@@ -52,7 +52,7 @@ function _parse_nonlinear_expression(model, x)
 end
 
 # JuMP special-cases the error for constant LHS and RHS terms in a comparison
-# expression. In JuMP v1.1 and earlier, it evaluted the outer terms in the
+# expression. In JuMP v1.1 and earlier, it evaluated the outer terms in the
 # current scope, and checked to see if they were Real. To keep the same behavior
 # we do the same here.
 function _assert_constant_comparison(code::Expr, expr::Expr)

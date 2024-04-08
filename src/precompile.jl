@@ -1,5 +1,5 @@
-# This precompile statements are a mix of hand-generated ones (e.g., to ensure
-# coverage across the breadth of common constraint types, as well as some
+# This precompile statements are a mix of hand-generated ones (for example, to
+# ensure coverage across the breadth of common constraint types, as well as some
 # SnoopCompile ones that are expensive.)
 
 function _precompile_()

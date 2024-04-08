@@ -170,7 +170,7 @@ Test.@test ≈(analytic_H, fdiff_H)
 """
     fdiff_derivatives(f::Function) -> Tuple{Function,Function}
 
-Return a tuple of functions that evalute the gradient and Hessian of `f` using
+Return a tuple of functions that evaluate the gradient and Hessian of `f` using
 ForwardDiff.jl.
 """
 function fdiff_derivatives(f::Function)
@@ -260,7 +260,7 @@ function enzyme_∇²f(H::AbstractMatrix{T}, x::Vararg{T,N}) where {T,N}
         ## initializing with a different direction.
         Enzyme.BatchDuplicated.(Enzyme.Active.(x), ntuple(direction, N))...,
     )[1]
-    ## Unpack Enzyme's `hess` data structure into the the matrix `H` expected by
+    ## Unpack Enzyme's `hess` data structure into the matrix `H` expected by
     ## JuMP.
     for j in 1:N, i in 1:j
         H[j, i] = hess[j][i]
@@ -282,7 +282,7 @@ Test.@test ≈(analytic_H, enzyme_H)
 """
     enzyme_derivatives(f::Function) -> Tuple{Function,Function}
 
-Return a tuple of functions that evalute the gradient and Hessian of `f` using
+Return a tuple of functions that evaluate the gradient and Hessian of `f` using
 Enzyme.jl.
 """
 function enzyme_derivatives(f::Function)

@@ -241,7 +241,7 @@ end
     SquareMatrixShape
 
 Shape object for a square matrix of `side_dimension` rows and columns. The
-vectorized form contains the entries of the the matrix given column by column
+vectorized form contains the entries of the matrix given column by column
 (or equivalently, the entries of the lower-left triangular part given row by
 row).
 """
@@ -303,7 +303,7 @@ end
     build_variable(error_fn::Function, variables, ::SymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
-creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+creating variables in `MOI.Reals`, that is, "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
@@ -335,7 +335,7 @@ end
     build_variable(error_fn::Function, variables, ::SkewSymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SkewSymmetricMatrixShape`](@ref)
-creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+creating variables in `MOI.Reals`, that is, "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
@@ -367,7 +367,7 @@ end
     build_variable(error_fn::Function, variables, ::HermitianMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`HermitianMatrixShape`](@ref)
-creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+creating variables in `MOI.Reals`, that is, "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
@@ -457,7 +457,7 @@ julia> @constraint(model, LinearAlgebra.Symmetric(Q) in PSDCone())
 
 The form above is usually used when the entries of `Q` are affine or quadratic
 expressions, but it can also be used when the entries are variables to get the
-reference of the semidefinite constraint, e.g.,
+reference of the semidefinite constraint, for example,
 ```jldoctest
 julia> model = Model();
 
@@ -550,7 +550,7 @@ julia> all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefi
  [real(H[1,1]), real(H[1,2]), real(H[2,2]), real(H[1,3]), real(H[2,3]), real(H[3,3]), imag(H[1,2]), imag(H[1,3]), imag(H[2,3])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(3)
 ```
 We see in the output of the last commands that 9 real variables were created.
-The matrix `H` contrains affine expressions in terms of these 9 variables that
+The matrix `H` constrains affine expressions in terms of these 9 variables that
 parametrize a Hermitian matrix.
 """
 struct HermitianPSDCone end

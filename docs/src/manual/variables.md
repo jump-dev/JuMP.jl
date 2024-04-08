@@ -244,7 +244,7 @@ x
 
 julia> @variable(model, x)
 ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, e.g.,
+    is intended, consider using the anonymous construction syntax, for example,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
@@ -752,7 +752,7 @@ Therefore, creating a new variable of the same name will throw an error:
 ```jldoctest variables_delete
 julia> @variable(model, x)
 ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, e.g.,
+    is intended, consider using the anonymous construction syntax, for example,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 

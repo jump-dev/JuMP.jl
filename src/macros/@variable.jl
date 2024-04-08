@@ -16,7 +16,7 @@ positional arguments `args` and the keyword arguments `kw_args`.
  * Omitted, like `@variable(model)`, which creates an anonymous variable
  * A single symbol like `@variable(model, x)`
  * A container expression like `@variable(model, x[i=1:3])`
- * An anoymous container expression like `@variable(model, [i=1:3])`
+ * An anonymous container expression like `@variable(model, [i=1:3])`
 
 ## Bounds
 
@@ -50,8 +50,8 @@ The recognized positional arguments in `args` are the following:
  * `Int`: restricts the variable to the set of integers, that is, ..., -2, -1,
     0, 1, 2, ... For example, `@variable(model, x, Int)`. Note: you cannot use
     `@variable(model, Int)`, use the `integer` keyword instead.
- * `Symmetric`: Only available when creating a square matrix of variables, i.e.,
-   when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
+ * `Symmetric`: Only available when creating a square matrix of variables, that
+   is when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
    it creates a symmetric matrix of variables.
  * `PSD`: A restrictive extension to `Symmetric` which constraints a square
    matrix of variables to `Symmetric` and constrains to be positive
@@ -545,7 +545,7 @@ end
 """
     parse_ternary_variable(error_fn, info_expr, lhs_sense, lhs, rhs_sense, rhs)
 
-A hook for JuMP extensiosn to intercept the parsing of a `:comparison`
+A hook for JuMP extensions to intercept the parsing of a `:comparison`
 expression, which has the form `lhs lhs_sense variable rhs_sense rhs`.
 """
 function parse_ternary_variable(

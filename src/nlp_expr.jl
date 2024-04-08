@@ -480,7 +480,7 @@ function _needs_flatten(parent::GenericNonlinearExpr, arg::GenericNonlinearExpr)
         # expression like log(sin(+(x, +(y, z))).
         #
         # If you have a benchmark that requires modifying this code, consider
-        # instead addinng `flatten!(::Any; force::Bool)` that would allow the
+        # instead adding `flatten!(::Any; force::Bool)` that would allow the
         # user to override this decision and flatten the entire tree.
         return any(Base.Fix2(_is_expr, :+), arg.args) ||
                any(Base.Fix2(_is_expr, :*), arg.args)

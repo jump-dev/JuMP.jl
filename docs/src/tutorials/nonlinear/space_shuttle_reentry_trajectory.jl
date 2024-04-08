@@ -179,7 +179,7 @@ nothing #hide
 #     For the best results, it is advised to experiment different linear solvers.
 #
 #     For example, the linear solver `MA27` is outdated and can be quite slow.
-#     `MA57` is a much better alternative, especially for highly-sparse problems
+#     `MA57` is a much better alternative, especially for highly sparse problems
 #     (such as trajectory optimization problems).
 
 ## Uncomment the lines below to pass user options to the solver

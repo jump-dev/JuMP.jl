@@ -11,7 +11,7 @@ implements in order to fix compatibility between JuMP types and the various
 wrappers in LinearAlgebra.
 
 Historically, these have been a big source of issues for users, so let's track
-what works, what doesnt, and make sure that we don't regress over time.
+what works, what doesn't, and make sure that we don't regress over time.
 """
 module TestLinearAlgebra
 

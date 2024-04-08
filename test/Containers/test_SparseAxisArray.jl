@@ -25,7 +25,7 @@ function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
     @test d3 == @inferred map(x -> 3 * x, d)
     # reduce
     @test sum_d == @inferred sum(d)
-    # bbroadcasting
+    # broadcasting
     @test dsqr == @inferred d .* d
     @test d2 == @inferred d .+ d
     @test d3 == @inferred d .* 3

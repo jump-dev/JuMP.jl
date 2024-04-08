@@ -143,7 +143,7 @@ end
 
 # Implement a special case: If the axis is a vector of pairs, also allow tuples
 # as indices. This is needed due to the behavior pairs and tuples when iterating
-# through dictionaries, i.e., `x[(k, v) in d]` gets added as `x[k => v]`, even
+# through dictionaries, that is, `x[(k, v) in d]` gets added as `x[k => v]`, even
 # though it looks to the user like they were tuples.
 
 function Base.getindex(

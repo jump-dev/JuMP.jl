@@ -90,7 +90,7 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     # List of bridges to add in addition to the ones added in
     # `MOI.Bridges.full_bridge_optimizer`. With `BridgeableConstraint`, the
     # same bridge may be added many times so we store them in a `Set` instead
-    # of, e.g., a `Vector`.
+    # of, for example, a `Vector`.
     bridge_types::Set{Any}
     # Hook into a solve call...function of the form f(m::GenericModel; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
@@ -387,7 +387,7 @@ Base.broadcastable(model::GenericModel) = Ref(model)
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
 model depends on which operating mode JuMP is in (see [`mode`](@ref)).
 
- * If JuMP is in `DIRECT` mode (i.e., the model was created using
+ * If JuMP is in `DIRECT` mode (that is, the model was created using
    [`direct_model`](@ref)), the backend will be the optimizer passed to
    [`direct_model`](@ref).
  * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
@@ -480,11 +480,11 @@ A HiGHS model with 0 columns and 0 rows.
 ```
 
 Moreover, if you modify the JuMP model, the reference you have to the backend
-(i.e., `inner` in the example above) may be out-dated, and you should call
+(that is, `inner` in the example above) may be out-dated, and you should call
 [`MOI.Utilities.attach_optimizer`](@ref) again.
 
 This function is also unsafe in the reverse direction: if you modify the unsafe
-backend, e.g., by adding a new constraint to `inner`, the changes may be
+backend, for example, by adding a new constraint to `inner`, the changes may be
 silently discarded by JuMP when the JuMP `model` is modified or solved.
 
 ## Alternative
@@ -906,7 +906,7 @@ x
 
 julia> @variable(model, x)
 ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, e.g.,
+    is intended, consider using the anonymous construction syntax, for example,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
@@ -1026,8 +1026,8 @@ Abstract base type for all scalar types
 
 The subtyping of `AbstractMutable` will allow calls of some `Base` functions
 to be redirected to a method in MA that handles type promotion more carefully
-(e.g. the promotion in sparse matrix products in SparseArrays usually does not
-work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
+(for example the promotion in sparse matrix products in SparseArrays usually
+does not work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 """
 abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
 

@@ -134,7 +134,7 @@ function lp_sensitivity_report(
     # take the distance between the value of the constraint and the
     # corresponding bound. Otherwise, we need to compute a search direction as
     # in `_compute_rhs_range`. This is just the negative of the search direction
-    # computed above. Moreover, we have to be careful with doubly-bounded
+    # computed above. Moreover, we have to be careful with doubly bounded
     # variables, because our computed range doesn't take into account the
     # inactive bound.
 
@@ -275,7 +275,7 @@ then our artificial entering variable is a duplicate of the `i`th variable, and
 
 If we are increasing the bounds associated with the `i`th affine constraint,
 then our artificial entering variable is a duplicate of the slack variable
-associated with the `i`th constraint, i.e., a `-1` in the `i`th row and zeros
+associated with the `i`th constraint, that is, a `-1` in the `i`th row and zeros
 everywhere else.
 
 In either case:
