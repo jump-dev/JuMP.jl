@@ -7,7 +7,7 @@ JuMP's documentation is written with [Documenter.jl](https://github.com/JuliaDoc
 ## Initial setup
 
 To build the documentation, you need to do a series of initialization steps.
-However, you only need to do this once!
+However, you only need to do this once.
 
 First, you will need a local copy of JuMP. If you don't have one already, run:
 ```
@@ -41,7 +41,7 @@ The compiled documents can be viewed at `~/.julia/dev/JuMP/docs/build/index.html
 ## Updating Project.toml
 
 Project.toml fixes the versions of JuMP-related packages such as MOI and the
-solvers. This is to prevent minor changes in the upstream solvers (e.g.,
+solvers. This is to prevent minor changes in the upstream solvers (for example,
 numerical differences or changes to their raw solver statuses) from causing the
 documentation builds to fail on an un-related PR.
 
@@ -54,7 +54,7 @@ it may happen that the second pull request finishes CI before the first. Therefo
 the docs from the second pull request will deploy and be updated in `/dev`. However,
 when the first pull request finishes and deploys the docs, these changes will be
 overwritten because they were not in the repository when the first pull request was
-merged!
+merged.
 
 For an example of this, see https://github.com/jump-dev/JuMP.jl/issues/2947.
 

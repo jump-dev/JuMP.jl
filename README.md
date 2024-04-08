@@ -9,7 +9,7 @@ visiting [jump.dev](https://jump.dev).
 
 |         | Latest release      | Development version        |
 | :------ | :------------------ | :------------------------- |
-| Tagged version | [![version](https://juliahub.com/docs/General/JuMP/stable/version.svg)](https://juliahub.com/ui/Packages/General/JuMP) [![deps](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2) | |
+| Tagged version | [![version](https://juliahub.com/docs/General/JuMP/stable/version.svg)](https://juliahub.com/ui/Packages/General/JuMP) [![JuliaHub](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2) | |
 | Install | `import Pkg; Pkg.add("JuMP")` | `import Pkg; Pkg.pkg"add JuMP#master"` |
 | Documentation | [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/) | [![dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/) |
 | Get help | Ask a question on the [Community forum](https://jump.dev/forum) | Join the [Developer chatroom](https://jump.dev/chatroom) |
@@ -27,7 +27,7 @@ describes the best practices for asking a question.
 
 ## Bug reports
 
-Please report any issues via the Github [issue tracker]. All types of issues
+Please report any issues via the GitHub [issue tracker]. All types of issues
 are welcome and encouraged; this includes bug reports, documentation typos,
 feature requests, etc.
 

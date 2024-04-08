@@ -34,6 +34,7 @@ multithreading
 namespace
 orthant
 performant
+plagiaristic
 [Pp]recompil(ation|(e(?d)))
 preprint
 README
@@ -50,6 +51,7 @@ TODO
 transpiled
 unexported
 [Uu]ntyped
+unwelcomed
 vectorize
 
 % JuMP-related vocab
@@ -109,20 +111,15 @@ Adagrad
 AMPL
 Appveyor
 Artelys
-Bonmin
-BONMIN
-Cbc
-CBC
-cdd
-CDD
-cddlib
-CDDLib
+(Bonmin|BONMIN)
+(Cbc|CBC)
+(cdd|CDD)
+(cddlib|CDDLib)
 Clarabel
 Clp
 CPLEXLink
-COSMO
+(cosmo|COSMO)
 COSMOAccelerators
-cosmo
 Couenne
 Divio
 Dualization
@@ -133,27 +130,24 @@ Enzyme
 Geomstats
 Geoopt
 GLPK
-Gurobi
-GUROBI
+(Gurobi|GUROBI)
 GZip
 Hypatia
-Ipopt
-IPOPT
+(Ipopt|IPOPT)
 Jax
 JSONSchema
-Knitro
-KNITRO
+(Knitro|KNITRO)
 [Mm]anopt
 MATLAB
 MOI
-Mosek
-MOSEK
+(Mosek|MOSEK)
 Octeract
 Optim
 Pajarito
 Pardiso
 PATHSolver
 Pavito
+(pdf|PDF)
 Penbmi
 Penopt
 Plasmo
@@ -163,8 +157,7 @@ Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
-Xpress
-XPRESS
+(Xpress|XPRESS)
 
 % People
 Arpit
