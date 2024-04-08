@@ -43,7 +43,7 @@ end
 Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
 
 # Whether something is zero or not for the purposes of printing it
-# oneunit is useful e.g. if coef is a Unitful quantity.
+# oneunit is useful, for example, if coef is a Unitful quantity.
 _is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
 
 # Whether something is one or not for the purposes of printing it.
@@ -69,8 +69,7 @@ function _is_im_for_printing(coef::Complex)
 end
 
 # Helper function that rounds carefully for the purposes of printing Reals
-# e.g.   5.3  =>  5.3
-#        1.0  =>  1
+# for example, 5.3  =>  5.3, and 1.0  =>  1
 function _string_round(x::Union{Float32,Float64})
     if isinteger(x) && typemin(Int64) <= x <= typemax(Int64)
         return string(round(Int64, x))

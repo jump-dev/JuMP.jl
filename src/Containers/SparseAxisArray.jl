@@ -312,7 +312,7 @@ function Base.copy(
         index => _getindex(bc, index) for index in _indices(bc.args...)
     )
     if isempty(dict) && dict isa OrderedCollections.OrderedDict{Any,Any}
-        # If `dict` is empty (e.g., because there are no indices), then
+        # If `dict` is empty (for example, because there are no indices), then
         # inference will produce a `OrderedCollections.OrderedDict{Any,Any}`,
         # and we won't have enough type information to call
         # `SparseAxisArray(dict)`. As a work-around, we explicitly construct the
@@ -354,7 +354,7 @@ _indices(::Any, args...) = _indices(args...)
 
 function _indices(x::SparseAxisArray, args...)
     indices = keys(x.data)
-    # Now that we have some keys, check the remaining arugments for
+    # Now that we have some keys, check the remaining arguments for
     # SparseAxisArrays, and if we find one, check it has the same set of keys.
     _check_same_indices(indices, args...)
     return indices

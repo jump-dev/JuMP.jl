@@ -4,10 +4,10 @@ about: Suggest an idea for JuMP
 
 ---
 
-Welcome to JuMP! You can use this Github issue to suggest a new feature for JuMP.
+Welcome. Use this GitHub issue to suggest a new feature for JuMP.
 
 **Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+A clear and concise description of what the problem is.
 
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
@@ -18,4 +18,4 @@ A clear and concise description of any alternative solutions or features you've 
 **Additional context**
 Add any other context or screenshots about the feature request here.
 
-Thanks for contributing to JuMP!
+Thanks for contributing to JuMP.

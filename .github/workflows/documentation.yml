@@ -34,10 +34,10 @@ jobs:
           path: ${{ github.workspace }}/latex-debug-logs      
       - uses: errata-ai/vale-action@reviewdog
         with:
-          version: 2.30.0
-          files: docs/src
+          version: 3.3.1
+          files: all
           fail_on_error: true
           filter_mode: nofilter
-          vale_flags: "--config=docs/.vale.ini"
+          vale_flags: "--config=.vale.ini"
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

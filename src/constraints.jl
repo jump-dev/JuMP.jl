@@ -291,8 +291,8 @@ Similar to the method above, except that it throws an error if the constraint is
 not an `F`-in-`S` contraint where `F` is either the JuMP or MOI type of the
 function, and `S` is the MOI type of the set. This method is recommended if you
 know the type of the function and set since its returned type can be inferred
-while for the method above (i.e. without `F` and `S`), the exact return type of
-the constraint index cannot be inferred.
+while for the method above (that is, without `F` and `S`), the exact return type
+of the constraint index cannot be inferred.
 
 ```jldoctest objective_function; filter = r"Stacktrace:.*"s
 julia> model = Model();
@@ -420,7 +420,7 @@ end
 
 Delete the constraints associated with `con_refs` from the model `model`.
 Solvers may implement specialized methods for deleting multiple constraints of
-the same concrete type, i.e., when `isconcretetype(eltype(con_refs))`. These
+the same concrete type, that is, when `isconcretetype(eltype(con_refs))`. These
 may be more efficient than repeatedly calling the single constraint delete
 method.
 
@@ -621,7 +621,7 @@ end
 The data for a vector constraint. The `func` field contains a JuMP object
 representing the function and the `set` field contains the MOI set. The
 `shape` field contains an [`AbstractShape`](@ref) matching the form in which
-the constraint was constructed (e.g., by using matrices or flat vectors).
+the constraint was constructed (for example, by using matrices or flat vectors).
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints.
 """
@@ -1057,8 +1057,8 @@ See also [`reduced_cost`](@ref JuMP.reduced_cost).
 
 - The function simply translates signs from `dual` and does not validate
   the conditions needed to guarantee the sensitivity interpretation of the
-  shadow price. The caller is responsible, e.g., for checking whether the solver
-  converged to an optimal primal-dual pair or a proof of infeasibility.
+  shadow price. The caller is responsible, for example, for checking whether the
+  solver converged to an optimal primal-dual pair or a proof of infeasibility.
 - The computation is based on the current objective sense of the model. If this
   has changed since the last solve, the results will be incorrect.
 - Relaxation of equality constraints (and hence the shadow price) is defined
@@ -1317,7 +1317,7 @@ Return the number of constraints in `model`.
 
 If `count_variable_in_set_constraints == true`, then `VariableRef` constraints
 such as `VariableRef`-in-`Integer` are included. To count only the number of
-structural constraints (e.g., the rows in the constraint matrix of a linear
+structural constraints (for example, the rows in the constraint matrix of a linear
 program), pass `count_variable_in_set_constraints = false`.
 
 ## Example
@@ -1359,8 +1359,8 @@ Return a list of all constraints in `model`.
 
 If `include_variable_in_set_constraints == true`, then `VariableRef` constraints
 such as `VariableRef`-in-`Integer` are included. To return only the structural
-constraints (e.g., the rows in the constraint matrix of a linear program), pass
-`include_variable_in_set_constraints = false`.
+constraints (for example, the rows in the constraint matrix of a linear program),
+pass `include_variable_in_set_constraints = false`.
 
 ## Example
 

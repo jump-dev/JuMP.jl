@@ -12,7 +12,7 @@
 Efficiently builds and returns an expression.
 
 The `name` argument is optional. If index sets are passed, a container is built
-and the expression may depend on the indices of the index ssets.
+and the expression may depend on the indices of the index sets.
 
 ## Keyword arguments
 

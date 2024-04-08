@@ -17,7 +17,7 @@
 
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
-    # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
+    # degradations. See, for example, https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
         return dict  # No-op.
     end
@@ -246,8 +246,8 @@ function Base.isreal(x::GenericAffExpr{<:Complex})
     return isreal(x.constant) && all(isreal, values(x.terms))
 end
 
-# Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
-# stdlib).
+# Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (for example,
+# in the stdlib).
 Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
 
 """
@@ -592,7 +592,7 @@ Alias for `GenericAffExpr{Float64,VariableRef}`, the specific
 """
 const AffExpr = GenericAffExpr{Float64,VariableRef}
 
-# Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
+# Check all coefficients are finite, that is, not NaN, not Inf, not -Inf
 function _assert_isfinite(a::GenericAffExpr)
     for (coef, var) in linear_terms(a)
         if !isfinite(coef)
@@ -817,7 +817,7 @@ end
 
 In many cases, `@variable` can return a `GenericAffExpr` instead of a
 `GenericVariableRef`. This is particularly the case for complex-valued
-expressions. To make common operatons like `lower_bound(x)` work, we should
+expressions. To make common operations like `lower_bound(x)` work, we should
 forward the method if and only if `x` is convertable to a `GenericVariableRef`.
 """
 function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}

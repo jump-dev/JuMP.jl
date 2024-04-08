@@ -74,8 +74,8 @@ end
 
 Base.broadcastable(reference_map::GenericReferenceMap) = Ref(reference_map)
 
-# Return a Boolean if the filtering function (1st argument) indicates that the whole value should
-# be copied over.
+# Return a Boolean if the filtering function (first argument) indicates that the
+# whole value should be copied over.
 _should_copy_complete_object(_, _) = true
 function _should_copy_complete_object(
     filter_constraints::Function,
@@ -105,10 +105,10 @@ constraint reference as argument.
 
 ## Note
 
-Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
+Model copy is not supported in `DIRECT` mode, that is, when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
-model construction, the new model will have no optimizer, i.e., an optimizer
+model construction, the new model will have no optimizer, that is, an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
 ## Example
@@ -209,10 +209,10 @@ and its copy.
 
 ## Note
 
-Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
+Model copy is not supported in `DIRECT` mode, that is, when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
-model construction, the new model will have no optimizer, i.e., an optimizer
+model construction, the new model will have no optimizer, that is, an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
 ## Example
@@ -257,10 +257,10 @@ This is a convenience function that provides a filtering function for
 
 ## Note
 
-Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
+Model copy is not supported in `DIRECT` mode, that is, when a model is constructed
 using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
-model construction, the new model will have no optimizer, i.e., an optimizer
+model construction, the new model will have no optimizer, that is, an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
 ## Example

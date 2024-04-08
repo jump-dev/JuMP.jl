@@ -9,7 +9,7 @@
 If `indices` is a [`NestedIterator`](@ref), return a
 [`SparseAxisArray`](@ref). Otherwise, `indices` should be
 a `VectorizedProductIterator` and the function returns
-`Array` if all iterators of the product are `Base.OneTo` and retunrs
+`Array` if all iterators of the product are `Base.OneTo` and returns
 [`DenseAxisArray`](@ref) otherwise.
 """
 function default_container end
@@ -171,13 +171,13 @@ function _container_dict(
 end
 
 # @default_eltype bailed and returned Any. Use an NTuple of Any of the
-# appropriate size intead.
+# appropriate size instead.
 function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
     return OrderedCollections.OrderedDict{K,Any}()
 end
 
 # @default_eltype bailed and returned Union{}. Use an NTuple of Any of the
-# appropriate size intead. We need this method to avoid an ambiguity with
+# appropriate size instead. We need this method to avoid an ambiguity with
 # `::Type{<:NTuple{N,Any}}` and `::Any`.
 function _container_dict(
     ::Type{Union{}},

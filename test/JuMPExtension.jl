@@ -611,7 +611,7 @@ end
 ###
 
 # Test printing of models of type `ModelType` for which the model is stored in
-# its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
+# its JuMP form, for example, as `AbstractVariable`s and `AbstractConstraint`s.
 # This is used by `JuMPExtension` but can also be used by external packages such
 # as `StructJuMP`, see https://github.com/jump-dev/JuMP.jl/issues/1711
 

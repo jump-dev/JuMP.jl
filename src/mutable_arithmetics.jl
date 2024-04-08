@@ -286,7 +286,7 @@ end
 function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.add_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
-    # We can't use `operate!!` here because in the IsNotMutable case (e.g.,
+    # We can't use `operate!!` here because in the IsNotMutable case (for example,
     # NonlinearExpr), it will fallback to this method and cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsNotMutable()
         return expr + _MA.operate(*, x, y)
@@ -308,7 +308,7 @@ function _MA.add_mul(
         typeof.(args)...,
     )
     expr = _MA.operate(convert, T, lhs)
-    # We can't use `operate!!` here because in the IsNotMutable case (e.g.,
+    # We can't use `operate!!` here because in the IsNotMutable case (for example,
     # NonlinearExpr), it will fallback to this method and cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsNotMutable()
         return expr + _MA.operate(*, x, y, args...)
@@ -319,7 +319,7 @@ end
 function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.sub_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
-    # We can't use `operate!!` here because in the IsNotMutable case (e.g.,
+    # We can't use `operate!!` here because in the IsNotMutable case (for example,
     # NonlinearExpr), it will fallback to this method and cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsNotMutable()
         return expr - _MA.operate(*, x, y)
@@ -341,7 +341,7 @@ function _MA.sub_mul(
         typeof.(args)...,
     )
     expr = _MA.operate(convert, T, lhs)
-    # We can't use `operate!!` here because in the IsNotMutable case (e.g.,
+    # We can't use `operate!!` here because in the IsNotMutable case (for example,
     # NonlinearExpr), it will fallback to this method and cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsNotMutable()
         return expr - _MA.operate(*, x, y, args...)

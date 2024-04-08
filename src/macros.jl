@@ -410,7 +410,7 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
     if haskey(obj_dict, name)
         error(
             """An object of name $name is already attached to this model. If this
-          is intended, consider using the anonymous construction syntax, e.g.,
+          is intended, consider using the anonymous construction syntax, for example,
           `x = @variable(model, [1:N], ...)` where the name of the object does
           not appear inside the macro.
 

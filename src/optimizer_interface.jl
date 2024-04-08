@@ -462,7 +462,7 @@ function optimize!(
         if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
             error(
                 "The solver does not support nonlinear problems " *
-                "(i.e., NLobjective and NLconstraint).",
+                "(that is, NLobjective and NLconstraint).",
             )
         else
             rethrow(err)
@@ -507,7 +507,7 @@ end
     termination_status(model::GenericModel)
 
 Return a [`MOI.TerminationStatusCode`](@ref) describing why the solver stopped
-(i.e., the [`MOI.TerminationStatus`](@ref) attribute).
+(that is, the [`MOI.TerminationStatus`](@ref) attribute).
 """
 function termination_status(model::GenericModel)
     return MOI.get(model, MOI.TerminationStatus())::MOI.TerminationStatusCode
@@ -536,7 +536,7 @@ end
 """
     raw_status(model::GenericModel)
 
-Return the reason why the solver stopped in its own words (i.e., the
+Return the reason why the solver stopped in its own words (that is, the
 MathOptInterface model attribute `RawStatusString`).
 """
 function raw_status(model::GenericModel)
@@ -560,7 +560,7 @@ end
     primal_status(model::GenericModel; result::Int = 1)
 
 Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
-primal solution of the solver (i.e., the [`MOI.PrimalStatus`](@ref) attribute)
+primal solution of the solver (that is, the [`MOI.PrimalStatus`](@ref) attribute)
 associated with the result index `result`.
 
 See also: [`result_count`](@ref).
@@ -573,7 +573,7 @@ end
     dual_status(model::GenericModel; result::Int = 1)
 
 Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
-dual solution of the solver (i.e., the [`MOI.DualStatus`](@ref) attribute)
+dual solution of the solver (that is, the [`MOI.DualStatus`](@ref) attribute)
 associated with the result index `result`.
 
 See also: [`result_count`](@ref).
@@ -711,7 +711,7 @@ constructor or by calling [`set_optimizer`](@ref).
 """
 struct NoOptimizer <: Exception end
 
-# Throws an error if `optimize!` has not been called, i.e., if there is no
+# Throws an error if `optimize!` has not been called, that is, if there is no
 # optimizer attached or if the termination status is `MOI.OPTIMIZE_NOT_CALLED`.
 function _moi_get_result(model::MOI.ModelLike, args...)
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED

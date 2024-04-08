@@ -531,7 +531,7 @@ function test_extension_variable_end_indexing(
     @test x[end, 1] == x[2, 1]
     @test x[0, end-1] == x[0, 3]
     @test z[end] == z[2]
-    # TODO: It is redirected to x[11] as it is the 11th element but linear
+    # TODO: It is redirected to x[11] as it is the eleventh element but linear
     #       indexing is not supported
     @test_throws BoundsError x[end-1]
     return

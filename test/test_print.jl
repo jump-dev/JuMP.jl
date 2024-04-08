@@ -144,7 +144,7 @@ function test_printing_expressions()
     io_test(MIME("text/latex"), ex, "2 x_{1} + 2 y_{2,3}")
 
     # TODO: These tests shouldn't depend on order of the two variables in
-    # quadratic terms, i.e., x*y vs y*x.
+    # quadratic terms, that is, x*y vs y*x.
     ex = @expression(mod, (x[1] + x[2]) * (y[2, 2] + 3.0))
     io_test(
         MIME("text/plain"),

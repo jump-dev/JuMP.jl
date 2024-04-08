@@ -154,13 +154,13 @@ end
 
 Helper function for macros to construct container objects.
 
-Takes an `Expr` that specifies the container, e.g.,
+Takes an `Expr` that specifies the container, for example,
 `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and returns:
 
- 1. `index_vars`: Names for the index variables, e.g. `[:i, gensym(), :k]`.
+ 1. `index_vars`: Names for the index variables, for example, `[:i, gensym(), :k]`.
     These may also be expressions, like `:((i, j))` from a call like
     `:(x[(i, j) in S])`.
- 2. `index_sets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
+ 2. `index_sets`: Sets used for indexing, for example, `[1:3, [:red,:blue], S]`
  3. `condition`: Expr containing any conditional imposed on indexing, or `:()`
     if none is present
 """
@@ -268,13 +268,13 @@ Helper function for macros to construct container objects.
  * `error_fn`: a function that takes a `String` and throws an error, potentially
    annotating the input string with extra information such as from which macro
    it was thrown from. Use `error` if you do not want a modified error message.
- * `expr`: an `Expr` that specifies the container, e.g.,
+ * `expr`: an `Expr` that specifies the container, for example,
    `:(x[i = 1:3, [:red, :blue], k = S; i + k <= 6])`
 
 ## Returns
 
  1. `name`: the name of the container, if given, otherwise `nothing`
- 2. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
+ 2. `index_vars`: a `Vector{Any}` of names for the index variables, for example,
     `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
     call like `:(x[(i, j) in S])`.
  3. `indices`: an iterator over the indices, for example,
@@ -408,7 +408,7 @@ function add_additional_args(
     end
     # Cache all keyword arguments
     kw_args = filter(Base.Fix2(Meta.isexpr, :kw), call_args)
-    # Remove keyowrd arguments from the end
+    # Remove keyword arguments from the end
     filter!(!Base.Fix2(Meta.isexpr, :kw), call_args)
     # Add the new positional arguments
     append!(call_args, esc.(args))

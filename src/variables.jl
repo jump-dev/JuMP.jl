@@ -1869,8 +1869,9 @@ function _moi_constrain_variable(
     info,
     ::Type{T},
 ) where {T}
-    # We don't call the _moi* versions (e.g., _moi_set_lower_bound) because they
-    # have extra checks that are not necessary for newly created variables.
+    # We don't call the _moi* versions (for example, _moi_set_lower_bound)
+    # because they have extra checks that are not necessary for newly created
+    # variables.
     if info.has_lb
         _moi_add_constraint(
             moi_backend,

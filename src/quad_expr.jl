@@ -141,8 +141,8 @@ function Base.isreal(x::GenericQuadExpr{<:Complex})
     return isreal(x.aff) && all(isreal, values(x.terms))
 end
 
-# Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
-# stdlib).
+# Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (for example,
+# in the stdlib).
 Base.:(==)(x::GenericQuadExpr, y::Number) = isempty(x.terms) && x.aff == y
 
 """

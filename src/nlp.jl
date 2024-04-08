@@ -805,7 +805,7 @@ not assume that the inputs are `Float64`.
 
 ## Notes
 
- * If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
+ * If the function `f` is univariate (that is, `dimension == 1`), `∇f` must return
    a number which represents the first-order derivative of the function `f`.
  * If the function `f` is multi-variate, `∇f` must have a signature matching
    `∇f(g::AbstractVector{T}, args::T...) where {T<:Real}`, where the first

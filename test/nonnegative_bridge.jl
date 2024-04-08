@@ -84,7 +84,7 @@ function MOI.Bridges.Constraint.concrete_bridge_type(
     ::Type{Nonnegative},
 ) where {T}
     # In the constructor, the function `f` of type `F` is passed to
-    # `MOI.Utilities.normalize_and_add_constraint` which removes the constrant
+    # `MOI.Utilities.normalize_and_add_constraint` which removes the constraint
     # from `f` but does not change its type so the type of the function in
     # `MOI.GreaterThan` will also be `F`.
     return NonnegativeBridge{T,F}
