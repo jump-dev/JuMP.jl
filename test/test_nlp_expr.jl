@@ -1054,7 +1054,7 @@ function test_nlp_matrix_adjoint()
     y = sin.(x)
     @test isequal_canonical(
         @expression(model, expr, y' * y),
-        NonlinearExpr(:+, Any[0.0, y[2] * y[2], y[1] * y[1]]),
+        NonlinearExpr(:+, Any[0.0, y[2]*y[2], y[1]*y[1]]),
     )
     return
 end
