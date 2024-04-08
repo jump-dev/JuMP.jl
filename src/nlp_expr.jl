@@ -291,6 +291,12 @@ function Base.one(::Type{GenericNonlinearExpr{V}}) where {V}
     return GenericNonlinearExpr{V}(:+, 1.0)
 end
 
+Base.conj(x::GenericNonlinearExpr) = x
+Base.real(x::GenericNonlinearExpr) = x
+Base.imag(x::GenericNonlinearExpr) = zero(x)
+Base.abs2(x::GenericNonlinearExpr) = x^2
+Base.isreal(::GenericNonlinearExpr) = true
+
 # Univariate operators
 
 _is_real(::Any) = false

@@ -1035,4 +1035,28 @@ function test_convert_float_nonlinear_expr()
     return
 end
 
+function test_nlp_adjoint()
+    model = Model()
+    @variable(model, x)
+    y = sin(x)
+    @test y' === y
+    @test conj(y) === y
+    @test real(y) === y
+    @test isequal_canonical(imag(y), zero(y))
+    @test isequal_canonical(abs2(y), y^2)
+    @test isreal(y)
+    return
+end
+
+function test_nlp_matrix_adjoint()
+    model = Model()
+    @variable(model, x[1:2])
+    y = sin.(x)
+    @test isequal_canonical(
+        @expression(model, expr, y' * y),
+        NonlinearExpr(:+, Any[0.0, y[2] * y[2], y[1] * y[1]]),
+    )
+    return
+end
+
 end  # module
