@@ -334,6 +334,7 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         end
     elseif isdefined(Base, f)
         @eval function Base.$(f)(x::AbstractJuMPScalar)
+            _throw_if_not_real(x)
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
         end
     elseif isdefined(MOI.Nonlinear, :SpecialFunctions)
@@ -341,6 +342,7 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         SF = MOI.Nonlinear.SpecialFunctions
         if isdefined(SF, f)
             @eval function $(SF).$(f)(x::AbstractJuMPScalar)
+                _throw_if_not_real(x)
                 return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
             end
         end
@@ -359,14 +361,20 @@ for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
     op = Meta.quot(f)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             rhs = convert(Float64, _constant_to_number(y))
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x, rhs)
         end
         function Base.$(f)(x::_Constant, y::AbstractJuMPScalar)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             lhs = convert(Float64, _constant_to_number(x))
             return GenericNonlinearExpr{variable_ref_type(y)}($op, lhs, y)
         end
         function Base.$(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
