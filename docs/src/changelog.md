@@ -7,6 +7,21 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.21.1 (April 11, 2024)
+
+### Fixed
+
+ - Fixed behavior of complex-value related functions like `real`, `imag`, `conj`
+   and `abs2` when called on [`GenericNonlinearExpr`](@ref). This fixes a method
+   error when calling `x'` where `x` is an array of nonlinear expressions. As a
+   related consequence, we now always error when creating nonlinear expressions
+   with complex components. Previously, only some constructors were checked for
+   complex expressionns. (#3724)
+
+### Other
+
+ - Documentation improvements (#3719) (#3720) (#3721) (#3722)
+
 ## Version 1.21.0 (March 31, 2024)
 
 ### Added
