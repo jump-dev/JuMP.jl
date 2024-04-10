@@ -215,6 +215,7 @@ function Base.:^(lhs::GenericAffExpr{T,V}, rhs::Integer) where {T,V}
     elseif rhs == 2
         return lhs * lhs
     else
+        _throw_if_not_real(lhs)
         return GenericNonlinearExpr{V}(:^, Any[lhs, rhs])
     end
 end

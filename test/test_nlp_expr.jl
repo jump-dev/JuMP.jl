@@ -1035,4 +1035,17 @@ function test_convert_float_nonlinear_expr()
     return
 end
 
+function test_error_complex_literal_pow()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($x)::$(typeof(x))`",
+        ),
+        x^3,
+    )
+    return
+end
+
 end  # module
