@@ -1059,4 +1059,37 @@ function test_nlp_matrix_adjoint()
     return
 end
 
+function test_error_complex_literal_pow()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($x)::$(typeof(x))`",
+        ),
+        x^3,
+    )
+    return
+end
+
+function test_error_nonlinear_expr_complex_constructor()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($x)::$(typeof(x))`",
+        ),
+        NonlinearExpr(:^, Any[x, 3]),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($x)::$(typeof(x))`",
+        ),
+        NonlinearExpr(:^, x, 3),
+    )
+    return
+end
+
 end  # module
