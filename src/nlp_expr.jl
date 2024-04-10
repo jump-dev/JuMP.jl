@@ -85,6 +85,9 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
         head::Symbol,
         args::Vararg{Any},
     ) where {V<:AbstractVariableRef}
+        for arg in args
+            _throw_if_not_real(arg)
+        end
         return new{V}(head, Any[a for a in args])
     end
 
@@ -92,6 +95,9 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
         head::Symbol,
         args::Vector{Any},
     ) where {V<:AbstractVariableRef}
+        for arg in args
+            _throw_if_not_real(arg)
+        end
         return new{V}(head, args)
     end
 end
@@ -290,6 +296,12 @@ end
 function Base.one(::Type{GenericNonlinearExpr{V}}) where {V}
     return GenericNonlinearExpr{V}(:+, 1.0)
 end
+
+Base.conj(x::GenericNonlinearExpr) = x
+Base.real(x::GenericNonlinearExpr) = x
+Base.imag(x::GenericNonlinearExpr) = zero(x)
+Base.abs2(x::GenericNonlinearExpr) = x^2
+Base.isreal(::GenericNonlinearExpr) = true
 
 # Univariate operators
 
