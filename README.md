@@ -89,7 +89,7 @@ United States. NumFOCUS provides JuMP with fiscal, legal, and administrative
 support to help ensure the health and sustainability of the project. Visit
 [numfocus.org](https://numfocus.org) for more information.
 
-You can support JuMP by [donating](https://numfocus.salsalabs.org/donate-to-jump/index.html).
+You can support JuMP by [donating](https://numfocus.org/donate-to-jump).
 
 Donations to JuMP are managed by NumFOCUS. For donors in the United States,
 your gift is tax-deductible to the extent provided by law. As with any donation,
