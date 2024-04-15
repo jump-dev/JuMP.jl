@@ -402,7 +402,7 @@ function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
     end
 end
 
-function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
+function Base.getindex(A::DenseAxisArray, args...; kwargs...)
     if !isempty(kwargs)
         if !isempty(args)
             error("Cannot index with mix of positional and keyword arguments")
@@ -413,7 +413,7 @@ function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
 end
 
 function _getindex_inner(
-    A::DenseAxisArray{T,N},
+    A::DenseAxisArray{T},
     args::Vararg{Any,N},
 ) where {T,N}
     new_indices = Base.to_index(A, args)
