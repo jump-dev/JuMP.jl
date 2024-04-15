@@ -133,6 +133,14 @@ function _MA.promote_operation(
     return GenericQuadExpr{T,V}
 end
 
+function _MA.promote_operation(
+    ::typeof(*),
+    ::Type{GenericAffExpr{T,V}},
+    ::Type{GenericAffExpr{S,V}},
+) where {T,S,V<:AbstractVariableRef}
+    return GenericQuadExpr{_MA.promote_operation(*, T, S),V}
+end
+
 function _MA.isequal_canonical(x::T, y::T) where {T<:AbstractJuMPScalar}
     return isequal_canonical(x, y)
 end
