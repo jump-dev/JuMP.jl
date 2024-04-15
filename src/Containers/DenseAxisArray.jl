@@ -407,8 +407,15 @@ function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
         if !isempty(args)
             error("Cannot index with mix of positional and keyword arguments")
         end
-        return getindex(A, _kwargs_to_args(A; kwargs...)...)
+        return _getindex_inner(A, _kwargs_to_args(A; kwargs...)...)
     end
+    return _getindex_inner(A, args...)
+end
+
+function _getindex_inner(
+    A::DenseAxisArray{T,N},
+    args::Vararg{Any,N},
+) where {T,N}
     new_indices = Base.to_index(A, args)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
