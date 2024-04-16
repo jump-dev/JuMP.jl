@@ -72,6 +72,12 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
+julia> @expression(model, x * 2.0 * (1 + x) * x)
+(2 x² + 2 x) * x
+
+julia> @expression(model, @nl(x * 2.0 * (1 + x) * x))
+x * 2.0 * (1 + x) * x
+
 julia> @allocated @expression(model, x * 2.0 * (1 + x) * x)
 3200
 
