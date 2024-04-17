@@ -467,6 +467,6 @@ function _plural_macro_code(model, block, macro_sym)
     return code
 end
 
-for file in readdir("macros")
-    include(joinpath("macros", file))
+for file in readdir(joinpath(@__DIR__, "macros"))
+    include(joinpath(@__DIR__, "macros", file))
 end
