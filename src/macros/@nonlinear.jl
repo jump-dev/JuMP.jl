@@ -9,7 +9,7 @@ const _op_mul = NonlinearOperator(*, :*)
 const _op_div = NonlinearOperator(/, :/)
 
 """
-    @nl(expr)
+    @nonlinear(expr)
 
 Change the parsing of `expr` to construct [`GenericNonlinearExpr`](@ref) instead
 of [`GenericAffExpr`](@ref) or [`GenericQuadExpr`](@ref).
@@ -38,13 +38,13 @@ julia> @variable(model, x);
 julia> @expression(model, (x - 0.1)^2)
 x² - 0.2 x + 0.010000000000000002
 
-julia> @expression(model, @nl((x - 0.1)^2))
+julia> @expression(model, @nonlinear((x - 0.1)^2))
 (x - 0.1) ^ 2.0
 
 julia> (x - 0.1)^2
 x² - 0.2 x + 0.010000000000000002
 
-julia> @nl((x - 0.1)^2)
+julia> @nonlinear((x - 0.1)^2)
 (x - 0.1) ^ 2.0
 ```
 
@@ -75,17 +75,17 @@ julia> @variable(model, x);
 julia> @expression(model, x * 2.0 * (1 + x) * x)
 (2 x² + 2 x) * x
 
-julia> @expression(model, @nl(x * 2.0 * (1 + x) * x))
+julia> @expression(model, @nonlinear(x * 2.0 * (1 + x) * x))
 x * 2.0 * (1 + x) * x
 
 julia> @allocated @expression(model, x * 2.0 * (1 + x) * x)
 3200
 
-julia> @allocated @expression(model, @nl(x * 2.0 * (1 + x) * x))
+julia> @allocated @expression(model, @nonlinear(x * 2.0 * (1 + x) * x))
 640
 ```
 """
-macro nl(expr)
+macro nonlinear(expr)
     ret = MacroTools.postwalk(expr) do x
         if Meta.isexpr(x, :call)
             if x.args[1] == :+
