@@ -531,3 +531,40 @@ function Base.:*(
 )
     return x * A
 end
+
+function Base.complex(
+    r::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+    i::Real,
+)
+    return r + im * i
+end
+
+function Base.complex(
+    r::Real,
+    i::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+)
+    return r + im * i
+end
+
+function Base.complex(
+    r::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+    i::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+)
+    return r + im * i
+end
