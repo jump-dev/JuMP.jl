@@ -680,7 +680,7 @@ function test_base_complex()
         @test isequal_canonical(complex(3, f), 3 + im * f)
         @test isequal_canonical(complex(f, 2.0), f + 2.0im)
     end
-    for f in (x, 1.0 * x), g in (x, 1.0 * x)
+    for f in (x, 1.0 * x, x^2), g in (x, 1.0 * x, x^2)
         @test isequal_canonical(complex(f, g), f + im * g)
     end
     @test_throws MethodError complex(x, 2im)

@@ -555,8 +555,16 @@ function Base.complex(
 end
 
 function Base.complex(
-    r::Union{GenericVariableRef{<:Real},GenericAffExpr{<:Real}},
-    i::Union{GenericVariableRef{<:Real},GenericAffExpr{<:Real}},
+    r::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+    i::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
 )
     return r + im * i
 end
