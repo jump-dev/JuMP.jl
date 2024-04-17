@@ -108,6 +108,17 @@ function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
     )
 end
 
+function GenericQuadExpr(
+    aff::GenericAffExpr{T,V},
+    quad::OrderedDict{UnorderedPair{V},S},
+) where {T,S,V}
+    C = promote_type(T, S)
+    return GenericQuadExpr(
+        convert(GenericAffExpr{C,V}, aff),
+        convert(OrderedDict{UnorderedPair{V},C}, quad),
+    )
+end
+
 function Base.iszero(expr::GenericQuadExpr)
     return iszero(expr.aff) && all(iszero, values(expr.terms))
 end
