@@ -13,7 +13,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: '1'
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Format check
         shell: julia --color=yes {0}
         run: |
