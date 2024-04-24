@@ -519,4 +519,37 @@ function test_aff_expr_complex_HermitianPSDCone()
     return
 end
 
+function test_multiply_expr_MA_Zero()
+    model = Model()
+    @variable(model, x)
+    for f in (x, x^2, sin(x))
+        @test @expression(model, f * sum(x for i in 1:0)) == 0.0
+        @test @expression(model, sum(x for i in 1:0) * f) == 0.0
+        @test @expression(model, -f * sum(x for i in 1:0)) == 0.0
+        @test @expression(model, sum(x for i in 1:0) * -f) == 0.0
+        @test @expression(model, (f + f) * sum(x for i in 1:0)) == 0.0
+        @test @expression(model, sum(x for i in 1:0) * (f + f)) == 0.0
+
+        @test isequal_canonical(@expression(model, f + sum(x for i in 1:0)), f)
+        @test isequal_canonical(@expression(model, sum(x for i in 1:0) + f), f)
+        @test isequal_canonical(
+            @expression(model, -f + sum(x for i in 1:0)),
+            -1.0 * f,  # Needed for f = sin(x)
+        )
+        @test isequal_canonical(
+            @expression(model, sum(x for i in 1:0) + -f),
+            -1.0 * f,  # Needed for f = sin(x)
+        )
+        @test isequal_canonical(
+            @expression(model, (f + f) + sum(x for i in 1:0)),
+            f + f,
+        )
+        @test isequal_canonical(
+            @expression(model, sum(x for i in 1:0) + (f + f)),
+            f + f,
+        )
+    end
+    return
+end
+
 end  # TestExpr
