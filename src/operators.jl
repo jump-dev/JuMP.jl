@@ -569,21 +569,15 @@ function Base.complex(
     return r + im * i
 end
 
-# These methods are used to provide an efficient implementation for a common
+# This method is used to provide an efficient implementation for the common
 # case like `x^2 * sum(f for i in 1:0)`, which lowers to
-# `_MA.operate!!(*, x^2, _MA.Zero())`
+# `_MA.operate!!(*, x^2, _MA.Zero())`. We don't need the method with reversed
+# arguments because MA.Zero is not mutable, and MA never queries the mutablility
+# of arguments if the first is not mutable.
 function _MA.promote_operation(
     ::typeof(*),
     ::Type{<:AbstractJuMPScalar},
     ::Type{_MA.Zero},
-)
-    return _MA.Zero
-end
-
-function _MA.promote_operation(
-    ::typeof(*),
-    ::Type{_MA.Zero},
-    ::Type{<:AbstractJuMPScalar},
 )
     return _MA.Zero
 end
