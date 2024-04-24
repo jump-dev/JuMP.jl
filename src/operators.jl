@@ -572,5 +572,18 @@ end
 # These methods are used to provide an efficient implementation for a common
 # case like `x^2 * sum(f for i in 1:0)`, which lowers to
 # `_MA.operate!!(*, x^2, _MA.Zero())`
-_MA.operate!!(::typeof(*), ::AbstractJuMPScalar, ::_MA.Zero) = _MA.Zero()
-_MA.operate!!(::typeof(*), ::_MA.Zero, ::AbstractJuMPScalar) = _MA.Zero()
+function _MA.promote_operation(
+    ::typeof(*),
+    ::Type{<:AbstractJuMPScalar},
+    ::Type{_MA.Zero},
+)
+    return _MA.Zero
+end
+
+function _MA.promote_operation(
+    ::typeof(*),
+    ::Type{_MA.Zero},
+    ::Type{<:AbstractJuMPScalar},
+)
+    return _MA.Zero
+end
