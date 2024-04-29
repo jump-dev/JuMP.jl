@@ -355,6 +355,34 @@ julia> expr.args
  x
 ```
 
+### Forcing nonlinear expressions
+
+The JuMP macros and operator overloading will preferentially build affine ([`GenericAffExpr`](@ref)) and quadratic ([`GenericQuadExpr`](@ref)) expressions
+instead of [`GenericNonlinearExpr`](@ref). For example:
+```jldoctest force_nonlinear
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> f = (x - 0.1)^2
+x² - 0.2 x + 0.010000000000000002
+
+julia> typeof(f)
+QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
+```
+To over-ride this behavior, use the [`@force_nonlinear`](@ref) macro:
+```jldoctest force_nonlinear
+julia> g = @force_nonlinear((x - 0.1)^2)
+(x - 0.1) ^ 2
+
+julia> typeof(g)
+NonlinearExpr (alias for GenericNonlinearExpr{GenericVariableRef{Float64}})
+```
+
+!!! warning
+    Use this macro only if necessary. See the docstring of [`@force_nonlinear`](@ref)
+    for more details on when you should use it.
+
 ## Function tracing
 
 Nonlinear expressions can be constructed using _function tracing_. Function
