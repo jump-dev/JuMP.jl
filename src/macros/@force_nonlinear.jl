@@ -44,13 +44,13 @@ julia> @expression(model, (x - 0.1)^2)
 x² - 0.2 x + 0.010000000000000002
 
 julia> @expression(model, @force_nonlinear((x - 0.1)^2))
-(x - 0.1) ^ 2.0
+(x - 0.1) ^ 2
 
 julia> (x - 0.1)^2
 x² - 0.2 x + 0.010000000000000002
 
 julia> @force_nonlinear((x - 0.1)^2)
-(x - 0.1) ^ 2.0
+(x - 0.1) ^ 2
 ```
 
 ### Use-case two: reduce allocations

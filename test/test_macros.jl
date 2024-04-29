@@ -2361,16 +2361,16 @@ end
 function test_force_nonlinear()
     model = Model()
     @variable(model, x)
-    @test (1 + x) isa AffExpr
+    @test 1 + x isa AffExpr
     @test @force_nonlinear(1 + x) isa GenericNonlinearExpr
-    @test (1 - x) isa AffExpr
+    @test 1 - x isa AffExpr
     @test @force_nonlinear(1 - x) isa GenericNonlinearExpr
-    @test (2 * x) isa AffExpr
+    @test 2 * x isa AffExpr
     @test @force_nonlinear(2 * x) isa GenericNonlinearExpr
-    @test (x / 3) isa AffExpr
+    @test x / 3 isa AffExpr
     @test @force_nonlinear(x / 3) isa GenericNonlinearExpr
-    @test (x ^ 2) isa QuadExpr
-    @test @force_nonlinear(x ^ 2) isa GenericNonlinearExpr
+    @test x^2 isa QuadExpr
+    @test @force_nonlinear(x^2) isa GenericNonlinearExpr
     @test_throws_runtime(
         ErrorException(
             "In `@force_nonlinear(x)`: expression did not produce a GenericNonlinearExpr",
