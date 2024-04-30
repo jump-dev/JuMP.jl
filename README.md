@@ -1,4 +1,9 @@
-![JuMP logo](https://jump.dev/JuMP.jl/dev/assets/logo-with-text-background.svg "JuMP logo")
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="https://jump.dev/JuMP.jl/dev/assets/logo-with-text.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://jump.dev/JuMP.jl/dev/assets/logo-dark-with-text.svg">
+  <img alt="JuMP.jl logo." src="https://jump.dev/JuMP.jl/dev/assets/logo-with-text-background.svg">
+</picture>
+
 ---
 
 [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
