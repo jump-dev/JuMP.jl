@@ -1092,4 +1092,40 @@ function test_error_nonlinear_expr_complex_constructor()
     return
 end
 
+function test_error_legacy_expression_constructor()
+    model = Model()
+    @variable(model, x)
+    @NLexpression(model, arg, x^3)
+    err = ErrorException(
+        "Cannot create a nonlinear expression that mixes features from " *
+        "both the legacy (macros beginning with `@NL`) and new " *
+        "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
+        "the other. Got: $arg",
+    )
+    @test_throws err GenericNonlinearExpr(:*, Any[x, arg])
+    @test_throws err GenericNonlinearExpr(:*, x, arg)
+    @test_throws err (x * arg)
+    @test_throws err (arg * x)
+    return
+end
+
+function test_error_legacy_parameter_constructor()
+    model = Model()
+    @variable(model, x)
+    @NLparameter(model, p == 1)
+    err = ErrorException(
+        "Cannot create a nonlinear expression that mixes features from " *
+        "both the legacy (macros beginning with `@NL`) and new " *
+        "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
+        "the other. Got: $p",
+    )
+    @test_throws err GenericNonlinearExpr(:*, Any[x, p])
+    @test_throws err GenericNonlinearExpr(:*, Any[p, x])
+    @test_throws err GenericNonlinearExpr(:*, x, p)
+    @test_throws err GenericNonlinearExpr(:*, p, x)
+    @test_throws err (x * p)
+    @test_throws err (p * x)
+    return
+end
+
 end  # module
