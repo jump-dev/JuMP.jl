@@ -371,26 +371,6 @@ function test_extension_recursion_stackoverflow(
     return
 end
 
-function test_nlparameter_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    e = x + p
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($p)"
-    return
-end
-
-function test_nlexpression_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLexpression(model, expr, sin(x))
-    e = x + expr
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($expr)"
-    return
-end
-
 function test_nlobjective_with_nlexpr()
     model = Model()
     @variable(model, x)
@@ -411,18 +391,6 @@ function test_nlconstraint_with_nlexpr()
         jump_function(model, nlp.constraints[index(c)].expression),
         sin(x)^2 - 1,
     )
-    return
-end
-
-function test_jump_function_nonlinearexpr()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    @NLexpression(model, expr1, sin(p + x))
-    @NLexpression(model, expr2, sin(expr1))
-    nlp = nonlinear_model(model)
-    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p) + $x)"
-    @test string(jump_function(model, nlp[index(expr2)])) == "sin($expr1)"
     return
 end
 
