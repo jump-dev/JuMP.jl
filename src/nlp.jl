@@ -213,6 +213,27 @@ function check_belongs_to_model(arg::NonlinearParameter, model::AbstractModel)
     return arg.model === model
 end
 
+variable_ref_type(arg::NonlinearParameter) = variable_ref_type(arg.model)
+
+function moi_function(p::NonlinearParameter)
+    return error(
+        """
+        Cannot mix a legacy NonlinearParameter with the new nonlinear API.
+
+        Got: $p
+
+        To update, replace calls to:
+        ```julia
+        @NLparameter(model, p == 1)
+        ```
+        with
+        ```julia
+        @variable(model, p in Parameter(1))
+        ```
+        """,
+    )
+end
+
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
@@ -319,6 +340,20 @@ end
 
 function check_belongs_to_model(arg::NonlinearExpression, model::AbstractModel)
     return arg.model === model
+end
+
+variable_ref_type(arg::NonlinearExpression) = variable_ref_type(arg.model)
+
+function moi_function(arg::NonlinearExpression)
+    return error(
+        """
+        Cannot mix a legacy NonlinearExpression with the new nonlinear API.
+
+        Got: $arg
+
+        To update, replace all calls to `@NLexpression` with `@expression`.
+        """,
+    )
 end
 
 function MOI.Nonlinear.parse_expression(

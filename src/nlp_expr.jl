@@ -102,19 +102,6 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     end
 end
 
-function moi_function(arg::Union{NonlinearExpression,NonlinearParameter})
-    return error(
-        "You cannot mix legacy nonlinear object of type $(typeof(arg)) with " *
-        "the new nonlinear API. To use the legacy nonlinear API, all " *
-        "nonlinear objects must be in a `@NL` macro.",
-    )
-end
-
-# This method is necessary to catch errors in an expression like p * x where
-# p is a nonlinear parameter.
-variable_ref_type(::NonlinearParameter) = GenericVariableRef{Float64}
-variable_ref_type(::NonlinearExpression) = GenericVariableRef{Float64}
-
 variable_ref_type(::Type{GenericNonlinearExpr}, ::Any) = nothing
 
 function variable_ref_type(::Type{GenericNonlinearExpr}, x::AbstractJuMPScalar)

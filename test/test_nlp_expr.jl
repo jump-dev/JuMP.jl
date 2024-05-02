@@ -1097,9 +1097,13 @@ function test_error_legacy_expression_constructor()
     @variable(model, x)
     @NLexpression(model, arg, x^3)
     err = ErrorException(
-        "You cannot mix legacy nonlinear object of type $(typeof(arg)) with " *
-        "the new nonlinear API. To use the legacy nonlinear API, all " *
-        "nonlinear objects must be in a `@NL` macro.",
+        """
+        Cannot mix a legacy NonlinearExpression with the new nonlinear API.
+
+        Got: $arg
+
+        To update, replace all calls to `@NLexpression` with `@expression`.
+        """,
     )
     @test_throws err @objective(model, Min, arg)
     @test_throws err @constraint(model, arg <= 0)
@@ -1114,9 +1118,20 @@ function test_error_legacy_parameter_constructor()
     @variable(model, x)
     @NLparameter(model, p == 1)
     err = ErrorException(
-        "You cannot mix legacy nonlinear object of type $(typeof(p)) with " *
-        "the new nonlinear API. To use the legacy nonlinear API, all " *
-        "nonlinear objects must be in a `@NL` macro.",
+        """
+        Cannot mix a legacy NonlinearParameter with the new nonlinear API.
+
+        Got: $p
+
+        To update, replace calls to:
+        ```julia
+        @NLparameter(model, p == 1)
+        ```
+        with
+        ```julia
+        @variable(model, p in Parameter(1))
+        ```
+        """,
     )
     @test_throws err @objective(model, Min, p)
     @test_throws err @constraint(model, p <= 0)
