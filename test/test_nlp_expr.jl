@@ -371,26 +371,6 @@ function test_extension_recursion_stackoverflow(
     return
 end
 
-function test_nlparameter_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    e = x + p
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($p)"
-    return
-end
-
-function test_nlexpression_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLexpression(model, expr, sin(x))
-    e = x + expr
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($expr)"
-    return
-end
-
 function test_nlobjective_with_nlexpr()
     model = Model()
     @variable(model, x)
@@ -411,18 +391,6 @@ function test_nlconstraint_with_nlexpr()
         jump_function(model, nlp.constraints[index(c)].expression),
         sin(x)^2 - 1,
     )
-    return
-end
-
-function test_jump_function_nonlinearexpr()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    @NLexpression(model, expr1, sin(p + x))
-    @NLexpression(model, expr2, sin(expr1))
-    nlp = nonlinear_model(model)
-    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p) + $x)"
-    @test string(jump_function(model, nlp[index(expr2)])) == "sin($expr1)"
     return
 end
 
@@ -1089,6 +1057,57 @@ function test_error_nonlinear_expr_complex_constructor()
         ),
         NonlinearExpr(:^, x, 3),
     )
+    return
+end
+
+function test_error_legacy_expression_constructor()
+    model = Model()
+    @variable(model, x)
+    @NLexpression(model, arg, x^3)
+    err = ErrorException(
+        """
+        Cannot mix a legacy NonlinearExpression with the new nonlinear API.
+
+        Got: $arg
+
+        To update, replace all calls to `@NLexpression` with `@expression`.
+        """,
+    )
+    @test_throws err @objective(model, Min, arg)
+    @test_throws err @constraint(model, arg <= 0)
+    @test_throws err @constraint(model, arg in MOI.LessThan(0.0))
+    @test_throws err moi_function(arg)
+    @test_throws err x * arg
+    @test_throws err arg * x
+    return
+end
+
+function test_error_legacy_parameter_constructor()
+    model = Model()
+    @variable(model, x)
+    @NLparameter(model, p == 1)
+    err = ErrorException(
+        """
+        Cannot mix a legacy NonlinearParameter with the new nonlinear API.
+
+        Got: $p
+
+        To update, replace calls to:
+        ```julia
+        @NLparameter(model, p == 1)
+        ```
+        with
+        ```julia
+        @variable(model, p in Parameter(1))
+        ```
+        """,
+    )
+    @test_throws err @objective(model, Min, p)
+    @test_throws err @constraint(model, p <= 0)
+    @test_throws err @constraint(model, p in MOI.LessThan(0.0))
+    @test_throws err moi_function(p)
+    @test_throws err x * p
+    @test_throws err p * x
     return
 end
 

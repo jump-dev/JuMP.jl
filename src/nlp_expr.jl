@@ -87,6 +87,7 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     ) where {V<:AbstractVariableRef}
         for arg in args
             _throw_if_not_real(arg)
+            _throw_if_legacy_error(arg)
         end
         return new{V}(head, Any[a for a in args])
     end
@@ -97,6 +98,7 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     ) where {V<:AbstractVariableRef}
         for arg in args
             _throw_if_not_real(arg)
+            _throw_if_legacy_error(arg)
         end
         return new{V}(head, args)
     end

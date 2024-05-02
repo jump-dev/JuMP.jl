@@ -3,6 +3,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+_throw_if_legacy_error(::Any) = nothing
+
 """
     nonlinear_model(
         model::GenericModel;
@@ -209,6 +211,33 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
+function check_belongs_to_model(arg::NonlinearParameter, model::AbstractModel)
+    return arg.model === model
+end
+
+variable_ref_type(arg::NonlinearParameter) = variable_ref_type(arg.model)
+
+function _throw_if_legacy_error(p::NonlinearParameter)
+    return error(
+        """
+        Cannot mix a legacy NonlinearParameter with the new nonlinear API.
+
+        Got: $p
+
+        To update, replace calls to:
+        ```julia
+        @NLparameter(model, p == 1)
+        ```
+        with
+        ```julia
+        @variable(model, p in Parameter(1))
+        ```
+        """,
+    )
+end
+
+moi_function(p::NonlinearParameter) = _throw_if_legacy_error(p)
+
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
@@ -312,6 +341,26 @@ struct NonlinearExpression <: AbstractJuMPScalar
     model::Model
     index::Int
 end
+
+function check_belongs_to_model(arg::NonlinearExpression, model::AbstractModel)
+    return arg.model === model
+end
+
+variable_ref_type(arg::NonlinearExpression) = variable_ref_type(arg.model)
+
+function _throw_if_legacy_error(arg::NonlinearExpression)
+    return error(
+        """
+        Cannot mix a legacy NonlinearExpression with the new nonlinear API.
+
+        Got: $arg
+
+        To update, replace all calls to `@NLexpression` with `@expression`.
+        """,
+    )
+end
+
+moi_function(arg::NonlinearExpression) = _throw_if_legacy_error(arg)
 
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
