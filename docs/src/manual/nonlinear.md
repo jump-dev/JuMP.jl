@@ -370,7 +370,7 @@ x² - 0.2 x + 0.010000000000000002
 julia> typeof(f)
 QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
 ```
-To over-ride this behavior, use the [`@force_nonlinear`](@ref) macro:
+To override this behavior, use the [`@force_nonlinear`](@ref) macro:
 ```jldoctest force_nonlinear
 julia> g = @force_nonlinear((x - 0.1)^2)
 (x - 0.1) ^ 2

@@ -2373,7 +2373,7 @@ function test_force_nonlinear()
     @test @force_nonlinear(x^2) isa GenericNonlinearExpr
     @test_throws_runtime(
         ErrorException(
-            "In `@force_nonlinear(x)`: expression did not produce a GenericNonlinearExpr",
+            "In `@force_nonlinear(x)`: expression did not produce a `GenericNonlinearExpr`. Got a `$(typeof(x))`: $x",
         ),
         @force_nonlinear(x),
     )

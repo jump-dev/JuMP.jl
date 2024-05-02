@@ -108,11 +108,14 @@ macro force_nonlinear(expr)
         end
         return x
     end
-    return quote
-        r = $(esc(ret))
-        if !(r isa $GenericNonlinearExpr)
-            $error_fn("expression did not produce a GenericNonlinearExpr")
-        end
-        r
-    end
+    return Expr(:call, _force_nonlinear, error_fn, esc(ret))
+end
+
+_force_nonlinear(::F, ret::GenericNonlinearExpr) where {F} = ret
+
+function _force_nonlinear(error_fn::F, ret::Any) where {F}
+    return error_fn(
+        "expression did not produce a `GenericNonlinearExpr`. Got a " *
+        "`$(typeof(ret))`: $(ret)",
+    )
 end
