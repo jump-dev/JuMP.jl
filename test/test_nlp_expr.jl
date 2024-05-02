@@ -1104,6 +1104,8 @@ function test_error_legacy_expression_constructor()
     @test_throws err @objective(model, Min, arg)
     @test_throws err @constraint(model, arg <= 0)
     @test_throws err @constraint(model, arg in MOI.LessThan(0.0))
+    @test_throws err moi_function(arg * x)
+    @test_throws err moi_function(x * arg)
     return
 end
 
@@ -1119,6 +1121,8 @@ function test_error_legacy_parameter_constructor()
     @test_throws err @objective(model, Min, p)
     @test_throws err @constraint(model, p <= 0)
     @test_throws err @constraint(model, p in MOI.LessThan(0.0))
+    @test_throws err moi_function(p * x)
+    @test_throws err moi_function(x * p)
     return
 end
 
