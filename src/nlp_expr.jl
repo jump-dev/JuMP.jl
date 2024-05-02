@@ -87,7 +87,6 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     ) where {V<:AbstractVariableRef}
         for arg in args
             _throw_if_not_real(arg)
-            _throw_if_legacy(arg)
         end
         return new{V}(head, Any[a for a in args])
     end
@@ -98,20 +97,16 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     ) where {V<:AbstractVariableRef}
         for arg in args
             _throw_if_not_real(arg)
-            _throw_if_legacy(arg)
         end
         return new{V}(head, args)
     end
 end
 
-_throw_if_legacy(::Any) = nothing
-
-function _throw_if_legacy(arg::Union{NonlinearExpression,NonlinearParameter})
+function moi_function(arg::Union{NonlinearExpression,NonlinearParameter})
     return error(
-        "Cannot create a nonlinear expression that mixes features from " *
-        "both the legacy (macros beginning with `@NL`) and new " *
-        "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-        "the other. Got: $arg",
+        "You cannot mix legacy nonlinear object of type $(typeof(arg)) with " *
+        "the new nonlinear API. To use the legacy nonlinear API, all " *
+        "nonlinear objects must be in a `@NL` macro.",
     )
 end
 

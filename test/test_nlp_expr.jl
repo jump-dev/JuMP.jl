@@ -371,6 +371,26 @@ function test_extension_recursion_stackoverflow(
     return
 end
 
+function test_nlparameter_interaction()
+    model = Model()
+    @variable(model, x)
+    @NLparameter(model, p == 1)
+    e = x + p
+    @test e isa GenericNonlinearExpr
+    @test string(e) == "x + ($p)"
+    return
+end
+
+function test_nlexpression_interaction()
+    model = Model()
+    @variable(model, x)
+    @NLexpression(model, expr, sin(x))
+    e = x + expr
+    @test e isa GenericNonlinearExpr
+    @test string(e) == "x + ($expr)"
+    return
+end
+
 function test_nlobjective_with_nlexpr()
     model = Model()
     @variable(model, x)
@@ -391,6 +411,18 @@ function test_nlconstraint_with_nlexpr()
         jump_function(model, nlp.constraints[index(c)].expression),
         sin(x)^2 - 1,
     )
+    return
+end
+
+function test_jump_function_nonlinearexpr()
+    model = Model()
+    @variable(model, x)
+    @NLparameter(model, p == 1)
+    @NLexpression(model, expr1, sin(p + x))
+    @NLexpression(model, expr2, sin(expr1))
+    nlp = nonlinear_model(model)
+    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p) + $x)"
+    @test string(jump_function(model, nlp[index(expr2)])) == "sin($expr1)"
     return
 end
 
@@ -1065,15 +1097,13 @@ function test_error_legacy_expression_constructor()
     @variable(model, x)
     @NLexpression(model, arg, x^3)
     err = ErrorException(
-        "Cannot create a nonlinear expression that mixes features from " *
-        "both the legacy (macros beginning with `@NL`) and new " *
-        "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-        "the other. Got: $arg",
+        "You cannot mix legacy nonlinear object of type $(typeof(arg)) with " *
+        "the new nonlinear API. To use the legacy nonlinear API, all " *
+        "nonlinear objects must be in a `@NL` macro.",
     )
-    @test_throws err GenericNonlinearExpr(:*, Any[x, arg])
-    @test_throws err GenericNonlinearExpr(:*, x, arg)
-    @test_throws err (x * arg)
-    @test_throws err (arg * x)
+    @test_throws err @objective(model, Min, arg)
+    @test_throws err @constraint(model, arg <= 0)
+    @test_throws err @constraint(model, arg in MOI.LessThan(0.0))
     return
 end
 
@@ -1082,17 +1112,13 @@ function test_error_legacy_parameter_constructor()
     @variable(model, x)
     @NLparameter(model, p == 1)
     err = ErrorException(
-        "Cannot create a nonlinear expression that mixes features from " *
-        "both the legacy (macros beginning with `@NL`) and new " *
-        "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-        "the other. Got: $p",
+        "You cannot mix legacy nonlinear object of type $(typeof(p)) with " *
+        "the new nonlinear API. To use the legacy nonlinear API, all " *
+        "nonlinear objects must be in a `@NL` macro.",
     )
-    @test_throws err GenericNonlinearExpr(:*, Any[x, p])
-    @test_throws err GenericNonlinearExpr(:*, Any[p, x])
-    @test_throws err GenericNonlinearExpr(:*, x, p)
-    @test_throws err GenericNonlinearExpr(:*, p, x)
-    @test_throws err (x * p)
-    @test_throws err (p * x)
+    @test_throws err @objective(model, Min, p)
+    @test_throws err @constraint(model, p <= 0)
+    @test_throws err @constraint(model, p in MOI.LessThan(0.0))
     return
 end
 

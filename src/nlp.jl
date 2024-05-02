@@ -209,6 +209,10 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
+function check_belongs_to_model(arg::NonlinearParameter, model::AbstractModel)
+    return arg.model === model
+end
+
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
@@ -311,6 +315,10 @@ Create an expression using [`@NLexpression`](@ref).
 struct NonlinearExpression <: AbstractJuMPScalar
     model::Model
     index::Int
+end
+
+function check_belongs_to_model(arg::NonlinearExpression, model::AbstractModel)
+    return arg.model === model
 end
 
 function MOI.Nonlinear.parse_expression(
