@@ -467,8 +467,6 @@ function _plural_macro_code(model, block, macro_sym)
     return code
 end
 
-include("macros/@objective.jl")
-include("macros/@expression.jl")
-include("macros/@constraint.jl")
-include("macros/@variable.jl")
-include("macros/@NL.jl")
+for file in readdir(joinpath(@__DIR__, "macros"))
+    include(joinpath(@__DIR__, "macros", file))
+end
