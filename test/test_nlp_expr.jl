@@ -371,26 +371,6 @@ function test_extension_recursion_stackoverflow(
     return
 end
 
-function test_nlparameter_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    e = x + p
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($p)"
-    return
-end
-
-function test_nlexpression_interaction()
-    model = Model()
-    @variable(model, x)
-    @NLexpression(model, expr, sin(x))
-    e = x + expr
-    @test e isa GenericNonlinearExpr
-    @test string(e) == "x + ($expr)"
-    return
-end
-
 function test_nlobjective_with_nlexpr()
     model = Model()
     @variable(model, x)
@@ -411,18 +391,6 @@ function test_nlconstraint_with_nlexpr()
         jump_function(model, nlp.constraints[index(c)].expression),
         sin(x)^2 - 1,
     )
-    return
-end
-
-function test_jump_function_nonlinearexpr()
-    model = Model()
-    @variable(model, x)
-    @NLparameter(model, p == 1)
-    @NLexpression(model, expr1, sin(p + x))
-    @NLexpression(model, expr2, sin(expr1))
-    nlp = nonlinear_model(model)
-    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p) + $x)"
-    @test string(jump_function(model, nlp[index(expr2)])) == "sin($expr1)"
     return
 end
 
@@ -1108,8 +1076,9 @@ function test_error_legacy_expression_constructor()
     @test_throws err @objective(model, Min, arg)
     @test_throws err @constraint(model, arg <= 0)
     @test_throws err @constraint(model, arg in MOI.LessThan(0.0))
-    @test_throws err moi_function(arg * x)
-    @test_throws err moi_function(x * arg)
+    @test_throws err moi_function(arg)
+    @test_throws err x * arg
+    @test_throws err arg * x
     return
 end
 
@@ -1136,8 +1105,9 @@ function test_error_legacy_parameter_constructor()
     @test_throws err @objective(model, Min, p)
     @test_throws err @constraint(model, p <= 0)
     @test_throws err @constraint(model, p in MOI.LessThan(0.0))
-    @test_throws err moi_function(p * x)
-    @test_throws err moi_function(x * p)
+    @test_throws err moi_function(p)
+    @test_throws err x * p
+    @test_throws err p * x
     return
 end
 

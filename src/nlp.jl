@@ -3,6 +3,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+_throw_if_legacy_error(::Any) = nothing
+
 """
     nonlinear_model(
         model::GenericModel;
@@ -215,7 +217,7 @@ end
 
 variable_ref_type(arg::NonlinearParameter) = variable_ref_type(arg.model)
 
-function moi_function(p::NonlinearParameter)
+function _throw_if_legacy_error(p::NonlinearParameter)
     return error(
         """
         Cannot mix a legacy NonlinearParameter with the new nonlinear API.
@@ -233,6 +235,8 @@ function moi_function(p::NonlinearParameter)
         """,
     )
 end
+
+moi_function(p::NonlinearParameter) = _throw_if_legacy_error(p)
 
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
@@ -344,7 +348,7 @@ end
 
 variable_ref_type(arg::NonlinearExpression) = variable_ref_type(arg.model)
 
-function moi_function(arg::NonlinearExpression)
+function _throw_if_legacy_error(arg::NonlinearExpression)
     return error(
         """
         Cannot mix a legacy NonlinearExpression with the new nonlinear API.
@@ -355,6 +359,8 @@ function moi_function(arg::NonlinearExpression)
         """,
     )
 end
+
+moi_function(arg::NonlinearExpression) = _throw_if_legacy_error(arg)
 
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
