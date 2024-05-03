@@ -1641,7 +1641,7 @@ function test_variable_normalized_coefficient_vector_quadratic()
     model = Model()
     @variable(model, x[1:3])
     A = [4 5 0; 0 6 7; 8 0 0; 9 10 11]
-    @constraint(model, c, A * x.^2 >= 0)
+    @constraint(model, c, A * (x .^ 2) >= 0)
     for i in 1:3, j in 1:3
         b = ifelse(i == j, A[:, i], zeros(4))
         @test normalized_coefficient(c, x[i], x[j]) == b
