@@ -2801,7 +2801,7 @@ end
 Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form.
 
-See also [`set_normalized_coefficient`](@ref).
+See also [`set_normalized_coefficient`](@ref) and [`set_normalized_coefficients`](@ref)..
 
 ## Example
 
@@ -2816,6 +2816,15 @@ con : 5 x ≤ 2
 
 julia> normalized_coefficient(con, x)
 5.0
+
+julia> @constraint(model, con_vec, [x, 2x + 1, 3] >= 0)
+[x, 2 x + 1, 3] ∈ MathOptInterface.Nonnegatives(3)
+
+julia> normalized_coefficient(con_vec, x)
+3-element Vector{Float64}:
+ 1.0
+ 2.0
+ 0.0
 ```
 """
 function normalized_coefficient(
@@ -2823,6 +2832,13 @@ function normalized_coefficient(
     variable::AbstractVariableRef,
 ) where {F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction}}
     return coefficient(constraint_object(constraint).func, variable)
+end
+
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+) where {F<:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction}}
+    return coefficient.(constraint_object(constraint).func, variable)
 end
 
 """
@@ -2861,6 +2877,15 @@ function normalized_coefficient(
 ) where {F<:MOI.ScalarQuadraticFunction}
     con = constraint_object(constraint)
     return coefficient(con.func, variable_1, variable_2)
+end
+
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable_1::AbstractVariableRef,
+    variable_2::AbstractVariableRef,
+) where {F<:MOI.VectorQuadraticFunction}
+    con = constraint_object(constraint)
+    return coefficient.(con.func, variable_1, variable_2)
 end
 
 ###
