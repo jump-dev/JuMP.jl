@@ -843,7 +843,7 @@ julia> normalized_coefficient(con, x[1], x[2])
 ### Vector constraints
 
 To modify the coefficients of a vector-valued constraint, use
-[`set_normalized_coefficients`](@ref).
+[`set_normalized_coefficient`](@ref).
 ```jldoctest
 julia> model = Model();
 
@@ -853,12 +853,12 @@ x
 julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
 con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
 
-julia> set_normalized_coefficients(con, x, [(1, 3.0)])
+julia> set_normalized_coefficient(con, x, [(1, 3.0)])
 
 julia> con
 con : [3 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
 
-julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+julia> set_normalized_coefficient(con, x, [(1, 2.0), (2, 5.0)])
 
 julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)

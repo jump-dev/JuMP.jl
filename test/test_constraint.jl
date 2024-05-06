@@ -1013,6 +1013,18 @@ function test_change_coefficients_vector_function()
     @variable(model, x)
     @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
     @test isequal_canonical(constraint_object(con).func, [5.0x, 4.0x])
+    set_normalized_coefficient(con, x, [(Int64(1), 3.0)])
+    @test isequal_canonical(constraint_object(con).func, [3.0x, 4.0x])
+    set_normalized_coefficient(con, x, [(Int64(1), 2.0), (Int64(2), 5.0)])
+    @test isequal_canonical(constraint_object(con).func, [2.0x, 5.0x])
+    return
+end
+
+function test_change_coefficients_vector_function_DEPRECATED()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+    @test isequal_canonical(constraint_object(con).func, [5.0x, 4.0x])
     set_normalized_coefficients(con, x, [(Int64(1), 3.0)])
     @test isequal_canonical(constraint_object(con).func, [3.0x, 4.0x])
     set_normalized_coefficients(con, x, [(Int64(1), 2.0), (Int64(2), 5.0)])

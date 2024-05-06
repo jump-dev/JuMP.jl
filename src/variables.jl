@@ -2624,7 +2624,7 @@ function set_normalized_coefficient(
 end
 
 """
-    set_normalized_coefficients(
+    set_normalized_coefficient(
         con_ref::ConstraintRef,
         variable::AbstractVariableRef,
         new_coefficients::Vector{Tuple{Int64,T}},
@@ -2648,13 +2648,13 @@ x
 julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
 con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
 
-julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+julia> set_normalized_coefficient(con, x, [(1, 2.0), (2, 5.0)])
 
 julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
 """
-function set_normalized_coefficients(
+function set_normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable::AbstractVariableRef,
     new_coefficients::Vector{Tuple{Int64,T}},
@@ -2669,6 +2669,22 @@ function set_normalized_coefficients(
     return
 end
 
+"""
+    set_normalized_coefficients(
+        constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+        variable::AbstractVariableRef,
+        new_coefficients::Vector{Tuple{Int64,T}},
+    ) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+
+A deprecated method that now redirects to [`set_normalized_coefficient`](@ref).
+"""
+function set_normalized_coefficients(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+    new_coefficients::Vector{Tuple{Int64,T}},
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    return set_normalized_coefficient(constraint, variable, new_coefficients)
+end
 """
     set_normalized_coefficient(
         constraint::ConstraintRef,
@@ -2801,7 +2817,7 @@ end
 Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form.
 
-See also [`set_normalized_coefficient`](@ref) and [`set_normalized_coefficients`](@ref)..
+See also [`set_normalized_coefficient`](@ref).
 
 ## Example
 
