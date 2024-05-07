@@ -2837,10 +2837,9 @@ julia> @constraint(model, con_vec, [x, 2x + 1, 3] >= 0)
 con_vec : [x, 2 x + 1, 3] ∈ MathOptInterface.Nonnegatives(3)
 
 julia> normalized_coefficient(con_vec, x)
-3-element Vector{Float64}:
- 1.0
- 2.0
- 0.0
+2-element Vector{Tuple{Int64, Float64}}:
+ (1, 1.0)
+ (2, 2.0)
 ```
 """
 function normalized_coefficient(
@@ -2853,8 +2852,15 @@ end
 function normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable::AbstractVariableRef,
-) where {F<:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction}}
-    return coefficient.(constraint_object(constraint).func, variable)
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    ret = Tuple{Int,T}[]
+    for (i, fi) in enumerate(constraint_object(constraint).func)
+        c = coefficient(fi, variable)
+        if !iszero(c)
+            push!(ret, (i, c))
+        end
+    end
+    return ret
 end
 
 """
@@ -2884,6 +2890,16 @@ julia> normalized_coefficient(con, x[1], x[1])
 
 julia> normalized_coefficient(con, x[1], x[2])
 3.0
+
+julia> @constraint(model, con_vec, x.^2 <= [1, 2])
+con_vec : [x[1]² - 1, x[2]² - 2] ∈ MathOptInterface.Nonpositives(2)
+
+julia> normalized_coefficient(con_vec, x[1], x[1])
+1-element Vector{Tuple{Int64, Float64}}:
+ (1, 1.0)
+
+julia> normalized_coefficient(con_vec, x[1], x[2])
+Tuple{Int64, Float64}[]
 ```
 """
 function normalized_coefficient(
@@ -2899,9 +2915,15 @@ function normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable_1::AbstractVariableRef,
     variable_2::AbstractVariableRef,
-) where {F<:MOI.VectorQuadraticFunction}
-    con = constraint_object(constraint)
-    return coefficient.(con.func, variable_1, variable_2)
+) where {T,F<:MOI.VectorQuadraticFunction{T}}
+    ret = Tuple{Int,T}[]
+    for (i, fi) in enumerate(constraint_object(constraint).func)
+        c = coefficient(fi, variable_1, variable_2)
+        if !iszero(c)
+            push!(ret, (i, c))
+        end
+    end
+    return ret
 end
 
 ###
