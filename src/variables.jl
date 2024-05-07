@@ -2853,14 +2853,8 @@ function normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable::AbstractVariableRef,
 ) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
-    ret = Tuple{Int,T}[]
-    for (i, fi) in enumerate(constraint_object(constraint).func)
-        c = coefficient(fi, variable)
-        if !iszero(c)
-            push!(ret, (i, c))
-        end
-    end
-    return ret
+    c = coefficient.(constraint_object(constraint).func, variable)
+    return filter!(!iszero ∘ last, collect(enumerate(c)))
 end
 
 """
@@ -2916,14 +2910,9 @@ function normalized_coefficient(
     variable_1::AbstractVariableRef,
     variable_2::AbstractVariableRef,
 ) where {T,F<:MOI.VectorQuadraticFunction{T}}
-    ret = Tuple{Int,T}[]
-    for (i, fi) in enumerate(constraint_object(constraint).func)
-        c = coefficient(fi, variable_1, variable_2)
-        if !iszero(c)
-            push!(ret, (i, c))
-        end
-    end
-    return ret
+    f = constraint_object(constraint).func
+    c = coefficient.(f, variable_1, variable_2)
+    return filter!(!iszero ∘ last, collect(enumerate(c)))
 end
 
 ###
