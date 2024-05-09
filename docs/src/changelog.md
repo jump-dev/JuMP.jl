@@ -7,6 +7,35 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.22.0 (May 10, 2024)
+
+### Added
+
+ - Added `Base.complex(r, i)` where `r` and `i` may be real-valued variables or
+   affine or quadratic expressions (#3734)
+ - Added [`@force_nonlinear`](@ref) for controlling when affine and quadratic
+   expressions are instead parsed as nonlinear expressions. This can be useful
+   for advanced users in a limited set of circumstances. (#3732)
+ - Added support for returning the variable coefficients of a vector-valued
+   constraint via [`normalized_coefficient`](@ref). In addition,
+   [`set_normalized_coefficients`](@ref) has been softly deprecated (no warning
+   is thrown and old code will still work for all future 1.X releases of JuMP)
+   in favor of [`set_normalized_coefficient`](@ref). This change was made to
+   unify how we get and set variable coefficients. (#3743)
+
+### Fixed
+
+ - Fixed missing `promote_operation` method that resulted in slow code (#3730)
+ - Improved performance of `getindex` for `Containers.DenseAxisArray` (#3731)
+ - Fixed the error message when the legacy nonnlinear API is mixed with the new
+   nonlinear API. In particular, we now uniformly throw an error message when
+   unexpected objects occur in nonlinear expressions. (#3741)
+
+### Other
+
+ - Updated documentation (#3727), (#3728), (#3739)
+ - Updated versions in GitHub actions (#3735)
+
 ## Version 1.21.1 (April 11, 2024)
 
 ### Fixed
