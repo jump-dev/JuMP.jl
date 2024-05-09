@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Fixed missing `promote_operation` method that resulted in slow code (#3730)
  - Improved performance of `getindex` for `Containers.DenseAxisArray` (#3731)
- - Fixed the error message when the legacy nonnlinear API is mixed with the new
+ - Fixed the error message when the legacy nonlinear API is mixed with the new
    nonlinear API. In particular, we now uniformly throw an error message when
    unexpected objects occur in nonlinear expressions. (#3741)
 
