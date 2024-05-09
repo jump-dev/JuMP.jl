@@ -2624,7 +2624,7 @@ function set_normalized_coefficient(
 end
 
 """
-    set_normalized_coefficients(
+    set_normalized_coefficient(
         con_ref::ConstraintRef,
         variable::AbstractVariableRef,
         new_coefficients::Vector{Tuple{Int64,T}},
@@ -2648,13 +2648,13 @@ x
 julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
 con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
 
-julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+julia> set_normalized_coefficient(con, x, [(1, 2.0), (2, 5.0)])
 
 julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
 """
-function set_normalized_coefficients(
+function set_normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable::AbstractVariableRef,
     new_coefficients::Vector{Tuple{Int64,T}},
@@ -2669,6 +2669,22 @@ function set_normalized_coefficients(
     return
 end
 
+"""
+    set_normalized_coefficients(
+        constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+        variable::AbstractVariableRef,
+        new_coefficients::Vector{Tuple{Int64,T}},
+    ) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+
+A deprecated method that now redirects to [`set_normalized_coefficient`](@ref).
+"""
+function set_normalized_coefficients(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+    new_coefficients::Vector{Tuple{Int64,T}},
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    return set_normalized_coefficient(constraint, variable, new_coefficients)
+end
 """
     set_normalized_coefficient(
         constraint::ConstraintRef,
@@ -2816,6 +2832,14 @@ con : 5 x ≤ 2
 
 julia> normalized_coefficient(con, x)
 5.0
+
+julia> @constraint(model, con_vec, [x, 2x + 1, 3] >= 0)
+con_vec : [x, 2 x + 1, 3] ∈ MathOptInterface.Nonnegatives(3)
+
+julia> normalized_coefficient(con_vec, x)
+2-element Vector{Tuple{Int64, Float64}}:
+ (1, 1.0)
+ (2, 2.0)
 ```
 """
 function normalized_coefficient(
@@ -2823,6 +2847,14 @@ function normalized_coefficient(
     variable::AbstractVariableRef,
 ) where {F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction}}
     return coefficient(constraint_object(constraint).func, variable)
+end
+
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    c = coefficient.(constraint_object(constraint).func, variable)
+    return filter!(!iszero ∘ last, collect(enumerate(c)))
 end
 
 """
@@ -2852,6 +2884,16 @@ julia> normalized_coefficient(con, x[1], x[1])
 
 julia> normalized_coefficient(con, x[1], x[2])
 3.0
+
+julia> @constraint(model, con_vec, x.^2 <= [1, 2])
+con_vec : [x[1]² - 1, x[2]² - 2] ∈ MathOptInterface.Nonpositives(2)
+
+julia> normalized_coefficient(con_vec, x[1], x[1])
+1-element Vector{Tuple{Int64, Float64}}:
+ (1, 1.0)
+
+julia> normalized_coefficient(con_vec, x[1], x[2])
+Tuple{Int64, Float64}[]
 ```
 """
 function normalized_coefficient(
@@ -2861,6 +2903,16 @@ function normalized_coefficient(
 ) where {F<:MOI.ScalarQuadraticFunction}
     con = constraint_object(constraint)
     return coefficient(con.func, variable_1, variable_2)
+end
+
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable_1::AbstractVariableRef,
+    variable_2::AbstractVariableRef,
+) where {T,F<:MOI.VectorQuadraticFunction{T}}
+    f = constraint_object(constraint).func
+    c = coefficient.(f, variable_1, variable_2)
+    return filter!(!iszero ∘ last, collect(enumerate(c)))
 end
 
 ###
