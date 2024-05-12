@@ -51,7 +51,7 @@
 [ECOS]
     rev = "v1.1.2"
 [GLPK]
-    rev = "v1.1.3"
+    rev = "v1.2.0"
 [Gurobi]
     rev = "v1.2.3"
 [HiGHS]
@@ -122,10 +122,10 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.15"
+    rev = "v1.1.16"
 [COSMO]
     user = "oxfordcontrol"
-    rev = "v0.8.8"
+    rev = "v0.8.9"
     has_html = true
 [DAQP]
     user = "darnstrom"
@@ -144,7 +144,7 @@
     rev = "e00a845d42653adf5d26c7cef1ef84fb990c91c7"
 [InfiniteOpt]
     user = "infiniteopt"
-    rev = "v0.5.8"
+    rev = "v0.5.9"
     filename = "docs/jump/README.md"
     extension = true
 [Juniper]
@@ -171,13 +171,13 @@
 #     user = "JuliaOpt"
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v1.9.2"
+    rev = "v1.9.4"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.7.2"
+    rev = "v1.7.5"
 [Percival]
     user = "JuliaSmoothOptimizers"
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
