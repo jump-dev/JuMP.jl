@@ -394,7 +394,7 @@ robustness_jump(3)
 # ```matlab
 # function robustness_yalmip(d)
 #     rho = random_state_pure(d^2);
-#     # PartialTranspose from https://github.com/nathanieljohnston/QETLAB
+#     % PartialTranspose from https://github.com/nathanieljohnston/QETLAB
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     lambda = sdpvar;
 #     constraints = [(rhoT + lambda*eye(d^2) >= 0):'PPT'];
@@ -403,7 +403,7 @@ robustness_jump(3)
 #     if sol.problem == 0
 #         WT = dual(constraints('PPT'));
 #         value(lambda)
-#         real(WT(:).' * rhoT(:))
+#         real(WT(:)' * rhoT(:))
 #     else
 #         display(['Something went wrong: ', sol.info])
 #     end
@@ -423,7 +423,7 @@ robustness_jump(3)
 # ```matlab
 # function robustness_cvx(d)
 #     rho = random_state_pure(d^2);
-#     # PartialTranspose from https://github.com/nathanieljohnston/QETLAB
+#     % PartialTranspose from https://github.com/nathanieljohnston/QETLAB
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     cvx_begin
 #         variable lambda
