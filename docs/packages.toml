@@ -47,7 +47,7 @@
     rev = "v0.4.2"
     extension = true
 [DSDP]
-    rev = "7e967c5e0cee9270d97145178dca6ac1e3d42890"
+    rev = "v0.2.0"
 [Dualization]
     rev = "v0.5.8"
 [ECOS]
