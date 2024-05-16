@@ -468,5 +468,7 @@ function _plural_macro_code(model, block, macro_sym)
 end
 
 for file in readdir(joinpath(@__DIR__, "macros"))
-    include(joinpath(@__DIR__, "macros", file))
+    if occursin(r".jl$", file)
+        include(joinpath(@__DIR__, "macros", file))
+    end
 end
