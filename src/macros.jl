@@ -468,5 +468,9 @@ function _plural_macro_code(model, block, macro_sym)
 end
 
 for file in readdir(joinpath(@__DIR__, "macros"))
-    include(joinpath(@__DIR__, "macros", file))
+    # The check for .jl is necessary because some users may have other files
+    # like .cov from running code coverage. See JuMP.jl#3746.
+    if endswith(file, ".jl")
+        include(joinpath(@__DIR__, "macros", file))
+    end
 end
