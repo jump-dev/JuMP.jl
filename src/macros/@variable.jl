@@ -675,9 +675,25 @@ function build_variable(
             )
         end
         error_fn(
-            "Unrecognized keyword argument: $key.\n\nIf you're trying " *
-            "to create a JuMP extension, you need to implement " *
-            "`build_variable`. Read the docstring for more details.",
+            """
+            Unrecognized keyword argument: $key.
+
+            The supported keyword arguments are:
+
+             * `base_name`
+             * `binary`
+             * `container`
+             * `integer`
+             * `lower_bound`
+             * `set`
+             * `set_string_name`
+             * `start`
+             * `upper_bound`
+             * `variable_type`
+
+            If you're trying to create a JuMP extension, you need to implement `JuMP.build_variable`.
+            See the docstring for more details.
+            """,
         )
     end
     if info.lower_bound isa AbstractArray
