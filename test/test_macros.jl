@@ -914,10 +914,25 @@ end
 function test_unrecognized_kwarg()
     model = Model()
     err = ErrorException(
-        "In `@variable(model, x, foo = 1)`: " *
-        "Unrecognized keyword argument: foo.\n\nIf you're trying to " *
-        "create a JuMP extension, you need to implement " *
-        "`build_variable`. Read the docstring for more details.",
+        """
+        In `@variable(model, x, foo = 1)`: Unrecognized keyword argument: foo.
+
+        The supported keyword arguments are:
+
+         * `base_name`
+         * `binary`
+         * `container`
+         * `integer`
+         * `lower_bound`
+         * `set`
+         * `set_string_name`
+         * `start`
+         * `upper_bound`
+         * `variable_type`
+
+        If you're trying to create a JuMP extension, you need to implement `JuMP.build_variable`.
+        See the docstring for more details.
+        """,
     )
     @test_throws_runtime err @variable(model, x, foo = 1)
     return
