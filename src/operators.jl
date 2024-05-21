@@ -568,3 +568,12 @@ function Base.complex(
 )
     return r + im * i
 end
+
+if VERSION >= v"1.11.0-alpha1" && isdefined(LinearAlgebra, :haszero)
+    # See JuMP.jl#3752 for details.
+    # Introduced by https://github.com/JuliaLang/julia/pull/52528
+    LinearAlgebra.haszero(::Type{<:AbstractVariableRef}) = true
+    LinearAlgebra.haszero(::Type{<:GenericAffExpr}) = true
+    LinearAlgebra.haszero(::Type{<:GenericQuadExpr}) = true
+    LinearAlgebra.haszero(::Type{<:GenericNonlinearExpr}) = true
+end
