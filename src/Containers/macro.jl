@@ -174,7 +174,7 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
         if !(name isa Symbol)
             error_fn(
                 "Unsupported syntax: the expression `$name` cannot be used " *
-                "as a name."
+                "as a name.",
             )
         end
     end

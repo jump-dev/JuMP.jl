@@ -2399,7 +2399,7 @@ function test_unsupported_name_syntax_multiple_ref()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:1][1:2])`: Unsupported syntax: " *
+            "In `@variable(model, (x[1:1])[1:2])`: Unsupported syntax: " *
             "the expression `x[1:1]` cannot be used as a name.",
         ),
         @variable(model, x[1:1][1:2]),
