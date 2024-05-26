@@ -170,7 +170,13 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
     # `:(t[i, j; k])` is a `:ref`, while `:(t[i; j])` is a `:typed_vcat`. In
     # both cases `:t` is the first argument.
     if Meta.isexpr(c, :typed_vcat) || Meta.isexpr(c, :ref)
-        popfirst!(c.args)
+        name = popfirst!(c.args)
+        if !(name isa Symbol)
+            error_fn(
+                "Unsupported syntax: the expression `$name` cannot be used " *
+                "as a name."
+            )
+        end
     end
     if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :typed_vcat)
         # An expression like `t[i; k]` or `[i; k]`. The filtering condition is
