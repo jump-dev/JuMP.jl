@@ -767,7 +767,19 @@ function function_string(mode, q::GenericQuadExpr)
 end
 
 function function_string(mode, vector::Vector{<:AbstractJuMPScalar})
-    return string("[", join(function_string.(Ref(mode), vector), ", "), "]")
+    strings = function_string.(Ref(mode), vector)
+    n = max(div(_TERM_LIMIT_FOR_PRINTING[], 2), 2)
+    if length(vector) <= n
+        return string("[", join(strings, ", "), "]")
+    end
+    n_lhs = div(n, 2)
+    i_rhs = length(vector) - (n - n_lhs) + 1
+    block = _terms_omitted(mode, length(vector) - n)
+    return string(
+        "[",
+        join(vcat(strings[1:n_lhs], block, strings[i_rhs:end]), ", "),
+        "]",
+    )
 end
 
 function function_string(

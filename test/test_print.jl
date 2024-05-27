@@ -1061,4 +1061,13 @@ function test_skipping_constraints_latex()
     return
 end
 
+function test_print_omit_vector()
+    n = 100
+    model = Model()
+    @variable(model, x[1:n, 1:n])
+    @constraint(model, vec(x) >= 0)
+    @test occursin("9970 terms omitted", sprint(print, model))
+    return
+end
+
 end  # TestPrint
