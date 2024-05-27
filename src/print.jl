@@ -277,6 +277,9 @@ function show_backend_summary(io::IO, model::GenericModel)
     catch
         "unknown"
     end
+    if name == "SolverName() attribute not implemented by the optimizer."
+        name = "unknown"
+    end
     print(io, "Solver name: ", name)
     return
 end

@@ -826,8 +826,8 @@ end
 If available, returns the solve time in wall-clock seconds reported by the
 solver (the [`MOI.SolveTimeSec`](@ref) attribute).
 
-Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
-implemented by the solver.
+Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
+by the solver.
 
 ## Example
 
@@ -854,8 +854,8 @@ end
 If available, returns the cumulative number of simplex iterations during the
 most-recent optimization (the [`MOI.SimplexIterations`](@ref) attribute).
 
-Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
-implemented by the solver.
+Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
+by the solver.
 
 ## Example
 
@@ -882,8 +882,8 @@ end
 If available, returns the cumulative number of barrier iterations during the
 most-recent optimization (the [`MOI.BarrierIterations`](@ref) attribute).
 
-Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
-implemented by the solver.
+Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
+by the solver.
 
 ## Example
 
@@ -911,8 +911,8 @@ If available, returns the total number of branch-and-bound nodes explored during
 the most recent optimization in a Mixed Integer Program (the
 [`MOI.NodeCount`](@ref) attribute).
 
-Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
-implemented by the solver.
+Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
+by the solver.
 
 ## Example
 
