@@ -364,6 +364,19 @@ end
     constant(aff::GenericAffExpr{C, V})::C
 
 Return the constant of the affine expression.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> aff = 2.0 * x + 3.0;
+
+julia> constant(aff)
+3.0
+```
 """
 constant(aff::GenericAffExpr) = aff.constant
 
@@ -413,17 +426,43 @@ end
 """
     add_to_expression!(expression, terms...)
 
-Updates `expression` *in place* to `expression + (*)(terms...)`. This is
-typically much more efficient than `expression += (*)(terms...)`. For example,
-`add_to_expression!(expression, a, b)` produces the same result as `expression
-+= a*b`, and `add_to_expression!(expression, a)` produces the same result as
+Updates `expression` in-place to `expression + (*)(terms...)`.
+
+This is typically much more efficient than `expression += (*)(terms...)` because
+it avoids the temorary allocation of the right-hand side term.
+
+For example, `add_to_expression!(expression, a, b)` produces the same result as
+`expression += a*b`, and `add_to_expression!(expression, a)` produces the same result as
 `expression += a`.
 
+## When to implement
+
 Only a few methods are defined, mostly for internal use, and only for the cases
-when (1) they can be implemented efficiently and (2) `expression` is capable of
-storing the result. For example, `add_to_expression!(::AffExpr, ::GenericVariableRef,
-::GenericVariableRef)` is not defined because a `GenericAffExpr` cannot store the
-product of two variables.
+when:
+
+ 1. they can be implemented efficiently
+ 2. `expression` is capable of storing the result. For example,
+    `add_to_expression!(::AffExpr, ::GenericVariableRef, ::GenericVariableRef)`
+    is not defined because a `GenericAffExpr` cannot store the product of two
+    variables.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> expr = 2 + x
+x + 2
+
+julia> add_to_expression!(expr, 3, x)
+4 x + 2
+
+julia> expr
+4 x + 2
+```
 """
 function add_to_expression! end
 

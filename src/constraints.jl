@@ -273,19 +273,27 @@ function set_name(
 end
 
 """
-    constraint_by_name(model::AbstractModel,
-                       name::String)::Union{ConstraintRef, Nothing}
+    constraint_by_name(
+        model::AbstractModel,
+        name::String,
+    )::Union{ConstraintRef,Nothing}
 
 Return the reference of the constraint with name attribute `name` or `Nothing`
 if no constraint has this name attribute. Throws an error if several
 constraints have `name` as their name attribute.
 
-    constraint_by_name(model::AbstractModel,
-                       name::String,
-                       F::Type{<:Union{AbstractJuMPScalar,
-                                       Vector{<:AbstractJuMPScalar},
-                                       MOI.AbstactFunction}},
-                       S::Type{<:MOI.AbstractSet})::Union{ConstraintRef, Nothing}
+    constraint_by_name(
+        model::AbstractModel,
+        name::String,
+        F::Type{
+            <:Union{
+                AbstractJuMPScalar,
+                Vector{<:AbstractJuMPScalar},
+                MOI.AbstactFunction,
+            },
+        },
+        S::Type{<:MOI.AbstractSet},
+    )::Union{ConstraintRef,Nothing}
 
 Similar to the method above, except that it throws an error if the constraint is
 not an `F`-in-`S` contraint where `F` is either the JuMP or MOI type of the
@@ -328,22 +336,25 @@ end
 function constraint_by_name(
     model::GenericModel,
     name::String,
-    F::Type{<:MOI.AbstractFunction},
-    S::Type{<:MOI.AbstractSet},
-)
+    ::Type{F},
+    ::Type{S},
+) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
     index = MOI.get(backend(model), MOI.ConstraintIndex{F,S}, name)
     if index isa Nothing
         return nothing
-    else
-        return constraint_ref_with_index(model, index)
     end
+    return constraint_ref_with_index(model, index)
 end
+
 function constraint_by_name(
     model::GenericModel,
     name::String,
-    F::Type{<:Union{ScalarType,Vector{ScalarType}}},
-    S::Type,
-) where {ScalarType<:AbstractJuMPScalar}
+    ::Type{F},
+    ::Type{S},
+) where {
+    F<:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
+    S<:MOI.AbstractSet,
+}
     return constraint_by_name(model, name, moi_function_type(F), S)
 end
 
