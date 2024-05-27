@@ -158,6 +158,24 @@ Takes precedence over any other attribute controlling verbosity and requires the
 solver to produce no output.
 
 See also: [`unset_silent`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_silent(model)
+
+julia> get_attribute(model, MOI.Silent())
+true
+
+julia> unset_silent(model)
+
+julia> get_attribute(model, MOI.Silent())
+false
+```
 """
 function set_silent(model::GenericModel)
     return MOI.set(model, MOI.Silent(), true)
@@ -170,6 +188,24 @@ Neutralize the effect of the `set_silent` function and let the solver attributes
 control the verbosity.
 
 See also: [`set_silent`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_silent(model)
+
+julia> get_attribute(model, MOI.Silent())
+true
+
+julia> unset_silent(model)
+
+julia> get_attribute(model, MOI.Silent())
+false
+```
 """
 function unset_silent(model::GenericModel)
     return MOI.set(model, MOI.Silent(), false)
@@ -184,6 +220,25 @@ Can be unset using [`unset_time_limit_sec`](@ref) or with `limit` set to
 `nothing`.
 
 See also: [`unset_time_limit_sec`](@ref), [`time_limit_sec`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> time_limit_sec(model)
+
+julia> set_time_limit_sec(model, 60.0)
+
+julia> time_limit_sec(model)
+60.0
+
+julia> unset_time_limit_sec(model)
+
+julia> time_limit_sec(model)
+```
 """
 function set_time_limit_sec(model::GenericModel, limit::Real)
     return MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
@@ -199,6 +254,25 @@ end
 Unset the time limit of the solver.
 
 See also: [`set_time_limit_sec`](@ref), [`time_limit_sec`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> time_limit_sec(model)
+
+julia> set_time_limit_sec(model, 60.0)
+
+julia> time_limit_sec(model)
+60.0
+
+julia> unset_time_limit_sec(model)
+
+julia> time_limit_sec(model)
+```
 """
 function unset_time_limit_sec(model::GenericModel)
     return MOI.set(model, MOI.TimeLimitSec(), nothing)
@@ -212,6 +286,25 @@ Return the time limit (in seconds) of the `model`.
 Returns `nothing` if unset.
 
 See also: [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> time_limit_sec(model)
+
+julia> set_time_limit_sec(model, 60.0)
+
+julia> time_limit_sec(model)
+60.0
+
+julia> unset_time_limit_sec(model)
+
+julia> time_limit_sec(model)
+```
 """
 function time_limit_sec(model::GenericModel)
     return MOI.get(model, MOI.TimeLimitSec())
@@ -221,7 +314,7 @@ function _try_get_solver_name(model_like)
     try
         return MOI.get(model_like, MOI.SolverName())::String
     catch ex
-        if isa(ex, ArgumentError)
+        if isa(ex, ArgumentError) || isa(ex, MOI.GetAttributeNotAllowed)
             return "SolverName() attribute not implemented by the optimizer."
         else
             rethrow(ex)
@@ -230,15 +323,37 @@ function _try_get_solver_name(model_like)
 end
 
 """
-    solver_name(model::GenericModel)
+    solver_name(model::GenericModel) --> String
 
-If available, returns the `SolverName` property of the underlying optimizer.
+If available, returns the [`MOI.SolverName`](@ref) property of the underlying
+optimizer.
 
-Returns `"No optimizer attached"` in `AUTOMATIC` or `MANUAL` modes when no
+Returns `"No optimizer attached."` in `AUTOMATIC` or `MANUAL` modes when no
 optimizer is attached.
 
 Returns `"SolverName() attribute not implemented by the optimizer."` if the
 attribute is not implemented.
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> solver_name(model)
+"Ipopt"
+
+julia> model = Model();
+
+julia> solver_name(model)
+"No optimizer attached."
+
+julia> model = Model(MOI.FileFormats.MPS.Model);
+
+julia> solver_name(model)
+"SolverName() attribute not implemented by the optimizer."
+```
 """
 function solver_name(model::GenericModel)
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
@@ -508,6 +623,17 @@ end
 
 Return a [`MOI.TerminationStatusCode`](@ref) describing why the solver stopped
 (that is, the [`MOI.TerminationStatus`](@ref) attribute).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> termination_status(model)
+OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
+```
 """
 function termination_status(model::GenericModel)
     return MOI.get(model, MOI.TerminationStatus())::MOI.TerminationStatusCode
@@ -525,6 +651,17 @@ end
 
 Return the number of results available to query after a call to
 [`optimize!`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> result_count(model)
+0
+```
 """
 function result_count(model::GenericModel)::Int
     if termination_status(model) == MOI.OPTIMIZE_NOT_CALLED
@@ -537,7 +674,18 @@ end
     raw_status(model::GenericModel)
 
 Return the reason why the solver stopped in its own words (that is, the
-MathOptInterface model attribute `RawStatusString`).
+MathOptInterface model attribute [`MOI.RawStatusString`](@ref)).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> raw_status(model)
+"optimize not called"
+```
 """
 function raw_status(model::GenericModel)
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
@@ -564,6 +712,17 @@ primal solution of the solver (that is, the [`MOI.PrimalStatus`](@ref) attribute
 associated with the result index `result`.
 
 See also: [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> primal_status(model; result = 2)
+NO_SOLUTION::ResultStatusCode = 0
+```
 """
 function primal_status(model::GenericModel; result::Int = 1)
     return MOI.get(model, MOI.PrimalStatus(result))::MOI.ResultStatusCode
@@ -577,6 +736,17 @@ dual solution of the solver (that is, the [`MOI.DualStatus`](@ref) attribute)
 associated with the result index `result`.
 
 See also: [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> dual_status(model; result = 2)
+NO_SOLUTION::ResultStatusCode = 0
+```
 """
 function dual_status(model::GenericModel; result::Int = 1)
     return MOI.get(model, MOI.DualStatus(result))::MOI.ResultStatusCode
@@ -610,6 +780,17 @@ If `dual`, additionally check that an optimal dual solution is available.
 If this function returns `false`, use [`termination_status`](@ref),
 [`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
 understand what solutions are available (if any).
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> is_solved_and_feasible(model)
+false
+```
 """
 function is_solved_and_feasible(
     model::GenericModel;
@@ -642,10 +823,26 @@ end
 """
     solve_time(model::GenericModel)
 
-If available, returns the solve time reported by the solver.
-Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support
-accessing the attribute MathOptInterface.SolveTimeSec()" if the attribute is
-not implemented.
+If available, returns the solve time in wall-clock seconds reported by the
+solver (the [`MOI.SolveTimeSec`](@ref) attribute).
+
+Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
+implemented by the solver.
+
+## Example
+
+```jldoctest; filter=r"[0-9].+"
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> optimize!(model)
+
+julia> solve_time(model)
+1.0488089174032211e-5
+```
 """
 function solve_time(model::GenericModel)
     return MOI.get(model, MOI.SolveTimeSec())
@@ -654,10 +851,26 @@ end
 """
     simplex_iterations(model::GenericModel)
 
-Gets the cumulative number of simplex iterations during the most-recent
-optimization.
+If available, returns the cumulative number of simplex iterations during the
+most-recent optimization (the [`MOI.SimplexIterations`](@ref) attribute).
 
-Solvers must implement `MOI.SimplexIterations()` to use this function.
+Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
+implemented by the solver.
+
+## Example
+
+```jldoctest; filter=r"[0-9].+"
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> optimize!(model)
+
+julia> simplex_iterations(model)
+0
+```
 """
 function simplex_iterations(model::GenericModel)
     return MOI.get(model, MOI.SimplexIterations())
@@ -666,10 +879,26 @@ end
 """
     barrier_iterations(model::GenericModel)
 
-Gets the cumulative number of barrier iterations during the most recent
-optimization.
+If available, returns the cumulative number of barrier iterations during the
+most-recent optimization (the [`MOI.BarrierIterations`](@ref) attribute).
 
-Solvers must implement `MOI.BarrierIterations()` to use this function.
+Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
+implemented by the solver.
+
+## Example
+
+```jldoctest; filter=r"[0-9].+"
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> optimize!(model)
+
+julia> barrier_iterations(model)
+0
+```
 """
 function barrier_iterations(model::GenericModel)
     return MOI.get(model, MOI.BarrierIterations())
@@ -678,10 +907,27 @@ end
 """
     node_count(model::GenericModel)
 
-Gets the total number of branch-and-bound nodes explored during the most recent
-optimization in a Mixed Integer Program.
+If available, returns the total number of branch-and-bound nodes explored during
+the most recent optimization in a Mixed Integer Program (the
+[`MOI.NodeCount`](@ref) attribute).
 
-Solvers must implement `MOI.NodeCount()` to use this function.
+Throws a [`MOI.GetAttributeNotAllowed`](@ref) if the attribute is not
+implemented by the solver.
+
+## Example
+
+```jldoctest; filter=r"[0-9].+"
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> optimize!(model)
+
+julia> node_count(model)
+0
+```
 """
 function node_count(model::GenericModel)
     return MOI.get(model, MOI.NodeCount())
