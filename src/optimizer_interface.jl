@@ -323,7 +323,7 @@ function _try_get_solver_name(model_like)
 end
 
 """
-    solver_name(model::GenericModel) --> String
+    solver_name(model::GenericModel)
 
 If available, returns the [`MOI.SolverName`](@ref) property of the underlying
 optimizer.

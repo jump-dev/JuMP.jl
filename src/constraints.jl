@@ -724,17 +724,95 @@ moi_set(constraint::AbstractConstraint) = constraint.set
 """
     constraint_object(con_ref::ConstraintRef)
 
-Return the underlying constraint data for the constraint referenced by `ref`.
+Return the underlying constraint data for the constraint referenced by `con_ref`.
+
+## Example
+
+A scalar constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2x <= 1)
+c : 2 x ≤ 1
+
+julia> object = constraint_object(c)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+
+julia> typeof(object)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+
+julia> object.func
+2 x
+
+julia> object.set
+MathOptInterface.LessThan{Float64}(1.0)
+```
+
+A vector constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, x in SecondOrderCone())
+c : [x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+
+julia> object = constraint_object(c)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}(VariableRef[x[1], x[2], x[3]], MathOptInterface.SecondOrderCone(3), VectorShape())
+
+julia> typeof(object)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}
+
+julia> object.func
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> object.set
+MathOptInterface.SecondOrderCone(3)
+```
 """
 function constraint_object end
 
 """
     struct ScalarConstraint
 
-The data for a scalar constraint. The `func` field contains a JuMP object
-representing the function and the `set` field contains the MOI set.
+The data for a scalar constraint.
+
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
+
+## Fields
+
+ * `.func`: field contains a JuMP object representing the function
+ * `.set`: field contains the MOI set
+
+## Example
+
+A scalar constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2x <= 1)
+c : 2 x ≤ 1
+
+julia> object = constraint_object(c)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+
+julia> typeof(object)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+
+julia> object.func
+2 x
+
+julia> object.set
+MathOptInterface.LessThan{Float64}(1.0)
+```
 """
 struct ScalarConstraint{
     F<:Union{Number,AbstractJuMPScalar},
@@ -745,6 +823,7 @@ struct ScalarConstraint{
 end
 
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
+
 shape(::ScalarConstraint) = ScalarShape()
 
 function constraint_object(
@@ -765,12 +844,47 @@ end
 """
     struct VectorConstraint
 
-The data for a vector constraint. The `func` field contains a JuMP object
-representing the function and the `set` field contains the MOI set. The
-`shape` field contains an [`AbstractShape`](@ref) matching the form in which
-the constraint was constructed (for example, by using matrices or flat vectors).
+The data for a vector constraint.
+
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints.
+
+## Fields
+
+ * `func`: field contains a JuMP object representing the function
+ * `set`: field contains the MOI set.
+ * `shape`: field contains an [`AbstractShape`](@ref) matching the form in which
+   the constraint was constructed (for example, by using matrices or flat
+   vectors).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, x in SecondOrderCone())
+c : [x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+
+julia> object = constraint_object(c)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}(VariableRef[x[1], x[2], x[3]], MathOptInterface.SecondOrderCone(3), VectorShape())
+
+julia> typeof(object)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}
+
+julia> object.func
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> object.set
+MathOptInterface.SecondOrderCone(3)
+
+julia> object.shape
+VectorShape()
+```
 """
 struct VectorConstraint{
     F<:Union{Number,AbstractJuMPScalar},
@@ -806,7 +920,9 @@ function VectorConstraint(
 end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
+
 shape(con::VectorConstraint) = con.shape
+
 function constraint_object(
     con_ref::ConstraintRef{
         <:AbstractModel,
@@ -818,6 +934,7 @@ function constraint_object(
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
     return VectorConstraint(jump_function(model, f), s, con_ref.shape)
 end
+
 function check_belongs_to_model(con::VectorConstraint, model)
     for func in con.func
         check_belongs_to_model(func, model)
@@ -1165,7 +1282,7 @@ end
 Return the dual value of constraint `con_ref` associated with result index
 `result` of the most-recent solution returned by the solver.
 
-Use `has_dual` to check if a result exists before asking for values.
+Use [`has_dual`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
 """
@@ -1195,8 +1312,10 @@ constraint.
 
 This value is computed from [`dual`](@ref) and can be queried only when
 `has_duals` is `true` and the objective sense is `MIN_SENSE` or `MAX_SENSE`
-(not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
-most in sign from the `dual` value depending on the objective sense.
+(not `FEASIBILITY_SENSE`).
+
+For linear constraints, the shadow prices differ at most in sign from the `dual`
+value depending on the objective sense.
 
 See also [`reduced_cost`](@ref JuMP.reduced_cost).
 

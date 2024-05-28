@@ -658,11 +658,6 @@ end
 ### Nonlinear dual solutions
 ###
 
-"""
-    dual(c::NonlinearConstraintRef)
-
-Return the dual of the nonlinear constraint `c`.
-"""
 function dual(c::NonlinearConstraintRef)
     _init_NLP(c.model)
     evaluator =

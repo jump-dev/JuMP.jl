@@ -273,14 +273,46 @@ Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
     coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V}
 
 Return the coefficient associated with variable `v` in the affine expression `a`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = 2.0 * x + 1.0;
+
+julia> coefficient(expr, x)
+2.0
+```
 """
 coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V} = get(a.terms, v, zero(C))
+
 coefficient(::GenericAffExpr{C,V}, ::V, ::V) where {C,V} = zero(C)
 
 """
     drop_zeros!(expr::GenericAffExpr)
 
 Remove terms in the affine expression with `0` coefficients.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> expr = x[1] + x[2];
+
+julia> add_to_expression!(expr, -1.0, x[1])
+0 x[1] + x[2]
+
+julia> drop_zeros!(expr)
+
+julia> expr
+x[2]
+```
 """
 function drop_zeros!(expr::GenericAffExpr)
     _drop_zeros!(expr.terms)
@@ -380,7 +412,7 @@ function value(var_value::Function, ex::GenericAffExpr{T,V}) where {T,V}
 end
 
 """
-    constant(aff::GenericAffExpr{C, V})::C
+    constant(aff::GenericAffExpr{C,V})::C
 
 Return the constant of the affine expression.
 
@@ -410,7 +442,7 @@ struct LinearTermIterator{GAE<:GenericAffExpr}
 end
 
 """
-    linear_terms(aff::GenericAffExpr{C, V})
+    linear_terms(aff::GenericAffExpr{C,V})
 
 Provides an iterator over coefficient-variable tuples `(a_i::C, x_i::V)` in the
 linear part of the affine expression.

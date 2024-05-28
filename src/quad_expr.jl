@@ -191,11 +191,31 @@ end
 Base.:(==)(x::GenericQuadExpr, y::Number) = isempty(x.terms) && x.aff == y
 
 """
-    coefficient(a::GenericAffExpr{C,V}, v1::V, v2::V) where {C,V}
+    coefficient(a::GenericQuadExpr{C,V}, v1::V, v2::V) where {C,V}
 
-Return the coefficient associated with the term `v1 * v2` in the quadratic expression `a`.
+Return the coefficient associated with the term `v1 * v2` in the quadratic
+expression `a`.
 
 Note that `coefficient(a, v1, v2)` is the same as `coefficient(a, v2, v1)`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> expr = 2.0 * x[1] * x[2];
+
+julia> coefficient(expr, x[1], x[2])
+2.0
+
+julia> coefficient(expr, x[2], x[1])
+2.0
+
+julia> coefficient(expr, x[1], x[1])
+0.0
+```
 """
 function coefficient(q::GenericQuadExpr{C,V}, v1::V, v2::V) where {C,V}
     return get(q.terms, UnorderedPair(v1, v2), zero(C))
@@ -204,7 +224,21 @@ end
 """
     coefficient(a::GenericQuadExpr{C,V}, v::V) where {C,V}
 
-Return the coefficient associated with variable `v` in the affine component of `a`.
+Return the coefficient associated with variable `v` in the affine component of
+`a`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = 2.0 * x^2 + 3.0 * x;
+
+julia> coefficient(expr, x)
+3.0
+```
 """
 coefficient(q::GenericQuadExpr{C,V}, v::V) where {C,V} = coefficient(q.aff, v)
 
@@ -212,6 +246,24 @@ coefficient(q::GenericQuadExpr{C,V}, v::V) where {C,V} = coefficient(q.aff, v)
     drop_zeros!(expr::GenericQuadExpr)
 
 Remove terms in the quadratic expression with `0` coefficients.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> expr = x[1]^2 + x[2]^2;
+
+julia> add_to_expression!(expr, -1.0, x[1], x[1])
+0 x[1]² + x[2]²
+
+julia> drop_zeros!(expr)
+
+julia> expr
+x[2]²
+```
 """
 function drop_zeros!(expr::GenericQuadExpr)
     drop_zeros!(expr.aff)
@@ -318,7 +370,7 @@ julia> constant(quad)
 constant(quad::GenericQuadExpr) = constant(quad.aff)
 
 """
-    linear_terms(quad::GenericQuadExpr{C, V})
+    linear_terms(quad::GenericQuadExpr{C,V})
 
 Provides an iterator over tuples `(coefficient::C, variable::V)` in the
 linear part of the quadratic expression.
@@ -336,7 +388,7 @@ struct QuadTermIterator{GQE<:GenericQuadExpr}
 end
 
 """
-    quad_terms(quad::GenericQuadExpr{C, V})
+    quad_terms(quad::GenericQuadExpr{C,V})
 
 Provides an iterator over tuples `(coefficient::C, var_1::V, var_2::V)` in the
 quadratic part of the quadratic expression.
