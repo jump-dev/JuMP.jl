@@ -1908,15 +1908,41 @@ Return `true` if the solver has a primal solution in result index `result`
 available to query, otherwise return `false`.
 
 See also [`value`](@ref) and [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> has_values(model)
+false
+
+julia> optimize!(model)
+
+julia> has_values(model)
+true
+```
 """
 function has_values(model::GenericModel; result::Int = 1)
     return primal_status(model; result = result) != MOI.NO_SOLUTION
 end
 
 """
-    add_variable(m::GenericModel, v::AbstractVariable, name::String="")
+    add_variable(m::GenericModel, v::AbstractVariable, name::String = "")
 
-Add a variable `v` to `Model m` and sets its name.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 """
 function add_variable end
 
@@ -2322,10 +2348,35 @@ end
 
 Return the reduced cost associated with variable `x`.
 
-Equivalent to querying the shadow price of the active variable bound
-(if one exists and is active).
+One interpretation of the reduced cost is that it is the change in the objective
+from an infinitesimal relaxation of the variable bounds.
+
+This method is equivalent to querying the shadow price of the active variable
+bound (if one exists and is active).
 
 See also: [`shadow_price`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x <= 1);
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> reduced_cost(x)
+2.0
+```
 """
 function reduced_cost(x::GenericVariableRef{T})::T where {T}
     model = owner_model(x)

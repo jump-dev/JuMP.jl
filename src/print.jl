@@ -179,6 +179,15 @@ _plural(n) = isone(n) ? "" : "s"
 
 Return the [`MOI.Name`](@ref) attribute of `model`'s [`backend`](@ref), or a
 default if empty.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> name(model)
+"A JuMP Model"
+```
 """
 name(model::AbstractModel) = "An Abstract JuMP Model"
 

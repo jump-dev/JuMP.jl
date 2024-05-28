@@ -41,23 +41,6 @@ function build_constraint(
     return build_constraint(error_fn, func, moi_set(set, length(func)))
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        f::AbstractVector{<:AbstractJuMPScalar},
-        ::Nonnegatives,
-        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
-    )
-
-A helper method that re-writes
-```julia
-@constraint(model, X >= Y, extra)
-```
-into
-```julia
-@constraint(model, X - Y in extra)
-```
-"""
 function build_constraint(
     error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
@@ -67,23 +50,6 @@ function build_constraint(
     return build_constraint(error_fn, f, extra)
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        f::AbstractVector{<:AbstractJuMPScalar},
-        ::Nonpositives,
-        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
-    )
-
-A helper method that re-writes
-```julia
-@constraint(model, Y <= X, extra)
-```
-into
-```julia
-@constraint(model, X - Y in extra)
-```
-"""
 function build_constraint(
     error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},

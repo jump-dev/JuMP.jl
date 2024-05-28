@@ -553,11 +553,6 @@ function add_nonlinear_constraint(model::Model, ex::Expr)
     return ConstraintRef(model, c, ScalarShape())
 end
 
-"""
-    is_valid(model::Model, c::NonlinearConstraintRef)
-
-Return `true` if `c` refers to a valid nonlinear constraint in `model`.
-"""
 function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
@@ -567,11 +562,6 @@ function is_valid(model::Model, c::NonlinearConstraintRef)
     return MOI.is_valid(nlp, index)
 end
 
-"""
-    delete(model::Model, c::NonlinearConstraintRef)
-
-Delete the nonlinear constraint `c` from `model`.
-"""
 function delete(model::Model, c::NonlinearConstraintRef)
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)

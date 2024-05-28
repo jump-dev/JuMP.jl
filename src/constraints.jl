@@ -409,36 +409,25 @@ function set_name(
 end
 
 """
-    constraint_by_name(
-        model::AbstractModel,
-        name::String,
-    )::Union{ConstraintRef,Nothing}
+    constraint_by_name(model::AbstractModel, name::String, [F, S])::Union{ConstraintRef,Nothing}
 
 Return the reference of the constraint with name attribute `name` or `Nothing`
-if no constraint has this name attribute. Throws an error if several
-constraints have `name` as their name attribute.
+if no constraint has this name attribute.
 
-    constraint_by_name(
-        model::AbstractModel,
-        name::String,
-        F::Type{
-            <:Union{
-                AbstractJuMPScalar,
-                Vector{<:AbstractJuMPScalar},
-                MOI.AbstactFunction,
-            },
-        },
-        S::Type{<:MOI.AbstractSet},
-    )::Union{ConstraintRef,Nothing}
+Throws an error if several constraints have `name` as their name attribute.
 
-Similar to the method above, except that it throws an error if the constraint is
-not an `F`-in-`S` contraint where `F` is either the JuMP or MOI type of the
-function, and `S` is the MOI type of the set. This method is recommended if you
-know the type of the function and set since its returned type can be inferred
-while for the method above (that is, without `F` and `S`), the exact return type
-of the constraint index cannot be inferred.
+If `F` and `S` are provided, this method addititionally throws an error if the
+constraint is not an `F`-in-`S` contraint where `F` is either the JuMP or MOI
+type of the function and `S` is the MOI type of the set.
 
-```jldoctest objective_function; filter = r"Stacktrace:.*"s
+Providing `F` and `S` is recommended if you know the type of the function and
+set since its returned type can be inferred while for the method above (that is,
+without `F` and `S`), the exact return type of the constraint index cannot be
+inferred.
+
+## Example
+
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -566,20 +555,49 @@ end
     delete(model::GenericModel, con_refs::Vector{<:ConstraintRef})
 
 Delete the constraints associated with `con_refs` from the model `model`.
+
 Solvers may implement specialized methods for deleting multiple constraints of
-the same concrete type, that is, when `isconcretetype(eltype(con_refs))`. These
-may be more efficient than repeatedly calling the single constraint delete
-method.
+the same concrete type. These methods may be more efficient than repeatedly
+calling the single constraint `delete` method.
 
 See also: [`unregister`](@ref)
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, 2 * x .<= 1)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c : 2 x[1] ≤ 1
+ c : 2 x[2] ≤ 1
+ c : 2 x[3] ≤ 1
+
+julia> delete(model, c)
+
+julia> unregister(model, :c)
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> model[:c]
+ERROR: KeyError: key :c not found
+Stacktrace:
+[...]
+```
 """
 function delete(
     model::GenericModel,
     con_refs::Vector{<:ConstraintRef{<:AbstractModel}},
 )
     if any(c -> model !== c.model, con_refs)
-        error("A constraint reference you are trying to delete does not" * "
-            belong to the model.")
+        error(
+            "A constraint reference you are trying to delete does not " *
+            "belong to the model.",
+        )
     end
     model.is_model_dirty = true
     MOI.delete(backend(model), index.(con_refs))
@@ -960,9 +978,14 @@ function _moi_add_constraint(
 end
 
 """
-    add_constraint(model::GenericModel, con::AbstractConstraint, name::String="")
+    add_constraint(
+        model::GenericModel,
+        con::AbstractConstraint,
+        name::String= "",
+    )
 
-Add a constraint `con` to `Model model` and sets its name.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 """
 function add_constraint(
     model::GenericModel,
@@ -1271,6 +1294,31 @@ Return `true` if the solver has a dual solution in result index `result`
 available to query, otherwise return `false`.
 
 See also [`dual`](@ref), [`shadow_price`](@ref), and [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> has_duals(model)
+false
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+```
 """
 function has_duals(model::GenericModel; result::Int = 1)
     return dual_status(model; result = result) != MOI.NO_SOLUTION
@@ -1285,6 +1333,31 @@ Return the dual value of constraint `con_ref` associated with result index
 Use [`has_duals`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> dual(c)
+-2.0
+````
 """
 function dual(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex};
@@ -1310,14 +1383,21 @@ end
 Return the change in the objective from an infinitesimal relaxation of the
 constraint.
 
-This value is computed from [`dual`](@ref) and can be queried only when
+The shadow price is computed from [`dual`](@ref) and can be queried only when
 `has_duals` is `true` and the objective sense is `MIN_SENSE` or `MAX_SENSE`
 (not `FEASIBILITY_SENSE`).
 
-For linear constraints, the shadow prices differ at most in sign from the `dual`
-value depending on the objective sense.
-
 See also [`reduced_cost`](@ref JuMP.reduced_cost).
+
+## Comparison to `dual`
+
+The shadow prices differ at most in sign from the `dual` value depending on the
+objective sense. The differences are summarized in the table:
+
+|             | `Min` | `Max` |
+| ----------- | ----- | ----- |
+| `f(x) <= b` | `+1`  | `-1`  |
+| `f(x) >= b` | `-1`  | `+1`  |
 
 ## Notes
 
@@ -1329,6 +1409,31 @@ See also [`reduced_cost`](@ref JuMP.reduced_cost).
   has changed since the last solve, the results will be incorrect.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> shadow_price(c)
+2.0
+```
 """
 function shadow_price(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},

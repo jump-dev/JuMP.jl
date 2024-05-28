@@ -733,11 +733,26 @@ function MOI.ScalarAffineFunction(
 end
 
 """
-    moi_function(x)
+    moi_function(x::AbstractJuMPScalar)
+    moi_function(x::AbstractArray{<:AbstractJuMPScalar})
 
 Given a JuMP object `x`, return the MathOptInterface equivalent.
 
 See also: [`jump_function`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> f = 2.0 * x + 1.0
+2 x + 1
+
+julia> moi_function(f)
+1.0 + 2.0 MOI.VariableIndex(1)
+```
 """
 function moi_function end
 
@@ -768,24 +783,54 @@ end
 Given a JuMP object type `T`, return the MathOptInterface equivalent.
 
 See also: [`jump_function_type`](@ref).
+
+## Example
+
+```jldoctest
+julia> moi_function_type(AffExpr)
+MathOptInterface.ScalarAffineFunction{Float64}
+```
 """
 function moi_function_type end
 
 """
-    jump_function(x)
+    jump_function(model::AbstractModel, x::MOI.AbstractFunction)
 
 Given an MathOptInterface object `x`, return the JuMP equivalent.
 
 See also: [`moi_function`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> f = 2.0 * x_moi + 1.0
+1.0 + 2.0 MOI.VariableIndex(1)
+
+julia> jump_function(model, f)
+2 x + 1
+```
 """
 function jump_function end
 
 """
-    jump_function_type(::Type{T}) where {T}
+    jump_function_type(model::AbstractModel, ::Type{T}) where {T}
 
 Given an MathOptInterface object type `T`, return the JuMP equivalent.
 
 See also: [`moi_function_type`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> jump_function_type(model, MOI.ScalarAffineFunction{Float64})
+AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
+```
 """
 function jump_function_type end
 
