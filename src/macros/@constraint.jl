@@ -31,7 +31,7 @@ The expression `expr` may be one of following forms:
    when `z` is `1`
 
  * `!z --> {expr}`, which defines an indicator constraint that activates
- when `z` is `0`
+   when `z` is `0`
 
  * `z <--> {expr}`, which defines a reified constraint
 
@@ -57,6 +57,46 @@ which are not listed here.
    attribute. Passing `set_string_name = false` can improve performance.
 
 Other keyword arguments may be supported by JuMP extensions.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @variable(model, z, Bin);
+
+julia> @constraint(model, x in SecondOrderCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+
+julia> @constraint(model, [i in 1:3], x[i] == i)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ x[1] = 1
+ x[2] = 2
+ x[3] = 3
+
+julia> @constraint(model, x .== [1, 2, 3])
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ x[1] = 1
+ x[2] = 2
+ x[3] = 3
+
+julia> @constraint(model, con_name, 1 <= x[1] + x[2] <= 3)
+con_name : x[1] + x[2] ∈ [1, 3]
+
+julia> @constraint(model, con_perp[i in 1:3], x[i] - 1 ⟂ x[i])
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.Complements}, VectorShape}}:
+ con_perp[1] : [x[1] - 1, x[1]] ∈ MathOptInterface.Complements(2)
+ con_perp[2] : [x[2] - 1, x[2]] ∈ MathOptInterface.Complements(2)
+ con_perp[3] : [x[3] - 1, x[3]] ∈ MathOptInterface.Complements(2)
+
+julia> @constraint(model, z --> {x[1] >= 0})
+z --> {x[1] ≥ 0}
+
+julia> @constraint(model, !z --> {2 * x[2] <= 3})
+!z --> {2 x[2] ≤ 3}
+```
 """
 macro constraint(input_args...)
     error_fn = Containers.build_error_fn(:constraint, input_args, __source__)
@@ -204,6 +244,17 @@ julia> @variable(model, x);
 
 julia> @build_constraint(2x >= 1)
 ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+```
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @build_constraint(x .>= 0)
+2-element Vector{ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}}:
+ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(x[1], MathOptInterface.GreaterThan{Float64}(-0.0))
+ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(x[2], MathOptInterface.GreaterThan{Float64}(-0.0))
 ```
 """
 macro build_constraint(arg)
@@ -778,7 +829,12 @@ function build_constraint(error_fn::Function, f::AbstractVector, set::Zeros)
     return build_constraint(error_fn, f, MOI.Zeros(length(f)))
 end
 
-# Generic fallback.
+"""
+    build_constraint(error_fn::Function, func, set, args...; kwargs...)
+
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
+"""
 function build_constraint(error_fn::Function, func, set, args...; kwargs...)
     arg_str = join(args, ", ")
     arg_str = isempty(arg_str) ? "" : ", " * arg_str

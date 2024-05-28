@@ -215,7 +215,7 @@ function sort_by_api_fn((key, type))
     deprecated_methods = [
         :add_nonlinear_constraint,
         :add_nonlinear_expression,
-        :add_nnonlinear_parameter,
+        :add_nonlinear_parameter,
         :all_nonlinear_constraints,
         :get_optimizer_attribute,
         :nonlinear_constraint_string,
@@ -226,7 +226,9 @@ function sort_by_api_fn((key, type))
         :register,
         :set_nonlinear_dual_start_value,
         :set_nonlinear_objective,
+        :set_normalized_coefficients,
         :set_optimizer_attribute,
+        :set_optimizer_attributes,
         :set_value,
         :NonlinearConstraintIndex,
         :NonlinearConstraintRef,

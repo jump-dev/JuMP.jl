@@ -50,6 +50,17 @@ include("shapes.jl")
     ModelMode
 
 An enum to describe the state of the CachingOptimizer inside a JuMP model.
+
+See also: [`mode`](@ref).
+
+## Values
+
+Possible values are:
+
+ * [`AUTOMATIC`]: `moi_backend` field holds a CachingOptimizer in AUTOMATIC mode.
+ * [`MANUAL`]: `moi_backend` field holds a CachingOptimizer in MANUAL mode.
+ * [`DIRECT`]: `moi_backend` field holds an AbstractOptimizer. No extra copy of
+   the model is stored. The `moi_backend` must support `add_constraint` etc.
 """
 @enum(ModelMode, AUTOMATIC, MANUAL, DIRECT)
 
@@ -78,6 +89,13 @@ abstract type AbstractModel end
 
 Return the return type of [`value`](@ref) for variables of that model. It
 defaults to `Float64` if it is not implemented.
+
+## Example
+
+```jldoctest
+julia> value_type(GenericModel{BigFloat})
+BigFloat
+```
 """
 value_type(::Type{<:AbstractModel}) = Float64
 
@@ -559,8 +577,16 @@ end
 """
     mode(model::GenericModel)
 
-Return the [`ModelMode`](@ref) ([`DIRECT`](@ref), [`AUTOMATIC`](@ref), or
-[`MANUAL`](@ref)) of `model`.
+Return the [`ModelMode`](@ref) of `model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> mode(model)
+AUTOMATIC::ModelMode = 0
+```
 """
 function mode(model::GenericModel)
     # The type of `backend(model)` is not type-stable, so we use a function
@@ -606,6 +632,22 @@ When in manual or automatic mode, return a `Bool` indicating whether the
 optimizer is set and unsupported constraints are automatically bridged
 to equivalent supported constraints when an appropriate transformation is
 available.
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> bridge_constraints(model)
+true
+
+julia> model = Model(Ipopt.Optimizer; add_bridges = false);
+
+julia> bridge_constraints(model)
+false
+```
 """
 function bridge_constraints(model::GenericModel)
     # The type of `backend(model)` is not type-stable, so we use a function
@@ -835,6 +877,32 @@ Empty the model, that is, remove all variables, constraints and model
 attributes but not optimizer attributes. Always return the argument.
 
 Note: removes extensions data.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> isempty(model)
+false
+
+julia> empty!(model)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> isempty(model)
+true
+```
 """
 function Base.empty!(model::GenericModel)::GenericModel
     # The method changes the Model object to, basically, the state it was when
@@ -858,9 +926,23 @@ end
 """
     isempty(model::GenericModel)
 
-Verifies whether the model is empty, that is, whether the MOI backend
-is empty and whether the model is in the same state as at its creation
-apart from optimizer attributes.
+Verifies whether the model is empty, that is, whether the MOI backend is empty
+and whether the model is in the same state as at its creation, apart from
+optimizer attributes.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> isempty(model)
+true
+
+julia> @variable(model, x[1:2]);
+
+julia> isempty(model)
+false
+```
 """
 function Base.isempty(model::GenericModel)
     return MOI.is_empty(model.moi_backend) &&
@@ -877,11 +959,25 @@ end
 Return the dictionary that maps the symbol name of a variable, constraint, or
 expression to the corresponding object.
 
-Objects are registered to a specific symbol in the macros.
-For example, `@variable(model, x[1:2, 1:2])` registers the array of variables
-`x` to the symbol `:x`.
+Objects are registered to a specific symbol in the macros. For example,
+`@variable(model, x[1:2, 1:2])` registers the array of variables `x` to the
+symbol `:x`.
 
 This method should be defined for any subtype of `AbstractModel`.
+
+See also: [`unregister`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> object_dictionary(model)
+Dict{Symbol, Any} with 1 entry:
+  :x => VariableRef[x[1], x[2]]
+```
 """
 object_dictionary(model::GenericModel) = model.obj_dict
 
@@ -1074,6 +1170,17 @@ end
     owner_model(s::AbstractJuMPScalar)
 
 Return the model owning the scalar `s`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> owner_model(x) === model
+true
+```
 """
 function owner_model end
 

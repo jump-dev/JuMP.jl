@@ -299,23 +299,6 @@ function _vectorize_variables(error_fn::Function, matrix::Matrix)
     return vectorize(matrix, SymmetricMatrixShape(n))
 end
 
-"""
-    build_variable(error_fn::Function, variables, ::SymmetricMatrixSpace)
-
-Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
-creating variables in `MOI.Reals`, that is, "free" variables unless they are
-constrained after their creation.
-
-This function is used by the [`@variable`](@ref) macro as follows:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2], Symmetric)
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- Q[1,1]  Q[1,2]
- Q[1,2]  Q[2,2]
-```
-"""
 function build_variable(
     error_fn::Function,
     variables::Matrix{<:AbstractVariable},
@@ -331,23 +314,6 @@ function build_variable(
     )
 end
 
-"""
-    build_variable(error_fn::Function, variables, ::SkewSymmetricMatrixSpace)
-
-Return a `VariablesConstrainedOnCreation` of shape [`SkewSymmetricMatrixShape`](@ref)
-creating variables in `MOI.Reals`, that is, "free" variables unless they are
-constrained after their creation.
-
-This function is used by the [`@variable`](@ref) macro as follows:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
-2×2 Matrix{AffExpr}:
- 0        Q[1,2]
- -Q[1,2]  0
-```
-"""
 function build_variable(
     error_fn::Function,
     variables::Matrix{<:AbstractVariable},
@@ -363,23 +329,6 @@ function build_variable(
     )
 end
 
-"""
-    build_variable(error_fn::Function, variables, ::HermitianMatrixSpace)
-
-Return a `VariablesConstrainedOnCreation` of shape [`HermitianMatrixShape`](@ref)
-creating variables in `MOI.Reals`, that is, "free" variables unless they are
-constrained after their creation.
-
-This function is used by the [`@variable`](@ref) macro as follows:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
-2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(Q[1,1])                    real(Q[1,2]) + imag(Q[1,2]) im
- real(Q[1,2]) - imag(Q[1,2]) im  real(Q[2,2])
-```
-"""
 function build_variable(
     error_fn::Function,
     variables::Matrix{<:AbstractVariable},
@@ -397,22 +346,6 @@ function build_variable(
     )
 end
 
-"""
-    build_variable(error_fn::Function, variables, ::PSDCone)
-
-Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
-constraining the variables to be positive semidefinite.
-
-This function is used by the [`@variable`](@ref) macro as follows:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2], PSD)
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- Q[1,1]  Q[1,2]
- Q[1,2]  Q[2,2]
-```
-"""
 function build_variable(
     error_fn::Function,
     variables::Matrix{<:AbstractVariable},
@@ -439,8 +372,8 @@ end
         ::PSDCone,
     ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
 
-Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
-the matrix `Q` to be positive semidefinite.
+Return a [`VectorConstraint`](@ref) of shape [`SymmetricMatrixShape`](@ref)
+constraining the matrix `Q` to be positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
 ```jldoctest
@@ -484,27 +417,6 @@ function build_constraint(
     )
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        Q::AbstractMatrix{<:AbstractJuMPScalar},
-        ::PSDCone,
-    )
-
-Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
-the matrix `Q` to be symmetric and positive semidefinite.
-
-This function is used by the [`@constraint`](@ref) macro as follows:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2]);
-
-julia> @constraint(model, Q in PSDCone())
-[Q[1,1]  Q[1,2];
- Q[2,1]  Q[2,2]] ∈ PSDCone()
-```
-"""
 function build_constraint(
     error_fn::Function,
     Q::AbstractMatrix{<:AbstractJuMPScalar},
@@ -644,29 +556,6 @@ function build_variable(
     )
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        Q::LinearAlgebra.Hermitian{V,M},
-        ::HermitianPSDCone,
-    ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
-
-Return a `VectorConstraint` of shape [`HermitianMatrixShape`](@ref) constraining
-the matrix `Q` to be Hermitian positive semidefinite.
-
-This function is used by the [`@constraint`](@ref) macros as follows:
-```jldoctest
-julia> import LinearAlgebra
-
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2]);
-
-julia> @constraint(model, LinearAlgebra.Hermitian(Q) in HermitianPSDCone())
-[Q[1,1]  Q[1,2];
- Q[1,2]  Q[2,2]] ∈ HermitianPSDCone()
-```
-"""
 function build_constraint(
     ::Function,
     Q::LinearAlgebra.Hermitian{V,M},

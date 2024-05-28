@@ -116,6 +116,25 @@ An expression type representing an affine expression of the form:
  * `.constant`: the constant `c` in the expression.
  * `.terms`: an `OrderedDict`, with keys of `VarType` and values of `CoefType`
    describing the sparse vector `a`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> expr = x[2] + 3.0 * x[1] + 4.0
+x[2] + 3 x[1] + 4
+
+julia> expr.constant
+4.0
+
+julia> expr.terms
+OrderedCollections.OrderedDict{VariableRef, Float64} with 2 entries:
+  x[2] => 1.0
+  x[1] => 3.0
+```
 """
 mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
@@ -254,14 +273,46 @@ Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
     coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V}
 
 Return the coefficient associated with variable `v` in the affine expression `a`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = 2.0 * x + 1.0;
+
+julia> coefficient(expr, x)
+2.0
+```
 """
 coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V} = get(a.terms, v, zero(C))
+
 coefficient(::GenericAffExpr{C,V}, ::V, ::V) where {C,V} = zero(C)
 
 """
     drop_zeros!(expr::GenericAffExpr)
 
 Remove terms in the affine expression with `0` coefficients.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> expr = x[1] + x[2];
+
+julia> add_to_expression!(expr, -1.0, x[1])
+0 x[1] + x[2]
+
+julia> drop_zeros!(expr)
+
+julia> expr
+x[2]
+```
 """
 function drop_zeros!(expr::GenericAffExpr)
     _drop_zeros!(expr.terms)
@@ -361,9 +412,22 @@ function value(var_value::Function, ex::GenericAffExpr{T,V}) where {T,V}
 end
 
 """
-    constant(aff::GenericAffExpr{C, V})::C
+    constant(aff::GenericAffExpr{C,V})::C
 
 Return the constant of the affine expression.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> aff = 2.0 * x + 3.0;
+
+julia> constant(aff)
+3.0
+```
 """
 constant(aff::GenericAffExpr) = aff.constant
 
@@ -378,7 +442,7 @@ struct LinearTermIterator{GAE<:GenericAffExpr}
 end
 
 """
-    linear_terms(aff::GenericAffExpr{C, V})
+    linear_terms(aff::GenericAffExpr{C,V})
 
 Provides an iterator over coefficient-variable tuples `(a_i::C, x_i::V)` in the
 linear part of the affine expression.
@@ -413,17 +477,43 @@ end
 """
     add_to_expression!(expression, terms...)
 
-Updates `expression` *in place* to `expression + (*)(terms...)`. This is
-typically much more efficient than `expression += (*)(terms...)`. For example,
-`add_to_expression!(expression, a, b)` produces the same result as `expression
-+= a*b`, and `add_to_expression!(expression, a)` produces the same result as
+Updates `expression` in-place to `expression + (*)(terms...)`.
+
+This is typically much more efficient than `expression += (*)(terms...)` because
+it avoids the temorary allocation of the right-hand side term.
+
+For example, `add_to_expression!(expression, a, b)` produces the same result as
+`expression += a*b`, and `add_to_expression!(expression, a)` produces the same result as
 `expression += a`.
 
+## When to implement
+
 Only a few methods are defined, mostly for internal use, and only for the cases
-when (1) they can be implemented efficiently and (2) `expression` is capable of
-storing the result. For example, `add_to_expression!(::AffExpr, ::GenericVariableRef,
-::GenericVariableRef)` is not defined because a `GenericAffExpr` cannot store the
-product of two variables.
+when:
+
+ 1. they can be implemented efficiently
+ 2. `expression` is capable of storing the result. For example,
+    `add_to_expression!(::AffExpr, ::GenericVariableRef, ::GenericVariableRef)`
+    is not defined because a `GenericAffExpr` cannot store the product of two
+    variables.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> expr = 2 + x
+x + 2
+
+julia> add_to_expression!(expr, 3, x)
+4 x + 2
+
+julia> expr
+4 x + 2
+```
 """
 function add_to_expression! end
 
@@ -643,11 +733,26 @@ function MOI.ScalarAffineFunction(
 end
 
 """
-    moi_function(x)
+    moi_function(x::AbstractJuMPScalar)
+    moi_function(x::AbstractArray{<:AbstractJuMPScalar})
 
 Given a JuMP object `x`, return the MathOptInterface equivalent.
 
 See also: [`jump_function`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> f = 2.0 * x + 1.0
+2 x + 1
+
+julia> moi_function(f)
+1.0 + 2.0 MOI.VariableIndex(1)
+```
 """
 function moi_function end
 
@@ -678,24 +783,54 @@ end
 Given a JuMP object type `T`, return the MathOptInterface equivalent.
 
 See also: [`jump_function_type`](@ref).
+
+## Example
+
+```jldoctest
+julia> moi_function_type(AffExpr)
+MathOptInterface.ScalarAffineFunction{Float64}
+```
 """
 function moi_function_type end
 
 """
-    jump_function(x)
+    jump_function(model::AbstractModel, x::MOI.AbstractFunction)
 
 Given an MathOptInterface object `x`, return the JuMP equivalent.
 
 See also: [`moi_function`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> f = 2.0 * index(x) + 1.0
+1.0 + 2.0 MOI.VariableIndex(1)
+
+julia> jump_function(model, f)
+2 x + 1
+```
 """
 function jump_function end
 
 """
-    jump_function_type(::Type{T}) where {T}
+    jump_function_type(model::AbstractModel, ::Type{T}) where {T}
 
 Given an MathOptInterface object type `T`, return the JuMP equivalent.
 
 See also: [`moi_function_type`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> jump_function_type(model, MOI.ScalarAffineFunction{Float64})
+AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
+```
 """
 function jump_function_type end
 

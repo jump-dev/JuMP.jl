@@ -179,6 +179,15 @@ _plural(n) = isone(n) ? "" : "s"
 
 Return the [`MOI.Name`](@ref) attribute of `model`'s [`backend`](@ref), or a
 default if empty.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> name(model)
+"A JuMP Model"
+```
 """
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
@@ -276,6 +285,9 @@ function show_backend_summary(io::IO, model::GenericModel)
         solver_name(model)
     catch
         "unknown"
+    end
+    if name == "SolverName() attribute not implemented by the optimizer."
+        name = "unknown"
     end
     print(io, "Solver name: ", name)
     return
@@ -600,6 +612,17 @@ end
     anonymous_name(::MIME, x::AbstractVariableRef)
 
 The name to use for an anonymous variable `x` when printing.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> x = @variable(model);
+
+julia> anonymous_name(MIME("text/plain"), x)
+"_[1]"
+```
 """
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
@@ -880,7 +903,8 @@ end
     constraint_string(
         mode::MIME,
         ref::ConstraintRef;
-        in_math_mode::Bool = false)
+        in_math_mode::Bool = false,
+    )
 
 Return a string representation of the constraint `ref`, given the `mode`.
 """

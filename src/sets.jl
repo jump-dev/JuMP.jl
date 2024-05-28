@@ -41,23 +41,6 @@ function build_constraint(
     return build_constraint(error_fn, func, moi_set(set, length(func)))
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        f::AbstractVector{<:AbstractJuMPScalar},
-        ::Nonnegatives,
-        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
-    )
-
-A helper method that re-writes
-```julia
-@constraint(model, X >= Y, extra)
-```
-into
-```julia
-@constraint(model, X - Y in extra)
-```
-"""
 function build_constraint(
     error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
@@ -67,23 +50,6 @@ function build_constraint(
     return build_constraint(error_fn, f, extra)
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        f::AbstractVector{<:AbstractJuMPScalar},
-        ::Nonpositives,
-        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
-    )
-
-A helper method that re-writes
-```julia
-@constraint(model, Y <= X, extra)
-```
-into
-```julia
-@constraint(model, X - Y in extra)
-```
-"""
 function build_constraint(
     error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
@@ -195,6 +161,23 @@ to element `x[i]`. If not provided, the `weights` vector defaults to
 `weights[i] = i`.
 
 This is a shortcut for the [`MOI.SOS1`](@ref) set.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3] in SOS1([4.1, 3.2, 5.0]))
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> print(model)
+Feasibility
+Subject to
+ [x[1], x[2], x[3]] ∈ MathOptInterface.SOS1{Float64}([4.1, 3.2, 5.0])
+```
 """
 struct SOS1{T} <: AbstractVectorSet
     weights::Vector{T}
@@ -230,6 +213,23 @@ to element `x[i]`. If not provided, the `weights` vector defaults to
 `weights[i] = i`.
 
 This is a shortcut for the [`MOI.SOS2`](@ref) set.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3] in SOS2([4.1, 3.2, 5.0]))
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> print(model)
+Feasibility
+Subject to
+ [x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([4.1, 3.2, 5.0])
+```
 """
 struct SOS2{T} <: AbstractVectorSet
     weights::Vector{T}

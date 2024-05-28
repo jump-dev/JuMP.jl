@@ -37,12 +37,29 @@ Return the index of the constraint that corresponds to `cr` in the MOI backend.
 index(cr::ConstraintRef) = cr.index
 
 """
-    struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+    struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
         constraint_ref::C
     end
 
-The constraint `constraint_ref` was used in a model different to
-`owner_model(constraint_ref)`.
+An error thrown when the constraint `constraint_ref` was used in a model
+different to `owner_model(constraint_ref)`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x >= 0)
+c : x ≥ 0
+
+julia> model_new = Model();
+
+julia> MOI.get(model_new, MOI.ConstraintName(), c)
+ERROR: ConstraintNotOwned{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}(c : x ≥ 0)
+Stacktrace:
+[...]
 """
 struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
     constraint_ref::C
@@ -74,10 +91,30 @@ Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
 Return the dual start value (MOI attribute `ConstraintDualStart`) of the
 constraint `con_ref`.
 
-Note: If no dual start value has been set, `dual_start_value` will return
-`nothing`.
+If no dual start value has been set, `dual_start_value` will return `nothing`.
 
 See also [`set_dual_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_dual_start_value(c, [0.0])
+
+julia> dual_start_value(c)
+1-element Vector{Float64}:
+ 0.0
+
+julia> set_dual_start_value(c, nothing)
+
+julia> dual_start_value(c)
+```
 """
 function dual_start_value(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
@@ -109,9 +146,32 @@ end
     set_dual_start_value(con_ref::ConstraintRef, value)
 
 Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
-`con_ref` to `value`. To remove a dual start value set it to `nothing`.
+`con_ref` to `value`.
+
+To remove a dual start value set it to `nothing`.
 
 See also [`dual_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_dual_start_value(c, [0.0])
+
+julia> dual_start_value(c)
+1-element Vector{Float64}:
+ 0.0
+
+julia> set_dual_start_value(c, nothing)
+
+julia> dual_start_value(c)
+```
 """
 function set_dual_start_value(
     con_ref::ConstraintRef{
@@ -132,6 +192,7 @@ function set_dual_start_value(
     )
     return
 end
+
 function set_dual_start_value(
     con_ref::ConstraintRef{
         <:AbstractModel,
@@ -164,10 +225,32 @@ end
     set_start_value(con_ref::ConstraintRef, value)
 
 Set the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
-constraint `con_ref` to `value`. To remove a primal start value set it to
-`nothing`.
+constraint `con_ref` to `value`.
+
+To remove a primal start value set it to `nothing`.
 
 See also [`start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_start_value(c, [4.0])
+
+julia> start_value(c)
+1-element Vector{Float64}:
+ 4.0
+
+julia> set_start_value(c, nothing)
+
+julia> start_value(c)
+```
 """
 function set_start_value(
     con_ref::ConstraintRef{
@@ -224,10 +307,30 @@ end
 Return the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
 constraint `con_ref`.
 
-Note: If no primal start value has been set, `start_value` will return
-`nothing`.
+If no primal start value has been set, `start_value` will return `nothing`.
 
 See also [`set_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_start_value(c, [4.0])
+
+julia> start_value(c)
+1-element Vector{Float64}:
+ 4.0
+
+julia> set_start_value(c, nothing)
+
+julia> start_value(c)
+```
 """
 function start_value(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
@@ -242,6 +345,20 @@ end
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> name(c)
+"c"
+```
 """
 function name(
     con_ref::ConstraintRef{<:AbstractModel,C},
@@ -264,6 +381,25 @@ end
     set_name(con_ref::ConstraintRef, s::AbstractString)
 
 Set a constraint's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_name(c, "my_constraint")
+
+julia> name(c)
+"my_constraint"
+
+julia> c
+my_constraint : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+```
 """
 function set_name(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
@@ -273,28 +409,25 @@ function set_name(
 end
 
 """
-    constraint_by_name(model::AbstractModel,
-                       name::String)::Union{ConstraintRef, Nothing}
+    constraint_by_name(model::AbstractModel, name::String, [F, S])::Union{ConstraintRef,Nothing}
 
 Return the reference of the constraint with name attribute `name` or `Nothing`
-if no constraint has this name attribute. Throws an error if several
-constraints have `name` as their name attribute.
+if no constraint has this name attribute.
 
-    constraint_by_name(model::AbstractModel,
-                       name::String,
-                       F::Type{<:Union{AbstractJuMPScalar,
-                                       Vector{<:AbstractJuMPScalar},
-                                       MOI.AbstactFunction}},
-                       S::Type{<:MOI.AbstractSet})::Union{ConstraintRef, Nothing}
+Throws an error if several constraints have `name` as their name attribute.
 
-Similar to the method above, except that it throws an error if the constraint is
-not an `F`-in-`S` contraint where `F` is either the JuMP or MOI type of the
-function, and `S` is the MOI type of the set. This method is recommended if you
-know the type of the function and set since its returned type can be inferred
-while for the method above (that is, without `F` and `S`), the exact return type
-of the constraint index cannot be inferred.
+If `F` and `S` are provided, this method addititionally throws an error if the
+constraint is not an `F`-in-`S` contraint where `F` is either the JuMP or MOI
+type of the function and `S` is the MOI type of the set.
 
-```jldoctest objective_function; filter = r"Stacktrace:.*"s
+Providing `F` and `S` is recommended if you know the type of the function and
+set since its returned type can be inferred while for the method above (that is,
+without `F` and `S`), the exact return type of the constraint index cannot be
+inferred.
+
+## Example
+
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -328,22 +461,25 @@ end
 function constraint_by_name(
     model::GenericModel,
     name::String,
-    F::Type{<:MOI.AbstractFunction},
-    S::Type{<:MOI.AbstractSet},
-)
+    ::Type{F},
+    ::Type{S},
+) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
     index = MOI.get(backend(model), MOI.ConstraintIndex{F,S}, name)
     if index isa Nothing
         return nothing
-    else
-        return constraint_ref_with_index(model, index)
     end
+    return constraint_ref_with_index(model, index)
 end
+
 function constraint_by_name(
     model::GenericModel,
     name::String,
-    F::Type{<:Union{ScalarType,Vector{ScalarType}}},
-    S::Type,
-) where {ScalarType<:AbstractJuMPScalar}
+    ::Type{F},
+    ::Type{S},
+) where {
+    F<:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
+    S<:MOI.AbstractSet,
+}
     return constraint_by_name(model, name, moi_function_type(F), S)
 end
 
@@ -419,20 +555,49 @@ end
     delete(model::GenericModel, con_refs::Vector{<:ConstraintRef})
 
 Delete the constraints associated with `con_refs` from the model `model`.
+
 Solvers may implement specialized methods for deleting multiple constraints of
-the same concrete type, that is, when `isconcretetype(eltype(con_refs))`. These
-may be more efficient than repeatedly calling the single constraint delete
-method.
+the same concrete type. These methods may be more efficient than repeatedly
+calling the single constraint `delete` method.
 
 See also: [`unregister`](@ref)
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, 2 * x .<= 1)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c : 2 x[1] ≤ 1
+ c : 2 x[2] ≤ 1
+ c : 2 x[3] ≤ 1
+
+julia> delete(model, c)
+
+julia> unregister(model, :c)
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> model[:c]
+ERROR: KeyError: key :c not found
+Stacktrace:
+[...]
+```
 """
 function delete(
     model::GenericModel,
     con_refs::Vector{<:ConstraintRef{<:AbstractModel}},
 )
     if any(c -> model !== c.model, con_refs)
-        error("A constraint reference you are trying to delete does not" * "
-            belong to the model.")
+        error(
+            "A constraint reference you are trying to delete does not " *
+            "belong to the model.",
+        )
     end
     model.is_model_dirty = true
     MOI.delete(backend(model), index.(con_refs))
@@ -577,17 +742,95 @@ moi_set(constraint::AbstractConstraint) = constraint.set
 """
     constraint_object(con_ref::ConstraintRef)
 
-Return the underlying constraint data for the constraint referenced by `ref`.
+Return the underlying constraint data for the constraint referenced by `con_ref`.
+
+## Example
+
+A scalar constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2x <= 1)
+c : 2 x ≤ 1
+
+julia> object = constraint_object(c)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+
+julia> typeof(object)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+
+julia> object.func
+2 x
+
+julia> object.set
+MathOptInterface.LessThan{Float64}(1.0)
+```
+
+A vector constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, x in SecondOrderCone())
+c : [x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+
+julia> object = constraint_object(c)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}(VariableRef[x[1], x[2], x[3]], MathOptInterface.SecondOrderCone(3), VectorShape())
+
+julia> typeof(object)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}
+
+julia> object.func
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> object.set
+MathOptInterface.SecondOrderCone(3)
+```
 """
 function constraint_object end
 
 """
     struct ScalarConstraint
 
-The data for a scalar constraint. The `func` field contains a JuMP object
-representing the function and the `set` field contains the MOI set.
+The data for a scalar constraint.
+
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
+
+## Fields
+
+ * `.func`: field contains a JuMP object representing the function
+ * `.set`: field contains the MOI set
+
+## Example
+
+A scalar constraint:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2x <= 1)
+c : 2 x ≤ 1
+
+julia> object = constraint_object(c)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+
+julia> typeof(object)
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+
+julia> object.func
+2 x
+
+julia> object.set
+MathOptInterface.LessThan{Float64}(1.0)
+```
 """
 struct ScalarConstraint{
     F<:Union{Number,AbstractJuMPScalar},
@@ -598,6 +841,7 @@ struct ScalarConstraint{
 end
 
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
+
 shape(::ScalarConstraint) = ScalarShape()
 
 function constraint_object(
@@ -618,12 +862,47 @@ end
 """
     struct VectorConstraint
 
-The data for a vector constraint. The `func` field contains a JuMP object
-representing the function and the `set` field contains the MOI set. The
-`shape` field contains an [`AbstractShape`](@ref) matching the form in which
-the constraint was constructed (for example, by using matrices or flat vectors).
+The data for a vector constraint.
+
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints.
+
+## Fields
+
+ * `func`: field contains a JuMP object representing the function
+ * `set`: field contains the MOI set.
+ * `shape`: field contains an [`AbstractShape`](@ref) matching the form in which
+   the constraint was constructed (for example, by using matrices or flat
+   vectors).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:3]);
+
+julia> @constraint(model, c, x in SecondOrderCone())
+c : [x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+
+julia> object = constraint_object(c)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}(VariableRef[x[1], x[2], x[3]], MathOptInterface.SecondOrderCone(3), VectorShape())
+
+julia> typeof(object)
+VectorConstraint{VariableRef, MathOptInterface.SecondOrderCone, VectorShape}
+
+julia> object.func
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> object.set
+MathOptInterface.SecondOrderCone(3)
+
+julia> object.shape
+VectorShape()
+```
 """
 struct VectorConstraint{
     F<:Union{Number,AbstractJuMPScalar},
@@ -659,7 +938,9 @@ function VectorConstraint(
 end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
+
 shape(con::VectorConstraint) = con.shape
+
 function constraint_object(
     con_ref::ConstraintRef{
         <:AbstractModel,
@@ -671,6 +952,7 @@ function constraint_object(
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
     return VectorConstraint(jump_function(model, f), s, con_ref.shape)
 end
+
 function check_belongs_to_model(con::VectorConstraint, model)
     for func in con.func
         check_belongs_to_model(func, model)
@@ -696,9 +978,14 @@ function _moi_add_constraint(
 end
 
 """
-    add_constraint(model::GenericModel, con::AbstractConstraint, name::String="")
+    add_constraint(
+        model::GenericModel,
+        con::AbstractConstraint,
+        name::String= "",
+    )
 
-Add a constraint `con` to `Model model` and sets its name.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 """
 function add_constraint(
     model::GenericModel,
@@ -1007,6 +1294,31 @@ Return `true` if the solver has a dual solution in result index `result`
 available to query, otherwise return `false`.
 
 See also [`dual`](@ref), [`shadow_price`](@ref), and [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> has_duals(model)
+false
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+```
 """
 function has_duals(model::GenericModel; result::Int = 1)
     return dual_status(model; result = result) != MOI.NO_SOLUTION
@@ -1018,9 +1330,34 @@ end
 Return the dual value of constraint `con_ref` associated with result index
 `result` of the most-recent solution returned by the solver.
 
-Use `has_dual` to check if a result exists before asking for values.
+Use [`has_duals`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> dual(c)
+-2.0
+````
 """
 function dual(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex};
@@ -1046,12 +1383,21 @@ end
 Return the change in the objective from an infinitesimal relaxation of the
 constraint.
 
-This value is computed from [`dual`](@ref) and can be queried only when
+The shadow price is computed from [`dual`](@ref) and can be queried only when
 `has_duals` is `true` and the objective sense is `MIN_SENSE` or `MAX_SENSE`
-(not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
-most in sign from the `dual` value depending on the objective sense.
+(not `FEASIBILITY_SENSE`).
 
 See also [`reduced_cost`](@ref JuMP.reduced_cost).
+
+## Comparison to `dual`
+
+The shadow prices differ at most in sign from the `dual` value depending on the
+objective sense. The differences are summarized in the table:
+
+|             | `Min` | `Max` |
+| ----------- | ----- | ----- |
+| `f(x) <= b` | `+1`  | `-1`  |
+| `f(x) >= b` | `-1`  | `+1`  |
 
 ## Notes
 
@@ -1063,6 +1409,31 @@ See also [`reduced_cost`](@ref JuMP.reduced_cost).
   has changed since the last solve, the results will be incorrect.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> shadow_price(c)
+2.0
+```
 """
 function shadow_price(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},

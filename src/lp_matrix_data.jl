@@ -32,8 +32,8 @@ Given a JuMP model of a linear program, return an [`LPMatrixData{T}`](@ref)
 struct storing data for an equivalent linear program in the form:
 ```math
 \\begin{aligned}
-\\min & c^\\top x + c_0\\
-      & b_l \\le A x \\le b_u \\
+\\min & c^\\top x + c_0 \\\\
+      & b_l \\le A x \\le b_u \\\\
       & x_l \\le x \\le x_u
 \\end{aligned}
 ```
@@ -69,6 +69,53 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
 
 The models supported by [`lp_matrix_data`](@ref) are intentionally limited
 to linear programs.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2] >= 0);
+
+julia> @constraint(model, x[1] + 2 * x[2] <= 1);
+
+julia> @objective(model, Max, x[2]);
+
+julia> data = lp_matrix_data(model);
+
+julia> data.A
+1×2 SparseArrays.SparseMatrixCSC{Float64, Int64} with 2 stored entries:
+ 1.0  2.0
+
+julia> data.b_lower
+1-element Vector{Float64}:
+ -Inf
+
+julia> data.b_upper
+1-element Vector{Float64}:
+ 1.0
+
+julia> data.x_lower
+2-element Vector{Float64}:
+ 0.0
+ 0.0
+
+julia> data.x_upper
+2-element Vector{Float64}:
+ Inf
+ Inf
+
+julia> data.c
+2-element Vector{Float64}:
+ 0.0
+ 1.0
+
+julia> data.c_offset
+0.0
+
+julia> data.sense
+MAX_SENSE::OptimizationSense = 1
+```
 """
 function lp_matrix_data(model::GenericModel{T}) where {T}
     variables = all_variables(model)

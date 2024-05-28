@@ -381,10 +381,24 @@ end
 """
     coefficient(v1::GenericVariableRef{T}, v2::GenericVariableRef{T}) where {T}
 
-Return `one(T)` if `v1 == v2`, and `zero(T)` otherwise.
+Return `one(T)` if `v1 == v2` and `zero(T)` otherwise.
 
 This is a fallback for other [`coefficient`](@ref) methods to simplify code in
 which the expression may be a single variable.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> coefficient(x[1], x[1])
+1.0
+
+julia> coefficient(x[1], x[2])
+0.0
+```
 """
 function coefficient(
     v1::GenericVariableRef{T},
@@ -1731,12 +1745,38 @@ end
 """
     start_value(v::GenericVariableRef)
 
-Return the start value (MOI attribute `VariablePrimalStart`) of the variable
-`v`.
+Return the start value ([`MOI.VariablePrimalStart`](@ref)) of the variable `v`.
 
 Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 
-See also [`set_start_value`](@ref).
+See also: [`has_start_value`](@ref), [`set_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 1.5);
+
+julia> @variable(model, y);
+
+julia> has_start_value(x)
+true
+
+julia> has_start_value(y)
+false
+
+julia> start_value(x)
+1.5
+
+julia> set_start_value(y, 2.0)
+
+julia> has_start_value(y)
+true
+
+julia> start_value(y)
+2.0
+```
 """
 function start_value(v::GenericVariableRef{T})::Union{Nothing,T} where {T}
     return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
@@ -1745,9 +1785,36 @@ end
 """
     has_start_value(variable::AbstractVariableRef)
 
-Return `true` if the variable has a start value set otherwise return `false`.
+Return `true` if the variable has a start value set, otherwise return `false`.
 
-See also [`set_start_value`](@ref).
+See also: [`start_value`](@ref), [`set_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 1.5);
+
+julia> @variable(model, y);
+
+julia> has_start_value(x)
+true
+
+julia> has_start_value(y)
+false
+
+julia> start_value(x)
+1.5
+
+julia> set_start_value(y, 2.0)
+
+julia> has_start_value(y)
+true
+
+julia> start_value(y)
+2.0
+```
 """
 has_start_value(v::AbstractVariableRef)::Bool = start_value(v) !== nothing
 
@@ -1757,14 +1824,46 @@ _convert_if_something(::Type, ::Nothing) = nothing
 """
     set_start_value(variable::GenericVariableRef, value::Union{Real,Nothing})
 
-Set the start value (MOI attribute `VariablePrimalStart`) of the `variable` to
+Set the start value ([`MOI.VariablePrimalStart`](@ref)) of the `variable` to
 `value`.
 
 Pass `nothing` to unset the start value.
 
 Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 
-See also [`start_value`](@ref).
+See also: [`has_start_value`](@ref), [`start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 1.5);
+
+julia> @variable(model, y);
+
+julia> has_start_value(x)
+true
+
+julia> has_start_value(y)
+false
+
+julia> start_value(x)
+1.5
+
+julia> set_start_value(x, nothing)
+
+julia> has_start_value(x)
+false
+
+julia> set_start_value(y, 2.0)
+
+julia> has_start_value(y)
+true
+
+julia> start_value(y)
+2.0
+```
 """
 function set_start_value(
     variable::GenericVariableRef{T},
@@ -1809,15 +1908,41 @@ Return `true` if the solver has a primal solution in result index `result`
 available to query, otherwise return `false`.
 
 See also [`value`](@ref) and [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x <= 1)
+c : x ≤ 1
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> has_values(model)
+false
+
+julia> optimize!(model)
+
+julia> has_values(model)
+true
+```
 """
 function has_values(model::GenericModel; result::Int = 1)
     return primal_status(model; result = result) != MOI.NO_SOLUTION
 end
 
 """
-    add_variable(m::GenericModel, v::AbstractVariable, name::String="")
+    add_variable(m::GenericModel, v::AbstractVariable, name::String = "")
 
-Add a variable `v` to `Model m` and sets its name.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 """
 function add_variable end
 
@@ -2223,10 +2348,35 @@ end
 
 Return the reduced cost associated with variable `x`.
 
-Equivalent to querying the shadow price of the active variable bound
-(if one exists and is active).
+One interpretation of the reduced cost is that it is the change in the objective
+from an infinitesimal relaxation of the variable bounds.
+
+This method is equivalent to querying the shadow price of the active variable
+bound (if one exists and is active).
 
 See also: [`shadow_price`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x <= 1);
+
+julia> @objective(model, Max, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> has_duals(model)
+true
+
+julia> reduced_cost(x)
+2.0
+```
 """
 function reduced_cost(x::GenericVariableRef{T})::T where {T}
     model = owner_model(x)
