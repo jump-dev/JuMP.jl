@@ -807,7 +807,7 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> f = 2.0 * x_moi + 1.0
+julia> f = 2.0 * index(x) + 1.0
 1.0 + 2.0 MOI.VariableIndex(1)
 
 julia> jump_function(model, f)
