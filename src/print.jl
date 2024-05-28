@@ -786,16 +786,15 @@ function function_string(
     ::MIME"text/plain",
     A::AbstractMatrix{<:AbstractJuMPScalar},
 )
-    str = sprint(show, MIME"text/plain"(), A)
+    str = sprint() do io
+        return show(IOContext(io, :limit => true), MIME("text/plain"), A)
+    end
     lines = split(str, '\n')
     # We drop the first line with the signature "m×n Array{...}:"
-    lines = lines[2:end]
+    popfirst!(lines)
     # We replace the first space by an opening `[`
     lines[1] = '[' * lines[1][2:end]
-    for i in 1:length(lines)
-        lines[i] = lines[i] * (i == length(lines) ? ']' : ';')
-    end
-    return join(lines, '\n')
+    return join(lines, "\n") * "]"
 end
 
 function function_string(
@@ -933,13 +932,7 @@ function constraint_string(mode, constraint_object::AbstractConstraint)
     # Leave `mode` untyped to avoid ambiguities!
     func_str = function_string(mode, constraint_object)
     in_set_str = in_set_string(mode, constraint_object)
-    if mode == MIME("text/plain")
-        lines = split(func_str, '\n')
-        lines[1+div(length(lines), 2)] *= " " * in_set_str
-        return join(lines, '\n')
-    else
-        return func_str * " " * in_set_str
-    end
+    return func_str * " " * in_set_str
 end
 
 function constraint_string(

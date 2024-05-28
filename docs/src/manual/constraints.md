@@ -201,7 +201,7 @@ julia> @variable(model, X[1:2, 1:2], Symmetric)
  X[1,2]  X[2,2]
 
 julia> @constraint(model, X == LinearAlgebra.I)
-[X[1,1] - 1  X[1,2];
+[X[1,1] - 1  X[1,2]
  X[1,2]      X[2,2] - 1] ∈ Zeros()
 ```
 
@@ -229,7 +229,7 @@ julia> @variable(model, X[1:2, 1:2] in HermitianPSDCone())
  real(X[1,2]) - imag(X[1,2]) im  real(X[2,2])
 
 julia> @constraint(model, X == LinearAlgebra.I)
-[real(X[1,1]) - 1                real(X[1,2]) + imag(X[1,2]) im;
+[real(X[1,1]) - 1                real(X[1,2]) + imag(X[1,2]) im
  real(X[1,2]) - imag(X[1,2]) im  real(X[2,2]) - 1] ∈ Zeros()
 
 julia> @constraint(model, X .== LinearAlgebra.I)
@@ -1415,7 +1415,7 @@ julia> @variable(model, X[1:2, 1:2])
  X[2,1]  X[2,2]
 
 julia> @constraint(model, X >= 0, PSDCone())
-[X[1,1]  X[1,2];
+[X[1,1]  X[1,2]
  X[2,1]  X[2,2]] ∈ PSDCone()
 ```
 
@@ -1436,7 +1436,7 @@ julia> Y = [1 2; 2 1]
  2  1
 
 julia> @constraint(model, X >= Y, PSDCone())
-[X[1,1] - 1  X[1,2] - 2;
+[X[1,1] - 1  X[1,2] - 2
  X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
 ```
 
@@ -1461,7 +1461,7 @@ julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
  X[1,2]  X[2,2]
 
 julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
-[X[1,1]  X[1,2];
+[X[1,1]  X[1,2]
  X[1,2]  X[2,2]] ∈ PSDCone()
 ```
 
@@ -1469,7 +1469,7 @@ Note that the lower triangular entries are ignored even if they are
 different so use it with caution:
 ```jldoctest con_psd
 julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
-[X[1,1]  X[1,2];
+[X[1,1]  X[1,2]
  X[1,2]  X[2,2]] ∈ PSDCone()
 ```
 (Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)

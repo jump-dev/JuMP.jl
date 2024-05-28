@@ -89,17 +89,14 @@ Consider the following example:
 ```jldoctest PSDCone
 julia> model = Model();
 
-julia> @variable(model, x)
-x
+julia> @variable(model, x);
 
-julia> a = [ x 2x
-            2x  x];
+julia> a = [x 2x; 2x x];
 
-julia> b = [1 2
-            2 4];
+julia> b = [1 2; 2 4];
 
 julia> cref = @constraint(model, a >= b, PSDCone())
-[x - 1    2 x - 2;
+[x - 1    2 x - 2
  2 x - 2  x - 4] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
@@ -119,7 +116,7 @@ is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 julia> using LinearAlgebra # For Symmetric
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
-[x - 1    2 x - 2;
+[x - 1    2 x - 2
  2 x - 2  x - 4] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
@@ -384,7 +381,7 @@ julia> model = Model();
 julia> @variable(model, Q[1:2, 1:2]);
 
 julia> @constraint(model, LinearAlgebra.Symmetric(Q) in PSDCone())
-[Q[1,1]  Q[1,2];
+[Q[1,1]  Q[1,2]
  Q[1,2]  Q[2,2]] ∈ PSDCone()
 ```
 
@@ -400,7 +397,7 @@ julia> @variable(model, Q[1:2, 1:2], Symmetric)
  Q[1,2]  Q[2,2]
 
 julia> @constraint(model, Q in PSDCone())
-[Q[1,1]  Q[1,2];
+[Q[1,1]  Q[1,2]
  Q[1,2]  Q[2,2]] ∈ PSDCone()
 ```
 """
