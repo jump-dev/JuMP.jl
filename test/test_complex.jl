@@ -253,7 +253,7 @@ function test_complex_hermitian_constraint()
     @constraint(model, c, H in HermitianPSDCone())
     @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
     @test function_string(MIME("text/plain"), constraint_object(c)) ==
-          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+          "[x[1,1]  x[1,2]\n x[1,2]  x[2,2]]"
     return
 end
 
@@ -266,11 +266,11 @@ function test_complex_hermitian_inequality_constraint()
     @constraint(model, c, H >= 0, HermitianPSDCone())
     @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
     @test function_string(MIME("text/plain"), constraint_object(c)) ==
-          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+          "[x[1,1]  x[1,2]\n x[1,2]  x[2,2]]"
     @constraint(model, c2, 0 <= H, HermitianPSDCone())
     @test constraint_object(c2).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
     @test function_string(MIME("text/plain"), constraint_object(c2)) ==
-          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+          "[x[1,1]  x[1,2]\n x[1,2]  x[2,2]]"
     return
 end
 

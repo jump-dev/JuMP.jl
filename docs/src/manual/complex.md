@@ -336,7 +336,7 @@ julia> H = LinearAlgebra.Hermitian([x[1] 1im; -1im -x[2]])
  -im   -x[2]
 
 julia> @constraint(model, H in HermitianPSDCone())
-[x[1]  im;
+[x[1]  im
  -im   -x[2]] ∈ HermitianPSDCone()
 ```
 

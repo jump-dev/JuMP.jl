@@ -597,10 +597,10 @@ Max a - b + 2 a1 - 10 x
 Subject to
  con : a + b - 10 c + c1 - 2 x $le 1
  a*b $le 2
- [a  b;
+ [a  b
   b  x] $inset $(PSDCone())
  [a, b, c] $inset $(MOI.PositiveSemidefiniteConeTriangle(2))
- [a  b;
+ [a  b
   c  x] $inset $(PSDCone())
  [a, b, c, x] $inset $(MOI.PositiveSemidefiniteConeSquare(2))
  soc : [-a + 1, u[1], u[2], u[3]] $inset $(MOI.SecondOrderCone(4))
@@ -873,7 +873,7 @@ function test_print_hermitian_psd_cone()
     H = Hermitian([x[1] 1im; -1im x[2]])
     c = @constraint(model, H in HermitianPSDCone())
     @test sprint(io -> show(io, MIME("text/plain"), c)) ==
-          "[x[1]  im;\n -im   x[2]] $in_sym $(HermitianPSDCone())"
+          "[x[1]  im\n -im   x[2]] $in_sym $(HermitianPSDCone())"
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
           "\$\$ \\begin{bmatrix}\nx_{1} & im\\\\\n-im & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
     return
@@ -1058,6 +1058,15 @@ function test_skipping_constraints_latex()
         @test occursin(output, str) == (i >= 100)
     end
     JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[] = ret
+    return
+end
+
+function test_print_omit_vector()
+    n = 100
+    model = Model()
+    @variable(model, x[1:n, 1:n])
+    @constraint(model, vec(x) >= 0)
+    @test occursin("9970 terms omitted", sprint(print, model))
     return
 end
 
