@@ -262,7 +262,7 @@ julia> @variable(model, x[1:3] in SOS2([4.1, 3.2, 5.0]))
 julia> print(model)
 Feasibility
 Subject to
-    [x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([4.1, 3.2, 5.0])
+ [x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([4.1, 3.2, 5.0])
 ```
 """
 struct SOS2{T} <: AbstractVectorSet

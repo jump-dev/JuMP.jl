@@ -93,7 +93,7 @@ defaults to `Float64` if it is not implemented.
 ## Example
 
 ```jldoctest
-julia> value_type(GenericModel{BigFloat}();)
+julia> value_type(GenericModel{BigFloat})
 BigFloat
 ```
 """
