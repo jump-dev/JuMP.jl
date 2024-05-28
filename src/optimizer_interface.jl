@@ -945,15 +945,42 @@ end
 """
     struct OptimizeNotCalled <: Exception end
 
-A result attribute cannot be queried before [`optimize!`](@ref) is called.
+An error thrown when a result attribute cannot be queried before
+[`optimize!`](@ref) is called.
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> objective_value(model)
+ERROR: OptimizeNotCalled()
+Stacktrace:
+[...]
+```
 """
 struct OptimizeNotCalled <: Exception end
 
 """
     struct NoOptimizer <: Exception end
 
-No optimizer is set. The optimizer can be provided to the [`Model`](@ref)
-constructor or by calling [`set_optimizer`](@ref).
+An error thrown when no optimizer is set and one is required.
+
+The optimizer can be provided to the [`Model`](@ref) constructor or by calling
+[`set_optimizer`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> optimize!(model)
+ERROR: NoOptimizer()
+Stacktrace:
+[...]
+```
 """
 struct NoOptimizer <: Exception end
 

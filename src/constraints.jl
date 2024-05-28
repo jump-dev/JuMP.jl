@@ -37,12 +37,29 @@ Return the index of the constraint that corresponds to `cr` in the MOI backend.
 index(cr::ConstraintRef) = cr.index
 
 """
-    struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+    struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
         constraint_ref::C
     end
 
-The constraint `constraint_ref` was used in a model different to
-`owner_model(constraint_ref)`.
+An error thrown when the constraint `constraint_ref` was used in a model
+different to `owner_model(constraint_ref)`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x >= 0)
+c : x ≥ 0
+
+julia> model_new = Model();
+
+julia> MOI.get(model_new, MOI.ConstraintName(), c)
+ERROR: ConstraintNotOwned{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}(c : x ≥ 0)
+Stacktrace:
+[...]
 """
 struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
     constraint_ref::C
@@ -74,10 +91,30 @@ Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
 Return the dual start value (MOI attribute `ConstraintDualStart`) of the
 constraint `con_ref`.
 
-Note: If no dual start value has been set, `dual_start_value` will return
-`nothing`.
+If no dual start value has been set, `dual_start_value` will return `nothing`.
 
 See also [`set_dual_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_dual_start_value(c, [0.0])
+
+julia> dual_start_value(c)
+1-element Vector{Float64}:
+ 0.0
+
+julia> set_dual_start_value(c, nothing)
+
+julia> dual_start_value(c)
+```
 """
 function dual_start_value(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
@@ -109,9 +146,32 @@ end
     set_dual_start_value(con_ref::ConstraintRef, value)
 
 Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
-`con_ref` to `value`. To remove a dual start value set it to `nothing`.
+`con_ref` to `value`.
+
+To remove a dual start value set it to `nothing`.
 
 See also [`dual_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_dual_start_value(c, [0.0])
+
+julia> dual_start_value(c)
+1-element Vector{Float64}:
+ 0.0
+
+julia> set_dual_start_value(c, nothing)
+
+julia> dual_start_value(c)
+```
 """
 function set_dual_start_value(
     con_ref::ConstraintRef{
@@ -132,6 +192,7 @@ function set_dual_start_value(
     )
     return
 end
+
 function set_dual_start_value(
     con_ref::ConstraintRef{
         <:AbstractModel,
@@ -164,10 +225,32 @@ end
     set_start_value(con_ref::ConstraintRef, value)
 
 Set the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
-constraint `con_ref` to `value`. To remove a primal start value set it to
-`nothing`.
+constraint `con_ref` to `value`.
+
+To remove a primal start value set it to `nothing`.
 
 See also [`start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_start_value(c, [4.0])
+
+julia> start_value(c)
+1-element Vector{Float64}:
+ 4.0
+
+julia> set_start_value(c, nothing)
+
+julia> start_value(c)
+```
 """
 function set_start_value(
     con_ref::ConstraintRef{
@@ -224,10 +307,30 @@ end
 Return the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
 constraint `con_ref`.
 
-Note: If no primal start value has been set, `start_value` will return
-`nothing`.
+If no primal start value has been set, `start_value` will return `nothing`.
 
 See also [`set_start_value`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, start = 2.0);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_start_value(c, [4.0])
+
+julia> start_value(c)
+1-element Vector{Float64}:
+ 4.0
+
+julia> set_start_value(c, nothing)
+
+julia> start_value(c)
+```
 """
 function start_value(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
@@ -242,6 +345,20 @@ end
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> name(c)
+"c"
+```
 """
 function name(
     con_ref::ConstraintRef{<:AbstractModel,C},
@@ -264,6 +381,25 @@ end
     set_name(con_ref::ConstraintRef, s::AbstractString)
 
 Set a constraint's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, [2x] in Nonnegatives())
+c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+
+julia> set_name(c, "my_constraint")
+
+julia> name(c)
+"my_constraint"
+
+julia> c
+my_constraint : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+```
 """
 function set_name(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},

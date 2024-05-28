@@ -50,6 +50,17 @@ include("shapes.jl")
     ModelMode
 
 An enum to describe the state of the CachingOptimizer inside a JuMP model.
+
+See also: [`mode`](@ref).
+
+## Values
+
+Possible values are:
+
+ * [`AUTOMATIC`]: `moi_backend` field holds a CachingOptimizer in AUTOMATIC mode.
+ * [`MANUAL`]: `moi_backend` field holds a CachingOptimizer in MANUAL mode.
+ * [`DIRECT`]: `moi_backend` field holds an AbstractOptimizer. No extra copy of
+   the model is stored. The `moi_backend` must support `add_constraint` etc.
 """
 @enum(ModelMode, AUTOMATIC, MANUAL, DIRECT)
 
@@ -78,6 +89,13 @@ abstract type AbstractModel end
 
 Return the return type of [`value`](@ref) for variables of that model. It
 defaults to `Float64` if it is not implemented.
+
+## Example
+
+```jldoctest
+julia> value_type(GenericModel{BigFloat}();)
+BigFloat
+```
 """
 value_type(::Type{<:AbstractModel}) = Float64
 
@@ -559,8 +577,16 @@ end
 """
     mode(model::GenericModel)
 
-Return the [`ModelMode`](@ref) ([`DIRECT`](@ref), [`AUTOMATIC`](@ref), or
-[`MANUAL`](@ref)) of `model`.
+Return the [`ModelMode`](@ref) of `model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> mode(model)
+AUTOMATIC::ModelMode = 0
+```
 """
 function mode(model::GenericModel)
     # The type of `backend(model)` is not type-stable, so we use a function
