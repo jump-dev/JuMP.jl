@@ -102,22 +102,69 @@ function reshape_vector end
     shape(c::AbstractConstraint)::AbstractShape
 
 Return the shape of the constraint `c`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> c = @constraint(model, x[2] <= 1);
+
+julia> shape(constraint_object(c))
+ScalarShape()
+
+julia> d = @constraint(model, x in SOS1());
+
+julia> shape(constraint_object(d))
+VectorShape()
+```
 """
 function shape end
 
 """
-    ScalarShape
+    ScalarShape()
 
-Shape of scalar constraints.
+An [`AbstractShape`](@ref) that represents scalar constraints.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> c = @constraint(model, x[2] <= 1);
+
+julia> shape(constraint_object(c))
+ScalarShape()
+```
 """
 struct ScalarShape <: AbstractShape end
+
 reshape_vector(α, ::ScalarShape) = α
 
 """
-    VectorShape
+    VectorShape()
 
-Vector for which the vectorized form corresponds exactly to the vector given.
+An [`AbstractShape`](@ref) that represents vector-valued constraints.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> c = @constraint(model, x in SOS1());
+
+julia> shape(constraint_object(c))
+VectorShape()
+```
 """
 struct VectorShape <: AbstractShape end
+
 reshape_vector(vectorized_form, ::VectorShape) = vectorized_form
+
 vectorize(x, ::VectorShape) = x

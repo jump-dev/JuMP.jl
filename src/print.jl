@@ -238,6 +238,19 @@ end
     show_objective_function_summary(io::IO, model::AbstractModel)
 
 Write to `io` a summary of the objective function type.
+
+## Extensions
+
+`AbstractModel`s should implement this method.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> show_objective_function_summary(stdout, model)
+Objective function type: AffExpr
+```
 """
 function show_objective_function_summary(io::IO, model::GenericModel)
     nlobj = _nlp_objective_function(model)
@@ -254,6 +267,21 @@ end
     show_constraints_summary(io::IO, model::AbstractModel)
 
 Write to `io` a summary of the number of constraints.
+
+## Extensions
+
+`AbstractModel`s should implement this method.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0);
+
+julia> show_constraints_summary(stdout, model)
+`VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint
+```
 """
 function show_constraints_summary(io::IO, model::GenericModel)
     for (F, S) in list_of_constraint_types(model)
@@ -272,7 +300,20 @@ end
 
 Print a summary of the optimizer backing `model`.
 
+## Extensions
+
 `AbstractModel`s should implement this method.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> show_backend_summary(stdout, model)
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+```
 """
 function show_backend_summary(io::IO, model::GenericModel)
     model_mode = mode(model)
@@ -412,6 +453,19 @@ end
     model_string(mode::MIME, model::AbstractModel)
 
 Return a `String` representation of `model` given the `mode`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0);
+
+julia> print(model_string(MIME("text/plain"), model))
+Feasibility
+Subject to
+ x ≥ 0
+```
 """
 function model_string(mode::MIME, model::AbstractModel)
     if mode == MIME("text/latex")
@@ -424,6 +478,19 @@ end
     objective_function_string(mode, model::AbstractModel)::String
 
 Return a `String` describing the objective function of the model.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @objective(model, Min, 2 * x);
+
+julia> objective_function_string(MIME("text/plain"), model)
+"2 x"
+```
 """
 function objective_function_string(mode, model::GenericModel)
     nlobj = _nlp_objective_function(model)
@@ -475,6 +542,21 @@ end
     constraints_string(mode, model::AbstractModel)::Vector{String}
 
 Return a list of `String`s describing each constraint of the model.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0);
+
+julia> @constraint(model, c, 2 * x <= 1);
+
+julia> constraints_string(MIME("text/plain"), model)
+2-element Vector{String}:
+ "c : 2 x ≤ 1"
+ "x ≥ 0"
+```
 """
 function constraints_string(mode, model::GenericModel)
     strings = String[
@@ -641,6 +723,17 @@ end
     )
 
 Return a `String` representing the function `func` using print mode `mode`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> function_string(MIME("text/plain"), 2 * x + 1)
+"2 x + 1"
+```
 """
 function function_string(mode::MIME"text/plain", v::AbstractVariableRef)
     var_name = name(v)
@@ -845,6 +938,18 @@ end
 
 Return a `String` representing the membership to the set `set` using print mode
 `mode`.
+
+## Extensions
+
+JuMP extensions may extend this method for new `set` types to improve the
+legibility of their printing.
+
+## Example
+
+```jldoctest
+julia> in_set_string(MIME("text/plain"), MOI.Interval(1.0, 2.0))
+"∈ [1, 2]"
+```
 """
 function in_set_string end
 
@@ -918,6 +1023,19 @@ end
     )
 
 Return a string representation of the constraint `ref`, given the `mode`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2 * x <= 1);
+
+julia> constraint_string(MIME("text/plain"), c)
+"c : 2 x ≤ 1"
+```
 """
 function constraint_string(mode::MIME, ref::ConstraintRef; in_math_mode = false)
     return constraint_string(

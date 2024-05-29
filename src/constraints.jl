@@ -33,6 +33,19 @@ end
     index(cr::ConstraintRef)::MOI.ConstraintIndex
 
 Return the index of the constraint that corresponds to `cr` in the MOI backend.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, x >= 0);
+
+julia> index(c)
+MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}(1)
+```
 """
 index(cr::ConstraintRef) = cr.index
 
@@ -60,6 +73,7 @@ julia> MOI.get(model_new, MOI.ConstraintName(), c)
 ERROR: ConstraintNotOwned{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}(c : x ≥ 0)
 Stacktrace:
 [...]
+```
 """
 struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
     constraint_ref::C
@@ -487,6 +501,9 @@ end
     constraint_ref_with_index(model::AbstractModel, index::MOI.ConstraintIndex)
 
 Return a `ConstraintRef` of `model` corresponding to `index`.
+
+This function is a helper function used internally by JuMP and some JuMP
+extensions. It should not need to be called in user-code.
 """
 function constraint_ref_with_index(
     model::AbstractModel,
@@ -497,6 +514,7 @@ function constraint_ref_with_index(
 )
     return ConstraintRef(model, index, ScalarShape())
 end
+
 function constraint_ref_with_index(
     model::AbstractModel,
     index::MOI.ConstraintIndex{
@@ -607,7 +625,25 @@ end
 """
     is_valid(model::GenericModel, con_ref::ConstraintRef{<:AbstractModel})
 
-Return `true` if `constraint_ref` refers to a valid constraint in `model`.
+Return `true` if `con_ref` refers to a valid constraint in `model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2 * x <= 1);
+
+julia> is_valid(model, c)
+true
+
+julia> model_2 = Model();
+
+julia> is_valid(model_2, c)
+false
+```
 """
 function is_valid(model::GenericModel, con_ref::ConstraintRef{<:AbstractModel})
     return (
@@ -1357,7 +1393,7 @@ true
 
 julia> dual(c)
 -2.0
-````
+```
 """
 function dual(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex};

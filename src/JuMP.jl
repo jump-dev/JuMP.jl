@@ -598,13 +598,30 @@ end
     set_string_names_on_creation(model::GenericModel, value::Bool)
 
 Set the default argument of the `set_string_name` keyword in the
-[`@variable`](@ref) and [`@constraint`](@ref) macros to `value`. This is used to
-determine whether to assign `String` names to all variables and constraints in
-`model`.
+[`@variable`](@ref) and [`@constraint`](@ref) macros to `value`.
+
+The `set_string_name` keyword is used to determine whether to assign `String`
+names to all variables and constraints in `model`.
 
 By default, `value` is `true`. However, for larger models calling
 `set_string_names_on_creation(model, false)` can improve performance at the cost
 of reducing the readability of printing and solver log messages.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_string_names_on_creation(model)
+true
+
+julia> set_string_names_on_creation(model, false)
+
+julia> set_string_names_on_creation(model)
+false
+```
 """
 function set_string_names_on_creation(model::GenericModel, value::Bool)
     model.set_string_names_on_creation = value
@@ -1205,6 +1222,43 @@ Base.iterate(x::AbstractJuMPScalar) = (x, true)
 Base.iterate(::AbstractJuMPScalar, state) = nothing
 Base.isempty(::AbstractJuMPScalar) = false
 Base.length(::AbstractJuMPScalar) = 1
+
+"""
+    isequal_canonical(
+        x::T,
+        y::T
+    ) where {T<:AbstractJuMPScalar,AbstractArray{<:AbstractJuMPScalar}}
+
+Return `true` if `x` is equal to `y` after dropping zeros and disregarding
+the order.
+
+This method is mainly useful for testing, because fallbacks like `x == y` do not
+account for valid mathematical comparisons like `x[1] + 0 x[2] + 1 == x[1] + 1`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> a = x[1] + 1.0
+x[1] + 1
+
+julia> b = x[1] + x[2] + 1.0
+x[1] + x[2] + 1
+
+julia> add_to_expression!(b, -1.0, x[2])
+x[1] + 0 x[2] + 1
+
+julia> a == b
+false
+
+julia> isequal_canonical(a, b)
+true
+```
+"""
+function isequal_canonical end
 
 # Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
 function isequal_canonical(

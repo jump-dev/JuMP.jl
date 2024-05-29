@@ -334,15 +334,28 @@ function Base.showerror(io::IO, err::VariableNotOwned)
 end
 
 """
-    check_belongs_to_model(func::AbstractJuMPScalar, model::AbstractModel)
+    check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
+    check_belongs_to_model(x::AbstractConstraint, model::AbstractModel)
 
-Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of one of the
-variables of the function `func` is not `model`.
+Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of `x` is not
+`model`.
 
-    check_belongs_to_model(constraint::AbstractConstraint, model::AbstractModel)
+## Example
 
-Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of one of the
-variables of the constraint `constraint` is not `model`.
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> check_belongs_to_model(x, model)
+
+julia> model_2 = Model();
+
+julia> check_belongs_to_model(x, model_2)
+ERROR: VariableNotOwned{VariableRef}(x): the variable x cannot be used in this model because
+it belongs to a different model.
+[...]
+```
 """
 function check_belongs_to_model end
 
@@ -350,6 +363,7 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     if owner_model(v) !== model
         throw(VariableNotOwned(v))
     end
+    return
 end
 
 Base.iszero(::GenericVariableRef) = false
@@ -2052,9 +2066,7 @@ function JuMP.add_variable(
 end
 ```
 but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
-instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
-for the difference between adding the variables with `MOI.add_constrained_variable`
-and adding them with `MOI.add_variable` and adding the constraint separately.
+instead.
 """
 struct VariableConstrainedOnCreation{
     S<:MOI.AbstractScalarSet,

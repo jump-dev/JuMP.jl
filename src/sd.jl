@@ -76,17 +76,18 @@ struct HermitianMatrixSpace end
     PSDCone
 
 Positive semidefinite cone object that can be used to constrain a square matrix
-to be positive semidefinite in the [`@constraint`](@ref) macro. If the matrix
-has type `Symmetric` then the columns vectorization (the vector obtained by
-concatenating the columns) of its upper triangular part is constrained to belong
-to the `MOI.PositiveSemidefiniteConeTriangle` set, otherwise its column
-vectorization is constrained to belong to the
-`MOI.PositiveSemidefiniteConeSquare` set.
+to be positive semidefinite in the [`@constraint`](@ref) macro.
+
+If the matrix has type `Symmetric` then the columns vectorization (the vector
+obtained by concatenating the columns) of its upper triangular part is
+constrained to belong to the [`MOI.PositiveSemidefiniteConeTriangle`](@ref) set,
+otherwise its column vectorization is constrained to belong to the
+[`MOI.PositiveSemidefiniteConeSquare`](@ref) set.
 
 ## Example
 
-Consider the following example:
-```jldoctest PSDCone
+Non-symmetric case:
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x);
@@ -109,11 +110,19 @@ julia> jump_function(constraint_object(cref))
 julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
-We see in the output of the last command that the vectorization of the matrix
-is constrained to belong to the `PositiveSemidefiniteConeSquare`.
+
+Symmetric case:
 
 ```jldoctest PSDCone
 julia> using LinearAlgebra # For Symmetric
+
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> a = [x 2x; 2x x];
+
+julia> b = [1 2; 2 4];
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
 [x - 1    2 x - 2
@@ -128,9 +137,6 @@ julia> jump_function(constraint_object(cref))
 julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
-As we see in the output of the last command, the vectorization of only the upper
-triangular part of the matrix is constrained to belong to the
-`PositiveSemidefiniteConeSquare`.
 """
 struct PSDCone end
 
@@ -362,45 +368,6 @@ function value(
     )
 end
 
-"""
-    build_constraint(
-        error_fn::Function,
-        Q::LinearAlgebra.Symmetric{V, M},
-        ::PSDCone,
-    ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
-
-Return a [`VectorConstraint`](@ref) of shape [`SymmetricMatrixShape`](@ref)
-constraining the matrix `Q` to be positive semidefinite.
-
-This function is used by the [`@constraint`](@ref) macros as follows:
-```jldoctest
-julia> import LinearAlgebra
-
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2]);
-
-julia> @constraint(model, LinearAlgebra.Symmetric(Q) in PSDCone())
-[Q[1,1]  Q[1,2]
- Q[1,2]  Q[2,2]] ∈ PSDCone()
-```
-
-The form above is usually used when the entries of `Q` are affine or quadratic
-expressions, but it can also be used when the entries are variables to get the
-reference of the semidefinite constraint, for example,
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, Q[1:2, 1:2], Symmetric)
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- Q[1,1]  Q[1,2]
- Q[1,2]  Q[2,2]
-
-julia> @constraint(model, Q in PSDCone())
-[Q[1,1]  Q[1,2]
- Q[1,2]  Q[2,2]] ∈ PSDCone()
-```
-"""
 function build_constraint(
     error_fn::Function,
     Q::LinearAlgebra.Symmetric{V,M},
