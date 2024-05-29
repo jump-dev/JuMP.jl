@@ -462,7 +462,10 @@ julia> model = Model();
 julia> @variable(model, x >= 0);
 
 julia> model_string(MIME("text/plain"), model)
-"Feasibility\nSubject to\n x ≥ 0\n"
+"Feasibility
+Subject to
+ x ≥ 0
+"
 ```
 """
 function model_string(mode::MIME, model::AbstractModel)
