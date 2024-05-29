@@ -263,11 +263,6 @@ function add_nonlinear_parameter(model::Model, value::Real)
     return NonlinearParameter(model, p.value)
 end
 
-"""
-    index(p::NonlinearParameter)::MOI.Nonlinear.ParameterIndex
-
-Return the index of the nonlinear parameter associated with `p`.
-"""
 index(p::NonlinearParameter) = MOI.Nonlinear.ParameterIndex(p.index)
 
 """
@@ -372,11 +367,6 @@ function MOI.Nonlinear.parse_expression(
     return MOI.Nonlinear.parse_expression(model, expr, index, parent)
 end
 
-"""
-    index(ex::NonlinearExpression)::MOI.Nonlinear.ExpressionIndex
-
-Return the index of the nonlinear expression associated with `ex`.
-"""
 index(ex::NonlinearExpression) = MOI.Nonlinear.ExpressionIndex(ex.index)
 
 """

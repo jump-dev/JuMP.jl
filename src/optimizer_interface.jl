@@ -370,6 +370,19 @@ Errors if `model` is in direct mode during a call from the function named
 
 Used internally within JuMP, or by JuMP extensions who do not want to support
 models in direct mode.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = direct_model(HiGHS.Optimizer());
+
+julia> error_if_direct_mode(model, :foo)
+ERROR: The `foo` function is not supported in DIRECT mode.
+Stacktrace:
+[...]
+```
 """
 function error_if_direct_mode(model::GenericModel, func::Symbol)
     if mode(model) == DIRECT
@@ -507,6 +520,28 @@ If `ignore_optimize_hook == true`, the optimize hook is ignored and the model is
 solved as if the hook was not set. Keyword arguments `kwargs` are passed to the
 `optimize_hook`. An error is thrown if `optimize_hook` is `nothing` and keyword
 arguments are provided.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> function my_optimize_hook(model; foo)
+           println("Hook called with foo = ", foo)
+           return optimize!(model; ignore_optimize_hook = true)
+       end
+my_optimize_hook (generic function with 1 method)
+
+julia> set_optimize_hook(model, my_optimize_hook)
+my_optimize_hook (generic function with 1 method)
+
+julia> optimize!(model; foo = 2)
+Hook called with foo = 2
+```
 """
 function optimize!(
     model::GenericModel;
@@ -590,13 +625,41 @@ end
 """
     compute_conflict!(model::GenericModel)
 
-Compute a conflict if the model is infeasible. If an optimizer has not
-been set yet (see [`set_optimizer`](@ref)), a [`NoOptimizer`](@ref)
-error is thrown.
+Compute a conflict if the model is infeasible.
 
-The status of the conflict can be checked with the `MOI.ConflictStatus`
+The conflict is also called the Irreducible Infeasible Subsystem (IIS).
+
+If an optimizer has not been set yet (see [`set_optimizer`](@ref)), a
+[`NoOptimizer`](@ref) error is thrown.
+
+The status of the conflict can be checked with the [`MOI.ConflictStatus`](@ref)
 model attribute. Then, the status for each constraint can be queried with
-the `MOI.ConstraintConflictStatus` attribute.
+the [`MOI.ConstraintConflictStatus`](@ref) attribute.
+
+See also: [`copy_conflict`](@ref)
+
+## Example
+
+```julia
+julia> using JuMP
+
+julia> model = Model(Gurobi.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0);
+
+julia> @constraint(model, c1, x >= 2);
+
+julia> @constraint(model, c2, x <= 1);
+
+julia> optimize!(model)
+
+julia> compute_conflict!(model)
+
+julia> get_attribute(model, MOI.ConflictStatus())
+CONFLICT_FOUND::ConflictStatusCode = 3
+```
 """
 function compute_conflict!(model::GenericModel)
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER

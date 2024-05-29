@@ -13,6 +13,33 @@
 
 Return an [`MOI.CallbackNodeStatusCode`](@ref) enum, indicating if the current
 primal solution available from [`callback_value`](@ref) is integer feasible.
+
+## Example
+
+```jldoctest; filter=r"CALLBACK_NODE_STATUS_.+"
+julia> import GLPK
+
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x <= 10, Int);
+
+julia> @objective(model, Max, x);
+
+julia> function my_callback_function(cb_data)
+           status = callback_node_status(cb_data, model)
+           println("Status is: ", status)
+           return
+       end
+my_callback_function (generic function with 1 method)
+
+julia> set_attribute(model, GLPK.CallbackFunction(), my_callback_function)
+
+julia> optimize!(model)
+Status is: CALLBACK_NODE_STATUS_UNKNOWN
+Status is: CALLBACK_NODE_STATUS_UNKNOWN
+Status is: CALLBACK_NODE_STATUS_INTEGER
+Status is: CALLBACK_NODE_STATUS_INTEGER
+```
 """
 function callback_node_status(cb_data, model::GenericModel)
     # TODO(odow):
@@ -29,11 +56,41 @@ end
 
 """
     callback_value(cb_data, x::GenericVariableRef)
+    callback_value(cb_data, x::Union{GenericAffExpr,GenericQuadExpr})
 
-Return the primal solution of a variable inside a callback.
+Return the primal solution of `x` inside a callback.
 
 `cb_data` is the argument to the callback function, and the type is dependent on
 the solver.
+
+Use [`callback_node_status`](@ref) to check whether a solution is available.
+
+## Example
+
+```jldoctest
+julia> import GLPK
+
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x <= 10, Int);
+
+julia> @objective(model, Max, x);
+
+julia> function my_callback_function(cb_data)
+           status = callback_node_status(cb_data, model)
+           if status == MOI.CALLBACK_NODE_STATUS_INTEGER
+               println("Solution is: ", callback_value(cb_data, x))
+           end
+           return
+       end
+my_callback_function (generic function with 1 method)
+
+julia> set_attribute(model, GLPK.CallbackFunction(), my_callback_function)
+
+julia> optimize!(model)
+Solution is: 10.0
+Solution is: 10.0
+```
 """
 function callback_value(cb_data, x::GenericVariableRef)
     # TODO(odow):
@@ -52,15 +109,6 @@ function callback_value(cb_data, x::GenericVariableRef)
     )
 end
 
-"""
-    callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
-
-Return the primal solution of an affine or quadratic expression inside a
-callback by getting the value for each variable appearing in the expression.
-
-`cb_data` is the argument to the callback function, and the type is dependent on
-the solver.
-"""
 function callback_value(cb_data, expr::Union{GenericAffExpr,GenericQuadExpr})
     return value(expr) do x
         return callback_value(cb_data, x)
