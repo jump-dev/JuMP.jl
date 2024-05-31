@@ -1070,4 +1070,21 @@ function test_print_omit_vector()
     return
 end
 
+function test_invalid_references()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, c[i=1:2], x[i] <= i)
+    delete(model, c[1])
+    delete(model, x[1])
+    mime = MIME("text/plain")
+    @test sprint(show, mime, x[1]) == "InvalidVariableRef"
+    @test occursin("InvalidVariableRef", sprint(show, mime, x))
+    @test sprint(show, mime, c[1]) == "InvalidConstraintRef"
+    @test occursin("InvalidConstraintRef", sprint(show, mime, c))
+    mime = MIME("text/latex")
+    @test sprint(show, mime, x[1]) == "\$ InvalidVariableRef \$"
+    @test sprint(show, mime, c[1]) == "InvalidConstraintRef"
+    return
+end
+
 end  # TestPrint

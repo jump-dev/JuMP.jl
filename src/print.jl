@@ -736,6 +736,9 @@ julia> function_string(MIME("text/plain"), 2 * x + 1)
 ```
 """
 function function_string(mode::MIME"text/plain", v::AbstractVariableRef)
+    if !is_valid(owner_model(v), v)
+        return "InvalidVariableRef"
+    end
     var_name = name(v)
     if isempty(var_name)
         return anonymous_name(mode, v)
@@ -744,6 +747,9 @@ function function_string(mode::MIME"text/plain", v::AbstractVariableRef)
 end
 
 function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
+    if !is_valid(owner_model(v), v)
+        return "InvalidVariableRef"
+    end
     var_name = name(v)
     if isempty(var_name)
         return anonymous_name(mode, v)
@@ -1038,6 +1044,9 @@ julia> constraint_string(MIME("text/plain"), c)
 ```
 """
 function constraint_string(mode::MIME, ref::ConstraintRef; in_math_mode = false)
+    if !is_valid(owner_model(ref), ref)
+        return "InvalidConstraintRef"
+    end
     return constraint_string(
         mode,
         name(ref),
