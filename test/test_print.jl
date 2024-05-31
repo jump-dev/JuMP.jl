@@ -1073,7 +1073,7 @@ end
 function test_invalid_references()
     model = Model()
     @variable(model, x[1:2])
-    @constraint(model, c[i=1:2], x[i] <= i)
+    @constraint(model, c[i in 1:2], x[i] <= i)
     delete(model, c[1])
     delete(model, x[1])
     mime = MIME("text/plain")
