@@ -119,6 +119,13 @@ function JuMP.add_constraint(
     )
 end
 
+function JuMP.is_valid(
+    model::M,
+    con_ref::ConstraintRef{M,CustomIndex},
+) where {M<:GenericModel}
+    return 1 <= con_ref.index.value <= length(model.ext[:custom_constraints])
+end
+
 function JuMP.constraint_object(cref::ConstraintRef{Model,CustomIndex})
     return cref.model.ext[:custom_constraints][cref.index.value]
 end
