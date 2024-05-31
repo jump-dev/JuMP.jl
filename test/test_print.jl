@@ -119,6 +119,13 @@ function JuMP.add_constraint(
     )
 end
 
+function JuMP.is_valid(
+    model::M,
+    con_ref::ConstraintRef{M,CustomIndex},
+) where {M<:GenericModel}
+    return 1 <= con_ref.index.value <= length(model.ext[:custom_constraints])
+end
+
 function JuMP.constraint_object(cref::ConstraintRef{Model,CustomIndex})
     return cref.model.ext[:custom_constraints][cref.index.value]
 end
@@ -1067,6 +1074,23 @@ function test_print_omit_vector()
     @variable(model, x[1:n, 1:n])
     @constraint(model, vec(x) >= 0)
     @test occursin("9970 terms omitted", sprint(print, model))
+    return
+end
+
+function test_invalid_references()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, c[i in 1:2], x[i] <= i)
+    delete(model, c[1])
+    delete(model, x[1])
+    mime = MIME("text/plain")
+    @test sprint(show, mime, x[1]) == "InvalidVariableRef"
+    @test occursin("InvalidVariableRef", sprint(show, mime, x))
+    @test sprint(show, mime, c[1]) == "InvalidConstraintRef"
+    @test occursin("InvalidConstraintRef", sprint(show, mime, c))
+    mime = MIME("text/latex")
+    @test sprint(show, mime, x[1]) == "\$ InvalidVariableRef \$"
+    @test sprint(show, mime, c[1]) == "InvalidConstraintRef"
     return
 end
 
