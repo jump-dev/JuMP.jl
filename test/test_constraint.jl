@@ -1898,11 +1898,13 @@ function test_symmetric_matrix_inequality()
         @test isequal_canonical(o.func, g)
         @test o.set == moi_set(set, 3)
         @test o.shape == SymmetricMatrixShape(2)
+        @test reshape_set(o.set, o.shape) == set
         c = @constraint(model, x <= y, set)
         o = constraint_object(c)
         @test isequal_canonical(o.func, -g)
         @test o.set == moi_set(set, 3)
         @test o.shape == SymmetricMatrixShape(2)
+        @test reshape_set(o.set, o.shape) == set
     end
     return
 end
