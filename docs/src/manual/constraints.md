@@ -1474,6 +1474,44 @@ julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
 ```
 (Note that no error is thrown, even though `X` is not symmetric.)
 
+## Symmetric matrices
+
+Inequalities between symmetric matrices are not supported, due to the common
+ambiguity between elementwise inequalities and a [`PSDCone`](@ref) constraint.
+```jldoctest symmetric_matrix
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], Symmetric);
+
+julia> @variable(model, y[1:2, 1:2], Symmetric);
+
+julia> @constraint(model, x >= y)
+ERROR: At REPL[91]:1: `@constraint(model, x >= y)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermmitianPSDCone())`.
+Stacktrace:
+[...]
+```
+
+Instead, use the [Set inequality syntax](@ref) to specify either a [`PSDCone`](@ref),
+or a elementwise inequality set like [`Nonnegatives`](@ref):
+
+```jldoctest symmetric_matrix
+julia> @constraint(model, x >= y, PSDCone())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ PSDCone()
+
+julia> @constraint(model, x >= y, Nonnegatives())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Nonnegatives()
+
+julia> @constraint(model, x >= y, Nonpositives())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Nonpositives()
+
+julia> @constraint(model, x >= y, Zeros())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Zeros()
+```
+
 ## Complementarity constraints
 
 A mixed complementarity constraint `F(x) ⟂ x` consists of finding `x` in the

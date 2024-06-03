@@ -1887,4 +1887,24 @@ function test_set_normalized_coefficient_quadratic_batch()
     return
 end
 
+function test_symmetric_matrix_inequality()
+    model = Model()
+    @variable(model, x[1:2, 1:2], Symmetric)
+    @variable(model, y[1:2, 1:2], Symmetric)
+    g = [x[1, 1] - y[1, 1], x[1, 2] - y[1, 2], x[2, 2] - y[2, 2]]
+    for set in (Nonnegatives(), Nonpositives(), Zeros())
+        c = @constraint(model, x >= y, set)
+        o = constraint_object(c)
+        @test isequal_canonical(o.func, g)
+        @test o.set == moi_set(set, 3)
+        @test o.shape == SymmetricMatrixShape(2)
+        c = @constraint(model, x <= y, set)
+        o = constraint_object(c)
+        @test isequal_canonical(o.func, -g)
+        @test o.set == moi_set(set, 3)
+        @test o.shape == SymmetricMatrixShape(2)
+    end
+    return
+end
+
 end  # module
