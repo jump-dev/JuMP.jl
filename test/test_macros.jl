@@ -1963,7 +1963,7 @@ function test_matrix_in_vector_set()
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
             "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
             "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
-            "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
+            "or `@constraint(model, X >= 0, HermitianPSDCone())`.",
         ),
         @constraint(model, X >= A),
     )
@@ -1973,7 +1973,7 @@ function test_matrix_in_vector_set()
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
             "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
             "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
-            "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
+            "or `@constraint(model, X <= 0, HermitianPSDCone())`.",
         ),
         @constraint(model, X <= A),
     )
