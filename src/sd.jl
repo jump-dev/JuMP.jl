@@ -126,7 +126,7 @@ julia> b = [1 2; 2 4];
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
 [x - 1  2 x - 2
- ⋅      x - 4] ∈ PSDCone()
+ ⋯      x - 4] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
 3-element Vector{AffExpr}:

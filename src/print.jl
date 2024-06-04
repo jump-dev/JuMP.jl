@@ -908,9 +908,9 @@ function function_string(
                 line *= " & "
             end
             if A isa LinearAlgebra.Symmetric && i > j
-                line *= "\\cdot"
+                line *= "\\cdots"
             elseif A isa LinearAlgebra.UpperTriangular && i > j
-                line *= "\\cdot"
+                line *= "\\cdots"
             else
                 line *= function_string(mode, A[i, j])
             end
@@ -935,7 +935,9 @@ function function_string(
     constraint::VectorConstraint{F,S,SymmetricMatrixShape},
 ) where {F,S}
     f = reshape_vector(jump_function(constraint), shape(constraint))
-    return function_string(mode, LinearAlgebra.UpperTriangular(f))
+    str = function_string(mode, LinearAlgebra.UpperTriangular(f))
+    return replace(str, "⋅" => "⋯")
+
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)

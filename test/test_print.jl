@@ -605,7 +605,7 @@ Subject to
  con : a + b - 10 c + c1 - 2 x $le 1
  a*b $le 2
  [a  b
-  ⋅  x] $inset $(PSDCone())
+  ⋯  x] $inset $(PSDCone())
  [a, b, c] $inset $(MOI.PositiveSemidefiniteConeTriangle(2))
  [a  b
   c  x] $inset $(PSDCone())
@@ -666,7 +666,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
         " & a\\times b \\leq 2\\\\\n" *
         " & \\begin{bmatrix}\n" *
         "a & b\\\\\n" *
-        "\\cdot & x\\\\\n" *
+        "\\cdots & x\\\\\n" *
         "\\end{bmatrix} \\in \\text{$(PSDCone())}\\\\\n" *
         " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\\n" *
         " & \\begin{bmatrix}\n" *
@@ -1100,13 +1100,13 @@ function test_symmetric_constraint()
     @test function_string(MIME("text/plain"), x) ==
           "[x[1,1]  x[1,2]\n x[1,2]  x[2,2]]"
     @test function_string(MIME("text/latex"), x) ==
-          "\\begin{bmatrix}\nx_{1,1} & x_{1,2}\\\\\n\\cdot & x_{2,2}\\\\\n\\end{bmatrix}"
+          "\\begin{bmatrix}\nx_{1,1} & x_{1,2}\\\\\n\\cdots & x_{2,2}\\\\\n\\end{bmatrix}"
     c = @constraint(model, x in PSDCone())
     o = constraint_object(c)
     @test function_string(MIME("text/plain"), o) ==
-          "[x[1,1]  x[1,2]\n ⋅       x[2,2]]"
+          "[x[1,1]  x[1,2]\n ⋯       x[2,2]]"
     @test function_string(MIME("text/latex"), o) ==
-          "\\begin{bmatrix}\nx_{1,1} & x_{1,2}\\\\\n\\cdot & x_{2,2}\\\\\n\\end{bmatrix}"
+          "\\begin{bmatrix}\nx_{1,1} & x_{1,2}\\\\\n\\cdots & x_{2,2}\\\\\n\\end{bmatrix}"
     return
 end
 
