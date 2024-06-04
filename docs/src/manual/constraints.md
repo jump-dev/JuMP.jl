@@ -202,12 +202,12 @@ julia> @variable(model, X[1:2, 1:2], Symmetric)
 
 julia> @constraint(model, X == LinearAlgebra.I)
 [X[1,1] - 1  X[1,2]
- X[1,2]      X[2,2] - 1] ∈ Zeros()
+ ⋅           X[2,2] - 1] ∈ Zeros()
 ```
 
-Despite the model showing the matrix in [`Zeros`](@ref), this will add only
-three rows to the constraint matrix because the symmetric constraints are
-redundant. In contrast, the broadcasting syntax adds four linear constraints:
+This will add only three rows to the constraint matrix because the symmetric
+constraints are redundant. In contrast, the broadcasting syntax adds four linear
+constraints:
 
 ```jldoctest con_symmetric_zeros
 julia> @constraint(model, X .== LinearAlgebra.I)
