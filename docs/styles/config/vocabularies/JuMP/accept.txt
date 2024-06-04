@@ -19,6 +19,7 @@ discretize(d|s)
 docstring(?s)
 doctest(?s)
 embeddable
+elementwise
 [Ee]num(?s)
 errored
 flamegraph
