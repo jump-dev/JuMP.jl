@@ -178,7 +178,7 @@ julia> @variable(model, X[1:2, 1:2])
  X[2,1]  X[2,2]
 
 julia> @constraint(model, X >= 0)
-ERROR: At none:1: `@constraint(model, X >= 0)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermmitianPSDCone())`.
+ERROR: At none:1: `@constraint(model, X >= 0)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermitianPSDCone())`.
 Stacktrace:
 [...]
 ```
