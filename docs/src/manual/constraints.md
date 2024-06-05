@@ -202,12 +202,12 @@ julia> @variable(model, X[1:2, 1:2], Symmetric)
 
 julia> @constraint(model, X == LinearAlgebra.I)
 [X[1,1] - 1  X[1,2]
- X[1,2]      X[2,2] - 1] ∈ Zeros()
+ ⋯           X[2,2] - 1] ∈ Zeros()
 ```
 
-Despite the model showing the matrix in [`Zeros`](@ref), this will add only
-three rows to the constraint matrix because the symmetric constraints are
-redundant. In contrast, the broadcasting syntax adds four linear constraints:
+This will add only three rows to the constraint matrix because the symmetric
+constraints are redundant. In contrast, the broadcasting syntax adds four linear
+constraints:
 
 ```jldoctest con_symmetric_zeros
 julia> @constraint(model, X .== LinearAlgebra.I)
@@ -1462,7 +1462,7 @@ julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
 
 julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
 [X[1,1]  X[1,2]
- X[1,2]  X[2,2]] ∈ PSDCone()
+ ⋯       X[2,2]] ∈ PSDCone()
 ```
 
 Note that the lower triangular entries are ignored even if they are
@@ -1470,9 +1470,9 @@ different so use it with caution:
 ```jldoctest con_psd
 julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
 [X[1,1]  X[1,2]
- X[1,2]  X[2,2]] ∈ PSDCone()
+ ⋯       X[2,2]] ∈ PSDCone()
 ```
-(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)
+(Note that no error is thrown, even though `X` is not symmetric.)
 
 ## Complementarity constraints
 

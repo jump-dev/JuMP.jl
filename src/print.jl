@@ -908,7 +908,9 @@ function function_string(
                 line *= " & "
             end
             if A isa LinearAlgebra.Symmetric && i > j
-                line *= "\\cdot"
+                line *= "\\cdots"
+            elseif A isa LinearAlgebra.UpperTriangular && i > j
+                line *= "\\cdots"
             else
                 line *= function_string(mode, A[i, j])
             end
@@ -921,6 +923,20 @@ end
 function function_string(mode, constraint::AbstractConstraint)
     f = reshape_vector(jump_function(constraint), shape(constraint))
     return function_string(mode, f)
+end
+
+# A special case for symmetric matrix constraints. Since the shape is
+# SymmetricMatrixShape, we know that MOI has been passed the upper triangle of
+# the matrix. We can make this clearer to users by printing the
+# LinearAlgebra.UpperTriangular. There shouldn't be any cases in which the
+# constraint function becomes ambiguous.
+function function_string(
+    mode,
+    constraint::VectorConstraint{F,S,SymmetricMatrixShape},
+) where {F,S}
+    f = reshape_vector(jump_function(constraint), shape(constraint))
+    str = function_string(mode, LinearAlgebra.UpperTriangular(f))
+    return replace(str, "⋅" => "⋯")
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
