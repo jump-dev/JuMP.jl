@@ -1891,6 +1891,8 @@ function test_symmetric_matrix_inequality()
     model = Model()
     @variable(model, x[1:2, 1:2], Symmetric)
     @variable(model, y[1:2, 1:2], Symmetric)
+    set_start_value.(x, [1 2; 2 3])
+    set_start_value.(y, [6 4; 4 7])
     g = [x[1, 1] - y[1, 1], x[1, 2] - y[1, 2], x[2, 2] - y[2, 2]]
     for set in (Nonnegatives(), Nonpositives(), Zeros())
         c = @constraint(model, x >= y, set)
@@ -1899,6 +1901,9 @@ function test_symmetric_matrix_inequality()
         @test o.set == moi_set(set, 3)
         @test o.shape == SymmetricMatrixShape(2)
         @test reshape_set(o.set, o.shape) == set
+        primal = value(start_value, c)
+        @test primal isa LinearAlgebra.Symmetric
+        @test primal == LinearAlgebra.Symmetric([-5.0 -2.0; -2.0 -4.0])
         @test_throws_runtime(
             ErrorException(
                 "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
@@ -1913,6 +1918,8 @@ function test_matrix_inequality()
     model = Model()
     @variable(model, x[1:2, 1:3])
     @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
     g = vec(x .- y)
     for set in (Nonnegatives(), Nonpositives(), Zeros())
         c = @constraint(model, x >= y, set)
@@ -1921,6 +1928,9 @@ function test_matrix_inequality()
         @test o.set == moi_set(set, 6)
         @test o.shape == ArrayShape((2, 3))
         @test reshape_set(o.set, o.shape) == set
+        primal = value(start_value, c)
+        @test primal isa Matrix{Float64}
+        @test primal == [-6.0 -7.0 -8.0; -4.0 -7.0 -7.0]
         @test_throws_runtime(
             ErrorException(
                 "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
