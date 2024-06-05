@@ -937,7 +937,6 @@ function function_string(
     f = reshape_vector(jump_function(constraint), shape(constraint))
     str = function_string(mode, LinearAlgebra.UpperTriangular(f))
     return replace(str, "⋅" => "⋯")
-
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
