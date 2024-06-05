@@ -188,19 +188,19 @@ Instead, use the [Set inequality syntax](@ref) to specify a set like
 ```jldoctest symmetric_matrix
 julia> @constraint(model, x >= y, PSDCone())
 [x[1,1] - y[1,1]  x[1,2] - y[1,2]
- x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ PSDCone()
+ ⋯                x[2,2] - y[2,2]] ∈ PSDCone()
 
 julia> @constraint(model, x >= y, Nonnegatives())
 [x[1,1] - y[1,1]  x[1,2] - y[1,2]
- x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Nonnegatives()
+ ⋯                x[2,2] - y[2,2]] ∈ Nonnegatives()
 
 julia> @constraint(model, x >= y, Nonpositives())
 [x[1,1] - y[1,1]  x[1,2] - y[1,2]
- x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Nonpositives()
+ ⋯                x[2,2] - y[2,2]] ∈ Nonpositives()
 
 julia> @constraint(model, x >= y, Zeros())
 [x[1,1] - y[1,1]  x[1,2] - y[1,2]
- x[1,2] - y[1,2]  x[2,2] - y[2,2]] ∈ Zeros()
+ ⋯                x[2,2] - y[2,2]] ∈ Zeros()
 ```
 
 ### Special cases
