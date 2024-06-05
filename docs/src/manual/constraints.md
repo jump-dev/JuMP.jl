@@ -1271,7 +1271,7 @@ julia> @constraint(model, x .- 1 >= 0, MOI.Nonnegatives(2))
 !!! warning
     The syntax `@constraint(model, y <= x, Set())` is supported, but it is not
     recommended because the value of the primal and dual solutions associated
-    with the connstraint may be the negative of what you expect.
+    with the constraint may be the negative of what you expect.
 
 ## Second-order cone constraints
 
@@ -1446,7 +1446,7 @@ julia> @constraint(model, X >= Y, PSDCone())
 !!! warning
     The syntax `@constraint(model, Y <= X, PSDCone())` is supported, but it is
     not recommended because the value of the primal and dual solutions associated
-    with the connstraint may be the negative of what you expect.
+    with the constraint may be the negative of what you expect.
 
 ### Symmetry
 
