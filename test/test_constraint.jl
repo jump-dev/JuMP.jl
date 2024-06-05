@@ -1899,12 +1899,12 @@ function test_symmetric_matrix_inequality()
         @test o.set == moi_set(set, 3)
         @test o.shape == SymmetricMatrixShape(2)
         @test reshape_set(o.set, o.shape) == set
-        c = @constraint(model, x <= y, set)
-        o = constraint_object(c)
-        @test isequal_canonical(o.func, -g)
-        @test o.set == moi_set(set, 3)
-        @test o.shape == SymmetricMatrixShape(2)
-        @test reshape_set(o.set, o.shape) == set
+        @test_throws_runtime(
+            ErrorException(
+                "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+            ),
+            @constraint(model, x <= y, set),
+        )
     end
     return
 end
@@ -1921,12 +1921,12 @@ function test_matrix_inequality()
         @test o.set == moi_set(set, 6)
         @test o.shape == ArrayShape((2, 3))
         @test reshape_set(o.set, o.shape) == set
-        c = @constraint(model, x <= y, set)
-        o = constraint_object(c)
-        @test isequal_canonical(o.func, -g)
-        @test o.set == moi_set(set, 6)
-        @test o.shape == ArrayShape((2, 3))
-        @test reshape_set(o.set, o.shape) == set
+        @test_throws_runtime(
+            ErrorException(
+                "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+            ),
+            @constraint(model, x <= y, set),
+        )
     end
     return
 end

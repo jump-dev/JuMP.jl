@@ -685,11 +685,11 @@ end
 
 function build_constraint(
     error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
+    ::Union{Array,LinearAlgebra.Symmetric},
     ::Nonpositives,
     set::Union{Nonnegatives,Nonpositives,Zeros},
 )
-    s = shape(f)
-    x = -vectorize(f, s)
-    return VectorConstraint(x, moi_set(set, length(x)), s)
+    return error_fn(
+        "The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+    )
 end
