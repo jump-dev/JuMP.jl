@@ -692,7 +692,7 @@ reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
 
 function build_constraint(
     error_fn::Function,
-    f::AbstractArray,
+    f::Array,
     ::Nonnegatives,
     set::Union{Nonnegatives,Nonpositives,Zeros},
 )
@@ -703,7 +703,7 @@ end
 
 function build_constraint(
     error_fn::Function,
-    f::AbstractArray,
+    f::Array,
     ::Nonpositives,
     set::Union{Nonnegatives,Nonpositives,Zeros},
 )
