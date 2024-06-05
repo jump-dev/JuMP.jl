@@ -685,3 +685,33 @@ function build_constraint(
     x = -vectorize(f, shape)
     return VectorConstraint(x, moi_set(set, length(x)), shape)
 end
+
+reshape_set(::MOI.Nonnegatives, ::SymmetricMatrixShape) = Nonnegatives()
+reshape_set(::MOI.Nonpositives, ::SymmetricMatrixShape) = Nonpositives()
+reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
+
+function build_constraint(
+    error_fn::Function,
+    f::AbstractArray,
+    ::Nonnegatives,
+    set::Union{Nonnegatives,Nonpositives,Zeros},
+)
+    shape = ArrayShape(size(f))
+    x = vectorize(f, shape)
+    return VectorConstraint(x, moi_set(set, length(x)), shape)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::AbstractArray,
+    ::Nonpositives,
+    set::Union{Nonnegatives,Nonpositives,Zeros},
+)
+    shape = ArrayShape(size(f))
+    x = -vectorize(f, shape)
+    return VectorConstraint(x, moi_set(set, length(x)), shape)
+end
+
+reshape_set(::MOI.Nonnegatives, ::ArrayShape) = Nonnegatives()
+reshape_set(::MOI.Nonpositives, ::ArrayShape) = Nonpositives()
+reshape_set(::MOI.Zeros, ::ArrayShape) = Zeros()
