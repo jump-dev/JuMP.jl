@@ -1238,8 +1238,9 @@ julia> @constraint(model, x in MOI.ExponentialCone())
 ## Set inequality syntax
 
 For modeling convenience, the syntax `@constraint(model, x >= y, Set())` is
-short-hand for `@constraint(model, x - y in Set())`. Therefore, the following
-calls are equivalent:
+short-hand for `@constraint(model, x - y in Set())`. 
+
+Therefore, the following calls are equivalent:
 ```jldoctest set_inequality
 julia> model = Model();
 
@@ -1248,9 +1249,6 @@ julia> @variable(model, x[1:2]);
 julia> y = [0.5, 0.75];
 
 julia> @constraint(model, x >= y, MOI.Nonnegatives(2))
-[x[1] - 0.5, x[2] - 0.75] ∈ MathOptInterface.Nonnegatives(2)
-
-julia> @constraint(model, y <= x, MOI.Nonnegatives(2))
 [x[1] - 0.5, x[2] - 0.75] ∈ MathOptInterface.Nonnegatives(2)
 
 julia> @constraint(model, x - y in MOI.Nonnegatives(2))
@@ -1269,6 +1267,11 @@ Use instead:
 julia> @constraint(model, x .- 1 >= 0, MOI.Nonnegatives(2))
 [x[1] - 1, x[2] - 1] ∈ MathOptInterface.Nonnegatives(2)
 ```
+
+!!! warning
+    The syntax `@constraint(model, y <= x, Set())` is supported, but it is not
+    recommended because the value of the primal and dual solutions associated
+    with the constraint may be the negative of what you expect.
 
 ## Second-order cone constraints
 
@@ -1439,6 +1442,11 @@ julia> @constraint(model, X >= Y, PSDCone())
 [X[1,1] - 1  X[1,2] - 2
  X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
 ```
+
+!!! warning
+    The syntax `@constraint(model, Y <= X, PSDCone())` is supported, but it is
+    not recommended because the value of the primal and dual solutions associated
+    with the constraint may be the negative of what you expect.
 
 ### Symmetry
 
