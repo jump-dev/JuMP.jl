@@ -8,11 +8,12 @@ you should _not_ use JuMP.
 
 ## When should you use JuMP?
 
-You should use JuMP if you have a constrained optimization problem for which you
-can formulate using the language of mathematical programming, that is:
+You should use JuMP if you have a constrained optimization problem that is
+formulated using the language of mathematical programming, that is, the problem
+has:
 
- * a set of decision variables
- * a scalar- or vector-valued objective function
+ * a set of real- or complex-valued decision variables
+ * a scalar- or vector-valued real objective function
  * a set of constraints.
 
 Key reasons to use JuMP include:
@@ -30,9 +31,7 @@ Key reasons to use JuMP include:
  - Ease of embedding
    - JuMP itself is written purely in Julia. Solvers are the only binary
      dependencies.
-   - JuMP provides automatic installation of many open-source solvers. This is
-     different to modeling languages in Python which require you to download
-     and install a solver yourself.
+   - JuMP provides automatic installation of most solvers.
    - Because it is embedded in a general-purpose programming language, JuMP
      makes it easy to solve optimization problems as part of a larger workflow,
      for example, inside a simulation, behind a web server, or as a subproblem
@@ -47,8 +46,7 @@ Key reasons to use JuMP include:
    - JuMP communicates with most solvers in memory, avoiding the need to write
      intermediary files.
  - Access to advanced algorithmic techniques
-   - JuMP supports efficient _in-memory_ re-solves of linear programs, which
-     previously required using solver-specific or low-level C++ libraries.
+   - JuMP supports efficient _in-memory_ re-solves of models.
    - JuMP provides access to solver-independent and solver-dependent
      [Callbacks](@ref callbacks_manual).
 
