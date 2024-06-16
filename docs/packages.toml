@@ -34,7 +34,7 @@
 [AmplNLWriter]
     rev = "v1.2.1"
 [BARON]
-    rev = "v0.8.3"
+    rev = "v0.8.5"
 [Cbc]
     rev = "v1.2.0"
 [Clp]
@@ -55,22 +55,22 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.2.3"
+    rev = "v1.3.0"
 [HiGHS]
     rev = "v1.9.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.6.2"
+    rev = "v1.6.3"
 [KNITRO]
     rev = "v0.14.2"
 [MiniZinc]
-    rev = "v0.3.8"
+    rev = "v0.3.9"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
-    rev = "v1.3.2"
+    rev = "v1.3.3"
     has_html = true
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
@@ -120,11 +120,11 @@
     rev = "v0.9.3"
 [Clarabel]
     user = "oxfordcontrol"
-    rev = "v0.7.1"
+    rev = "v0.9.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.16"
+    rev = "v1.1.17"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -161,10 +161,10 @@
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
-    rev  = "b6ea68189558558e44195c1f87c00d9f5038cf0d"
+    rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.58"
+    rev = "v0.4.65"
     filename = "Readme.md"
 [NEOSServer]
     user = "odow"
@@ -176,10 +176,10 @@
     rev = "v1.9.4"
 [OSQP]
     user = "osqp"
-    rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
+    rev = "v0.8.1"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.7.5"
+    rev = "v1.7.7"
 [Percival]
     user = "JuliaSmoothOptimizers"
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
