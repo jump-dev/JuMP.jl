@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Improved error message for unsupported container syntax like `x[A][B]`
    (#3756)
  - Docstring improvements (#3758), (#3760), (#3761), (#3767)
- - Added warning to documenntation about `Y <= X, Set()` syntax (#3769)
+ - Added warning to documentation about `Y <= X, Set()` syntax (#3769)
  - Work-around change on `nightly` (#3753), (#3754)
  - Improved printing of symmetric matrices when used in constraints (#3768)
  - Fixed a test for upcoming printing change in MOI (#3772)
