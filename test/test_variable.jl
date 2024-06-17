@@ -1651,4 +1651,15 @@ function test_variable_normalized_coefficient_vector_quadratic()
     return
 end
 
+function test_value_number()
+    model = Model()
+    @variable(model, x, start = 2)
+    @expression(model, expr[i in 0:2], (1 + x)^i)
+    y = Containers.DenseAxisArray([1, 3, 9], 0:2)
+    @test ≈(value.(start_value, expr), y)
+    @test value(expr[0]; result = 1) == 1
+    @test value(expr[0]; result = 2) == 1
+    return
+end
+
 end  # module TestVariable

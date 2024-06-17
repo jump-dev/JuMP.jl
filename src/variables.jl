@@ -2457,8 +2457,12 @@ function value(::AbstractArray{<:AbstractJuMPScalar})
     )
 end
 
-value(::_MA.Zero) = 0.0
-value(x::Number) = x
+# Fallback. See JuMP#3775
+value(::_MA.Zero; result::Int = 1) = 0.0
+
+value(x::Number; result::Int = 1) = x
+
+value(::Function, x::Number) = x
 
 function _info_from_variable(v::GenericVariableRef)
     has_lb = has_lower_bound(v)
