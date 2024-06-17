@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Improved error message for unsupported kwargs in variable macro (#3751)
+ - Improved error message for unsupported `kwargs` in variable macro (#3751)
  - Improved error message for unsupported container syntax like `x[A][B]`
    (#3756)
  - Docstring improvements (#3758), (#3760), (#3761), (#3767)
