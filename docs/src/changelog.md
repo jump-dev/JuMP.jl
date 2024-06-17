@@ -7,6 +7,27 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.22.2 (June 17, 2024)
+
+### Fixed
+
+ - Fixed printing to omit terms when printing a large array of expressions
+   (#3759)
+ - Fixed bug in printing when `show` is called on an invalid variable or
+   constraint (#3763)
+
+### Other
+
+ - Improved error message for unsupported `kwargs` in variable macro (#3751)
+ - Improved error message for unsupported container syntax like `x[A][B]`
+   (#3756)
+ - Docstring improvements (#3758), (#3760), (#3761), (#3767)
+ - Added warning to documentation about `Y <= X, Set()` syntax (#3769)
+ - Work-around change on `nightly` (#3753), (#3754)
+ - Improved printing of symmetric matrices when used in constraints (#3768)
+ - Fixed a test for upcoming printing change in MOI (#3772)
+ - Updated `should_i_use.md` (#3773)
+
 ## Version 1.22.1 (May 17, 2024)
 
 ### Fixed
