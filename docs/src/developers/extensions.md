@@ -458,14 +458,18 @@ silent_hook (generic function with 1 method)
 julia> optimize!(model; silent = true)
 
 julia> optimize!(model; silent = false)
+Coefficient ranges:
+  Cost   [1e+00, 1e+00]
+  Bound  [2e+00, 2e+00]
+Assessing feasibility of MIP using primal feasibility and integrality tolerance of       1e-06
 Solution has               num          max          sum
 Col     infeasibilities      0            0            0
 Integer infeasibilities      0            0            0
 Row     infeasibilities      0            0            0
 Row     residuals            0            0            0
 Presolving model
-0 rows, 0 cols, 0 nonzeros
-0 rows, 0 cols, 0 nonzeros
+0 rows, 0 cols, 0 nonzeros  0s
+0 rows, 0 cols, 0 nonzeros  0s
 Presolve: Optimal
 
 Solving report
