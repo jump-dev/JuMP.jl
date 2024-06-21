@@ -23,7 +23,7 @@ $ cd ~/.julia/dev/JuMP
 
 The next step is to setup the `docs` environment.
 ```
-$ julia --project=docs -e 'import Pkg; Pkg.instantiate(); Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.develop("MathOptInterface)'
+$ julia --project=docs -e 'import Pkg; Pkg.instantiate(); Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.develop("MathOptInterface")'
 ```
 
 Now you're ready to build the documentation.
