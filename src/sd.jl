@@ -593,7 +593,7 @@ function build_constraint(error_fn::Function, ::AbstractMatrix, ::Zeros)
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
         "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
         "this syntax is supported in the special case that the matrices are " *
-        "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
+        "`Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.",
     )
 end
 
@@ -694,11 +694,7 @@ function build_constraint(
     )
 end
 
-function build_constraint(
-    error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
-    set::Zeros,
-)
+function build_constraint(error_fn::Function, f::Array, set::Zeros)
     s = shape(f)
     x = vectorize(f, s)
     return VectorConstraint(x, moi_set(set, length(x)), s)
