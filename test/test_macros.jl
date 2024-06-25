@@ -1977,6 +1977,7 @@ function test_matrix_in_vector_set()
         ),
         @constraint(model, X <= A),
     )
+    Y = Containers.DenseAxisArray(X, 2:3, 2:3)
     B = Containers.DenseAxisArray(A, 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(
@@ -1986,7 +1987,7 @@ function test_matrix_in_vector_set()
             "this syntax is supported in the special case that the matrices are " *
             "`Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.",
         ),
-        @constraint(model, X == B),
+        @constraint(model, Y == B),
     )
     return
 end

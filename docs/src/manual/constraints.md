@@ -116,7 +116,7 @@ julia> b = [5, 6]
  6
 
 julia> @constraint(model, con_vector, A * x == b)
-con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Zeros()
 
 julia> @constraint(model, con_scalar, A * x .== b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
@@ -1257,7 +1257,7 @@ julia> @constraint(model, x in MOI.ExponentialCone())
 ## Set inequality syntax
 
 For modeling convenience, the syntax `@constraint(model, x >= y, Set())` is
-short-hand for `@constraint(model, x - y in Set())`. 
+short-hand for `@constraint(model, x - y in Set())`.
 
 Therefore, the following calls are equivalent:
 ```jldoctest set_inequality
