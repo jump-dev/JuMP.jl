@@ -570,8 +570,6 @@ function build_constraint(
     return VectorConstraint(x, MOI.Zeros(length(x)), shape)
 end
 
-reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
-
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonnegatives)
     return error_fn(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
@@ -656,4 +654,42 @@ function build_variable(
     n = _square_side(error_fn, variables)
     x = _vectorize_variables(error_fn, variables)
     return VariablesConstrainedOnCreation(x, set, SymmetricMatrixShape(n))
+end
+
+moi_set(::Nonnegatives, dim::Int) = MOI.Nonnegatives(dim)
+moi_set(::Nonpositives, dim::Int) = MOI.Nonpositives(dim)
+moi_set(::Zeros, dim::Int) = MOI.Zeros(dim)
+
+shape(f::LinearAlgebra.Symmetric) = SymmetricMatrixShape(size(f, 1))
+
+reshape_set(::MOI.Nonnegatives, ::SymmetricMatrixShape) = Nonnegatives()
+reshape_set(::MOI.Nonpositives, ::SymmetricMatrixShape) = Nonpositives()
+reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
+
+shape(f::Array) = ArrayShape(size(f))
+
+reshape_set(::MOI.Nonnegatives, ::ArrayShape) = Nonnegatives()
+reshape_set(::MOI.Nonpositives, ::ArrayShape) = Nonpositives()
+reshape_set(::MOI.Zeros, ::ArrayShape) = Zeros()
+
+function build_constraint(
+    error_fn::Function,
+    f::Union{Array,LinearAlgebra.Symmetric},
+    ::Nonnegatives,
+    set::Union{Nonnegatives,Nonpositives,Zeros},
+)
+    s = shape(f)
+    x = vectorize(f, s)
+    return VectorConstraint(x, moi_set(set, length(x)), s)
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Union{Array,LinearAlgebra.Symmetric},
+    ::Nonpositives,
+    set::Union{Nonnegatives,Nonpositives,Zeros},
+)
+    return error_fn(
+        "The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+    )
 end

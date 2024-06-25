@@ -164,27 +164,46 @@ julia> @constraint(model, A * x .>= b)
  3 x[1] + 4 x[2] ≥ 6
 ```
 
-### Vectorized matrix constraints
+## Matrix inequalities
 
-In most cases, you cannot use the non-broadcasting syntax for general matrices.
-For example:
+Inequalities between matrices are not supported, due to the common ambiguity
+between elementwise inequalities and a [`PSDCone`](@ref) constraint.
 
-```jldoctest
+```jldoctest symmetric_matrix
 julia> model = Model();
 
-julia> @variable(model, X[1:2, 1:2])
-2×2 Matrix{VariableRef}:
- X[1,1]  X[1,2]
- X[2,1]  X[2,2]
+julia> @variable(model, x[1:2, 1:2], Symmetric);
 
-julia> @constraint(model, X >= 0)
-ERROR: At none:1: `@constraint(model, X >= 0)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermitianPSDCone())`.
+julia> @variable(model, y[1:2, 1:2], Symmetric);
+
+julia> @constraint(model, x >= y)
+ERROR: At none:1: `@constraint(model, x >= y)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermitianPSDCone())`.
 Stacktrace:
 [...]
 ```
 
-Instead, to represent matrix inequalities you must always use the element-wise
-broadcasting `.==`, `.>=`, or `.<=`, or use the [Set inequality syntax](@ref).
+Instead, use the [Set inequality syntax](@ref) to specify a set like
+[`PSDCone`](@ref) or [`Nonnegatives`](@ref):
+
+```jldoctest symmetric_matrix
+julia> @constraint(model, x >= y, PSDCone())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ ⋯                x[2,2] - y[2,2]] ∈ PSDCone()
+
+julia> @constraint(model, x >= y, Nonnegatives())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ ⋯                x[2,2] - y[2,2]] ∈ Nonnegatives()
+
+julia> @constraint(model, x >= y, Nonpositives())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ ⋯                x[2,2] - y[2,2]] ∈ Nonpositives()
+
+julia> @constraint(model, x >= y, Zeros())
+[x[1,1] - y[1,1]  x[1,2] - y[1,2]
+ ⋯                x[2,2] - y[2,2]] ∈ Zeros()
+```
+
+### Special cases
 
 There are two exceptions: if the result of the left-hand side minus the
 right-hand side is a `LinearAlgebra.Symmetric` matrix or a `LinearAlgebra.Hermitian`
