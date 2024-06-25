@@ -1979,4 +1979,71 @@ function test_matrix_equality()
     return
 end
 
+function test_matrix_ambiguous_greater_than_inequality()
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
+    err = ErrorException(
+        """
+        In `@constraint(model, x >= y)`: \nThe syntax `x >= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, pass `PSDCone()`:
+
+        ```julia
+        @constraint(model, x >= y, PSDCone())
+        ```
+
+        To create an element-wise inequality, pass `Nonnegatives()`, or use
+        broadcasting:
+
+        ```julia
+        @constraint(model, x >= y, Nonnegatives())
+        # or
+        @constraint(model, x .>= y)
+        ```""",
+    )
+    @test_throws_runtime(err, @constraint(model, x >= y))
+    c = @constraint(model, x - y in Nonnegatives())
+    @test value(start_value, c) ≈ [-6 -7 -8; -4 -7 -7]
+    return
+end
+
+function test_matrix_ambiguous_less_than_inequality()
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
+    err = ErrorException(
+        """
+        In `@constraint(model, x <= y)`: \nThe syntax `x <= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, reverse the sense of the
+        inequality and pass `PSDCone()`:
+
+        ```julia
+        @constraint(model, y >= x, PSDCone())
+        ```
+
+        To create an element-wise inequality, reverse the sense of the
+        inequality and pass `Nonnegatives()`, or use broadcasting:
+
+        ```julia
+        @constraint(model, y >= x, Nonnegatives())
+        # or
+        @constraint(model, x .<= y)
+        ```""",
+    )
+    @test_throws_runtime(err, @constraint(model, x <= y))
+    c = @constraint(model, x - y in Nonpositives())
+    @test value(start_value, c) ≈ [-6 -7 -8; -4 -7 -7]
+    return
+end
+
 end  # module

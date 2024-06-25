@@ -694,7 +694,31 @@ function build_constraint(
     )
 end
 
-function build_constraint(error_fn::Function, f::Array, set::Zeros)
+function build_constraint(
+    error_fn::Function,
+    f::Union{Array,LinearAlgebra.Symmetric},
+    set::Nonnegatives,
+)
+    s = shape(f)
+    x = vectorize(f, s)
+    return VectorConstraint(x, moi_set(set, length(x)), s)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Union{Array,LinearAlgebra.Symmetric},
+    set::Nonpositives,
+)
+    s = shape(f)
+    x = vectorize(f, s)
+    return VectorConstraint(x, moi_set(set, length(x)), s)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Union{Array,LinearAlgebra.Symmetric},
+    set::Zeros,
+)
     s = shape(f)
     x = vectorize(f, s)
     return VectorConstraint(x, moi_set(set, length(x)), s)
