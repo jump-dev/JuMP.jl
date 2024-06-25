@@ -587,19 +587,40 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonnegatives())
-[x[1], x[2]] ∈ MathOptInterface.Nonnegatives(2)
+[x[1], x[2]] ∈ Nonnegatives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x >= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonnegatives()
 ```
 """
 struct Nonnegatives end
 
-operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}}) = Nonnegatives()
+"""
+    GreaterThanZero()
+
+A struct used to intercept when `>=` or `≥` is used in a macro via
+[`operator_to_set`](@ref).
+
+This struct is not the same as [`Nonnegatives`](@ref) so that we can disambiguate
+`x >= y` and `x - y in Nonnegatives()`.
+
+This struct is not intended for general usage, but it may be useful to some
+JuMP extensions.
+
+## Example
+
+```jldoctest
+julia> operator_to_set(error, Val(:>=))
+GreaterThanZero()
+```
+"""
+struct GreaterThanZero end
+
+operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}}) = GreaterThanZero()
 
 """
     Nonpositives()
@@ -618,19 +639,40 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonpositives())
-[x[1], x[2]] ∈ MathOptInterface.Nonpositives(2)
+[x[1], x[2]] ∈ Nonpositives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x <= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonpositives()
 ```
 """
 struct Nonpositives end
 
-operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = Nonpositives()
+"""
+    GreaterThanZero()
+
+A struct used to intercept when `<=` or `≤` is used in a macro via
+[`operator_to_set`](@ref).
+
+This struct is not the same as [`Nonpositives`](@ref) so that we can disambiguate
+`x <= y` and `x - y in Nonpositives()`.
+
+This struct is not intended for general usage, but it may be useful to some
+JuMP extensions.
+
+## Example
+
+```jldoctest
+julia> operator_to_set(error, Val(:<=))
+LessThanZero()
+```
+"""
+struct LessThanZero end
+
+operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = LessThanZero()
 
 """
     Zeros()
@@ -649,14 +691,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Zeros())
-[x[1], x[2]] ∈ MathOptInterface.Zeros(2)
+[x[1], x[2]] ∈ Zeros()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x == b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Zeros()
 ```
 """
 struct Zeros end
@@ -790,6 +832,86 @@ function parse_constraint_call(
         :(build_constraint($error_fn, $f, $(esc(set))))
     end
     return parse_code, build_call
+end
+
+function build_constraint(
+    error_fn::Function,
+    f,
+    ::GreaterThanZero,
+    args...;
+    kwargs...,
+)
+    return build_constraint(error_fn, f, Nonnegatives(), args...; kwargs...)
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
+    ::GreaterThanZero,
+)
+    return error_fn(
+        """
+
+        The syntax `x >= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, pass `PSDCone()` or
+        `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, x >= y, PSDCone())
+        ```
+
+        To create an element-wise inequality, pass `Nonnegatives()`, or use
+        broadcasting:
+
+        ```julia
+        @constraint(model, x >= y, Nonnegatives())
+        # or
+        @constraint(model, x .>= y)
+        ```""",
+    )
+end
+
+function build_constraint(
+    error_fn::Function,
+    f,
+    ::LessThanZero,
+    args...;
+    kwargs...,
+)
+    return build_constraint(error_fn, f, Nonpositives(), args...; kwargs...)
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
+    ::LessThanZero,
+)
+    return error_fn(
+        """
+
+        The syntax `x <= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, reverse the sense of the
+        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, y >= x, PSDCone())
+        ```
+
+        To create an element-wise inequality, reverse the sense of the
+        inequality and pass `Nonnegatives()`, or use broadcasting:
+
+        ```julia
+        @constraint(model, y >= x, Nonnegatives())
+        # or
+        @constraint(model, x .<= y)
+        ```""",
+    )
 end
 
 function build_constraint(

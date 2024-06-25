@@ -116,7 +116,7 @@ julia> b = [5, 6]
  6
 
 julia> @constraint(model, con_vector, A * x == b)
-con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Zeros()
 
 julia> @constraint(model, con_scalar, A * x .== b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
@@ -148,7 +148,7 @@ constraint.
 
 ```jldoctest con_vector
 julia> @constraint(model, A * x <= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonpositives()
 
 julia> @constraint(model, A * x .<= b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
@@ -156,7 +156,7 @@ julia> @constraint(model, A * x .<= b)
  3 x[1] + 4 x[2] ≤ 6
 
 julia> @constraint(model, A * x >= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonnegatives()
 
 julia> @constraint(model, A * x .>= b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
@@ -169,7 +169,7 @@ julia> @constraint(model, A * x .>= b)
 Inequalities between matrices are not supported, due to the common ambiguity
 between elementwise inequalities and a [`PSDCone`](@ref) constraint.
 
-```jldoctest symmetric_matrix
+````jldoctest symmetric_matrix
 julia> model = Model();
 
 julia> @variable(model, x[1:2, 1:2], Symmetric);
@@ -177,10 +177,29 @@ julia> @variable(model, x[1:2, 1:2], Symmetric);
 julia> @variable(model, y[1:2, 1:2], Symmetric);
 
 julia> @constraint(model, x >= y)
-ERROR: At none:1: `@constraint(model, x >= y)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermitianPSDCone())`.
+ERROR: At none:1: `@constraint(model, x >= y)`:
+The syntax `x >= y` is ambiguous for matrices because we cannot tell if
+you intend a positive semidefinite constraint or an elementwise
+inequality.
+
+To create a positive semidefinite constraint, pass `PSDCone()` or
+`HermitianPSDCone()`:
+
+```julia
+@constraint(model, x >= y, PSDCone())
+```
+
+To create an element-wise inequality, pass `Nonnegatives()`, or use
+broadcasting:
+
+```julia
+@constraint(model, x >= y, Nonnegatives())
+# or
+@constraint(model, x .>= y)
+```
 Stacktrace:
 [...]
-```
+````
 
 Instead, use the [Set inequality syntax](@ref) to specify a set like
 [`PSDCone`](@ref) or [`Nonnegatives`](@ref):
@@ -1257,7 +1276,7 @@ julia> @constraint(model, x in MOI.ExponentialCone())
 ## Set inequality syntax
 
 For modeling convenience, the syntax `@constraint(model, x >= y, Set())` is
-short-hand for `@constraint(model, x - y in Set())`. 
+short-hand for `@constraint(model, x - y in Set())`.
 
 Therefore, the following calls are equivalent:
 ```jldoctest set_inequality

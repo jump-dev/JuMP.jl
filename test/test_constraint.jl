@@ -1952,4 +1952,140 @@ function test_matrix_inequality()
     return
 end
 
+function test_symmetric_equality()
+    model = Model()
+    @variable(model, x[1:2, 1:2], Symmetric)
+    @variable(model, y[1:2, 1:2], Symmetric)
+    set_start_value.(x, [1 2; 2 3])
+    set_start_value.(y, [6 4; 4 7])
+    g = [x[1, 1] - y[1, 1], x[1, 2] - y[1, 2], x[2, 2] - y[2, 2]]
+    c = @constraint(model, x == y)
+    o = constraint_object(c)
+    @test isequal_canonical(o.func, g)
+    @test o.set == moi_set(Zeros(), 3)
+    @test o.shape == SymmetricMatrixShape(2)
+    @test reshape_set(o.set, o.shape) == Zeros()
+    primal = value(start_value, c)
+    @test primal isa LinearAlgebra.Symmetric
+    @test primal == LinearAlgebra.Symmetric([-5.0 -2.0; -2.0 -4.0])
+    return
+end
+
+function test_matrix_equality()
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
+    g = vec(x .- y)
+    c = @constraint(model, x == y)
+    o = constraint_object(c)
+    @test isequal_canonical(o.func, g)
+    @test o.set == moi_set(Zeros(), 6)
+    @test o.shape == ArrayShape((2, 3))
+    @test reshape_set(o.set, o.shape) == Zeros()
+    primal = value(start_value, c)
+    @test primal isa Matrix{Float64}
+    @test primal == [-6.0 -7.0 -8.0; -4.0 -7.0 -7.0]
+    @test dual_start_value(c) === nothing
+    dual_start = rand(2, 3)
+    set_dual_start_value(c, dual_start)
+    @test dual_start_value(c) == dual_start
+    return
+end
+
+function test_matrix_ambiguous_greater_than_inequality()
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
+    err = ErrorException(
+        """
+        In `@constraint(model, x >= y)`: \nThe syntax `x >= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, pass `PSDCone()` or
+        `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, x >= y, PSDCone())
+        ```
+
+        To create an element-wise inequality, pass `Nonnegatives()`, or use
+        broadcasting:
+
+        ```julia
+        @constraint(model, x >= y, Nonnegatives())
+        # or
+        @constraint(model, x .>= y)
+        ```""",
+    )
+    @test_throws_runtime(err, @constraint(model, x >= y))
+    c = @constraint(model, x - y in Nonnegatives())
+    @test value(start_value, c) ≈ [-6 -7 -8; -4 -7 -7]
+    return
+end
+
+function test_matrix_ambiguous_less_than_inequality()
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @variable(model, y[1:2, 1:3])
+    set_start_value.(x, [1 2 3; 4 5 6])
+    set_start_value.(y, [7 9 11; 8 12 13])
+    err = ErrorException(
+        """
+        In `@constraint(model, x <= y)`: \nThe syntax `x <= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, reverse the sense of the
+        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, y >= x, PSDCone())
+        ```
+
+        To create an element-wise inequality, reverse the sense of the
+        inequality and pass `Nonnegatives()`, or use broadcasting:
+
+        ```julia
+        @constraint(model, y >= x, Nonnegatives())
+        # or
+        @constraint(model, x .<= y)
+        ```""",
+    )
+    @test_throws_runtime(err, @constraint(model, x <= y))
+    c = @constraint(model, x - y in Nonpositives())
+    @test value(start_value, c) ≈ [-6 -7 -8; -4 -7 -7]
+    return
+end
+
+function test_abstract_vector_orthants()
+    model = Model()
+    @variable(model, x[i = 2:3], start = i)
+    y = Containers.DenseAxisArray([4, 6], 2:3)
+    g = [x[2] - 4, x[3] - 6]
+    for (c, set) in (
+        @constraint(model, x >= y) => MOI.Nonnegatives(2),
+        @constraint(model, x <= y) => MOI.Nonpositives(2),
+        @constraint(model, x == y) => MOI.Zeros(2),
+    )
+        o = constraint_object(c)
+        @test isequal_canonical(o.func, g)
+        @test o.set == set
+        @test o.shape == VectorShape()
+        @test reshape_set(o.set, o.shape) == set
+        primal = value(start_value, c)
+        @test primal isa Vector{Float64}
+        @test primal == [2 - 4, 3 - 6]
+        @test dual_start_value(c) === nothing
+        dual_start = rand(2)
+        set_dual_start_value(c, dual_start)
+        @test dual_start_value(c) == dual_start
+    end
+    return
+end
+
 end  # module
