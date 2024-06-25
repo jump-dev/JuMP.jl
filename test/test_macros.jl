@@ -1981,7 +1981,7 @@ function test_matrix_in_vector_set()
     B = Containers.DenseAxisArray(A, 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, X == B)`: " *
+            "In `@constraint(model, Y == B)`: " *
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
             "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
             "this syntax is supported in the special case that the matrices are " *
