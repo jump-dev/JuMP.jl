@@ -835,11 +835,7 @@ function build_constraint(
     return build_constraint(error_fn, f, Nonpositives(), args...; kwargs...)
 end
 
-function build_constraint(
-    error_fn::Function,
-    ::AbstractMatrix,
-    ::_OpLessThan,
-)
+function build_constraint(error_fn::Function, ::AbstractMatrix, ::_OpLessThan)
     return error_fn(
         """
 
