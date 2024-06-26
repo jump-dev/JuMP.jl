@@ -2051,4 +2051,30 @@ function test_matrix_ambiguous_less_than_inequality()
     return
 end
 
+function test_abstract_vector_orthants()
+    model = Model()
+    @variable(model, x[i = 2:3], start = i)
+    y = Containers.DenseAxisArray([4, 6], 2:3)
+    g = [x[2] - 4, x[3] - 6]
+    for (c, set) in (
+        @constraint(model, x >= y) => MOI.Nonnegatives(2),
+        @constraint(model, x <= y) => MOI.Nonpositives(2),
+        @constraint(model, x == y) => MOI.Zeros(2),
+    )
+        o = constraint_object(c)
+        @test isequal_canonical(o.func, g)
+        @test o.set == set
+        @test o.shape == VectorShape()
+        @test reshape_set(o.set, o.shape) == set
+        primal = value(start_value, c)
+        @test primal isa Vector{Float64}
+        @test primal == [2 - 4, 3 - 6]
+        @test dual_start_value(c) === nothing
+        dual_start = rand(2)
+        set_dual_start_value(c, dual_start)
+        @test dual_start_value(c) == dual_start
+    end
+    return
+end
+
 end  # module
