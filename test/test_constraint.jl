@@ -1976,6 +1976,10 @@ function test_matrix_equality()
     primal = value(start_value, c)
     @test primal isa Matrix{Float64}
     @test primal == [-6.0 -7.0 -8.0; -4.0 -7.0 -7.0]
+    @test dual_start_value(c) === nothing
+    dual_start = rand(2, 3)
+    set_dual_start_value(c, dual_start)
+    @test dual_start_value(c) == dual_start
     return
 end
 
