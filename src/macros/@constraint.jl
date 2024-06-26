@@ -794,7 +794,7 @@ end
 
 function build_constraint(
     error_fn::Function,
-    ::AbstractMatrix,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
     ::_OpGreaterThan,
 )
     return error_fn(
@@ -804,7 +804,8 @@ function build_constraint(
         you intend a positive semidefinite constraint or an an elementwise
         inequality.
 
-        To create a positive semidefinite constraint, pass `PSDCone()`:
+        To create a positive semidefinite constraint, pass `PSDCone()` or
+        `HermitianPSDCone()`:
 
         ```julia
         @constraint(model, x >= y, PSDCone())
@@ -835,7 +836,11 @@ function build_constraint(
     return build_constraint(error_fn, f, Nonpositives(), args...; kwargs...)
 end
 
-function build_constraint(error_fn::Function, ::AbstractMatrix, ::_OpLessThan)
+function build_constraint(
+    error_fn::Function,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
+    ::_OpLessThan,
+)
     return error_fn(
         """
 
@@ -844,7 +849,7 @@ function build_constraint(error_fn::Function, ::AbstractMatrix, ::_OpLessThan)
         inequality.
 
         To create a positive semidefinite constraint, reverse the sense of the
-        inequality and pass `PSDCone()`:
+        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
 
         ```julia
         @constraint(model, y >= x, PSDCone())

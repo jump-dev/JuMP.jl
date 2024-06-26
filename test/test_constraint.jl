@@ -1991,7 +1991,8 @@ function test_matrix_ambiguous_greater_than_inequality()
         you intend a positive semidefinite constraint or an an elementwise
         inequality.
 
-        To create a positive semidefinite constraint, pass `PSDCone()`:
+        To create a positive semidefinite constraint, pass `PSDCone()` or
+        `HermitianPSDCone()`:
 
         ```julia
         @constraint(model, x >= y, PSDCone())
@@ -2025,7 +2026,7 @@ function test_matrix_ambiguous_less_than_inequality()
         inequality.
 
         To create a positive semidefinite constraint, reverse the sense of the
-        inequality and pass `PSDCone()`:
+        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
 
         ```julia
         @constraint(model, y >= x, PSDCone())

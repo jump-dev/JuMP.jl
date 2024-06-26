@@ -182,7 +182,8 @@ The syntax `x >= y` is ambiguous for matrices because we cannot tell if
 you intend a positive semidefinite constraint or an an elementwise
 inequality.
 
-To create a positive semidefinite constraint, pass `PSDCone()`:
+To create a positive semidefinite constraint, pass `PSDCone()` or
+`HermitianPSDCone()`:
 
 ```julia
 @constraint(model, x >= y, PSDCone())
