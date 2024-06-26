@@ -1955,7 +1955,7 @@ end
 
 function test_matrix_in_vector_set()
     model = Model()
-    @variable(model, X[1:2, 1:2], container = DenseAxisArray)
+    @variable(model, X[2:3, 2:3])
     A = Containers.DenseAxisArray([1 2; 3 4], 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(

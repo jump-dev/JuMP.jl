@@ -3052,7 +3052,7 @@ julia> normalized_coefficient(con, x[1], x[2])
 3.0
 
 julia> @constraint(model, con_vec, x.^2 <= [1, 2])
-con_vec : [x[1]² - 1, x[2]² - 2] ∈ MathOptInterface.Nonpositives(2)
+con_vec : [x[1]² - 1, x[2]² - 2] ∈ Nonpositives()
 
 julia> normalized_coefficient(con_vec, x[1], x[1])
 1-element Vector{Tuple{Int64, Float64}}:
