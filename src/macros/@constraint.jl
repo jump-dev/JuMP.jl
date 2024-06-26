@@ -801,7 +801,7 @@ function build_constraint(
         """
 
         The syntax `x >= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an an elementwise
+        you intend a positive semidefinite constraint or an elementwise
         inequality.
 
         To create a positive semidefinite constraint, pass `PSDCone()` or
@@ -845,7 +845,7 @@ function build_constraint(
         """
 
         The syntax `x <= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an an elementwise
+        you intend a positive semidefinite constraint or an elementwise
         inequality.
 
         To create a positive semidefinite constraint, reverse the sense of the

@@ -1992,7 +1992,7 @@ function test_matrix_ambiguous_greater_than_inequality()
     err = ErrorException(
         """
         In `@constraint(model, x >= y)`: \nThe syntax `x >= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an an elementwise
+        you intend a positive semidefinite constraint or an elementwise
         inequality.
 
         To create a positive semidefinite constraint, pass `PSDCone()` or
@@ -2026,7 +2026,7 @@ function test_matrix_ambiguous_less_than_inequality()
     err = ErrorException(
         """
         In `@constraint(model, x <= y)`: \nThe syntax `x <= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an an elementwise
+        you intend a positive semidefinite constraint or an elementwise
         inequality.
 
         To create a positive semidefinite constraint, reverse the sense of the

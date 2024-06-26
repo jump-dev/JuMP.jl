@@ -179,7 +179,7 @@ julia> @variable(model, y[1:2, 1:2], Symmetric);
 julia> @constraint(model, x >= y)
 ERROR: At none:1: `@constraint(model, x >= y)`:
 The syntax `x >= y` is ambiguous for matrices because we cannot tell if
-you intend a positive semidefinite constraint or an an elementwise
+you intend a positive semidefinite constraint or an elementwise
 inequality.
 
 To create a positive semidefinite constraint, pass `PSDCone()` or
