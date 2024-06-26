@@ -1955,8 +1955,8 @@ end
 
 function test_matrix_in_vector_set()
     model = Model()
-    @variable(model, X[1:2, 1:2])
-    A = [1 2; 3 4]
+    @variable(model, X[1:2, 1:2], container = DenseAxisArray)
+    A = Containers.DenseAxisArray([1 2; 3 4], 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, X >= A)`: " *
@@ -1977,17 +1977,15 @@ function test_matrix_in_vector_set()
         ),
         @constraint(model, X <= A),
     )
-    Y = Containers.DenseAxisArray(X, 2:3, 2:3)
-    B = Containers.DenseAxisArray(A, 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, Y == B)`: " *
+            "In `@constraint(model, X == A)`: " *
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
             "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
             "this syntax is supported in the special case that the matrices are " *
             "`Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.",
         ),
-        @constraint(model, Y == B),
+        @constraint(model, X == A),
     )
     return
 end
