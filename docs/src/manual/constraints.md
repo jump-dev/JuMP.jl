@@ -169,7 +169,7 @@ julia> @constraint(model, A * x .>= b)
 Inequalities between matrices are not supported, due to the common ambiguity
 between elementwise inequalities and a [`PSDCone`](@ref) constraint.
 
-```jldoctest symmetric_matrix
+````jldoctest symmetric_matrix
 julia> model = Model();
 
 julia> @variable(model, x[1:2, 1:2], Symmetric);
@@ -198,7 +198,7 @@ broadcasting:
 ```
 Stacktrace:
 [...]
-```
+````
 
 Instead, use the [Set inequality syntax](@ref) to specify a set like
 [`PSDCone`](@ref) or [`Nonnegatives`](@ref):
