@@ -3000,7 +3000,7 @@ julia> normalized_coefficient(con, x)
 5.0
 
 julia> @constraint(model, con_vec, [x, 2x + 1, 3] >= 0)
-con_vec : [x, 2 x + 1, 3] ∈ MathOptInterface.Nonnegatives(3)
+con_vec : [x, 2 x + 1, 3] ∈ Nonnegatives()
 
 julia> normalized_coefficient(con_vec, x)
 2-element Vector{Tuple{Int64, Float64}}:

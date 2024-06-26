@@ -568,14 +568,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonnegatives())
-[x[1], x[2]] ∈ MathOptInterface.Nonnegatives(2)
+[x[1], x[2]] ∈ Nonnegatives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x >= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonnegatives()
 ```
 """
 struct Nonnegatives end
@@ -599,14 +599,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonpositives())
-[x[1], x[2]] ∈ MathOptInterface.Nonpositives(2)
+[x[1], x[2]] ∈ Nonpositives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x <= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonpositives()
 ```
 """
 struct Nonpositives end
