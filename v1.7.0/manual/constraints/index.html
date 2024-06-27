@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Constraints · JuMP</title><meta name="title" content="Constraints · JuMP"/><meta property="og:title" content="Constraints · JuMP"/><meta property="twitter:title" content="Constraints · JuMP"/><meta name="description" content="Documentation for JuMP."/><meta property="og:description" content="Documentation for JuMP."/><meta property="twitter:description" content="Documentation for JuMP."/><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img class="docs-light-only" src="../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../tutorials/getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../tutorials/getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../tutorials/getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../tutorials/linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../tutorials/linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../tutorials/linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../tutorials/linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../tutorials/linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../tutorials/linear/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../tutorials/linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../tutorials/linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../tutorials/linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../tutorials/linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../tutorials/linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../tutorials/linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../tutorials/linear/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../tutorials/conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../tutorials/conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../tutorials/conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../tutorials/conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../tutorials/conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../tutorials/conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../tutorials/conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../tutorials/conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../tutorials/conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../tutorials/algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../tutorials/algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../tutorials/applications/web_app/">Serving web apps</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../models/">Models</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li class="is-active"><a class="tocitem" href>Constraints</a><ul class="internal"><li><a class="tocitem" href="#Add-a-constraint"><span>Add a constraint</span></a></li><li><a class="tocitem" href="#Registered-constraints"><span>Registered constraints</span></a></li><li><a class="tocitem" href="#Anonymous-constraints"><span>Anonymous constraints</span></a></li><li><a class="tocitem" href="#Constraint-names"><span>Constraint names</span></a></li><li><a class="tocitem" href="#String-names,-symbolic-names,-and-bindings"><span>String names, symbolic names, and bindings</span></a></li><li><a class="tocitem" href="#The-@constraints-macro"><span>The <code>@constraints</code> macro</span></a></li><li><a class="tocitem" href="#constraint_duality"><span>Duality</span></a></li><li><a class="tocitem" href="#Modify-a-constant-term"><span>Modify a constant term</span></a></li><li><a class="tocitem" href="#Modify-a-variable-coefficient"><span>Modify a variable coefficient</span></a></li><li><a class="tocitem" href="#Delete-a-constraint"><span>Delete a constraint</span></a></li><li><a class="tocitem" href="#Start-values"><span>Start values</span></a></li><li><a class="tocitem" href="#Constraint-containers"><span>Constraint containers</span></a></li><li><a class="tocitem" href="#Accessing-constraints-from-a-model"><span>Accessing constraints from a model</span></a></li><li><a class="tocitem" href="#MathOptInterface-constraints"><span>MathOptInterface constraints</span></a></li><li><a class="tocitem" href="#Set-inequality-syntax"><span>Set inequality syntax</span></a></li><li><a class="tocitem" href="#Second-order-cone-constraints"><span>Second-order cone constraints</span></a></li><li><a class="tocitem" href="#Rotated-second-order-cone-constraints"><span>Rotated second-order cone constraints</span></a></li><li><a class="tocitem" href="#Semi-integer-and-semi-continuous-variables"><span>Semi-integer and semi-continuous variables</span></a></li><li><a class="tocitem" href="#Special-Ordered-Sets-of-Type-1"><span>Special Ordered Sets of Type 1</span></a></li><li><a class="tocitem" href="#Special-Ordered-Sets-of-Type-2"><span>Special Ordered Sets of Type 2</span></a></li><li><a class="tocitem" href="#Indicator-constraints"><span>Indicator constraints</span></a></li><li><a class="tocitem" href="#Semidefinite-constraints"><span>Semidefinite constraints</span></a></li><li><a class="tocitem" href="#Complementarity-constraints"><span>Complementarity constraints</span></a></li></ul></li><li><a class="tocitem" href="../expressions/">Expressions</a></li><li><a class="tocitem" href="../objective/">Objectives</a></li><li><a class="tocitem" href="../containers/">Containers</a></li><li><a class="tocitem" href="../solutions/">Solutions</a></li><li><a class="tocitem" href="../nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../complex/">Complex number support</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../reference/models/">Models</a></li><li><a class="tocitem" href="../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/">Introduction</a></li><li><a class="tocitem" href="../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Constraints</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Constraints</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/manual/constraints.md" title="Edit source on GitHub"><span class="docs-icon fas"></span></a><a class="docs-settings-button docs-navbar-link fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button docs-navbar-link fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="jump_constraints"><a class="docs-heading-anchor" href="#jump_constraints">Constraints</a><a id="jump_constraints-1"></a><a class="docs-heading-anchor-permalink" href="#jump_constraints" title="Permalink"></a></h1><p>JuMP is based on the <a href="../../moi/#moi_documentation">MathOptInterface (MOI) API</a>. Because of this, JuMP uses the following standard form to represent problems:</p><p class="math-container">\[\begin{align}
+    &amp; \min_{x \in \mathbb{R}^n} &amp; f_0(x)
+    \\
+    &amp; \;\;\text{s.t.} &amp; f_i(x) &amp; \in \mathcal{S}_i &amp; i = 1 \ldots m
+\end{align}\]</p><p>Each constraint, <span>$f_i(x) \in \mathcal{S}_i$</span>, is composed of a function and a set. For example, instead of calling <span>$a^\top x \le b$</span> a <em>less-than-or-equal-to</em> constraint, we say that it is a <em>scalar-affine-in-less-than</em> constraint, where the function <span>$a^\top x$</span> belongs to the <em>less-than</em> set <span>$(-\infty, b]$</span>. We use the shorthand <em>function-in-set</em> to refer to constraints composed of different types of functions and sets.</p><p>This page explains how to write various types of constraints in JuMP. For nonlinear constraints, see <a href="../nlp/#Nonlinear-Modeling">Nonlinear Modeling</a> instead.</p><h2 id="Add-a-constraint"><a class="docs-heading-anchor" href="#Add-a-constraint">Add a constraint</a><a id="Add-a-constraint-1"></a><a class="docs-heading-anchor-permalink" href="#Add-a-constraint" title="Permalink"></a></h2><p>Add a constraint to a JuMP model using the <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> macro. The syntax to use depends on the type of constraint you wish to add.</p><h3 id="Add-a-linear-constraint"><a class="docs-heading-anchor" href="#Add-a-linear-constraint">Add a linear constraint</a><a id="Add-a-linear-constraint-1"></a><a class="docs-heading-anchor-permalink" href="#Add-a-linear-constraint" title="Permalink"></a></h3><p>Create linear constraints using the <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> macro:</p><pre><code class="language-julia hljs">model = Model()
+@variable(model, x[1:3])
+@constraint(model, c1, sum(x) &lt;= 1)
+@constraint(model, c2, x[1] + 2 * x[3] &gt;= 2)
+@constraint(model, c3, sum(i * x[i] for i in 1:3) == 3)
+@constraint(model, c4, 4 &lt;= 2 * x[2] &lt;= 5)
+print(model)
+
+# output
+
+Feasibility
+Subject to
+ c3 : x[1] + 2 x[2] + 3 x[3] = 3.0
+ c2 : x[1] + 2 x[3] ≥ 2.0
+ c1 : x[1] + x[2] + x[3] ≤ 1.0
+ c4 : 2 x[2] ∈ [4.0, 5.0]</code></pre><h3 id="Normalization"><a class="docs-heading-anchor" href="#Normalization">Normalization</a><a id="Normalization-1"></a><a class="docs-heading-anchor-permalink" href="#Normalization" title="Permalink"></a></h3><p>JuMP normalizes constraints by moving all of the terms containing variables to the left-hand side and all of the constant terms to the right-hand side. Thus, we get:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, c, 2x + 1 &lt;= 4x + 4)
+c : -2 x &lt;= 3.0</code></pre><h3 id="quad_constraints"><a class="docs-heading-anchor" href="#quad_constraints">Add a quadratic constraint</a><a id="quad_constraints-1"></a><a class="docs-heading-anchor-permalink" href="#quad_constraints" title="Permalink"></a></h3><p>In addition to affine functions, JuMP also supports constraints with quadratic terms. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia&gt; @variable(model, t &gt;= 0)
+t
+
+julia&gt; @constraint(model, my_q, x[1]^2 + x[2]^2 &lt;= t^2)
+my_q : x[1]² + x[2]² - t² &lt;= 0.0</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Because solvers can take advantage of the knowledge that a constraint is quadratic, prefer adding quadratic constraints using <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a>, rather than <a href="../../reference/nlp/#JuMP.@NLconstraint"><code>@NLconstraint</code></a>.</p></div></div><h3 id="Vectorized-constraints"><a class="docs-heading-anchor" href="#Vectorized-constraints">Vectorized constraints</a><a id="Vectorized-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Vectorized-constraints" title="Permalink"></a></h3><p>You can also add constraints to JuMP using vectorized linear algebra. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia&gt; A = [1 2; 3 4]
+2×2 Matrix{Int64}:
+ 1  2
+ 3  4
+
+julia&gt; b = [5, 6]
+2-element Vector{Int64}:
+ 5
+ 6
+
+julia&gt; @constraint(model, con, A * x .== b)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ con : x[1] + 2 x[2] = 5.0
+ con : 3 x[1] + 4 x[2] = 6.0</code></pre><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Make sure to use <a href="https://docs.julialang.org/en/v1/manual/functions/index.html#man-vectorized-1">Julia&#39;s dot syntax</a> in front of the comparison operators (for example, <code>.==</code>, <code>.&gt;=</code>, and <code>.&lt;=</code>). If you use a comparison without the dot, an error will be thrown.</p></div></div><h3 id="Containers-of-constraints"><a class="docs-heading-anchor" href="#Containers-of-constraints">Containers of constraints</a><a id="Containers-of-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Containers-of-constraints" title="Permalink"></a></h3><p>The <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> macro supports creating collections of constraints. We&#39;ll cover some brief syntax here; read the <a href="#Constraint-containers">Constraint containers</a> section for more details:</p><p>Create arrays of constraints:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, c[i=1:3], x[i] &lt;= i^2)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c[1] : x[1] ≤ 1.0
+ c[2] : x[2] ≤ 4.0
+ c[3] : x[3] ≤ 9.0
+
+julia&gt; c[2]
+c[2] : x[2] ≤ 4.0</code></pre><p>Sets can be any Julia type that supports iteration:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, c[i=2:3, [&quot;red&quot;, &quot;blue&quot;]], x[i] &lt;= i^2)
+2-dimensional DenseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, [&quot;red&quot;, &quot;blue&quot;]
+And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c[2,red] : x[2] ≤ 4.0  c[2,blue] : x[2] ≤ 4.0
+ c[3,red] : x[3] ≤ 9.0  c[3,blue] : x[3] ≤ 9.0
+
+julia&gt; c[2, &quot;red&quot;]
+c[2,red] : x[2] ≤ 4.0</code></pre><p>Sets can depend upon previous indices:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, c[i=1:3, j=i:3], x[i] &lt;= j)
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 6 entries:
+  [1, 1]  =  c[1,1] : x[1] ≤ 1.0
+  [1, 2]  =  c[1,2] : x[1] ≤ 2.0
+  [1, 3]  =  c[1,3] : x[1] ≤ 3.0
+  [2, 2]  =  c[2,2] : x[2] ≤ 2.0
+  [2, 3]  =  c[2,3] : x[2] ≤ 3.0
+  [3, 3]  =  c[3,3] : x[3] ≤ 3.0</code></pre><p>and you can filter elements in the sets using the <code>;</code> syntax:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, c[i=1:9; mod(i, 3) == 0], x[i] &lt;= i)
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1, Tuple{Int64}} with 3 entries:
+  [3]  =  c[3] : x[3] ≤ 3.0
+  [6]  =  c[6] : x[6] ≤ 6.0
+  [9]  =  c[9] : x[9] ≤ 9.0</code></pre><h2 id="Registered-constraints"><a class="docs-heading-anchor" href="#Registered-constraints">Registered constraints</a><a id="Registered-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Registered-constraints" title="Permalink"></a></h2><p>When you create constraints, JuMP registers them inside the model using their corresponding symbol. Get a registered name using <code>model[:key]</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, my_c, 2x &lt;= 1)
+my_c : 2 x ≤ 1.0
+
+julia&gt; model
+A JuMP Model
+Feasibility problem with:
+Variable: 1
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: my_c, x
+
+julia&gt; model[:my_c] === my_c
+true</code></pre><h2 id="Anonymous-constraints"><a class="docs-heading-anchor" href="#Anonymous-constraints">Anonymous constraints</a><a id="Anonymous-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Anonymous-constraints" title="Permalink"></a></h2><p>To reduce the likelihood of accidental bugs, and because JuMP registers constraints inside a model, creating two constraints with the same name is an error:</p><pre><code class="language-julia hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, c, 2x &lt;= 1)
+c : 2 x &lt;= 1.0
+
+julia&gt; @constraint(model, c, 2x &lt;= 1)
+ERROR: An object of name c is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :c)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:c]`.
+[...]</code></pre><p>A common reason for encountering this error is adding constraints in a loop.</p><p>As a work-around, JuMP provides <em>anonymous</em> constraints. Create an anonymous constraint by omitting the name argument:</p><pre><code class="language-julia-repl hljs">julia&gt; c = @constraint(model, 2x &lt;= 1)
+2 x &lt;= 1.0</code></pre><p>Create a container of anonymous constraints by dropping the name in front of the <code>[</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; c = @constraint(model, [i = 1:3], x[i] &lt;= i)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ x[1] ≤ 1.0
+ x[2] ≤ 2.0
+ x[3] ≤ 3.0</code></pre><h2 id="Constraint-names"><a class="docs-heading-anchor" href="#Constraint-names">Constraint names</a><a id="Constraint-names-1"></a><a class="docs-heading-anchor-permalink" href="#Constraint-names" title="Permalink"></a></h2><p>In addition to the symbol that constraints are registered with, constraints have a <code>String</code> name that is used for printing and writing to file formats.</p><p>Get and set the name of a constraint using <a href="../../reference/constraints/#JuMP.name-Tuple{ConstraintRef{Model, var&quot;#s1215&quot;, Shape} where {var&quot;#s1215&quot;&lt;:MathOptInterface.ConstraintIndex, Shape&lt;:AbstractShape}}"><code>name(::JuMP.ConstraintRef)</code></a> and <a href="../../reference/constraints/#JuMP.set_name-Tuple{ConstraintRef{Model, var&quot;#s1215&quot;, Shape} where {var&quot;#s1215&quot;&lt;:MathOptInterface.ConstraintIndex, Shape&lt;:AbstractShape}, String}"><code>set_name(::JuMP.ConstraintRef, ::String)</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(); @variable(model, x);
+
+julia&gt; @constraint(model, con, x &lt;= 1)
+con : x &lt;= 1.0
+
+julia&gt; name(con)
+&quot;con&quot;
+
+julia&gt; set_name(con, &quot;my_con_name&quot;)
+
+julia&gt; con
+my_con_name : x &lt;= 1.0</code></pre><p>Override the default choice of name using the <code>base_name</code> keyword:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(); @variable(model, x);
+
+julia&gt; con = @constraint(model, [i=1:2], x &lt;= i, base_name = &quot;my_con&quot;)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0</code></pre><p>Note that names apply to each element of the container, not to the container of constraints:</p><pre><code class="language-julia-repl hljs">julia&gt; name(con[1])
+&quot;my_con[1]&quot;
+
+julia&gt; set_name(con[1], &quot;c&quot;)
+
+julia&gt; con
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c : x ≤ 1.0
+ my_con[2] : x ≤ 2.0</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>For some models, setting the string name of each constraint can take a non-trivial portion of the total time required to build the model. Turn off <code>String</code> names by passing <code>set_string_name = false</code> to <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x);
+
+julia&gt; @constraint(model, con, x &lt;= 2, set_string_name = false)
+x &lt;= 2.0</code></pre><p>See <a href="../../tutorials/getting_started/performance_tips/#Disable-string-names">Disable string names</a> for more information.</p></div></div><h3 id="Retrieve-a-constraint-by-name"><a class="docs-heading-anchor" href="#Retrieve-a-constraint-by-name">Retrieve a constraint by name</a><a id="Retrieve-a-constraint-by-name-1"></a><a class="docs-heading-anchor-permalink" href="#Retrieve-a-constraint-by-name" title="Permalink"></a></h3><p>Retrieve a constraint from a model using <a href="../../reference/constraints/#JuMP.constraint_by_name"><code>constraint_by_name</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; constraint_by_name(model, &quot;c&quot;)
+c : x ≤ 1.0</code></pre><p>If the name is not present, <code>nothing</code> will be returned:</p><pre><code class="language-julia-repl hljs">julia&gt; constraint_by_name(model, &quot;bad_name&quot;)</code></pre><p>You can only look up individual constraints using <a href="../../reference/constraints/#JuMP.constraint_by_name"><code>constraint_by_name</code></a>. Something like this will not work:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(); @variable(model, x);
+
+julia&gt; con = @constraint(model, [i=1:2], x &lt;= i, base_name = &quot;my_con&quot;)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+
+julia&gt; constraint_by_name(model, &quot;my_con&quot;)</code></pre><p>To look up a collection of constraints, do not use <a href="../../reference/constraints/#JuMP.constraint_by_name"><code>constraint_by_name</code></a>. Instead, register them using the <code>model[:key] = value</code> syntax:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(); @variable(model, x);
+
+julia&gt; model[:con] = @constraint(model, [i=1:2], x &lt;= i, base_name = &quot;my_con&quot;)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+
+julia&gt; model[:con]
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0</code></pre><h2 id="String-names,-symbolic-names,-and-bindings"><a class="docs-heading-anchor" href="#String-names,-symbolic-names,-and-bindings">String names, symbolic names, and bindings</a><a id="String-names,-symbolic-names,-and-bindings-1"></a><a class="docs-heading-anchor-permalink" href="#String-names,-symbolic-names,-and-bindings" title="Permalink"></a></h2><p>It&#39;s common for new users to experience confusion relating to constraints. Part of the problem is the difference between the name that a constraint is registered under and the <code>String</code> name used for printing.</p><p>Here&#39;s a summary of the differences:</p><ul><li>Constraints are created using <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a>.</li><li>Constraints can be named or anonymous.</li><li>Named constraints have the form <code>@constraint(model, c, expr)</code>. For named constraints:<ul><li>The <code>String</code> name of the constraint is set to <code>&quot;c&quot;</code>.</li><li>A Julia variable <code>c</code> is created that binds <code>c</code> to  the JuMP constraint.</li><li>The name <code>:c</code> is registered as a key in the model with the value <code>c</code>.</li></ul></li><li>Anonymous constraints have the form <code>c = @constraint(model, expr)</code>. For anonymous constraints:<ul><li>The <code>String</code> name of the constraint is set to <code>&quot;&quot;</code>.</li><li>You control the name of the Julia variable used as the binding.</li><li>No name is registered as a key in the model.</li></ul></li><li>The <code>base_name</code> keyword can override the <code>String</code> name of the constraint.</li><li>You can manually register names in the model via <code>model[:key] = value</code>.</li></ul><p>Here&#39;s an example of the differences:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; c_binding = @constraint(model, 2x &lt;= 1, base_name = &quot;c&quot;)
+c : 2 x &lt;= 1.0
+
+julia&gt; model
+A JuMP Model
+Feasibility problem with:
+Variable: 1
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: x
+
+julia&gt; c
+ERROR: UndefVarError: c not defined
+
+julia&gt; c_binding
+c : 2 x &lt;= 1.0
+
+julia&gt; name(c_binding)
+&quot;c&quot;
+
+julia&gt; model[:c_register] = c_binding
+c : 2 x &lt;= 1.0
+
+julia&gt; model
+A JuMP Model
+Feasibility problem with:
+Variable: 1
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: c_register, x
+
+julia&gt; model[:c_register]
+c : 2 x &lt;= 1.0
+
+julia&gt; model[:c_register] === c_binding
+true
+
+julia&gt; c
+ERROR: UndefVarError: c not defined</code></pre><h2 id="The-@constraints-macro"><a class="docs-heading-anchor" href="#The-@constraints-macro">The <code>@constraints</code> macro</a><a id="The-@constraints-macro-1"></a><a class="docs-heading-anchor-permalink" href="#The-@constraints-macro" title="Permalink"></a></h2><p>If you have many <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> calls, use the <a href="../../reference/constraints/#JuMP.@constraints"><code>@constraints</code></a> macro to improve readability:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraints(model, begin
+           2x &lt;= 1
+           c, x &gt;= -1
+       end)
+(2 x ≤ 1.0, c : x ≥ -1.0)
+
+julia&gt; print(model)
+Feasibility
+Subject to
+ c : x ≥ -1.0
+ 2 x ≤ 1.0</code></pre><p>The <a href="../../reference/constraints/#JuMP.@constraints"><code>@constraints</code></a> macro returns a tuple of the constraints that were defined.</p><h2 id="constraint_duality"><a class="docs-heading-anchor" href="#constraint_duality">Duality</a><a id="constraint_duality-1"></a><a class="docs-heading-anchor-permalink" href="#constraint_duality" title="Permalink"></a></h2><p>JuMP adopts the notion of <a href="../../moi/background/duality/#Duality">conic duality from MathOptInterface</a>. For linear programs, a feasible dual on a <code>&gt;=</code> constraint is nonnegative and a feasible dual on a <code>&lt;=</code> constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>JuMP&#39;s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. <strong>This is a different convention from linear programming duality in some common textbooks.</strong> If you have a linear program, and you want the textbook definition, you probably want to use <a href="../../reference/solutions/#JuMP.shadow_price"><code>shadow_price</code></a> and <a href="../../reference/solutions/#JuMP.reduced_cost"><code>reduced_cost</code></a> instead.</p></div></div><p>The dual value associated with a constraint in the most recent solution can be accessed using the <a href="../../reference/solutions/#JuMP.dual"><code>dual</code></a> function. Use <a href="../../reference/solutions/#JuMP.has_duals"><code>has_duals</code></a> to check if the model has a dual solution available to query. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, con, x &lt;= 1)
+con : x &lt;= 1.0
+
+julia&gt; @objective(model, Min, -2x)
+-2 x
+
+julia&gt; has_duals(model)
+false
+
+julia&gt; optimize!(model)
+
+julia&gt; has_duals(model)
+true
+
+julia&gt; dual(con)
+-2.0
+
+julia&gt; @objective(model, Max, 2x)
+2 x
+
+julia&gt; optimize!(model)
+
+julia&gt; dual(con)
+-2.0</code></pre><p>To help users who may be less familiar with conic duality, JuMP provides <a href="../../reference/solutions/#JuMP.shadow_price"><code>shadow_price</code></a>, which returns a value that can be interpreted as the improvement in the objective in response to an infinitesimal relaxation (on the scale of one unit) in the right-hand side of the constraint. <a href="../../reference/solutions/#JuMP.shadow_price"><code>shadow_price</code></a> can be used only on linear constraints with a <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code> comparison operator.</p><p>In the example above, <code>dual(con)</code> returned <code>-2.0</code> regardless of the optimization sense. However, in the second case when the optimization sense is <code>Max</code>, <a href="../../reference/solutions/#JuMP.shadow_price"><code>shadow_price</code></a> returns:</p><pre><code class="language-julia-repl hljs">julia&gt; shadow_price(con)
+2.0</code></pre><h3 id="Duals-of-variable-bounds"><a class="docs-heading-anchor" href="#Duals-of-variable-bounds">Duals of variable bounds</a><a id="Duals-of-variable-bounds-1"></a><a class="docs-heading-anchor-permalink" href="#Duals-of-variable-bounds" title="Permalink"></a></h3><p>To query the dual variables associated with a variable bound, first obtain a constraint reference using one of <a href="../../reference/variables/#JuMP.UpperBoundRef"><code>UpperBoundRef</code></a>, <a href="../../reference/variables/#JuMP.LowerBoundRef"><code>LowerBoundRef</code></a>, or <a href="../../reference/variables/#JuMP.FixRef"><code>FixRef</code></a>, and then call <a href="../../reference/solutions/#JuMP.dual"><code>dual</code></a> on the returned constraint reference. The <a href="../../reference/solutions/#JuMP.reduced_cost"><code>reduced_cost</code></a> function may simplify this process as it returns the shadow price of an active bound of a variable (or zero, if no active bound exists).</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x &lt;= 1)
+x
+
+julia&gt; @objective(model, Min, -2x)
+-2 x
+
+julia&gt; optimize!(model)
+
+julia&gt; dual(UpperBoundRef(x))
+-2.0
+
+julia&gt; reduced_cost(x)
+-2.0</code></pre><h2 id="Modify-a-constant-term"><a class="docs-heading-anchor" href="#Modify-a-constant-term">Modify a constant term</a><a id="Modify-a-constant-term-1"></a><a class="docs-heading-anchor-permalink" href="#Modify-a-constant-term" title="Permalink"></a></h2><p>This section explains how to modify the constant term in a constraint. There are multiple ways to achieve this goal; we explain three options.</p><h3 id="Option-1:-change-the-right-hand-side"><a class="docs-heading-anchor" href="#Option-1:-change-the-right-hand-side">Option 1: change the right-hand side</a><a id="Option-1:-change-the-right-hand-side-1"></a><a class="docs-heading-anchor-permalink" href="#Option-1:-change-the-right-hand-side" title="Permalink"></a></h3><p>Use <a href="../../reference/constraints/#JuMP.set_normalized_rhs"><code>set_normalized_rhs</code></a> to modify the right-hand side (constant) term of a linear or quadratic  constraint. Use <a href="../../reference/constraints/#JuMP.normalized_rhs"><code>normalized_rhs</code></a> to query the right-hand side term.</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; set_normalized_rhs(con, 3)
+
+julia&gt; con
+con : 2 x &lt;= 3.0
+
+julia&gt; normalized_rhs(con)
+3.0</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p><a href="../../reference/constraints/#JuMP.set_normalized_rhs"><code>set_normalized_rhs</code></a> sets the right-hand side term of the normalized constraint. See <a href="#Normalization">Normalization</a> for more details.</p></div></div><h3 id="Option-2:-use-fixed-variables"><a class="docs-heading-anchor" href="#Option-2:-use-fixed-variables">Option 2: use fixed variables</a><a id="Option-2:-use-fixed-variables-1"></a><a class="docs-heading-anchor-permalink" href="#Option-2:-use-fixed-variables" title="Permalink"></a></h3><p>If constraints are complicated, for example, they are composed of a number of components, each of which has a constant term, then it may be difficult to calculate what the right-hand side term is in the standard form.</p><p>For this situation, JuMP includes the ability to <em>fix</em> variables to a value using the <a href="../../reference/variables/#JuMP.fix"><code>fix</code></a> function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a new variable and fixing it to different values. Here is an example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, const_term)
+const_term
+
+julia&gt; @constraint(model, con, 2x &lt;= const_term + 1)
+con : 2 x - const_term &lt;= 1.0
+
+julia&gt; fix(const_term, 1.0)</code></pre><p>The constraint <code>con</code> is now equivalent to <code>2x &lt;= 2</code>.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>Fixed variables are not replaced with constants when communicating the problem to a solver. Therefore, even though <code>const_term</code> is fixed, it is still a decision variable, and so <code>const_term * x</code> is bilinear.</p></div></div><h3 id="Option-3:-modify-the-function&#39;s-constant-term"><a class="docs-heading-anchor" href="#Option-3:-modify-the-function&#39;s-constant-term">Option 3: modify the function&#39;s constant term</a><a id="Option-3:-modify-the-function&#39;s-constant-term-1"></a><a class="docs-heading-anchor-permalink" href="#Option-3:-modify-the-function&#39;s-constant-term" title="Permalink"></a></h3><p>The third option is to use <a href="../../reference/constraints/#JuMP.add_to_function_constant"><code>add_to_function_constant</code></a>. The constant given is added to the function of a <code>func</code>-in-<code>set</code> constraint. In the following example, adding <code>2</code> to the function has the effect of removing <code>2</code> to the right-hand side:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; add_to_function_constant(con, 2)
+
+julia&gt; con
+con : 2 x &lt;= -1.0
+
+julia&gt; normalized_rhs(con)
+-1.0</code></pre><p>In the case of interval constraints, the constant is removed from each bound:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 0 &lt;= 2x + 1 &lt;= 2)
+con : 2 x ∈ [-1.0, 1.0]
+
+julia&gt; add_to_function_constant(con, 3)
+
+julia&gt; con
+con : 2 x ∈ [-4.0, -2.0]</code></pre><h2 id="Modify-a-variable-coefficient"><a class="docs-heading-anchor" href="#Modify-a-variable-coefficient">Modify a variable coefficient</a><a id="Modify-a-variable-coefficient-1"></a><a class="docs-heading-anchor-permalink" href="#Modify-a-variable-coefficient" title="Permalink"></a></h2><h3 id="Scalar-constraints"><a class="docs-heading-anchor" href="#Scalar-constraints">Scalar constraints</a><a id="Scalar-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Scalar-constraints" title="Permalink"></a></h3><p>To modify the coefficients for a linear term (modifying the coefficient of a quadratic term is not supported) in a constraint, use <a href="../../reference/constraints/#JuMP.set_normalized_coefficient"><code>set_normalized_coefficient</code></a>. To query the current coefficient, use <a href="../../reference/constraints/#JuMP.normalized_coefficient"><code>normalized_coefficient</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 2x[1] + x[2] &lt;= 1)
+con : 2 x[1] + x[2] ≤ 1.0
+
+julia&gt; set_normalized_coefficient(con, x[2], 0)
+
+julia&gt; con
+con : 2 x[1] ≤ 1.0
+
+julia&gt; normalized_coefficient(con, x[2])
+0.0</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p><a href="../../reference/constraints/#JuMP.set_normalized_coefficient"><code>set_normalized_coefficient</code></a> sets the coefficient of the normalized constraint. See <a href="#Normalization">Normalization</a> for more details.</p></div></div><h3 id="Vector-constraints"><a class="docs-heading-anchor" href="#Vector-constraints">Vector constraints</a><a id="Vector-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Vector-constraints" title="Permalink"></a></h3><p>To modify the coefficients of a vector-valued constraint, use <a href="../../reference/constraints/#JuMP.set_normalized_coefficients"><code>set_normalized_coefficients</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia&gt; set_normalized_coefficients(con, x, [(1, 3.0)])
+
+julia&gt; con
+con : [3 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia&gt; set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+
+julia&gt; con
+con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)</code></pre><h2 id="Delete-a-constraint"><a class="docs-heading-anchor" href="#Delete-a-constraint">Delete a constraint</a><a id="Delete-a-constraint-1"></a><a class="docs-heading-anchor-permalink" href="#Delete-a-constraint" title="Permalink"></a></h2><p>Use <a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a> to delete a constraint from a model. Use <a href="../../reference/constraints/#JuMP.is_valid"><code>is_valid</code></a> to check if a constraint belongs to a model and has not been deleted.</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; is_valid(model, con)
+true
+
+julia&gt; delete(model, con)
+
+julia&gt; is_valid(model, con)
+false</code></pre><p>Deleting a constraint does not unregister the symbolic reference from the model. Therefore, creating a new constraint of the same name will throw an error:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con, 2x &lt;= 1)
+ERROR: An object of name con is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :con)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:con]`.
+[...]</code></pre><p>After calling <a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a>, call <a href="../../reference/models/#JuMP.unregister"><code>unregister</code></a> to remove the symbolic reference:</p><pre><code class="language-julia-repl hljs">julia&gt; unregister(model, :con)
+
+julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p><a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a> does not automatically <a href="../../reference/models/#JuMP.unregister"><code>unregister</code></a> because we do not distinguish between names that are automatically registered by JuMP macros, and names that are manually registered by the user by setting values in <a href="../../reference/models/#JuMP.object_dictionary"><code>object_dictionary</code></a>. In addition, deleting a constraint and then adding a new constraint of the same name is an easy way to introduce bugs into your code.</p></div></div><h2 id="Start-values"><a class="docs-heading-anchor" href="#Start-values">Start values</a><a id="Start-values-1"></a><a class="docs-heading-anchor-permalink" href="#Start-values" title="Permalink"></a></h2><p>Provide a starting value (also called warmstart) for a constraint&#39;s primal and dual solutions using <a href="../../reference/variables/#JuMP.set_start_value"><code>set_start_value</code></a> and <a href="../../reference/constraints/#JuMP.set_dual_start_value"><code>set_dual_start_value</code></a>.</p><p>Query the starting value for a constraint&#39;s primal and dual solution using <a href="../../reference/variables/#JuMP.start_value"><code>start_value</code></a> and <a href="../../reference/constraints/#JuMP.dual_start_value"><code>dual_start_value</code></a>. If no start value has been set, the methods will return <code>nothing</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, con, x &gt;= 10)
+con : x ≥ 10.0
+
+julia&gt; start_value(con)
+
+julia&gt; set_start_value(con, 10.0)
+
+julia&gt; start_value(con)
+10.0
+
+julia&gt; dual_start_value(con)
+
+julia&gt; set_dual_start_value(con, 2)
+
+julia&gt; dual_start_value(con)
+2.0</code></pre><p>Vector-valued constraints require a vector:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:3])
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, con, x in SecondOrderCone())
+con : [x[1], x[2], x[3]] in MathOptInterface.SecondOrderCone(3)
+
+julia&gt; dual_start_value(con)
+
+julia&gt; set_dual_start_value(con, [1.0, 2.0, 3.0])
+
+julia&gt; dual_start_value(con)
+3-element Vector{Float64}:
+ 1.0
+ 2.0
+ 3.0</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>For more information, check out the <a href="../../tutorials/conic/start_values/#Primal-and-dual-warm-starts">Primal and dual warm-starts</a> tutorial.</p></div></div><h2 id="Constraint-containers"><a class="docs-heading-anchor" href="#Constraint-containers">Constraint containers</a><a id="Constraint-containers-1"></a><a class="docs-heading-anchor-permalink" href="#Constraint-containers" title="Permalink"></a></h2><p>Like <a href="../variables/#Variable-containers">Variable containers</a>, JuMP provides a mechanism for building groups of constraints compactly. References to these groups of constraints are returned in <em>containers</em>. Three types of constraint containers are supported: <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>You can read more about containers in the <a href="../containers/#Containers">Containers</a> section.</p></div></div><h3 id="constraint_arrays"><a class="docs-heading-anchor" href="#constraint_arrays">Arrays</a><a id="constraint_arrays-1"></a><a class="docs-heading-anchor-permalink" href="#constraint_arrays" title="Permalink"></a></h3><p>One way of adding a group of constraints compactly is the following:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con[i = 1:3], i * x &lt;= i + 1)
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1] : x ≤ 2.0
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0</code></pre><p>JuMP returns references to the three constraints in an <code>Array</code> that is bound to the Julia variable <code>con</code>. This array can be accessed and sliced as you would with any Julia array:</p><pre><code class="language-julia-repl hljs">julia&gt; con[1]
+con[1] : x &lt;= 2.0
+
+julia&gt; con[2:3]
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0</code></pre><p>Anonymous containers can also be constructed by dropping the name (for example, <code>con</code>) before the square brackets:</p><pre><code class="language-julia-repl hljs">julia&gt; con = @constraint(model, [i = 1:2], i * x &lt;= i + 1)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ x ≤ 2.0
+ 2 x ≤ 3.0</code></pre><p>Just like <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>, JuMP will form an <code>Array</code> of constraints when it can determine at parse time that the indices are one-based integer ranges. Therefore <code>con[1:b]</code> will create an <code>Array</code>, but <code>con[a:b]</code> will not. A special case is <code>con[Base.OneTo(n)]</code> which will produce an <code>Array</code>. If JuMP cannot determine that the indices are one-based integer ranges (for example, in the case of <code>con[a:b]</code>), JuMP will create a <code>DenseAxisArray</code> instead.</p><h3 id="DenseAxisArrays"><a class="docs-heading-anchor" href="#DenseAxisArrays">DenseAxisArrays</a><a id="DenseAxisArrays-1"></a><a class="docs-heading-anchor-permalink" href="#DenseAxisArrays" title="Permalink"></a></h3><p>The syntax for constructing a <a href="../../reference/containers/#JuMP.Containers.DenseAxisArray"><code>DenseAxisArray</code></a> of constraints is very similar to the <a href="../variables/#variable_jump_arrays">syntax for constructing</a> a <code>DenseAxisArray</code> of variables.</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con[i = 1:2, j = 2:3], i * x &lt;= j + 1)
+2-dimensional DenseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, 2:3
+And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1,2] : x ≤ 3.0    con[1,3] : x ≤ 4.0
+ con[2,2] : 2 x ≤ 3.0  con[2,3] : 2 x ≤ 4.0</code></pre><h3 id="SparseAxisArrays"><a class="docs-heading-anchor" href="#SparseAxisArrays">SparseAxisArrays</a><a id="SparseAxisArrays-1"></a><a class="docs-heading-anchor-permalink" href="#SparseAxisArrays" title="Permalink"></a></h3><p>The syntax for constructing a <a href="../../reference/containers/#JuMP.Containers.SparseAxisArray"><code>SparseAxisArray</code></a> of constraints is very similar to the <a href="../variables/#variable_sparseaxisarrays">syntax for constructing</a> a <code>SparseAxisArray</code> of variables.</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x &lt;= j + 1)
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 2 entries:
+  [1, 2]  =  con[1,2] : x ≤ 3.0
+  [2, 1]  =  con[2,1] : 2 x ≤ 2.0</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>If you have many index dimensions and a large amount of sparsity, read <a href="../variables/#Performance-considerations">Performance considerations</a>.</p></div></div><h3 id="Forcing-the-container-type"><a class="docs-heading-anchor" href="#Forcing-the-container-type">Forcing the container type</a><a id="Forcing-the-container-type-1"></a><a class="docs-heading-anchor-permalink" href="#Forcing-the-container-type" title="Permalink"></a></h3><p>When creating a container of constraints, JuMP will attempt to choose the tightest container type that can store the constraints. However, because this happens at parse time, it does not always make the best choice. Just like in <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>, you can force the type of container using the <code>container</code> keyword. For syntax and the reason behind this, take a look at the <a href="../variables/#variable_forcing">variable docs</a>.</p><h3 id="Constraints-with-similar-indices"><a class="docs-heading-anchor" href="#Constraints-with-similar-indices">Constraints with similar indices</a><a id="Constraints-with-similar-indices-1"></a><a class="docs-heading-anchor-permalink" href="#Constraints-with-similar-indices" title="Permalink"></a></h3><p>Containers are often used to create constraints over a set of indices. However, you&#39;ll often have cases in which you are repeating the indices:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraints(model, begin
+           [i=1:2, j=1:2, k=1:2], i * x[j] &lt;= k
+           [i=1:2, j=1:2, k=1:2], i * y[j] &lt;= k
+       end);</code></pre><p>This is hard to read and leads to a lot of copy-paste. A more readable way is to use a for-loop:</p><pre><code class="language-julia-repl hljs">julia&gt; for i=1:2, j=1:2, k=1:2
+           @constraints(model, begin
+               i * x[j] &lt;= k
+               i * y[j] &lt;= k
+           end)
+       end</code></pre><h2 id="Accessing-constraints-from-a-model"><a class="docs-heading-anchor" href="#Accessing-constraints-from-a-model">Accessing constraints from a model</a><a id="Accessing-constraints-from-a-model-1"></a><a class="docs-heading-anchor-permalink" href="#Accessing-constraints-from-a-model" title="Permalink"></a></h2><p>Query the types of function-in-set constraints in a model using <a href="../../reference/constraints/#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x[i=1:2] &gt;= i, Int);
+
+julia&gt; @constraint(model, x[1] + x[2] &lt;= 1);
+
+julia&gt; list_of_constraint_types(model)
+3-element Vector{Tuple{Type, Type}}:
+ (AffExpr, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.Integer)</code></pre><p>For a given combination of function and set type, use <a href="../../reference/constraints/#JuMP.num_constraints"><code>num_constraints</code></a> to access the number of constraints and <a href="../../reference/constraints/#JuMP.all_constraints"><code>all_constraints</code></a> to access a list of their references:</p><pre><code class="language-julia-repl hljs">julia&gt; num_constraints(model, VariableRef, MOI.Integer)
+2
+
+julia&gt; cons = all_constraints(model, VariableRef, MOI.Integer)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}, ScalarShape}}:
+ x[1] integer
+ x[2] integer</code></pre><p>You can also count the total number of constraints in the model, but you must explicitly choose whether to count <code>VariableRef</code> constraints such as bound and integrality constraints:</p><pre><code class="language-julia-repl hljs">julia&gt; num_constraints(model; count_variable_in_set_constraints = true)
+5
+
+julia&gt; num_constraints(model; count_variable_in_set_constraints = false)
+1</code></pre><p>The same also applies for <a href="../../reference/constraints/#JuMP.all_constraints"><code>all_constraints</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; all_constraints(model; include_variable_in_set_constraints = true)
+5-element Vector{ConstraintRef}:
+ x[1] + x[2] ≤ 1.0
+ x[1] ≥ 1.0
+ x[2] ≥ 2.0
+ x[1] integer
+ x[2] integer
+
+julia&gt; all_constraints(model; include_variable_in_set_constraints = false)
+1-element Vector{ConstraintRef}:
+ x[1] + x[2] ≤ 1.0</code></pre><p>If you need finer-grained control on which constraints to include, use a variant of:</p><pre><code class="language-julia-repl hljs">julia&gt; sum(
+           num_constraints(model, F, S) for
+           (F, S) in list_of_constraint_types(model) if F != VariableRef
+       )
+1</code></pre><p>Use <a href="../../reference/constraints/#JuMP.constraint_object"><code>constraint_object</code></a> to get an instance of an <a href="../../reference/constraints/#JuMP.AbstractConstraint"><code>AbstractConstraint</code></a> object that stores the constraint data:</p><pre><code class="language-julia-repl hljs">julia&gt; con = constraint_object(cons[1])
+ScalarConstraint{VariableRef, MathOptInterface.Integer}(x[1], MathOptInterface.Integer())
+
+julia&gt; con.func
+x[1]
+
+julia&gt; con.set
+MathOptInterface.Integer()</code></pre><h2 id="MathOptInterface-constraints"><a class="docs-heading-anchor" href="#MathOptInterface-constraints">MathOptInterface constraints</a><a id="MathOptInterface-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#MathOptInterface-constraints" title="Permalink"></a></h2><p>Because JuMP is based on MathOptInterface, you can add any constraints supported by MathOptInterface using the function-in-set syntax. For a list of supported functions and sets, read <a href="../../moi/manual/standard_form/#Standard-form-problem">Standard form problem</a>.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>We use <code>MOI</code> as an alias for the <code>MathOptInterface</code> module. This alias is defined by <code>using JuMP</code>. You may also define it in your code as follows:</p><pre><code class="language-julia hljs">import MathOptInterface
+const MOI = MathOptInterface</code></pre></div></div><p>For example, the following two constraints are equivalent:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, 2 * x[1] &lt;= 1)
+2 x[1] ≤ 1.0
+
+julia&gt; @constraint(model, 2 * x[1] in MOI.LessThan(1.0))
+2 x[1] ≤ 1.0</code></pre><p>You can also use any set defined by MathOptInterface:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x - [1; 2; 3] in MOI.Nonnegatives(3))
+[x[1] - 1, x[2] - 2, x[3] - 3] ∈ MathOptInterface.Nonnegatives(3)
+
+julia&gt; @constraint(model, x in MOI.ExponentialCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.ExponentialCone()</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>Similar to how JuMP defines the <code>&lt;=</code> and <code>&gt;=</code> syntax as a convenience way to specify <a href="../../moi/reference/standard_form/#MathOptInterface.LessThan"><code>MOI.LessThan</code></a> and <a href="../../moi/reference/standard_form/#MathOptInterface.GreaterThan"><code>MOI.GreaterThan</code></a> constraints, the remaining sections in this page describe functions and syntax that have been added for the convenience of common modeling situations.</p></div></div><h2 id="Set-inequality-syntax"><a class="docs-heading-anchor" href="#Set-inequality-syntax">Set inequality syntax</a><a id="Set-inequality-syntax-1"></a><a class="docs-heading-anchor-permalink" href="#Set-inequality-syntax" title="Permalink"></a></h2><p>For modeling convenience, the syntax <code>@constraint(model, x &gt;= y, Set())</code> is short-hand for <code>@constraint(model, x - y in Set())</code>. Therefore, the following calls are equivalent:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, x[1:2]);
+
+julia&gt; y = [0.5, 0.75];
+
+julia&gt; @constraint(model, x &gt;= y, MOI.Nonnegatives(2))
+[x[1] - 0.5, x[2] - 0.75] ∈ MathOptInterface.Nonnegatives(2)
+
+julia&gt; @constraint(model, y &lt;= x, MOI.Nonnegatives(2))
+[x[1] - 0.5, x[2] - 0.75] ∈ MathOptInterface.Nonnegatives(2)
+
+julia&gt; @constraint(model, x - y in MOI.Nonnegatives(2))
+[x[1] - 0.5, x[2] - 0.75] ∈ MathOptInterface.Nonnegatives(2)</code></pre><p>Non-zero constants are not supported in this syntax:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x &gt;= 1, MOI.Nonnegatives(2))
+ERROR: Operation `sub_mul` between `Vector{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+Stacktrace:
+[...]</code></pre><p>Use instead:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x .- 1 &gt;= 0, MOI.Nonnegatives(2))
+[x[1] - 1, x[2] - 1] ∈ MathOptInterface.Nonnegatives(2)</code></pre><h2 id="Second-order-cone-constraints"><a class="docs-heading-anchor" href="#Second-order-cone-constraints">Second-order cone constraints</a><a id="Second-order-cone-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Second-order-cone-constraints" title="Permalink"></a></h2><p>A <a href="../../reference/constraints/#JuMP.SecondOrderCone"><code>SecondOrderCone</code></a> constrains the variables <code>t</code> and <code>x</code> to the set:</p><p class="math-container">\[||x||_2 \le t,\]</p><p>and <span>$t \ge 0$</span>. It can be added as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, t)
+t
+
+julia&gt; @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia&gt; @constraint(model, [t; x] in SecondOrderCone())
+[t, x[1], x[2]] ∈ MathOptInterface.SecondOrderCone(3)</code></pre><h2 id="Rotated-second-order-cone-constraints"><a class="docs-heading-anchor" href="#Rotated-second-order-cone-constraints">Rotated second-order cone constraints</a><a id="Rotated-second-order-cone-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Rotated-second-order-cone-constraints" title="Permalink"></a></h2><p>A <a href="../../reference/constraints/#JuMP.RotatedSecondOrderCone"><code>RotatedSecondOrderCone</code></a> constrains the variables <code>t</code>, <code>u</code>, and <code>x</code> to the set:</p><p class="math-container">\[||x||_2^2 \le 2 t \cdot u\]</p><p>and <span>$t, u \ge 0$</span>. It can be added as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model();
+
+julia&gt; @variable(model, t)
+t
+
+julia&gt; @variable(model, u)
+u
+
+julia&gt; @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia&gt; @constraint(model, [t; u; x] in RotatedSecondOrderCone())
+[t, u, x[1], x[2]] ∈ MathOptInterface.RotatedSecondOrderCone(4)</code></pre><h2 id="Semi-integer-and-semi-continuous-variables"><a class="docs-heading-anchor" href="#Semi-integer-and-semi-continuous-variables">Semi-integer and semi-continuous variables</a><a id="Semi-integer-and-semi-continuous-variables-1"></a><a class="docs-heading-anchor-permalink" href="#Semi-integer-and-semi-continuous-variables" title="Permalink"></a></h2><p>Semi-continuous variables are constrained to the set <span>$x \in \{0\} \cup [l, u]$</span>.</p><p>Create a semi-continuous variable using the <code>MOI.Semicontinuous</code> set:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
+x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)</code></pre><p>Semi-integer variables  are constrained to the set <span>$x \in \{0\} \cup \{l, l+1, \dots, u\}$</span>.</p><p>Create a semi-integer variable using the <code>MOI.Semiinteger</code> set:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
+x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)</code></pre><h2 id="Special-Ordered-Sets-of-Type-1"><a class="docs-heading-anchor" href="#Special-Ordered-Sets-of-Type-1">Special Ordered Sets of Type 1</a><a id="Special-Ordered-Sets-of-Type-1-1"></a><a class="docs-heading-anchor-permalink" href="#Special-Ordered-Sets-of-Type-1" title="Permalink"></a></h2><p>In a Special Ordered Set of Type 1 (often denoted SOS-I or SOS1), at most one element can take a non-zero value.</p><p>Construct SOS-I constraints using the <a href="../../reference/constraints/#JuMP.SOS1"><code>SOS1</code></a> set:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:3])
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, x in SOS1())
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])</code></pre><p>Although not required for feasibility, solvers can benefit from an ordering of the variables (for example, the variables represent different factories to build, at most one factory can be built, and the factories can be ordered according to cost). To induce an ordering, a vector of weights can be provided, and the variables are ordered according to their corresponding weight.</p><p>For example, in the constraint:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x in SOS1([3.1, 1.2, 2.3]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([3.1, 1.2, 2.3])</code></pre><p>the variables <code>x</code> have precedence <code>x[2]</code>, <code>x[3]</code>, <code>x[1]</code>.</p><h2 id="Special-Ordered-Sets-of-Type-2"><a class="docs-heading-anchor" href="#Special-Ordered-Sets-of-Type-2">Special Ordered Sets of Type 2</a><a id="Special-Ordered-Sets-of-Type-2-1"></a><a class="docs-heading-anchor-permalink" href="#Special-Ordered-Sets-of-Type-2" title="Permalink"></a></h2><p>In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be non-zero, and if there are two non-zeros, they must be consecutive according to the ordering induced by a weight vector.</p><p>Construct SOS-II constraints using the <a href="../../reference/constraints/#JuMP.SOS2"><code>SOS2</code></a> set:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])</code></pre><p>The possible non-zero pairs are (<code>x[1]</code>, <code>x[3]</code>) and (<code>x[2]</code>, <code>x[3]</code>):</p><p>If the weight vector is omitted, JuMP induces an ordering from <code>1:length(x)</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, x in SOS2())
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])</code></pre><h2 id="Indicator-constraints"><a class="docs-heading-anchor" href="#Indicator-constraints">Indicator constraints</a><a id="Indicator-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Indicator-constraints" title="Permalink"></a></h2><p>Indicator constraints consist of a binary variable and a linear constraint. The constraint holds when the binary variable takes the value <code>1</code>. The constraint may or may not hold when the binary variable takes the value <code>0</code>.</p><p>To enforce the constraint <code>x + y &lt;= 1</code> when the binary variable <code>a</code> is <code>1</code>, use:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, y)
+y
+
+julia&gt; @variable(model, a, Bin)
+a
+
+julia&gt; @constraint(model, a =&gt; {x + y &lt;= 1})
+a =&gt; {x + y ≤ 1.0}</code></pre><p>If the constraint must hold when <code>a</code> is zero, add <code>!</code> or <code>¬</code> before the binary variable;</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, !a =&gt; {x + y &lt;= 1})
+!a =&gt; {x + y ≤ 1.0}</code></pre><h2 id="Semidefinite-constraints"><a class="docs-heading-anchor" href="#Semidefinite-constraints">Semidefinite constraints</a><a id="Semidefinite-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Semidefinite-constraints" title="Permalink"></a></h2><p>To constrain a matrix to be positive semidefinite (PSD), use <a href="../../reference/constraints/#JuMP.PSDCone"><code>PSDCone</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, X[1:2, 1:2])
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[2,1]  X[2,2]
+
+julia&gt; @constraint(model, X &gt;= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[2,1]  X[2,2]] ∈ PSDCone()</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Where possible, prefer constructing a matrix of <a href="../variables/#Semidefinite-variables">Semidefinite variables</a> using the <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> macro, rather than adding a constraint like <code>@constraint(model, X &gt;= 0, PSDCone())</code>. In some solvers, adding the constraint via <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> is less efficient, and can result in additional intermediate variables and constraints being added to the model.</p></div></div><p>The inequality <code>X &gt;= Y</code> between two square matrices <code>X</code> and <code>Y</code> is understood as constraining <code>X - Y</code> to be positive semidefinite.</p><pre><code class="language-julia-repl hljs">julia&gt; Y = [1 2; 2 1]
+2×2 Matrix{Int64}:
+ 1  2
+ 2  1
+
+julia&gt; @constraint(model, X &gt;= Y, PSDCone())
+[X[1,1] - 1  X[1,2] - 2;
+ X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()</code></pre><h3 id="Symmetry"><a class="docs-heading-anchor" href="#Symmetry">Symmetry</a><a id="Symmetry-1"></a><a class="docs-heading-anchor-permalink" href="#Symmetry" title="Permalink"></a></h3><p>Solvers supporting PSD constraints usually expect to be given a matrix that is <em>symbolically</em> symmetric, that is, for which the expression in corresponding off-diagonal entries are the same. In our example, the expressions of entries <code>(1, 2)</code> and <code>(2, 1)</code> are respectively <code>X[1,2] - 2</code> and <code>X[2,1] - 2</code> which are different.</p><p>To bridge the gap between the constraint modeled and what the solver expects, solvers may add an equality constraint <code>X[1,2] - 2 == X[2,1] - 2</code> to force symmetry. Use <code>LinearAlgebra.Symmetric</code> to explicitly tell the solver that the matrix is symmetric:</p><pre><code class="language-julia-repl hljs">julia&gt; import LinearAlgebra
+
+julia&gt; Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[1,2]  X[2,2]
+
+julia&gt; @constraint(model, LinearAlgebra.Symmetric(Z) &gt;= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()</code></pre><p>Note that the lower triangular entries are ignored even if they are different so use it with caution:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, LinearAlgebra.Symmetric(X) &gt;= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()</code></pre><p>(Note the <code>(2, 1)</code> element of the constraint is <code>X[1,2]</code>, not <code>X[2,1]</code>.)</p><h2 id="Complementarity-constraints"><a class="docs-heading-anchor" href="#Complementarity-constraints">Complementarity constraints</a><a id="Complementarity-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Complementarity-constraints" title="Permalink"></a></h2><p>A mixed complementarity constraint <code>F(x) ⟂ x</code> consists of finding <code>x</code> in the interval <code>[lb, ub]</code>, such that the following holds:</p><ul><li><code>F(x) == 0</code> if <code>lb &lt; x &lt; ub</code></li><li><code>F(x) &gt;= 0</code> if <code>lb == x</code></li><li><code>F(x) &lt;= 0</code> if <code>x == ub</code></li></ul><p>JuMP supports mixed complementarity constraints via <code>complements(F(x), x)</code> or <code>F(x) ⟂ x</code> in the <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a> macro. The interval set <code>[lb, ub]</code> is obtained from the variable bounds on <code>x</code>.</p><p>For example, to define the problem <code>2x - 1 ⟂ x</code> with <code>x ∈ [0, ∞)</code>, do:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x &gt;= 0)
+x
+
+julia&gt; @constraint(model, 2x - 1 ⟂ x)
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)</code></pre><p>This problem has a unique solution at <code>x = 0.5</code>.</p><p>The perp operator <code>⟂</code> can be entered in most editors (and the Julia REPL) by typing <code>\perp&lt;tab&gt;</code>.</p><p>An alternative approach that does not require the <code>⟂</code> symbol uses the <code>complements</code> function as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @constraint(model, complements(2x - 1, x))
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)</code></pre><p>In both cases, the mapping <code>F(x)</code> is supplied as the first argument, and the matching variable <code>x</code> is supplied as the second.</p><p>Vector-valued complementarity constraints are also supported:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, -2 &lt;= y[1:2] &lt;= 2)
+2-element Vector{VariableRef}:
+ y[1]
+ y[2]
+
+julia&gt; M = [1 2; 3 4]
+2×2 Matrix{Int64}:
+ 1  2
+ 3  4
+
+julia&gt; q = [5, 6]
+2-element Vector{Int64}:
+ 5
+ 6
+
+julia&gt; @constraint(model, M * y + q ⟂ y)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(4)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../variables/">« Variables</a><a class="docs-footer-nextpage" href="../expressions/">Expressions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.28.0-DEV on <span class="colophon-date" title="Wednesday 25 January 2023 02:51">Wednesday 25 January 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
