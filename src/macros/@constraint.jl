@@ -568,14 +568,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonnegatives())
-[x[1], x[2]] ∈ MathOptInterface.Nonnegatives(2)
+[x[1], x[2]] ∈ Nonnegatives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x >= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonnegatives()
 ```
 """
 struct Nonnegatives end
@@ -599,14 +599,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Nonpositives())
-[x[1], x[2]] ∈ MathOptInterface.Nonpositives(2)
+[x[1], x[2]] ∈ Nonpositives()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x <= b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Nonpositives()
 ```
 """
 struct Nonpositives end
@@ -630,14 +630,14 @@ julia> @variable(model, x[1:2])
  x[2]
 
 julia> @constraint(model, x in Zeros())
-[x[1], x[2]] ∈ MathOptInterface.Zeros(2)
+[x[1], x[2]] ∈ Zeros()
 
 julia> A = [1 2; 3 4];
 
 julia> b = [5, 6];
 
 julia> @constraint(model, A * x == b)
-[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ Zeros()
 ```
 """
 struct Zeros end
@@ -762,6 +762,9 @@ function parse_constraint_call(
     func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
     f, parse_code = _rewrite_expression(func)
     set = operator_to_set(error_fn, operator)
+    # So that we can call a special method to intercept the ambiguous cases of
+    # `x >= y` and `x <= y` with arrays.
+    set = _intercept_operator(set)
     # `_functionize` deals with the pathological case where the `lhs` is a
     # `VariableRef` and the `rhs` is a summation with no terms.
     f = :(_functionize($f))
@@ -771,6 +774,96 @@ function parse_constraint_call(
         :(build_constraint($error_fn, $f, $(esc(set))))
     end
     return parse_code, build_call
+end
+
+_intercept_operator(x) = x
+
+struct _OpGreaterThan end
+
+_intercept_operator(::Nonnegatives) = _OpGreaterThan()
+
+function build_constraint(
+    error_fn::Function,
+    f,
+    ::_OpGreaterThan,
+    args...;
+    kwargs...,
+)
+    return build_constraint(error_fn, f, Nonnegatives(), args...; kwargs...)
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
+    ::_OpGreaterThan,
+)
+    return error_fn(
+        """
+
+        The syntax `x >= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, pass `PSDCone()` or
+        `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, x >= y, PSDCone())
+        ```
+
+        To create an element-wise inequality, pass `Nonnegatives()`, or use
+        broadcasting:
+
+        ```julia
+        @constraint(model, x >= y, Nonnegatives())
+        # or
+        @constraint(model, x .>= y)
+        ```""",
+    )
+end
+
+struct _OpLessThan end
+
+_intercept_operator(::Nonpositives) = _OpLessThan()
+
+function build_constraint(
+    error_fn::Function,
+    f,
+    ::_OpLessThan,
+    args...;
+    kwargs...,
+)
+    return build_constraint(error_fn, f, Nonpositives(), args...; kwargs...)
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Union{Matrix,LinearAlgebra.Symmetric,LinearAlgebra.Hermitian},
+    ::_OpLessThan,
+)
+    return error_fn(
+        """
+
+        The syntax `x <= y` is ambiguous for matrices because we cannot tell if
+        you intend a positive semidefinite constraint or an elementwise
+        inequality.
+
+        To create a positive semidefinite constraint, reverse the sense of the
+        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
+
+        ```julia
+        @constraint(model, y >= x, PSDCone())
+        ```
+
+        To create an element-wise inequality, reverse the sense of the
+        inequality and pass `Nonnegatives()`, or use broadcasting:
+
+        ```julia
+        @constraint(model, y >= x, Nonnegatives())
+        # or
+        @constraint(model, x .<= y)
+        ```""",
+    )
 end
 
 function build_constraint(
