@@ -256,3 +256,42 @@ LinearAlgebra.eigvals(H_star)
 
 # we see that they are all positive. Therefore, the Hessian is positive
 # definite, and so the solution found by Ipopt is a local minimizer.
+
+# ## Jacobians
+
+# In addition to the Hessian, it is also possible to query other parts of the
+# nonlinear model. For example, the Jacobian of the constraints can be queried
+# using [`MOI.jacobian_structure`](@ref) and [`MOI.eval_constraint_jacobian`](@ref).
+
+function compute_optimal_jacobian(model::Model)
+    rows = Any[]
+    nlp = MOI.Nonlinear.Model()
+    for (F, S) in list_of_constraint_types(model)
+        for ci in all_constraints(model, F, S)
+            if !(F <: VariableRef)
+                push!(rows, ci)
+                object = constraint_object(ci)
+                MOI.Nonlinear.add_constraint(nlp, object.func, object.set)
+            end
+        end
+    end
+    MOI.Nonlinear.set_objective(nlp, objective_function(model))
+    x = all_variables(model)
+    backend = MOI.Nonlinear.SparseReverseMode()
+    evaluator = MOI.Nonlinear.Evaluator(nlp, backend, index.(x))
+    ## Initialize the Jacobian
+    MOI.initialize(evaluator, [:Jac])
+    ## Query the Jacobian structure
+    sparsity = MOI.jacobian_structure(evaluator)
+    I, J, V = first.(sparsity), last.(sparsity), zeros(length(sparsity))
+    ## Query the Jacobian values
+    MOI.eval_constraint_jacobian(evaluator, V, value.(x))
+    return SparseArrays.sparse(I, J, V, length(rows), length(x))
+end
+
+compute_optimal_jacobian(model)
+
+# Compare that to the analytic solution:
+
+y = value.(x)
+[2y[1] 0; 2y[1]+2y[2] 2y[1]+2y[2]]

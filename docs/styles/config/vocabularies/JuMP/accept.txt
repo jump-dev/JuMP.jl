@@ -70,6 +70,7 @@ functionize
 geomean
 hypergraph
 infeasibilities
+Jacobian(?s)
 (lin|mixint|quad)prog
 (log|root)det
 (L|Q|MI|MIC)P(?s)
