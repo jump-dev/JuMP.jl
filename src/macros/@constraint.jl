@@ -419,6 +419,25 @@ end
 
 function parse_constraint_head(
     error_fn::Function,
+    ::Union{Val{:vect},Val{:vcat}},
+    args...,
+)
+    return error_fn(
+        """
+        Unsupported constraint expression: we don't know how to parse a
+        `[ ]` block as a constraint. Have you written:
+        ```julia
+        @constraint(model, name, [...], ...)
+        ```
+        instead of:
+        ```julia
+        @constraint(model, name[...], ...)
+        ```""",
+    )
+end
+
+function parse_constraint_head(
+    error_fn::Function,
     ::Val{:call},
     op::Symbol,
     args...,

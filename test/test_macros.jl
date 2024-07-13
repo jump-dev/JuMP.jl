@@ -2407,4 +2407,40 @@ function test_unsupported_name_syntax_multiple_ref()
     return
 end
 
+function test_constraint_vect_vcat()
+    model = Model()
+    @variable(model, x)
+    @test_throws_parsetime(
+        ErrorException(
+            """
+            In `@constraint(model, c, [k in 1:2], x <= k)`: Unsupported constraint expression: we don't know how to parse a
+            `[ ]` block as a constraint. Have you written:
+            ```julia
+            @constraint(model, name, [...], ...)
+            ```
+            instead of:
+            ```julia
+            @constraint(model, name[...], ...)
+            ```""",
+        ),
+        @constraint(model, c, [k in 1:2], x <= k),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            """
+            In `@constraint(model, c, [k in 1:2; isodd(k)], x <= k)`: Unsupported constraint expression: we don't know how to parse a
+            `[ ]` block as a constraint. Have you written:
+            ```julia
+            @constraint(model, name, [...], ...)
+            ```
+            instead of:
+            ```julia
+            @constraint(model, name[...], ...)
+            ```""",
+        ),
+        @constraint(model, c, [k in 1:2; isodd(k)], x <= k),
+    )
+    return
+end
+
 end  # module
