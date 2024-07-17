@@ -30,7 +30,8 @@ Solver-independent callback support is limited to a few solvers. This includes
 [GLPK](https://github.com/jump-dev/GLPK.jl),
 [Gurobi](https://github.com/jump-dev/Gurobi.jl),
 [Xpress](https://github.com/jump-dev/Xpress.jl), and
-[SCIP](https://github.com/scipopt/SCIP.jl).
+[SCIP](https://github.com/scipopt/SCIP.jl) (SCIP does not support lazy
+constraints).
 
 !!! warning
     While JuMP provides a solver-independent way of accessing callbacks, you
