@@ -825,7 +825,7 @@ function build_constraint(
 end
 
 function build_constraint(error_fn::Function, f, set::Zeros, args...; kwargs...)
-    return build_constraint(error_fn, f, MOI.EqualTo(false), args...; kwargs...)
+    return build_constraint(error_fn, f, MOI.EqualTo(_MA.Zero()), args...; kwargs...)
 end
 
 function build_constraint(
