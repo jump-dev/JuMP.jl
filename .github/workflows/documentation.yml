@@ -19,7 +19,10 @@ jobs:
         shell: julia --color=yes --project=docs/ {0}
         run: |
           using Pkg
-          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.add([
+              PackageSpec(name="MutableArithmetics", rev="bl/zero_number"),
+              PackageSpec(path=pwd()),
+          ])
           Pkg.instantiate()
       - name: Build and deploy
         env:
