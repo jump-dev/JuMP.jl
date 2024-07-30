@@ -133,7 +133,7 @@ function solve_knapsack_problem(;
         println(", c[$i] / w[$i] = ", profit[i] / weight[i])
     end
     chosen_items = [i for i in 1:n if value(x[i]) > 0.5]
-    return return chosen_items
+    return chosen_items
 end
 
 solve_knapsack_problem(; profit = profit, weight = weight, capacity = capacity)
