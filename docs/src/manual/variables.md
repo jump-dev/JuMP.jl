@@ -562,6 +562,14 @@ julia> @variable(model, x, Bin)
 x
 ```
 
+!!! warning
+    Solvers use tolerances to decide whether a variable satisfies the binary
+    constraint. Thus, the true feasible region is
+    $[-\varepsilon, \varepsilon] \cup [1 - \varepsilon, 1 + \varepsilon]$,
+    where $\varepsilon$ is solver-specific, but typically `1e-6`. As a result,
+    you should expect the `value(x)` of a `Bin` variable to sometimes take a
+    value like `-0.0`, `1e-8`, or `0.999999`.
+
 Check if a variable is binary using [`is_binary`](@ref):
 ```jldoctest variables_binary
 julia> is_binary(x)
@@ -603,6 +611,14 @@ julia> model = Model();
 julia> @variable(model, x, Int)
 x
 ```
+
+!!! warning
+    Solvers use tolerances to decide whether a variable satisfies the integer
+    constraint. Thus, the true feasible region is
+    $\cup_{z \in \mathbb{Z}}[z - \varepsilon, z + \varepsilon]$,
+    where $\varepsilon$ is solver-specific, but typically `1e-6`. As a result,
+    you should expect the `value(x)` of an `Int` variable to sometimes take a
+    value like `1e-8`, or `2.999999`.
 
 Check if a variable is integer using [`is_integer`](@ref):
 ```jldoctest variables_integer
