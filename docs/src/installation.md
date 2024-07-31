@@ -35,10 +35,12 @@ frequently.
 
 ## Install JuMP
 
-From Julia, JuMP is installed using the built-in package manager:
+JuMP is installed using the built-in Julia package manager. Launch Julia, and
+then enter the following at the `julia>` prompt:
 ```julia
-import Pkg
-Pkg.add("JuMP")
+julia> import Pkg
+
+julia> Pkg.add("JuMP")
 ```
 
 !!! tip
@@ -49,8 +51,9 @@ Pkg.add("JuMP")
 
 When we release a new version of JuMP, you can update with:
 ```julia
-import Pkg
-Pkg.update("JuMP")
+julia> import Pkg
+
+julia> Pkg.update("JuMP")
 ```
 
 ## Install a solver
@@ -61,18 +64,23 @@ to install one before you can solve problems with JuMP.
 Install a solver using the Julia package manager, replacing `"Clp"` by the
 Julia package name as appropriate.
 ```julia
-import Pkg
-Pkg.add("Clp")
+julia> import Pkg
+
+julia> Pkg.add("Clp")
 ```
 
 Once installed, you can use Clp as a solver with JuMP as follows, using
 [`set_attribute`](@ref) to set solver-specific options:
 ```julia
-using JuMP
-using Clp
-model = Model(Clp.Optimizer)
-set_attribute(model, "LogLevel" => 1)
-set_attribute(model, "PrimalTolerance" => 1e-7)
+julia> using JuMP
+
+julia> using Clp
+
+julia> model = Model(Clp.Optimizer);
+
+julia> set_attribute(model, "LogLevel" => 1)
+
+julia> set_attribute(model, "PrimalTolerance" => 1e-7)
 ```
 
 !!! note
