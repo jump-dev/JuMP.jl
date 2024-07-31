@@ -61,26 +61,26 @@ julia> Pkg.update("JuMP")
 JuMP depends on solvers to solve optimization problems. Therefore, you will need
 to install one before you can solve problems with JuMP.
 
-Install a solver using the Julia package manager, replacing `"Clp"` by the
+Install a solver using the Julia package manager, replacing `"HiGHS"` by the
 Julia package name as appropriate.
 ```julia
 julia> import Pkg
 
-julia> Pkg.add("Clp")
+julia> Pkg.add("HiGHS")
 ```
 
-Once installed, you can use Clp as a solver with JuMP as follows, using
+Once installed, you can use HiGHS as a solver with JuMP as follows, using
 [`set_attribute`](@ref) to set solver-specific options:
 ```julia
 julia> using JuMP
 
-julia> using Clp
+julia> using HiGHS
 
-julia> model = Model(Clp.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
-julia> set_attribute(model, "LogLevel" => 1)
+julia> set_attribute(model, "output_flag" => false)
 
-julia> set_attribute(model, "PrimalTolerance" => 1e-7)
+julia> set_attribute(model, "primal_feasibility_tolerance" => 1e-8)
 ```
 
 !!! note
