@@ -1635,6 +1635,12 @@ function test_hermitian_in_zeros()
     model = Model()
     @variable(model, H[1:2, 1:2] in HermitianPSDCone())
     c = @constraint(model, H == LinearAlgebra.I)
+    @test c.shape == HermitianMatrixShape(2; needs_adjoint_dual = true)
+    set_dual_start_value(c, [1 2+1im; 2-1im 3])
+    @test dual_start_value(c) ==
+          LinearAlgebra.Hermitian([1.0 2.0+1.0im; 2.0-1.0im 3.0])
+    @test MOI.get(backend(model), MOI.ConstraintDualStart(), index(c)) ==
+          [1.0, 4.0, 3.0, 2.0]
     con = constraint_object(c)
     @test isequal_canonical(con.func[1], real(H[1, 1]) - 1)
     @test isequal_canonical(con.func[2], real(H[1, 2]))
@@ -1650,6 +1656,11 @@ function test_symmetric_in_zeros()
     model = Model()
     @variable(model, H[1:2, 1:2], Symmetric)
     c = @constraint(model, H == LinearAlgebra.I)
+    @test c.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
+    set_dual_start_value(c, [1 2; 2 3])
+    @test dual_start_value(c) == LinearAlgebra.Symmetric([1.0 2.0; 2.0 3.0])
+    @test MOI.get(backend(model), MOI.ConstraintDualStart(), index(c)) ==
+          [1.0, 4.0, 3.0]
     con = constraint_object(c)
     @test isequal_canonical(con.func[1], H[1, 1] - 1)
     @test isequal_canonical(con.func[2], H[1, 2] - 0)
