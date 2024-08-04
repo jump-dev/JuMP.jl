@@ -109,7 +109,7 @@ function solve_economic_dispatch(generators::Vector, wind, scenario)
         model,
         Min,
         sum(generators[i].variable_cost * g[i] for i in 1:N) +
-        wind.variable_cost * w,
+        wind_generator.variable_cost * w,
     )
     ## Define the power balance constraint
     @constraint(model, sum(g[i] for i in 1:N) + w == scenario.demand)
