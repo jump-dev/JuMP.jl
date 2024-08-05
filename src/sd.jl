@@ -141,15 +141,50 @@ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 struct PSDCone end
 
 """
-    SymmetricMatrixShape
+    SymmetricMatrixShape(
+        side_dimension::Int;
+        needs_adjoint_dual::Bool = false,
+    )
 
-Shape object for a symmetric square matrix of `side_dimension` rows and columns.
+The shape object for a symmetric square matrix of `side_dimension` rows and
+columns.
+
 The vectorized form contains the entries of the upper-right triangular part of
 the matrix given column by column (or equivalently, the entries of the
 lower-left triangular part given row by row).
+
+## `needs_adjoint_dual`
+
+By default, the [`dual_shape`](@ref) of [`SymmetricMatrixShape`](@ref) is also
+[`SymmetricMatrixShape`](@ref). This is true for cases such as a
+`LinearAlgebra.Symmetric` matrix in [`PSDCone`](@ref).
+
+However, JuMP also supports `LinearAlgebra.Symmetric` matrix in `Zeros`, which
+is interpreted as an element-wise equality constraint. By exploiting symmetry,
+we pass only the upper triangle of the equality constraints. This works for the
+primal, but it leads to a factor of 2 difference in the off-diagonal dual
+elements. (The dual value of the `(i, j)` element in the triangle formulation
+should be divided by 2 when spread across the `(i, j)` and `(j, i)` elements in
+the square matrix formulation.) If the constraint has this dual inconsistency,
+set `needs_adjoint_dual = true`.
 """
 struct SymmetricMatrixShape <: AbstractShape
     side_dimension::Int
+    needs_adjoint_dual::Bool
+
+    function SymmetricMatrixShape(
+        side_dimension::Int;
+        needs_adjoint_dual::Bool = false,
+    )
+        return new(side_dimension, needs_adjoint_dual)
+    end
+end
+
+function dual_shape(s::SymmetricMatrixShape)
+    if s.needs_adjoint_dual
+        return SymmetricMatrixAdjointShape(s.side_dimension)
+    end
+    return s
 end
 
 function reshape_vector(
@@ -172,6 +207,39 @@ function reshape_set(
     ::SymmetricMatrixShape,
 )
     return PSDCone()
+end
+
+"""
+    SymmetricMatrixAdjointShape(side_dimension)
+
+The [`dual_shape`](@ref) of [`SymmetricMatrixShape`](@ref).
+
+This shape is not intended for regular use.
+"""
+struct SymmetricMatrixAdjointShape <: AbstractShape
+    side_dimension::Int
+end
+
+function vectorize(matrix::AbstractMatrix, s::SymmetricMatrixAdjointShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [((i == j) ? 1 : 2) * matrix[i, j] for j in 1:n for i in 1:j]
+end
+
+function reshape_vector(
+    v::Vector{T},
+    shape::SymmetricMatrixAdjointShape,
+) where {T}
+    matrix = Matrix{T}(undef, shape.side_dimension, shape.side_dimension)
+    k = 0
+    for j in 1:shape.side_dimension
+        for i in 1:j-1
+            k += 1
+            matrix[j, i] = matrix[i, j] = 0.5 * v[k]
+        end
+        k += 1
+        matrix[j, j] = v[k]
+    end
+    return LinearAlgebra.Symmetric(matrix)
 end
 
 """
@@ -432,14 +500,49 @@ parametrize a Hermitian matrix.
 struct HermitianPSDCone end
 
 """
-    HermitianMatrixShape
+    HermitianMatrixShape(
+        side_dimension::Int;
+        needs_adjoint_dual::Bool = false,
+    )
 
-Shape object for a Hermitian square matrix of `side_dimension` rows and
-columns. The vectorized form corresponds to
+The shape object for a Hermitian square matrix of `side_dimension` rows and
+columns.
+
+The vectorized form corresponds to
 [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref).
+
+## `needs_adjoint_dual`
+
+By default, the [`dual_shape`](@ref) of [`HermitianMatrixShape`](@ref) is also
+[`HermitianMatrixShape`](@ref). This is true for cases such as a
+`LinearAlgebra.Hermitian` matrix in [`HermitianPSDCone`](@ref).
+
+However, JuMP also supports `LinearAlgebra.Hermitian` matrix in `Zeros`, which
+is interpreted as an element-wise equality constraint. By exploiting symmetry,
+we pass only the upper triangle of the equality constraints. This works for the
+primal, but it leads to a factor of 2 difference in the off-diagonal dual
+elements. (The dual value of the `(i, j)` element in the triangle formulation
+should be divided by 2 when spread across the `(i, j)` and `(j, i)` elements in
+the square matrix formulation.) If the constraint has this dual inconsistency,
+set `needs_adjoint_dual = true`.
 """
 struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
+    needs_adjoint_dual::Bool
+
+    function HermitianMatrixShape(
+        side_dimension::Int;
+        needs_adjoint_dual::Bool = false,
+    )
+        return new(side_dimension, needs_adjoint_dual)
+    end
+end
+
+function dual_shape(s::HermitianMatrixShape)
+    if s.needs_adjoint_dual
+        return HermitianMatrixAdjointShape(s.side_dimension)
+    end
+    return s
 end
 
 function vectorize(matrix, ::HermitianMatrixShape)
@@ -472,6 +575,49 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
             imag_k += 1
             matrix[i, j] = v[real_k] + im * v[imag_k]
             matrix[j, i] = v[real_k] - im * v[imag_k]
+        end
+        real_k += 1
+        matrix[j, j] = v[real_k]
+    end
+    return LinearAlgebra.Hermitian(matrix)
+end
+
+"""
+    HermitianMatrixAdjointShape(side_dimension)
+
+The [`dual_shape`](@ref) of [`HermitianMatrixShape`](@ref).
+
+This shape is not intended for regular use.
+"""
+struct HermitianMatrixAdjointShape <: AbstractShape
+    side_dimension::Int
+end
+
+function vectorize(matrix, ::HermitianMatrixAdjointShape)
+    n = LinearAlgebra.checksquare(matrix)
+    real_shape = SymmetricMatrixAdjointShape(n)
+    imag_shape = SymmetricMatrixShape(n - 1)
+    return vcat(
+        vectorize(_real.(matrix), real_shape),
+        vectorize(2 * _imag.(matrix[1:(end-1), 2:end]), imag_shape),
+    )
+end
+
+function reshape_vector(
+    v::Vector{T},
+    shape::HermitianMatrixAdjointShape,
+) where {T}
+    NewType = _MA.promote_operation(_MA.add_mul, T, Complex{Bool}, T)
+    n = shape.side_dimension
+    matrix = Matrix{NewType}(undef, n, n)
+    real_k = 0
+    imag_k = MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n))
+    for j in 1:n
+        for i in 1:(j-1)
+            real_k += 1
+            imag_k += 1
+            matrix[i, j] = (v[real_k] + im * v[imag_k]) / 2
+            matrix[j, i] = (v[real_k] - im * v[imag_k]) / 2
         end
         real_k += 1
         matrix[j, j] = v[real_k]
@@ -552,7 +698,7 @@ function build_constraint(
     ::Zeros,
 )
     n = LinearAlgebra.checksquare(H)
-    shape = HermitianMatrixShape(n)
+    shape = HermitianMatrixShape(n; needs_adjoint_dual = true)
     x = vectorize(H, shape)
     return VectorConstraint(x, MOI.Zeros(length(x)), shape)
 end
@@ -565,7 +711,7 @@ function build_constraint(
     ::Zeros,
 )
     n = LinearAlgebra.checksquare(f)
-    shape = SymmetricMatrixShape(n)
+    shape = SymmetricMatrixShape(n; needs_adjoint_dual = true)
     x = vectorize(f, shape)
     return VectorConstraint(x, MOI.Zeros(length(x)), shape)
 end
