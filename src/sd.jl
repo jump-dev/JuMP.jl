@@ -705,17 +705,6 @@ end
 
 reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
 
-function build_constraint(
-    error_fn::Function,
-    f::LinearAlgebra.Symmetric,
-    ::Zeros,
-)
-    n = LinearAlgebra.checksquare(f)
-    shape = SymmetricMatrixShape(n; needs_adjoint_dual = true)
-    x = vectorize(f, shape)
-    return VectorConstraint(x, MOI.Zeros(length(x)), shape)
-end
-
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonnegatives)
     return error_fn(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
@@ -806,66 +795,50 @@ moi_set(::Nonnegatives, dim::Int) = MOI.Nonnegatives(dim)
 moi_set(::Nonpositives, dim::Int) = MOI.Nonpositives(dim)
 moi_set(::Zeros, dim::Int) = MOI.Zeros(dim)
 
-shape(f::LinearAlgebra.Symmetric) = SymmetricMatrixShape(size(f, 1))
+function _shape_for_orthants(f::LinearAlgebra.Symmetric)
+    n = LinearAlgebra.checksquare(f)
+    return SymmetricMatrixShape(n; needs_adjoint_dual = true)
+end
 
 reshape_set(::MOI.Nonnegatives, ::SymmetricMatrixShape) = Nonnegatives()
 reshape_set(::MOI.Nonpositives, ::SymmetricMatrixShape) = Nonpositives()
 reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
 
-shape(f::Array) = ArrayShape(size(f))
+_shape_for_orthants(f::Array) = ArrayShape(size(f))
 
 reshape_set(::MOI.Nonnegatives, ::ArrayShape) = Nonnegatives()
 reshape_set(::MOI.Nonpositives, ::ArrayShape) = Nonpositives()
 reshape_set(::MOI.Zeros, ::ArrayShape) = Zeros()
 
-function build_constraint(
-    error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
-    ::Nonnegatives,
-    set::Union{Nonnegatives,Nonpositives,Zeros},
-)
-    s = shape(f)
-    x = vectorize(f, s)
-    return VectorConstraint(x, moi_set(set, length(x)), s)
-end
+# We use an @eval loop because a `Union` introduces ambiguities.
+for S in (Nonnegatives, Nonpositives, Zeros)
+    for F in (Array, LinearAlgebra.Symmetric)
+        @eval begin
+            function build_constraint(error_fn::Function, f::$F, set::$S)
+                s = _shape_for_orthants(f)
+                x = vectorize(f, s)
+                return VectorConstraint(x, moi_set(set, length(x)), s)
+            end
 
-function build_constraint(
-    error_fn::Function,
-    ::Union{Array,LinearAlgebra.Symmetric},
-    ::Nonpositives,
-    set::Union{Nonnegatives,Nonpositives,Zeros},
-)
-    return error_fn(
-        "The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
-    )
-end
+            function build_constraint(
+                error_fn::Function,
+                f::$F,
+                ::Nonnegatives,
+                set::$S,
+            )
+                return build_constraint(error_fn, f, set)
+            end
 
-function build_constraint(
-    error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
-    set::Nonnegatives,
-)
-    s = shape(f)
-    x = vectorize(f, s)
-    return VectorConstraint(x, moi_set(set, length(x)), s)
-end
-
-function build_constraint(
-    error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
-    set::Nonpositives,
-)
-    s = shape(f)
-    x = vectorize(f, s)
-    return VectorConstraint(x, moi_set(set, length(x)), s)
-end
-
-function build_constraint(
-    error_fn::Function,
-    f::Union{Array,LinearAlgebra.Symmetric},
-    set::Zeros,
-)
-    s = shape(f)
-    x = vectorize(f, s)
-    return VectorConstraint(x, moi_set(set, length(x)), s)
+            function build_constraint(
+                error_fn::Function,
+                ::$F,
+                ::Nonpositives,
+                set::$S,
+            )
+                return error_fn(
+                    "The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+                )
+            end
+        end
+    end
 end
