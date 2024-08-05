@@ -1910,7 +1910,7 @@ function test_symmetric_matrix_inequality()
         o = constraint_object(c)
         @test isequal_canonical(o.func, g)
         @test o.set == moi_set(set, 3)
-        @test o.shape == SymmetricMatrixShape(2)
+        @test o.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
         @test reshape_set(o.set, o.shape) == set
         primal = value(start_value, c)
         @test primal isa LinearAlgebra.Symmetric
@@ -1963,7 +1963,7 @@ function test_symmetric_equality()
     o = constraint_object(c)
     @test isequal_canonical(o.func, g)
     @test o.set == moi_set(Zeros(), 3)
-    @test o.shape == SymmetricMatrixShape(2)
+    @test o.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
     @test reshape_set(o.set, o.shape) == Zeros()
     primal = value(start_value, c)
     @test primal isa LinearAlgebra.Symmetric
