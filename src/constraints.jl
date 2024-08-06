@@ -117,7 +117,7 @@ julia> model = Model();
 julia> @variable(model, x, start = 2.0);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> set_dual_start_value(c, [0.0])
 
@@ -174,7 +174,7 @@ julia> model = Model();
 julia> @variable(model, x, start = 2.0);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> set_dual_start_value(c, [0.0])
 
@@ -253,7 +253,7 @@ julia> model = Model();
 julia> @variable(model, x, start = 2.0);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> set_start_value(c, [4.0])
 
@@ -333,7 +333,7 @@ julia> model = Model();
 julia> @variable(model, x, start = 2.0);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> set_start_value(c, [4.0])
 
@@ -368,7 +368,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> name(c)
 "c"
@@ -404,7 +404,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, c, [2x] in Nonnegatives())
-c : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+c : [2 x] ∈ Nonnegatives()
 
 julia> set_name(c, "my_constraint")
 
@@ -412,7 +412,7 @@ julia> name(c)
 "my_constraint"
 
 julia> c
-my_constraint : [2 x] ∈ MathOptInterface.Nonnegatives(1)
+my_constraint : [2 x] ∈ Nonnegatives()
 ```
 """
 function set_name(
