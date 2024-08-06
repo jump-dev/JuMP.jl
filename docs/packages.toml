@@ -38,7 +38,7 @@
 [Cbc]
     rev = "v1.2.0"
 [Clp]
-    rev = "v1.0.3"
+    rev = "v1.1.0"
 [CPLEX]
     rev = "v1.0.3"
 [CSDP]
@@ -57,16 +57,16 @@
 [Gurobi]
     rev = "v1.3.0"
 [HiGHS]
-    rev = "v1.9.0"
+    rev = "v1.9.2"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.6.3"
+    rev = "v1.6.5"
 [KNITRO]
-    rev = "v0.14.2"
+    rev = "v0.14.4"
 [MiniZinc]
-    rev = "v0.3.9"
+    rev = "v0.3.11"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
@@ -75,7 +75,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.7.0"
+    rev = "v0.8.1"
     extension = true
 [Pavito]
     rev = "v0.3.8"
@@ -83,10 +83,10 @@
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
 [PolyJuMP]
-    rev = "v0.7.4"
+    rev = "v0.7.5"
     extension = true
 [SCS]
-    rev = "v2.0.0"
+    rev = "v2.0.1"
 [SDPA]
     rev = "v0.5.1"
 [SDPLR]
@@ -117,14 +117,14 @@
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "v0.9.3"
+    rev = "v0.9.4"
 [Clarabel]
     user = "oxfordcontrol"
     rev = "v0.9.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.17"
+    rev = "v1.1.19"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -157,14 +157,14 @@
     rev = "v0.1.2"
 [MadNLP]
     user = "MadNLP"
-    rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
+    rev = "v0.8.4"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.65"
+    rev = "v0.4.69"
     filename = "Readme.md"
 [NEOSServer]
     user = "odow"
@@ -185,7 +185,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.5.4"
+    rev = "v0.6.0"
     has_html = true
     extension = true
 [ProxSDP]
@@ -197,7 +197,7 @@
     rev = "v0.11.14"
 [SDDP]
     user = "odow"
-    rev = "v1.6.7"
+    rev = "v1.8.1"
     has_html = true
     extension = true
 [Tulip]
