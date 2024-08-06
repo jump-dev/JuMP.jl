@@ -539,16 +539,19 @@ Let's see what the [`backend`](@ref) of a JuMP [`Model`](@ref) is:
 julia> model = Model(HiGHS.Optimizer);
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
-in state EMPTY_OPTIMIZER
-in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
-  fallback for MOIU.Model{Float64}
-with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
-  with 0 variable bridges
-  with 0 constraint bridges
-  with 0 objective bridges
-  with inner model A HiGHS model with 0 columns and 0 rows.
+MOIU.CachingOptimizer
+├ state: EMPTY_OPTIMIZER
+├ mode: AUTOMATIC
+├ model_cache: MOIU.UniversalFallback{MOIU.Model{Float64}}
+│ ├ ObjectiveSense: FEASIBILITY_SENSE
+│ ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
+│ ├ NumberOfVariables: 0
+│ └ NumberOfConstraints: 0
+└ optimizer: MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
+  ├ Variable bridges: none
+  ├ Constraint bridges: none
+  ├ Objective bridges: none
+  └ model: A HiGHS model with 0 columns and 0 rows.
 ```
 
 Uh oh. Even though we passed a `HiGHS.Optimizer`, the backend is a much more
@@ -568,16 +571,19 @@ It has two parts:
     ```jldoctest models_backends
     julia> b.model_cache
     MOIU.UniversalFallback{MOIU.Model{Float64}}
-    fallback for MOIU.Model{Float64}
+    ├ ObjectiveSense: FEASIBILITY_SENSE
+    ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
+    ├ NumberOfVariables: 0
+    └ NumberOfConstraints: 0
     ```
  2. An optimizer, which is used to solve the problem
     ```jldoctest models_backends
     julia> b.optimizer
     MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
-    with 0 variable bridges
-    with 0 constraint bridges
-    with 0 objective bridges
-    with inner model A HiGHS model with 0 columns and 0 rows.
+    ├ Variable bridges: none
+    ├ Constraint bridges: none
+    ├ Objective bridges: none
+    └ model: A HiGHS model with 0 columns and 0 rows.
     ```
 
 !!! info
@@ -635,12 +641,15 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: HiGHS
 
 julia> backend(model)
-MOIU.CachingOptimizer{HiGHS.Optimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
-in state EMPTY_OPTIMIZER
-in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
-  fallback for MOIU.Model{Float64}
-with optimizer A HiGHS model with 0 columns and 0 rows.
+MOIU.CachingOptimizer
+├ state: EMPTY_OPTIMIZER
+├ mode: AUTOMATIC
+├ model_cache: MOIU.UniversalFallback{MOIU.Model{Float64}}
+│ ├ ObjectiveSense: FEASIBILITY_SENSE
+│ ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
+│ ├ NumberOfVariables: 0
+│ └ NumberOfConstraints: 0
+└ optimizer: A HiGHS model with 0 columns and 0 rows.
 ```
 
 Bridges can be added and removed from a [`MOI.Bridges.LazyBridgeOptimizer`](@ref)
@@ -654,16 +663,19 @@ In some advanced use-cases, it is necessary to work with the inner optimization
 model directly. To access this model, use [`unsafe_backend`](@ref):
 ```jldoctest models_backends
 julia> backend(model)
-MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
-in state EMPTY_OPTIMIZER
-in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
-  fallback for MOIU.Model{Float64}
-with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
-  with 0 variable bridges
-  with 0 constraint bridges
-  with 0 objective bridges
-  with inner model A HiGHS model with 0 columns and 0 rows.
+MOIU.CachingOptimizer
+├ state: EMPTY_OPTIMIZER
+├ mode: AUTOMATIC
+├ model_cache: MOIU.UniversalFallback{MOIU.Model{Float64}}
+│ ├ ObjectiveSense: FEASIBILITY_SENSE
+│ ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
+│ ├ NumberOfVariables: 0
+│ └ NumberOfConstraints: 0
+└ optimizer: MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
+  ├ Variable bridges: none
+  ├ Constraint bridges: none
+  ├ Objective bridges: none
+  └ model: A HiGHS model with 0 columns and 0 rows.
 
 julia> unsafe_backend(model)
 A HiGHS model with 0 columns and 0 rows.
