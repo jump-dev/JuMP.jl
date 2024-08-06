@@ -141,7 +141,7 @@ Hypatia
 Jax
 JSONSchema
 (Knitro|KNITRO)
-Lapack
+(Lapack|LAPACK)
 [Mm]anopt
 MATLAB
 MOI
