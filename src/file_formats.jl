@@ -105,14 +105,12 @@ Other `kwargs` are passed to the `Model` constructor of the chosen format.
 function read_from_file(
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
+    coefficient_type::Type = Float64,
     kwargs...,
 )
-    src =
-        MOI.FileFormats.Model(; format = format, filename = filename, kwargs...)
+    src = MOI.FileFormats.Model(; format, filename, coefficient_type, kwargs...)
     MOI.read_from_file(src, filename)
-    # TODO(odow): what number type to choose? Are there any non-Float64 file
-    # formats?
-    model = GenericModel{Float64}()
+    model = GenericModel{coefficient_type}()
     MOI.copy_to(model, src)
     return model
 end
