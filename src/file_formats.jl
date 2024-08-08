@@ -88,6 +88,14 @@ function Base.write(
     return
 end
 
+_value_type(model::MOI.Utilities.AbstractModelLike{T}) where {T} = T
+
+# This fallback may not get the correct value type. However, since
+# all models defined in `MOI.FileFormats` are created with
+# `MOI.Utilities.@model` except `NL` which only supports `Float64`,
+# this does the job for now.
+_value_type(model::MOI.ModelLike) = Float64
+
 """
     read_from_file(
         filename::String;
@@ -105,12 +113,11 @@ Other `kwargs` are passed to the `Model` constructor of the chosen format.
 function read_from_file(
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
-    coefficient_type::Type = Float64,
     kwargs...,
 )
-    src = MOI.FileFormats.Model(; format, filename, coefficient_type, kwargs...)
+    src = MOI.FileFormats.Model(; format, filename, kwargs...)
     MOI.read_from_file(src, filename)
-    model = GenericModel{coefficient_type}()
+    model = GenericModel{_value_type(model)}()
     MOI.copy_to(model, src)
     return model
 end
