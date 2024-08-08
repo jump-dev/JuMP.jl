@@ -6,7 +6,9 @@
 module TestFileFormats
 
 using JuMP
-using LinearAlgebra, Test
+using Test
+
+import LinearAlgebra
 
 function test_mof_file()
     model = Model()
@@ -141,7 +143,7 @@ end
 function test_sdpa_bigfloat()
     model = Model()
     @variable(model, x)
-    @constraint(model, Symmetric([1 x; x 1]) in PSDCone())
+    @constraint(model, LinearAlgebra.Symmetric([1 x; x 1]) in PSDCone())
     @objective(model, Max, 2x)
     write_to_file(model, "model.dat-s")
     model_2 = read_from_file("model.dat-s"; number_type = BigFloat)
