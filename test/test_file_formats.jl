@@ -8,6 +8,8 @@ module TestFileFormats
 using JuMP
 using Test
 
+import LinearAlgebra
+
 function test_mof_file()
     model = Model()
     @variable(model, x)
@@ -135,6 +137,18 @@ function test_nl_round_trip()
         @test c.expression == constraints[c.set]
     end
     rm("model.nl")
+    return
+end
+
+function test_sdpa_bigfloat()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, LinearAlgebra.Symmetric([1 x; x 1]) in PSDCone())
+    @objective(model, Max, 2x)
+    write_to_file(model, "model.dat-s")
+    model_2 = read_from_file("model.dat-s"; number_type = BigFloat)
+    @test model_2 isa GenericModel{BigFloat}
+    rm("model.dat-s")
     return
 end
 

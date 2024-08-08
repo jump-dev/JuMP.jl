@@ -88,6 +88,14 @@ function Base.write(
     return
 end
 
+_value_type(::MOI.Utilities.AbstractModelLike{T}) where {T} = T
+
+# This fallback may not get the correct value type. However, since
+# all models defined in `MOI.FileFormats` return a
+# `MOI.Utilities.GenericModel` except `NL` and `MOF` which only supports
+# `Float64`, this does the job for now.
+_value_type(::MOI.ModelLike) = Float64
+
 """
     read_from_file(
         filename::String;
@@ -107,12 +115,9 @@ function read_from_file(
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
     kwargs...,
 )
-    src =
-        MOI.FileFormats.Model(; format = format, filename = filename, kwargs...)
+    src = MOI.FileFormats.Model(; format, filename, kwargs...)
     MOI.read_from_file(src, filename)
-    # TODO(odow): what number type to choose? Are there any non-Float64 file
-    # formats?
-    model = GenericModel{Float64}()
+    model = GenericModel{_value_type(src)}()
     MOI.copy_to(model, src)
     return model
 end
