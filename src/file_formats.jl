@@ -91,9 +91,9 @@ end
 _value_type(model::MOI.Utilities.AbstractModelLike{T}) where {T} = T
 
 # This fallback may not get the correct value type. However, since
-# all models defined in `MOI.FileFormats` are created with
-# `MOI.Utilities.@model` except `NL` which only supports `Float64`,
-# this does the job for now.
+# all models defined in `MOI.FileFormats` return a
+# `MOI.Utilities.GenericModel` except `NL` and `MOF` which only supports
+# `Float64`, this does the job for now.
 _value_type(model::MOI.ModelLike) = Float64
 
 """
