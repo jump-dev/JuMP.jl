@@ -755,7 +755,7 @@ function test_printing_model_with_nonlinear()
         A JuMP Model
         ├ solver: none
         ├ objective_sense: MAX_SENSE
-        │ └ objective_function_type: AffExpr
+        │ └ objective_function_type: $AffExpr
         ├ num_variables: 1
         ├ num_constraints: 1
         │ └ Nonlinear: 1
