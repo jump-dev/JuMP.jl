@@ -11,13 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
- - Add set inequality syntax for matrices (#3766)
- - Improve matrix inequality support (#3778)
+ - Added set inequality syntax for matrices (#3766)
+ - Improved matrix inequality support (#3778)
 
 ### Fixed
 
- - Fix methods for calling [`value`](@ref) on a `::Number` (#3776)
- - Fix querying dual of Symmetric and Hermitian equality constraints (#3797)
+ - Fixed a method for calling [`value`](@ref) on a `::Number` (#3776)
+ - Fixed querying dual of Symmetric and Hermitian equality constraints (#3797)
+ - Fixed [`read_from_file`](@ref) for coefficient types other than `Float64` (#3801)
 
 ### Other
 
