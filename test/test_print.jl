@@ -653,8 +653,7 @@ Subject to
         │ ├ $VariableType in MOI.Integer: 4
         │ └ $VariableType in MOI.ZeroOne: 4
         └ Names registered in the model
-          └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z
-        """;
+          └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""";
         repl = :show,
     )
 
@@ -716,8 +715,7 @@ Subject to
         │ ├ $VariableType in MOI.Integer: 1
         │ └ $VariableType in MOI.ZeroOne: 1
         └ Names registered in the model
-          └ :x, :y
-        """;
+          └ :x, :y""";
         repl = :show,
     )
 
@@ -736,8 +734,7 @@ Subject to
         ├ num_constraints: 1
         │ └ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
         └ Names registered in the model
-          └ :x
-        """;
+          └ :x""";
         repl = :show,
     )
     return
@@ -763,8 +760,7 @@ function test_printing_model_with_nonlinear()
         ├ num_constraints: 1
         │ └ Nonlinear: 1
         └ Names registered in the model
-          └ :x
-        """;
+          └ :x""";
         repl = :show,
     )
 
@@ -853,7 +849,7 @@ function test_print_summary_min_sense()
     model = Model()
     @variable(model, x)
     @objective(model, Min, x)
-    @test occursin("Minimization problem with:", sprint(show, model))
+    @test occursin("objective_sense: MIN_SENSE", sprint(show, model))
 end
 
 function test_show_latex_parameter()
