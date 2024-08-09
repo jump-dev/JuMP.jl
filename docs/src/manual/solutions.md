@@ -608,13 +608,7 @@ julia> using JuMP
 
 julia> import Gurobi
 
-julia> model = Model(Gurobi.Optimizer)
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: Gurobi
+julia> model = Model(Gurobi.Optimizer);
 
 julia> set_silent(model)
 

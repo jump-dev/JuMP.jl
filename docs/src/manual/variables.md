@@ -190,23 +190,23 @@ corresponding symbol. Get a registered name using `model[:key]`:
 ```jldoctest
 julia> model = Model()
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> @variable(model, x)
 x
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 0
+└ Names registered in the model
+  └ :x
 
 julia> model[:x] === x
 true
@@ -430,11 +430,11 @@ x
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> x
 ERROR: UndefVarError: `x` not defined
@@ -450,12 +450,12 @@ x
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x_register
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 0
+└ Names registered in the model
+  └ :x_register
 
 julia> model[:x_register]
 x

@@ -351,11 +351,11 @@ corresponding symbol. Get a registered name using `model[:key]`:
 ```jldoctest
 julia> model = Model()
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> @variable(model, x)
 x
@@ -365,13 +365,13 @@ my_c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: my_c, x
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 1
+│ └ AffExpr in MOI.LessThan{Float64}: 1
+└ Names registered in the model
+  └ :my_c, :x
 
 julia> model[:my_c] === my_c
 true
@@ -567,13 +567,13 @@ c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 1
+│ └ AffExpr in MOI.LessThan{Float64}: 1
+└ Names registered in the model
+  └ :x
 
 julia> c
 ERROR: UndefVarError: `c` not defined
@@ -589,13 +589,13 @@ c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variable: 1
-`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: c_register, x
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 1
+├ num_constraints: 1
+│ └ AffExpr in MOI.LessThan{Float64}: 1
+└ Names registered in the model
+  └ :c_register, :x
 
 julia> model[:c_register]
 c : 2 x ≤ 1
@@ -1597,13 +1597,14 @@ x[1] && x[2] = false
 
 julia> model
 A JuMP Model
-Feasibility problem with:
-Variables: 2
-`GenericNonlinearExpr{GenericVariableRef{Bool}}`-in-`MathOptInterface.EqualTo{Bool}`: 2 constraints
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x
+├ value_type: Bool
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 2
+├ num_constraints: 2
+│ └ GenericNonlinearExpr{GenericVariableRef{Bool}} in MOI.EqualTo{Bool}: 2
+└ Names registered in the model
+  └ :x
 ```
 
 Boolean constraints should not be added using the `==` operator because JuMP

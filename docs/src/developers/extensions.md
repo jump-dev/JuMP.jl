@@ -364,11 +364,11 @@ MyModel (generic function with 1 method)
 
 julia> model = MyModel()
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> model.ext
 Dict{Symbol, Any} with 1 entry:
