@@ -266,10 +266,12 @@ julia> optimizer = optimizer_with_attributes(
 
 julia> model = direct_generic_model(Float64, optimizer)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: HiGHS
+├ mode: DIRECT
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 is equivalent to:
 ```jldoctest
@@ -277,10 +279,12 @@ julia> import HiGHS
 
 julia> model = direct_generic_model(Float64, HiGHS.Optimizer())
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: HiGHS
+├ mode: DIRECT
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> set_attribute(model, "presolve", "off")
 
@@ -371,10 +375,12 @@ julia> optimizer = optimizer_with_attributes(
 
 julia> model = direct_model(optimizer)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: HiGHS
+├ mode: DIRECT
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 is equivalent to:
 ```jldoctest
@@ -382,10 +388,12 @@ julia> import HiGHS
 
 julia> model = direct_model(HiGHS.Optimizer())
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: HiGHS
+├ mode: DIRECT
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> set_attribute(model, "presolve", "off")
 
@@ -485,11 +493,11 @@ julia> import HiGHS
 
 julia> model = Model(HiGHS.Optimizer)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: HiGHS
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> MOI.Utilities.attach_optimizer(model)
 
@@ -907,11 +915,11 @@ false
 
 julia> empty!(model)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> print(model)
 Feasibility

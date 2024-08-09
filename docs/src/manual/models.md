@@ -27,11 +27,11 @@ Create a model by passing an optimizer to [`Model`](@ref):
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: HiGHS
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 
 If you don't know which optimizer you will be using at creation time, create a
@@ -40,11 +40,11 @@ prior to [`optimize!`](@ref):
 ```jldoctest
 julia> model = Model()
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> set_optimizer(model, HiGHS.Optimizer)
 ```
@@ -127,11 +127,11 @@ julia> import MultiObjectiveAlgorithms as MOA
 
 julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: MOA[algorithm=MultiObjectiveAlgorithms.Lexicographic, optimizer=HiGHS]
+├ solver: MOA[algorithm=MultiObjectiveAlgorithms.Lexicographic, optimizer=HiGHS]
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 
 ## [Solver options](@id solver_options)
@@ -144,11 +144,11 @@ julia> model = Model(
            optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false),
        )
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: HiGHS
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 
 Alternatively, use [`set_attribute`](@ref) to set an attribute after
@@ -214,14 +214,14 @@ julia> model = Model(); @variable(model, x >= 0); @objective(model, Max, x);
 
 julia> model
 A JuMP Model
-Maximization problem with:
-Variable: 1
-Objective function type: VariableRef
-`VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x
+├ solver: none
+├ objective_sense: MAX_SENSE
+│ └ objective_function_type: VariableRef
+├ num_variables: 1
+├ num_constraints: 1
+│ └ VariableRef in MOI.GreaterThan{Float64}: 1
+└ Names registered in the model
+  └ :x
 ```
 
 Use `print` to print the formulation of the model (in IJulia, this will render
@@ -356,23 +356,23 @@ JuMP models can be created from file formats using [`read_from_file`](@ref) and
 ```jldoctest file_formats
 julia> model = read_from_file("model.mps")
 A JuMP Model
-Minimization problem with:
-Variables: 0
-Objective function type: AffExpr
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: MIN_SENSE
+│ └ objective_function_type: AffExpr
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> seekstart(io);
 
 julia> model2 = read(io, Model; format = MOI.FileFormats.FORMAT_MPS)
 A JuMP Model
-Minimization problem with:
-Variables: 0
-Objective function type: AffExpr
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: MIN_SENSE
+│ └ objective_function_type: AffExpr
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 
 !!! note
@@ -634,11 +634,11 @@ Use the `add_bridges = false` keyword to remove the bridging layer:
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer; add_bridges = false)
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: HiGHS
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> backend(model)
 MOIU.CachingOptimizer
@@ -694,10 +694,12 @@ JuMP model using [`direct_model`](@ref):
 ```jldoctest direct_mode
 julia> model = direct_model(HiGHS.Optimizer())
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: HiGHS
+├ mode: DIRECT
+├ solver: HiGHS
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 ```
 
 !!! warning
