@@ -1110,4 +1110,18 @@ function test_symmetric_constraint()
     return
 end
 
+function test_show_generic_model_bigfloat()
+    model = GenericModel{BigFloat}()
+    ret = """
+    A JuMP Model
+    ├ value_type: BigFloat
+    ├ solver: none
+    ├ objective_sense: FEASIBILITY_SENSE
+    ├ num_variables: 0
+    ├ num_constraints: 0
+    └ Names registered in the model: none"""
+    @test sprint(show, model) == ret
+    return
+end
+
 end  # TestPrint
