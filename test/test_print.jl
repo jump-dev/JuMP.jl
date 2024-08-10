@@ -636,24 +636,24 @@ Subject to
         MIME("text/plain"),
         model_1,
         """
-A JuMP Model
-Maximization problem with:
-Variables: 13
-Objective function type: $(GenericAffExpr{Float64,VariableType})
-`$(GenericAffExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-`$(GenericQuadExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-`$(Array{VariableType,1})`-in-`MathOptInterface.PositiveSemidefiniteConeTriangle`: 2 constraints
-`$(Array{VariableType,1})`-in-`MathOptInterface.PositiveSemidefiniteConeSquare`: 2 constraints
-`$(Array{GenericAffExpr{Float64,VariableType},1})`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
-`$VariableType`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
-`$VariableType`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
-`$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
-`$VariableType`-in-`MathOptInterface.Integer`: 4 constraints
-`$VariableType`-in-`MathOptInterface.ZeroOne`: 4 constraints
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
+        A JuMP Model
+        ├ solver: none
+        ├ objective_sense: MAX_SENSE
+        │ └ objective_function_type: $(GenericAffExpr{Float64,VariableType})
+        ├ num_variables: 13
+        ├ num_constraints: 24
+        │ ├ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeTriangle: 2
+        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeSquare: 2
+        │ ├ $(Vector{GenericAffExpr{Float64,VariableType}}) in MOI.SecondOrderCone: 1
+        │ ├ $VariableType in MOI.EqualTo{Float64}: 1
+        │ ├ $VariableType in MOI.GreaterThan{Float64}: 4
+        │ ├ $VariableType in MOI.LessThan{Float64}: 4
+        │ ├ $VariableType in MOI.Integer: 4
+        │ └ $VariableType in MOI.ZeroOne: 4
+        └ Names registered in the model
+          └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""";
         repl = :show,
     )
 
@@ -706,16 +706,16 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
         MIME("text/plain"),
         model_2,
         """
-A JuMP Model
-Feasibility problem with:
-Variables: 2
-`$(GenericQuadExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-`$VariableType`-in-`MathOptInterface.Integer`: 1 constraint
-`$VariableType`-in-`MathOptInterface.ZeroOne`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x, y""";
+        A JuMP Model
+        ├ solver: none
+        ├ objective_sense: FEASIBILITY_SENSE
+        ├ num_variables: 2
+        ├ num_constraints: 3
+        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+        │ ├ $VariableType in MOI.Integer: 1
+        │ └ $VariableType in MOI.ZeroOne: 1
+        └ Names registered in the model
+          └ :x, :y""";
         repl = :show,
     )
 
@@ -727,14 +727,14 @@ Names registered in the model: x, y""";
         MIME("text/plain"),
         model_3,
         """
-A JuMP Model
-Feasibility problem with:
-Variable: 1
-`$(GenericAffExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x""";
+        A JuMP Model
+        ├ solver: none
+        ├ objective_sense: FEASIBILITY_SENSE
+        ├ num_variables: 1
+        ├ num_constraints: 1
+        │ └ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+        └ Names registered in the model
+          └ :x""";
         repl = :show,
     )
     return
@@ -752,15 +752,15 @@ function test_printing_model_with_nonlinear()
         MIME("text/plain"),
         model,
         """
-A JuMP Model
-Maximization problem with:
-Variable: 1
-Objective function type: Nonlinear
-Nonlinear: 1 constraint
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
-Names registered in the model: x""";
+        A JuMP Model
+        ├ solver: none
+        ├ objective_sense: MAX_SENSE
+        │ └ objective_function_type: $AffExpr
+        ├ num_variables: 1
+        ├ num_constraints: 1
+        │ └ Nonlinear: 1
+        └ Names registered in the model
+          └ :x""";
         repl = :show,
     )
 
@@ -849,7 +849,7 @@ function test_print_summary_min_sense()
     model = Model()
     @variable(model, x)
     @objective(model, Min, x)
-    @test occursin("Minimization problem with:", sprint(show, model))
+    @test occursin("objective_sense: MIN_SENSE", sprint(show, model))
 end
 
 function test_show_latex_parameter()
@@ -1107,6 +1107,20 @@ function test_symmetric_constraint()
           "[x[1,1]  x[1,2]\n ⋯       x[2,2]]"
     @test function_string(MIME("text/latex"), o) ==
           "\\begin{bmatrix}\nx_{1,1} & x_{1,2}\\\\\n\\cdots & x_{2,2}\\\\\n\\end{bmatrix}"
+    return
+end
+
+function test_show_generic_model_bigfloat()
+    model = GenericModel{BigFloat}()
+    ret = """
+    A JuMP Model
+    ├ value_type: BigFloat
+    ├ solver: none
+    ├ objective_sense: FEASIBILITY_SENSE
+    ├ num_variables: 0
+    ├ num_constraints: 0
+    └ Names registered in the model: none"""
+    @test sprint(show, model) == ret
     return
 end
 

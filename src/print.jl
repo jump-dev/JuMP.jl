@@ -234,6 +234,62 @@ function _print_summary(io::IO, model::AbstractModel)
     return
 end
 
+function _print_summary(io::IO, model::GenericModel{T}) where {T}
+    println(io, name(model))
+    if T != Float64
+        println(io, "├ value_type: ", T)
+    end
+    if mode(model) != AUTOMATIC
+        println(io, "├ mode: ", mode(model))
+    end
+    println(io, "├ solver: ", _try_solver_name(model))
+    sense = objective_sense(model)
+    println(io, "├ objective_sense: ", sense)
+    if sense != FEASIBILITY_SENSE
+        F = objective_function_type(model)
+        println(io, "│ └ objective_function_type: ", F)
+    end
+    println(io, "├ num_variables: ", num_variables(model))
+    n_constraints = 0
+    constraint_lines = String[]
+    for (F, S) in list_of_constraint_types(model)
+        n = num_constraints(model, F, S)
+        n_constraints += n
+        line = sprint(MOI.Utilities.print_with_acronym, "$F in $S: $n")
+        push!(constraint_lines, line)
+    end
+    n = num_nonlinear_constraints(model)
+    if n > 0
+        n_constraints += n
+        push!(constraint_lines, "Nonlinear: $n")
+    end
+    println(io, "├ num_constraints: $n_constraints")
+    for (i, line) in enumerate(constraint_lines)
+        tag = i == length(constraint_lines) ? "└" : "├"
+        println(io, "│ $tag $line")
+    end
+    print(io, "└ Names registered in the model")
+    if isempty(object_dictionary(model))
+        print(io, ": none")
+    else
+        names = sort!(collect(keys(object_dictionary(model))))
+        print(io, "\n  └ :", join(names, ", :"))
+    end
+    return
+end
+
+function _try_solver_name(model)
+    if mode(model) != DIRECT &&
+       MOI.Utilities.state(backend(model)) == MOI.Utilities.NO_OPTIMIZER
+        return "none"
+    end
+    try
+        return MOI.get(backend(model), MOI.SolverName())
+    catch
+        return "unknown"
+    end
+end
+
 """
     show_objective_function_summary(io::IO, model::AbstractModel)
 
