@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - Added a warning to docs about tolerances in Bin and Int variables (#3794)
    - Clarify where to type installation commands (#3795)
  - Improve error message for common incorrect syntax in constraint macro (#3781)
+ - Changed `show(::IO, ::GenericModel)` to a more informative tree structure (#3803)
 
 ## Version 1.22.2 (June 17, 2024)
 
