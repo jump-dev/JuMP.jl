@@ -689,4 +689,26 @@ function test_base_complex()
     return
 end
 
+function test_hermitian_and_symmetric()
+    model = Model()
+    @variable(model, A[1:2, 1:2], Symmetric)
+    @variable(model, B[1:2, 1:2], Hermitian)
+    for (x, y) in (
+        (A, B),
+        (B, A),
+        (1.0 * A, B),
+        (B, 1.0 * A),
+        (1.0 * A, 1.0 * B),
+        (1.0 * B, 1.0 * A),
+        (1.0 * LinearAlgebra.Symmetric(A .* A), 1.0 * B),
+        (1.0 * B, 1.0 * LinearAlgebra.Symmetric(A .* A)),
+    )
+        @test x + y isa LinearAlgebra.Hermitian
+        @test x + y == x .+ y
+        @test x - y isa LinearAlgebra.Hermitian
+        @test x - y == x .- y
+    end
+    return
+end
+
 end

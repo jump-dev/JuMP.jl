@@ -571,3 +571,55 @@ function Base.complex(
 )
     return r + im * i
 end
+
+function Base.:+(
+    A::LinearAlgebra.Symmetric{V},
+    B::LinearAlgebra.Hermitian,
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return LinearAlgebra.Hermitian(A) + B
+end
+
+function Base.:+(
+    A::LinearAlgebra.Hermitian,
+    B::LinearAlgebra.Symmetric{V},
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return A + LinearAlgebra.Hermitian(B)
+end
+
+function Base.:-(
+    A::LinearAlgebra.Symmetric{V},
+    B::LinearAlgebra.Hermitian,
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return LinearAlgebra.Hermitian(A) - B
+end
+
+function Base.:-(
+    A::LinearAlgebra.Hermitian,
+    B::LinearAlgebra.Symmetric{V},
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return A - LinearAlgebra.Hermitian(B)
+end
