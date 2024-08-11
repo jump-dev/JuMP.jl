@@ -333,11 +333,9 @@ end
 function Base.:+(a::GenericAffExpr, q::GenericQuadExpr)
     return GenericQuadExpr(a + q.aff, copy(q.terms))
 end
-function Base.:-(a::GenericAffExpr, q::GenericQuadExpr)
-    result = -q
-    # This makes an unnecessary copy of aff, but it's important for a to appear
-    # first.
-    result.aff = a + result.aff
+function Base.:-(a::GenericAffExpr{S}, q::GenericQuadExpr{T}) where {S,T}
+    result = -_copy_convert_coef(_MA.promote_operation(-, S, T), q)
+    add_to_expression!(result.aff, a)
     return result
 end
 

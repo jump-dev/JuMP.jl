@@ -689,6 +689,18 @@ function test_base_complex()
     return
 end
 
+function test_aff_minus_quad()
+    model = Model()
+    @variable(model, x)
+    a, b = 1.0 * x, (2 + 3im) * x^2
+    @test a - b == -(b - a)
+    @test b - a == -(a - b)
+    a, b = (1.0 + 2im) * x, 3 * x^2 + 4 * x
+    @test a - b == -(b - a)
+    @test b - a == -(a - b)
+    return
+end
+
 function test_hermitian_and_symmetric()
     model = Model()
     @variable(model, A[1:2, 1:2], Symmetric)
