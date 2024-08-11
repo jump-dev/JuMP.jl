@@ -469,7 +469,7 @@ function test_extension_basic_operators_affexpr(
     @test_expression_with_string aff - aff "0 x"
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
-    @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
+    @test_expression_with_string aff2 - q "-2.5 y*z - 7.1 x + 1.2 y - 1.3"
     @test_expression_with_string aff2 * q "(1.2 y + 1.2) * (2.5 y*z + 7.1 x + 2.5)"
     @test_expression_with_string aff2 / q "(1.2 y + 1.2) / (2.5 y*z + 7.1 x + 2.5)"
     @test transpose(aff) === aff
@@ -499,7 +499,7 @@ function test_extension_basic_operators_quadexpr(
     @test_expression_with_string q * 2 "5 y*z + 14.2 x + 5"
     @test_expression_with_string q / 2 "1.25 y*z + 3.55 x + 1.25"
     @test q == q
-    @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
+    @test_expression_with_string aff2 - q "-2.5 y*z - 7.1 x + 1.2 y - 1.3"
     # 4-2 QuadExpr--Variable
     @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
     @test_expression_with_string q - w "2.5 y*z + 7.1 x - w + 2.5"
