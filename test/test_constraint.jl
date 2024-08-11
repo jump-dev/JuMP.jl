@@ -2088,4 +2088,23 @@ function test_abstract_vector_orthants()
     return
 end
 
+function test_real_hermitian_in_zeros()
+    model = Model()
+    @variable(model, x[1:2, 1:2], Symmetric)
+    c = @constraint(model, LinearAlgebra.Hermitian(x) in Zeros())
+    obj = constraint_object(c)
+    @test obj.func == [x[1, 1], x[1, 2], x[2, 2]]
+    @test obj.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
+    H = LinearAlgebra.Hermitian([1 2; 2 3])
+    c = @constraint(model, x == H)
+    obj = constraint_object(c)
+    @test obj.func == [x[1, 1] - 1, x[1, 2] - 2, x[2, 2] - 3]
+    @test obj.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
+    c = @constraint(model, LinearAlgebra.Hermitian(x .^ 2) in Zeros())
+    obj = constraint_object(c)
+    @test obj.func == [x[1, 1]^2, x[1, 2]^2, x[2, 2]^2]
+    @test obj.shape == SymmetricMatrixShape(2; needs_adjoint_dual = true)
+    return
+end
+
 end  # module

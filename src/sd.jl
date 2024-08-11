@@ -703,6 +703,22 @@ function build_constraint(
     return VectorConstraint(x, MOI.Zeros(length(x)), shape)
 end
 
+# If we have a real-valued Hermitian matrix, then it is actually Symmetric, and
+# not Complex-valued Hermitian.
+function build_constraint(
+    error_fn::Function,
+    H::LinearAlgebra.Hermitian{V},
+    set::Zeros,
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return build_constraint(error_fn, LinearAlgebra.Symmetric(H), set)
+end
+
 reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
 
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonnegatives)
