@@ -599,7 +599,7 @@ function Base.:+(
 end
 
 function Base.:-(
-    A::LinearAlgebra.Symmetric{V},
+    A::LinearAlgebra.Symmetric{V,Matrix{V}},
     B::LinearAlgebra.Hermitian,
 ) where {
     V<:Union{
@@ -613,7 +613,7 @@ end
 
 function Base.:-(
     A::LinearAlgebra.Hermitian,
-    B::LinearAlgebra.Symmetric{V},
+    B::LinearAlgebra.Symmetric{V,Matrix{V}},
 ) where {
     V<:Union{
         GenericVariableRef{<:Real},
