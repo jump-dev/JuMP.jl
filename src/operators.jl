@@ -570,6 +570,8 @@ function Base.complex(
     return r + im * i
 end
 
+# These methods exist in LinearAlgebra for subtypes of Real. Without them, we
+# return a `Matrix` which looses the Hermitian information.
 function Base.:+(
     A::LinearAlgebra.Symmetric{V,Matrix{V}},
     B::LinearAlgebra.Hermitian,
