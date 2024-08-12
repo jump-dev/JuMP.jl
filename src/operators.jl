@@ -333,11 +333,9 @@ end
 function Base.:+(a::GenericAffExpr, q::GenericQuadExpr)
     return GenericQuadExpr(a + q.aff, copy(q.terms))
 end
-function Base.:-(a::GenericAffExpr, q::GenericQuadExpr)
-    result = -q
-    # This makes an unnecessary copy of aff, but it's important for a to appear
-    # first.
-    result.aff = a + result.aff
+function Base.:-(a::GenericAffExpr{S}, q::GenericQuadExpr{T}) where {S,T}
+    result = -_copy_convert_coef(_MA.promote_operation(-, S, T), q)
+    add_to_expression!(result.aff, a)
     return result
 end
 
@@ -570,4 +568,58 @@ function Base.complex(
     },
 )
     return r + im * i
+end
+
+# These methods exist in LinearAlgebra for subtypes of Real. Without them, we
+# return a `Matrix` which looses the Hermitian information.
+function Base.:+(
+    A::LinearAlgebra.Symmetric{V,Matrix{V}},
+    B::LinearAlgebra.Hermitian,
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return LinearAlgebra.Hermitian(A) + B
+end
+
+function Base.:+(
+    A::LinearAlgebra.Hermitian,
+    B::LinearAlgebra.Symmetric{V,Matrix{V}},
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return A + LinearAlgebra.Hermitian(B)
+end
+
+function Base.:-(
+    A::LinearAlgebra.Symmetric{V,Matrix{V}},
+    B::LinearAlgebra.Hermitian,
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return LinearAlgebra.Hermitian(A) - B
+end
+
+function Base.:-(
+    A::LinearAlgebra.Hermitian,
+    B::LinearAlgebra.Symmetric{V,Matrix{V}},
+) where {
+    V<:Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+}
+    return A - LinearAlgebra.Hermitian(B)
 end

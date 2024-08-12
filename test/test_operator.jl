@@ -469,7 +469,7 @@ function test_extension_basic_operators_affexpr(
     @test_expression_with_string aff - aff "0 x"
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
-    @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
+    @test_expression_with_string aff2 - q "-2.5 y*z - 7.1 x + 1.2 y - 1.3"
     @test_expression_with_string aff2 * q "(1.2 y + 1.2) * (2.5 y*z + 7.1 x + 2.5)"
     @test_expression_with_string aff2 / q "(1.2 y + 1.2) / (2.5 y*z + 7.1 x + 2.5)"
     @test transpose(aff) === aff
@@ -499,7 +499,7 @@ function test_extension_basic_operators_quadexpr(
     @test_expression_with_string q * 2 "5 y*z + 14.2 x + 5"
     @test_expression_with_string q / 2 "1.25 y*z + 3.55 x + 1.25"
     @test q == q
-    @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
+    @test_expression_with_string aff2 - q "-2.5 y*z - 7.1 x + 1.2 y - 1.3"
     # 4-2 QuadExpr--Variable
     @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
     @test_expression_with_string q - w "2.5 y*z + 7.1 x - w + 2.5"
@@ -686,6 +686,40 @@ function test_base_complex()
     @test_throws MethodError complex(x, 2im)
     @test_throws MethodError complex(2im, x)
     @test_throws MethodError complex(2.0 + x, im * x)
+    return
+end
+
+function test_aff_minus_quad()
+    model = Model()
+    @variable(model, x)
+    a, b = 1.0 * x, (2 + 3im) * x^2
+    @test a - b == -(b - a)
+    @test b - a == -(a - b)
+    a, b = (1.0 + 2im) * x, 3 * x^2 + 4 * x
+    @test a - b == -(b - a)
+    @test b - a == -(a - b)
+    return
+end
+
+function test_hermitian_and_symmetric()
+    model = Model()
+    @variable(model, A[1:2, 1:2], Symmetric)
+    @variable(model, B[1:2, 1:2], Hermitian)
+    for (x, y) in (
+        (A, B),
+        (B, A),
+        (1.0 * A, B),
+        (B, 1.0 * A),
+        (1.0 * A, 1.0 * B),
+        (1.0 * B, 1.0 * A),
+        (1.0 * LinearAlgebra.Symmetric(A .* A), 1.0 * B),
+        (1.0 * B, 1.0 * LinearAlgebra.Symmetric(A .* A)),
+    )
+        @test x + y isa LinearAlgebra.Hermitian
+        @test x + y == x .+ y
+        @test x - y isa LinearAlgebra.Hermitian
+        @test x - y == x .- y
+    end
     return
 end
 
