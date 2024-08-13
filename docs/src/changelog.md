@@ -7,6 +7,33 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.23.0 (August 13, 2024)
+
+### Added
+
+ - Added set inequality syntax for matrices (#3766)
+ - Improved matrix inequality support (#3778) (#3805)
+
+### Fixed
+
+ - Fixed a method for calling [`value`](@ref) on a `::Number` (#3776)
+ - Fixed querying dual of Symmetric and Hermitian equality constraints (#3797)
+ - Fixed [`read_from_file`](@ref) for coefficient types other than `Float64`
+   (#3801)
+
+### Other
+
+ - Documentation improvements
+   - Fixed missing character in installation instructions (#3777)
+   - Added a section of querying the Jacobian (#3779)
+   - Clarify that SCIP does not support lazy constraints (#3784)
+   - Fixed typo in `knapsack.jl` (#3792)
+   - Added a warning to docs about tolerances in Bin and Int variables (#3794)
+   - Clarify where to type installation commands (#3795)
+ - Improve error message for common incorrect syntax in constraint macro (#3781)
+ - Changed `show(::IO, ::GenericModel)` to a more informative tree structure
+   (#3803)
+
 ## Version 1.22.2 (June 17, 2024)
 
 ### Fixed

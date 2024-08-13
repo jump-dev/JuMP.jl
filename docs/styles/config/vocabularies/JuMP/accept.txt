@@ -31,7 +31,7 @@ jll|JLL
 [Jj]ulia
 [Mm]ultiline
 [Mm]ulticriteria
-multithreading
+multithread(ed|ing)
 namespace
 orthant
 performant
@@ -92,6 +92,7 @@ priori
 POVM
 [Pp]recompil(ation|(e(?d)))
 [Pp]resolve
+refactorization
 Relatedly
 rhs
 satisfiability
@@ -140,6 +141,7 @@ Hypatia
 Jax
 JSONSchema
 (Knitro|KNITRO)
+(Lapack|LAPACK)
 [Mm]anopt
 MATLAB
 MOI
