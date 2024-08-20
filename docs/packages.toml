@@ -62,7 +62,7 @@
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.6.5"
+    rev = "v1.6.6"
 [KNITRO]
     rev = "v0.14.4"
 [MiniZinc]
@@ -78,7 +78,7 @@
     rev = "v0.8.1"
     extension = true
 [Pavito]
-    rev = "v0.3.8"
+    rev = "v0.3.9"
 # Penopt.jl isn't a registered package yet
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
@@ -154,7 +154,7 @@
     rev = "v0.9.2"
 [Loraine]
     user = "kocvara"
-    rev = "v0.1.2"
+    rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
     rev = "v0.8.4"
@@ -169,8 +169,9 @@
 [NEOSServer]
     user = "odow"
     rev = "v1.1.0"
-# [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
-#     user = "JuliaOpt"
+[NLopt]
+    user = "JuliaOpt"
+    rev = "6fd18707b633978bfb3070b8fa514adcd9fe5289"
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v1.9.4"
@@ -185,7 +186,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.0"
+    rev = "v0.6.1"
     has_html = true
     extension = true
 [ProxSDP]
