@@ -38,6 +38,7 @@ performant
 plagiaristic
 [Pp]recompil(ation|(e(?d)))
 preprint
+[Pp]seudorandom
 README
 recurse
 reimplemented
@@ -216,12 +217,15 @@ Linial
 Luangkesorn
 Lubin
 Madani
+Makoto
 Mangasarian
 Marek
 Markowitz
 Mathieu
+Matsumoto
 Maurer
 Mehdi
+Mersenne
 Michal
 Mitsos
 Mittelman
