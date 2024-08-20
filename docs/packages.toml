@@ -186,7 +186,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.1"
+    rev = "v0.6.0"
     has_html = true
     extension = true
 [ProxSDP]
