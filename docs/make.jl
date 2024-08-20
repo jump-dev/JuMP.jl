@@ -193,7 +193,6 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "packages/$solver.md")
     end
 end
-push!(_LIST_OF_SOLVERS, "JuliaOpt/NLopt.jl" => "packages/NLopt.md")
 push!(
     _LIST_OF_EXTENSIONS,
     "rafaqz/DimensionalData.jl" => "extensions/DimensionalData.md",
