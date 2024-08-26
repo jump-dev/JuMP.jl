@@ -129,12 +129,12 @@ m[2]
 
 # Like YALMIP and CVX, JuMP is smart enough to not generate redundant 
 # constraints when declaring equality constraints between `Symmetric` or 
-#`Hermitian` matrices. In these cases `@constraint(model, m == c)` will not 
+# `Hermitian` matrices. In these cases `@constraint(model, m == c)` will not 
 # generate constraints for the lower diagonal and the imaginary part of the 
 # diagonal (in the complex case).
 
 # Experienced MATLAB users will probably be relieved to see that you must pass
-# `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, as
+# `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, because
 # the `>=` ambiguity in YALMIP and CVX is common source of bugs.
 
 # ## Setting the objective
