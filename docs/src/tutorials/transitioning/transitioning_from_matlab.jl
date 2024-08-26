@@ -127,17 +127,15 @@ m[2]
 # | `@constraint(model, [t; v] in SecondOrderCone())`        | `cone(v, t)`         | `{v, t} == lorentz(length(v))`           |
 # | `@constraint(model, [x, y, z] in MOI.ExponentialCone())` | `expcone([x, y, z])` | `{x, y, z} == exponential(1)`            |
 
-# A subtlety appears when declaring equality constraints for matrices. In
-# general, JuMP uses `@constraint(model, m .== c)`, with the dot meaning
-# broadcasting in Julia, except when `m` is `Symmetric` or `Hermitian`: in this
-# case `@constraint(model, m == c)` is allowed, and is much better, as JuMP is
-# smart enough to not generate redundant constraints for the lower diagonal and
-# the imaginary part of the diagonal (in the complex case). Both YALMIP and CVX
-# are also smart enough to do this and the syntax is always just `m == c`.
+# Like YALMIP and CVX, JuMP is smart enough to not generate redundant 
+# constraints when declaring equality constraints between `Symmetric` or 
+# `Hermitian` matrices. In these cases `@constraint(model, m == c)` will not 
+# generate constraints for the lower diagonal and the imaginary part of the 
+# diagonal (in the complex case).
 
-# Experienced YALMIP users will probably be relieved to see that you must pass
-# `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, as
-# the `>=` ambiguity in YALMIP is common source of bugs.
+# Experienced MATLAB users will probably be relieved to see that you must pass
+# `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, because
+# the `>=` ambiguity in YALMIP and CVX is common source of bugs.
 
 # ## Setting the objective
 
