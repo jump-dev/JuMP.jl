@@ -29,7 +29,7 @@
 #     It's in the "Getting started" section because it is one of the most common
 #     causes of performance problems that users experience when they first start
 #     using JuMP to write large scale programs. If you are new to JuMP, you may
-#     want to briefly skim the tutorial, and come back to it once you have
+#     want to briefly skim the tutorial and come back to it once you have
 #     written a few JuMP models.
 
 # ## Required packages
@@ -98,8 +98,8 @@ model = Model()
 # The benefit of this formulation is that it looks very similar to the
 # mathematical formulation of a network flow problem.
 
-# The downside to this formulation is subtle. Behind the scenes, the JuMP macros
-# expand to:
+# The downside to this formulation is subtle. Behind the scenes, the JuMP
+# `@constraint` macro expands to something like:
 
 model = Model()
 @variable(model, flows[e in edges] >= 0)
@@ -119,8 +119,8 @@ for n in nodes
     @constraint(model, flow_out - flow_in == demand(n))
 end
 
-# This formulation includes two for-loops, that loop over every edge (twice) for
-# every node. The big-O notation of this is ``O(|nodes| \times |edges|)``. If
+# This formulation includes two for-loops, with a loop over every edge (twice) for
+# every node. The [big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) of the runtime is ``O(|nodes| \times |edges|)``. If
 # you have a large number of nodes and a large number of edges, the runtime of
 # this loop can be large.
 
@@ -233,7 +233,7 @@ Plots.plot!(factors, run_times_cached; label = "Cached")
 
 # If you write code with `sum-if` type conditions, for example,
 # `@constraint(model, [a in set], sum(x[b] for b in list if condition(a, b))`,
-# you can improve the performance by caching of the elements for which `condition(a, b)`
+# you can improve the performance by caching the elements for which `condition(a, b)`
 # is true.
 
 # Finally, you should understand that this behavior is not specific to JuMP, and
