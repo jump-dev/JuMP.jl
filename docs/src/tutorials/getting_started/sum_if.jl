@@ -232,7 +232,7 @@ Plots.plot!(factors, a .+ b * factors; label = "Linear fit")
 
 # Even though the cached model needs to build `in_nodes` and `out_nodes`, it is
 # asymptotically faster than the naïve model, scaling linearly with `factor`
-# rather than quadraticaly.
+# rather than quadratically.
 
 # ## Lesson
 
