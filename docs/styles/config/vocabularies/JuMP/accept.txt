@@ -42,6 +42,7 @@ preprint
 README
 recurse
 reimplemented
+runtime(?s)
 [Ss]tacktrace
 subexpression(?s)
 subgraph(?s)
