@@ -104,19 +104,19 @@ model = Model()
 model = Model()
 @variable(model, flows[e in edges] >= 0)
 for n in nodes
-    flow_out = AffExpr(0.0)
-    for (i, j) in edges
-        if i == n
-            add_to_expression!(flow_out, flows[(i, j)])
-        end
-    end
     flow_in = AffExpr(0.0)
     for (i, j) in edges
         if j == n
             add_to_expression!(flow_in, flows[(i, j)])
         end
     end
-    @constraint(model, flow_out - flow_in == demand(n))
+    flow_out = AffExpr(0.0)
+    for (i, j) in edges
+        if i == n
+            add_to_expression!(flow_out, flows[(i, j)])
+        end
+    end
+    @constraint(model, flow_in - flow_out == demand(n))
 end
 
 # This formulation includes two for-loops, with a loop over every edge (twice) for
@@ -133,8 +133,8 @@ function build_naive_model(nodes, edges, demand)
     @constraint(
         model,
         [n in nodes],
-        sum(flows[(i, j)] for (i, j) in edges if i == n) -
-        sum(flows[(i, j)] for (i, j) in edges if j == n) == demand(n)
+        sum(flows[(i, j)] for (i, j) in edges if j == n) -
+        sum(flows[(i, j)] for (i, j) in edges if i == n) == demand(n)
     )
     return model
 end
@@ -179,8 +179,8 @@ model = Model()
 @constraint(
     model,
     [n in nodes],
-    sum(flows[(n, j)] for j in out_nodes[n]) -
-    sum(flows[(i, n)] for i in in_nodes[n]) == demand(n)
+    sum(flows[(i, n)] for i in in_nodes[n]) -
+    sum(flows[(n, j)] for j in out_nodes[n]) == demand(n)
 );
 
 # The benefit of this formulation is that we now loop over `out_nodes[n]`
@@ -202,8 +202,8 @@ function build_cached_model(nodes, edges, demand)
     @constraint(
         model,
         [n in nodes],
-        sum(flows[(n, j)] for j in out_nodes[n]) -
-        sum(flows[(i, n)] for i in in_nodes[n]) == demand(n)
+        sum(flows[(i, n)] for i in in_nodes[n]) -
+        sum(flows[(n, j)] for j in out_nodes[n]) == demand(n)
     )
     return model
 end

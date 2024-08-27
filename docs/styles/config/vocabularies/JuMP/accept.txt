@@ -137,6 +137,7 @@ Geomstats
 Geoopt
 GLPK
 (Gurobi|GUROBI)
+gurobipy
 GZip
 Hypatia
 (Ipopt|IPOPT)
@@ -158,6 +159,7 @@ Pavito
 Penbmi
 Penopt
 Plasmo
+Pyomo
 puzzlor
 RAPOSa
 Riemopt
