@@ -148,11 +148,12 @@ nodes, edges, demand = build_random_graph(1_000, 2_000)
 run_times = Float64[]
 factors = 1:10
 for factor in factors
+    GC.gc()  #src
     graph = build_random_graph(1_000 * factor, 5_000 * factor)
     push!(run_times, @elapsed build_naive_model(graph...))
 end
 Plots.plot(; xlabel = "Factor", ylabel = "Runtime [s]")
-Plots.plot!(factors, run_times; label = "Actual")
+Plots.scatter!(factors, run_times; label = "Actual")
 a, b = hcat(ones(10), factors .^ 2) \ run_times
 Plots.plot!(factors, a .+ b * factors .^ 2; label = "Quadratic fit")
 
@@ -183,9 +184,7 @@ model = Model()
 );
 
 # The benefit of this formulation is that we now loop over `out_nodes[n]`
-# rather than `edges` for each node `n`. If the graph is sparse, so that the
-# number of edges attached to a node is much less than the total number of
-# edges, then this can have a large performance benefit.
+# rather than `edges` for each node `n`, and so the runtime is ``O(|edges|)``.
 
 # Let's build a new function to benchmark our formulation:
 
@@ -218,16 +217,22 @@ run_times_naive = Float64[]
 run_times_cached = Float64[]
 factors = 1:10
 for factor in factors
+    GC.gc()  #src
     graph = build_random_graph(1_000 * factor, 5_000 * factor)
     push!(run_times_naive, @elapsed build_naive_model(graph...))
     push!(run_times_cached, @elapsed build_cached_model(graph...))
 end
 Plots.plot(; xlabel = "Factor", ylabel = "Runtime [s]")
-Plots.plot!(factors, run_times_naive; label = "Actual")
-Plots.plot!(factors, run_times_cached; label = "Cached")
+Plots.scatter!(factors, run_times_naive; label = "Actual")
+a, b = hcat(ones(10), factors .^ 2) \ run_times_naive
+Plots.plot!(factors, a .+ b * factors .^ 2; label = "Quadratic fit")
+Plots.scatter!(factors, run_times_cached; label = "Cached")
+a, b = hcat(ones(10), factors) \ run_times_cached
+Plots.plot!(factors, a .+ b * factors; label = "Linear fit")
 
 # Even though the cached model needs to build `in_nodes` and `out_nodes`, it is
-# asymptotically faster.
+# asymptotically faster than the naïve model, scaling linearly with `factor`
+# rather than quadraticaly.
 
 # ## Lesson
 
