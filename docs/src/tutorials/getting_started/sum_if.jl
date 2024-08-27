@@ -232,7 +232,7 @@ Plots.plot!(factors, run_times_cached; label = "Cached")
 # ## Lesson
 
 # If you write code with `sum-if` type conditions, for example,
-#`@constraint(model, [a in set], sum(x[b] for b in list if condition(a, b))`,
+# `@constraint(model, [a in set], sum(x[b] for b in list if condition(a, b))`,
 # you can improve the performance by caching of the elements for which `condition(a, b)`
 # is true.
 
