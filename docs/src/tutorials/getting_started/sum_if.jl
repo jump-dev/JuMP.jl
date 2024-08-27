@@ -38,7 +38,6 @@
 
 using JuMP
 import Plots
-import Statistics
 
 # ## Data
 
