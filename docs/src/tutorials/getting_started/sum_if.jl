@@ -78,7 +78,7 @@ nodes, edges, demand = build_random_graph(4, 8)
 # ```math
 # \begin{aligned}
 # s.t. && \sum_{(i,n)\in E} x_{i,n} - \sum_{(n,j)\in E} x_{n,j} = d_n && \forall n \in N\\
-# && x_{e} \\ge 0 && \forall e \in E
+# && x_{e} \ge 0 && \forall e \in E
 # \end{aligned}
 # ```
 
@@ -120,7 +120,8 @@ for n in nodes
 end
 
 # This formulation includes two for-loops, with a loop over every edge (twice) for
-# every node. The [big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) of the runtime is ``O(|nodes| \times |edges|)``. If
+# every node. The [big-O notation](https://en.wikipedia.org/wiki/Big_O_notation)
+# of the runtime is ``O(|nodes| \times |edges|)``. If
 # you have a large number of nodes and a large number of edges, the runtime of
 # this loop can be large.
 
@@ -182,8 +183,8 @@ model = Model()
     sum(flows[(i, n)] for i in in_nodes[n]) == demand(n)
 );
 
-# The benefit of this formulation is that we now loop over |`out_nodes[n]`|
-# rather that `edges` for each node `n`. If the graph is sparse, so that the
+# The benefit of this formulation is that we now loop over `out_nodes[n]`
+# rather than `edges` for each node `n`. If the graph is sparse, so that the
 # number of edges attached to a node is much less than the total number of
 # edges, then this can have a large performance benefit.
 
@@ -226,7 +227,7 @@ Plots.plot(; xlabel = "Factor", ylabel = "Runtime [s]")
 Plots.plot!(factors, run_times_naive; label = "Actual")
 Plots.plot!(factors, run_times_cached; label = "Cached")
 
-# Even though the cached model needs to build `in_nodes`` and `out_nodes`, it is
+# Even though the cached model needs to build `in_nodes` and `out_nodes`, it is
 # asymptotically faster.
 
 # ## Lesson
