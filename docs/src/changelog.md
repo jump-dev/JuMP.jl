@@ -7,6 +7,18 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.23.1 (August 30, 2024)
+
+### Fixed
+
+ - Fixed a bug with indicator constraints and the `in set` syntax (#3813)
+
+### Other
+
+ - Updated packages in documentation (#3807)
+ - Updated the transitioning from MATLAB tutorial (#3809)
+ - Add tutorial [Performance problems with sum-if formulations](@ref) (#3810)
+
 ## Version 1.23.0 (August 13, 2024)
 
 ### Added
