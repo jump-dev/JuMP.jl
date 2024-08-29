@@ -2107,4 +2107,15 @@ function test_real_hermitian_in_zeros()
     return
 end
 
+function test_issue_3812()
+    model = Model()
+    @variable(model, b, Bin)
+    @variable(model, x)
+    c = @constraint(model, b => {x in MOI.EqualTo(1.0)})
+    o = constraint_object(c)
+    @test o.func == [b, x]
+    @test o.set == MOI.Indicator{MOI.ACTIVATE_ON_ONE}(MOI.EqualTo(1.0))
+    return
+end
+
 end  # module

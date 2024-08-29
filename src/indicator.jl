@@ -71,13 +71,16 @@ function parse_constraint_call(
         )
     end
     f, lhs_parse_code = _rewrite_expression(variable)
-    push!(rhs_parsecode.args, lhs_parse_code)
+    parsecode = quote
+        $rhs_parsecode
+        $lhs_parse_code
+    end
     build_call = if vectorized
         :(_build_indicator_constraint.($error_fn, $f, $rhs_build_call, $S))
     else
         :(_build_indicator_constraint($error_fn, $f, $rhs_build_call, $S))
     end
-    return rhs_parsecode, build_call
+    return parsecode, build_call
 end
 
 function constraint_string(
