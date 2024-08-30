@@ -72,6 +72,10 @@
 [MultiObjectiveAlgorithms]
     rev = "v1.3.3"
     has_html = true
+[NEOSServer]
+    rev = "v1.1.1"
+[NLopt]
+    rev = "v1.1.0"
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
@@ -101,7 +105,7 @@
     rev = "v0.7.3"
     extension = true
 [Xpress]
-    rev = "v0.16.2"
+    rev = "v0.17.0"
 
 # =========================== non-jump-dev packages ========================== #
 
@@ -164,14 +168,8 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.69"
+    rev = "v0.5.0"
     filename = "Readme.md"
-[NEOSServer]
-    user = "odow"
-    rev = "v1.1.0"
-[NLopt]
-    user = "JuliaOpt"
-    rev = "6fd18707b633978bfb3070b8fa514adcd9fe5289"
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v1.9.4"
@@ -186,7 +184,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.0"
+    rev = "v0.6.2"
     has_html = true
     extension = true
 [ProxSDP]
