@@ -204,6 +204,28 @@ model
 renewable_production = Float64[]
 storage_level = Float64[0.0]  # Include an initial storage level
 
+# We'll also plot the solution at each of the time-steps to help visualize the
+# solution to the rolling horizon problems.
+
+function plot_solution(model, offset)
+    plot = Plots.plot(;
+        ylabel = "MW",
+        xlims = (0, total_time_length),
+        xticks = 0:12:total_time_length,
+    )
+    x = offset .+ (1:optimization_window)
+    y = hcat(value.(model[:p]), value.(model[:r]), value.(model[:d]))
+    if offset == 0
+        Plots.areaplot!(x, y; label = ["thermal" "solar" "discharge"])
+        Plots.areaplot!(x, -value.(model[:c]); label = "charge")
+    else
+        Plots.areaplot!(x, y; label = false)
+        Plots.areaplot!(x, -value.(model[:c]); label = false)
+    end
+    return plot
+end
+plots = Any[]
+
 # Now we can iterate across the windows of our rolling horizon problem, and at
 # each window, we:
 
@@ -230,6 +252,7 @@ for offset in 0:move_forward:total_time_length-1
         push!(renewable_production, value(model[:r][t]))
         push!(storage_level, value(model[:s][t]))
     end
+    push!(plots, plot_solution(model, offset))
 end
 
 # We can now plot the solution to the week-long problem:
@@ -241,6 +264,15 @@ Plots.plot(
     xlabel = "Hours",
     ylabel = "MW",
     xticks = 0:12:total_time_length,
+)
+
+# and visualize each of the rolling horizon subplots:
+
+Plots.plot(
+    plots...;
+    layout = (length(plots), 1),
+    size = (600, 800),
+    margin = 3Plots.mm,
 )
 
 # ## Final remark
