@@ -38,18 +38,16 @@
 using JuMP
 import CSV
 import DataFrames
-import Dates
 import HiGHS
 import ParametricOptInterface as POI
 import Plots
-import StatsPlots
 
 # ## The optimization model
 #
 # The model is a simplified GEP problem in which we decide the new capacity in
 # renewables for a power system with a given thermal and storage capacity.
 #
-# ### Variables
+# ### [Variables](@id rolling_horizon_variables)
 #
 # - Investment: $i \geq 0$
 # - Renewable production: $r_t \geq 0$
@@ -64,7 +62,7 @@ import StatsPlots
 # - Renewable availability at time $t$: $A_t$
 # - Initial storage: $S_0$
 #
-# ### Constraints
+# ### [Constraints](@id rolling_horizon_constraints)
 #
 # 1. **Balance Constraint:**
 #
