@@ -211,7 +211,6 @@ model
 # additional periods or hours beyond the "move forward" parameter to prevent the
 # storage from depleting entirely at the end of the specified hours.
 
-objective_function_per_window = Float64[]
 renewable_production = Float64[]
 storage_level = Float64[0.0]  # Include an initial storage level
 
@@ -237,7 +236,6 @@ for offset in 0:move_forward:total_time_length-1
     ## Step 2: solve the model
     optimize!(model)
     ## Step 3: store the results of the move_forward values
-    push!(objective_function_per_window, objective_value(model))
     for t in 1:move_forward
         push!(renewable_production, value(model[:r][t]))
         push!(storage_level, value(model[:s][t]))
@@ -245,16 +243,6 @@ for offset in 0:move_forward:total_time_length-1
 end
 
 # We can explore the outputs in the following graphs:
-
-Plots.plot(
-    objective_function_per_window ./ 10^3;
-    label = false,
-    linewidth = 3,
-    xlabel = "Window",
-    ylabel = "[000'] \$",
-)
-
-#-
 
 Plots.plot(
     [time_series.demand_MW, renewable_production, storage_level[2:end]];
