@@ -22,14 +22,15 @@
 #
 # **This tutorial was originally contributed by Diego Tejada.**
 #
+# The purpose of this tutorial is to demonstrate how to use [ParametricOptInterface.jl](@ref)
+# to solve a rolling horizon optimization problem.
+#
 # The term "rolling horizon" refers to solving a time-dependent model
 # repeatedly, where the planning interval is shifted forward in time during each
 # solution step.
 #
-# With the features provided in [ParametricOptInterface.jl](@ref), setting up
-# such a model is quite straightforward. This tutorial explains the necessary
-# steps to implement a basic model with a rolling horizon in a simple generation
-# expansion problem (GEP).
+# As a motivating example, this tutorial models the operations of a power system
+# with solar generation and a battery.
 
 # ## Required packages
 #
@@ -44,67 +45,53 @@ import Plots
 
 # ## The optimization model
 #
-# The model is a simplified GEP problem in which we decide the new capacity in
-# renewables for a power system with a given thermal and storage capacity.
+# The model is a simplified model of a power system's operations with battery
+# storage.
 #
-# ### [Variables](@id rolling_horizon_variables)
+# We model the system of a set of time-steps $t \in 1,\ldots,T$, where each time
+# step is a period of one hour.
 #
-# - Investment: $i \geq 0$
+# There are five types of decision variables in the model:
+#
 # - Renewable production: $r_t \geq 0$
 # - Thermal production: $0 \leq p_t \leq \overline{P}$
 # - Storage level: $0 \leq s_t \leq \overline{S}$
 # - Storage charging: $0 \leq c_t \leq \overline{C}$
 # - Storage discharging: $0 \leq d_t \leq \overline{D}$
 #
-# ### Parameters that will change each window
+# For the purpose of this tutorial, there are three parameters of interest:
 #
 # - Demand at time $t$: $D_t$
 # - Renewable availability at time $t$: $A_t$
 # - Initial storage: $S_0$
 #
-# ### [Constraints](@id rolling_horizon_constraints)
+# The objective function to minimize is the total cost of thermal generation:
+# $$\min \sum_{t} O \cdot p_t$$
 #
-# 1. **Balance Constraint:**
+# For the constraints, we must balance power generation and consumption in all
+# time periods:
+# $$p_t + r_t + d_t = D_t + c_t, \quad \forall t$$
 #
-#    $p_t + r_t + d_t = D_t + c_t, \quad \forall t$
+# We need to account for the dynamics of the battery storage:
+# $$s_t = s_{t-1} + \eta^c \cdot c_t - \frac{d_t}{\eta^d}, \quad \forall t$$
+# with the boundary condition that $s_0 = S_0$.
 #
-# 2. **Storage Dynamics for $t \geq 2$:**
-#
-#    $s_t = s_{t-1} + \eta^c \cdot c_t - \frac{d_t}{\eta^d}, \quad \forall t \in \{2, \ldots, \mathcal{T}\}$
-#
-# 3. **Initial Storage:**
-#
-#    $s_1 = S_0 +\eta^c \cdot c_1 - \frac{d_1}{\eta^d}$
-#
-# 4. **Maximum Renewable Availability:**
-#
-#    $r_t \leq A_t \cdot i, \quad \forall t$
-#
-# ### Objective Function
-#
-# The objective function to minimize is the total cost:
-#
-# $\min \left(I \cdot i + \sum_{t} O \cdot p_t\right)$
+# Finally, the level of renewable energy production is limited by the
+# availability factor $A$ and the installed capacity $i$:
+# $$r_t \leq A_t \cdot i, \quad \forall t$$
 
-# In large-scale optimization problems, this model is solved in two steps:
-#
-# 1. *Investment decisions step*: This involves a simplified version of the
-#    model, for example, without integer variables and representative periods.
-# 2. *Operation decisions step*: After determining the values of the investments
-#    from the previous step, this step involves solving an operational problem
-#    to decide on production, storage levels, charging, and discharging.
-#
-# The second step is also computationally intensive. A common practice is to use
-# the rolling horizon idea to solve multiple identical problems of a smaller
-# size. These problems differ only in parameters such as demand, renewable
-# profiles, or initial conditions.
-#
-# This example focuses on the second step, aiming to determine the operational
-# variables for a given investment using a rolling horizon strategy.
-#
+# Solving this problem with a large number of time steps is computationally
+# challenging. A common practice is to use the rolling horizon idea to solve
+# multiple identical problems of a smaller size. These problems differ only in
+# parameters such as demand, renewable availability, and initial storage. By
+# combining the solution of many smaller problems, we can recover a feasible
+# solution to the full problem. However, because we don't optimize the full set
+# of decisions in a single optimization problem, the recovered solution might be
+# suboptimal.
+
 # ## Parameter definition and input data
 
-# There are two main parameters for a rolling horizon basic implementation: the
+# There are two main parameters for a rolling horizon implementation: the
 # optimization window and the move forward.
 
 # **Optimization Window**: this value defines how many periods (for example,
@@ -136,7 +123,11 @@ time_series = CSV.read(filename, DataFrames.DataFrame);
 # production during the operation optimization step.
 
 solar_investment = 150
-time_series.solar_MW = solar_investment * time_series.solar_pu
+
+# We multiple the level of solar investment by the time series of availability
+# to get actual MW generated.
+
+time_series.solar_MW = solar_investment * time_series.solar_pu;
 
 # In addition, we can determine some basic information about the rolling
 # horizon, such as the number of windows that we are going to optimize given the
@@ -181,7 +172,6 @@ Plots.plot(
 model = Model(() -> POI.Optimizer(HiGHS.Optimizer()))
 set_silent(model)
 @variables(model, begin
-    i == solar_investment
     0 <= r[1:optimization_window]
     0 <= p[1:optimization_window] <= 150
     0 <= s[1:optimization_window] <= 40
@@ -190,16 +180,16 @@ set_silent(model)
     ## Initialize empty parameters. These values will get updated layer
     D[t in 1:optimization_window] in Parameter(0)
     A[t in 1:optimization_window] in Parameter(0)
-    So in Parameter(0)
+    S_0 in Parameter(0)
 end)
-@objective(model, Min, 100 * i + 50 * sum(p))
+@objective(model, Min, 50 * sum(p))
 @constraints(
     model,
     begin
         p .+ r .+ d .== D .+ c
-        s[1] == So + 0.9 * c[1] - d[1] / 0.9
+        s[1] == S_0 + 0.9 * c[1] - d[1] / 0.9
         [t in 2:optimization_window], s[t] == s[t-1] + 0.9 * c[t] - d[t] / 0.9
-        r .<= A .* i
+        r .<= A .* solar_investment
     end
 )
 model
@@ -232,7 +222,7 @@ for offset in 0:move_forward:total_time_length-1
         set_parameter_value(model[:D][t], time_series[row, :demand_MW])
         set_parameter_value(model[:A][t], time_series[row, :solar_pu])
     end
-    set_parameter_value(model[:So], storage_level[end])
+    set_parameter_value(model[:S_0], storage_level[end])
     ## Step 2: solve the model
     optimize!(model)
     ## Step 3: store the results of the move_forward values
@@ -242,7 +232,7 @@ for offset in 0:move_forward:total_time_length-1
     end
 end
 
-# We can explore the outputs in the following graphs:
+# We can now plot the solution to the week-long problem:
 
 Plots.plot(
     [time_series.demand_MW, renewable_production, storage_level[2:end]];
