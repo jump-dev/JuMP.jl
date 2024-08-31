@@ -123,6 +123,7 @@ move_forward = 24;
 
 filename = joinpath(@__DIR__, "rolling_horizon.csv")
 time_series = CSV.read(filename, DataFrames.DataFrame)
+time_series[1:21:end, :]
 
 # We define the solar investment (for example, 150 MW) to determine the solar
 # production during the operation optimization step.
