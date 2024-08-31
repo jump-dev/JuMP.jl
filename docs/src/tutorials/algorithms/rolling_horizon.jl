@@ -66,19 +66,24 @@ import Plots
 # - Initial storage: $S_0$
 #
 # The objective function to minimize is the total cost of thermal generation:
+#
 # $$\min \sum_{t} O \cdot p_t$$
 #
 # For the constraints, we must balance power generation and consumption in all
 # time periods:
-# $$p_t + r_t + d_t = D_t + c_t, \quad \forall t$$
+#
+# $$p_t + r_t + d_t = D_t + c_t \forall t$$
 #
 # We need to account for the dynamics of the battery storage:
-# $$s_t = s_{t-1} + \eta^c \cdot c_t - \frac{d_t}{\eta^d}, \quad \forall t$$
+#
+# $$s_t = s_{t-1} + \eta^c \cdot c_t - \frac{d_t}{\eta^d}, \forall t$$
+#
 # with the boundary condition that $s_0 = S_0$.
 #
-# Finally, the level of renewable energy production is limited by the
-# availability factor $A$ and the installed capacity $i$:
-# $$r_t \leq A_t \cdot i, \quad \forall t$$
+# Finally, the level of renewable energy production is limited by the quantity
+# of potential solar generation $A$:
+#
+# $$r_t \leq A_t, \quad \forall t$$
 
 # Solving this problem with a large number of time steps is computationally
 # challenging. A common practice is to use the rolling horizon idea to solve
@@ -98,14 +103,14 @@ import Plots
 # hours) we will optimize each time. For this example, we set the default value
 # to 48 hours, meaning we will optimize two days each time.
 
-optimization_window = 48
+optimization_window = 48;
 
 # **Move Forward**: this value defines how many periods (for example, hours) we
 # will move forward to optimize the next optimization window. For this example,
 # we set the default value in 24 hours, meaning we will move one day ahead each
 # time.
 
-move_forward = 24
+move_forward = 24;
 
 # Note that the move forward parameter must be lower or equal to the
 # optimization window parameter to work correctly.
@@ -117,12 +122,12 @@ move_forward = 24
 # demand, and a solar production profile.
 
 filename = joinpath(@__DIR__, "rolling_horizon.csv")
-time_series = CSV.read(filename, DataFrames.DataFrame);
+time_series = CSV.read(filename, DataFrames.DataFrame)
 
 # We define the solar investment (for example, 150 MW) to determine the solar
 # production during the operation optimization step.
 
-solar_investment = 150
+solar_investment = 150;
 
 # We multiple the level of solar investment by the time series of availability
 # to get actual MW generated.
@@ -189,7 +194,7 @@ end)
         p .+ r .+ d .== D .+ c
         s[1] == S_0 + 0.9 * c[1] - d[1] / 0.9
         [t in 2:optimization_window], s[t] == s[t-1] + 0.9 * c[t] - d[t] / 0.9
-        r .<= A .* solar_investment
+        r .<= A
     end
 )
 model
@@ -201,30 +206,15 @@ model
 # additional periods or hours beyond the "move forward" parameter to prevent the
 # storage from depleting entirely at the end of the specified hours.
 
-renewable_production = Float64[]
-storage_level = Float64[0.0]  # Include an initial storage level
-
-# We'll also plot the solution at each of the time-steps to help visualize the
-# solution to the rolling horizon problems.
-
-function plot_solution(model, offset)
-    plot = Plots.plot(;
-        ylabel = "MW",
-        xlims = (0, total_time_length),
-        xticks = 0:12:total_time_length,
-    )
-    x = offset .+ (1:optimization_window)
-    y = hcat(value.(model[:p]), value.(model[:r]), value.(model[:d]))
-    if offset == 0
-        Plots.areaplot!(x, y; label = ["thermal" "solar" "discharge"])
-        Plots.areaplot!(x, -value.(model[:c]); label = "charge")
-    else
-        Plots.areaplot!(x, y; label = false)
-        Plots.areaplot!(x, -value.(model[:c]); label = false)
-    end
-    return plot
-end
-plots = Any[]
+sol_complete = Dict(
+    :r => zeros(total_time_length),
+    :p => zeros(total_time_length),
+    :c => zeros(total_time_length),
+    :d => zeros(total_time_length),
+    ## The storage level is initialized with an initial value
+    :s => zeros(total_time_length + 1),
+)
+sol_windows = Pair{Int,Dict{Symbol,Vector{Float64}}}[]
 
 # Now we can iterate across the windows of our rolling horizon problem, and at
 # each window, we:
@@ -237,43 +227,61 @@ for offset in 0:move_forward:total_time_length-1
     ## Step 1: update the parameter values over the optimization_window
     for t in 1:optimization_window
         ## This row computation just let's us "wrap around" the `time_series`
-        ## DataFrame, so that the forecase for demand and solar PU in day 8 is
+        ## DataFrame, so that the forecast for demand and solar MW in day 8 is
         ## the same as day 1. In real models, you might choose to do something
         ## different.
         row = 1 + mod(offset + t, size(time_series, 1))
         set_parameter_value(model[:D][t], time_series[row, :demand_MW])
-        set_parameter_value(model[:A][t], time_series[row, :solar_pu])
+        set_parameter_value(model[:A][t], time_series[row, :solar_MW])
     end
-    set_parameter_value(model[:S_0], storage_level[end])
+    set_parameter_value(model[:S_0], sol_complete[:s][end])
     ## Step 2: solve the model
     optimize!(model)
     ## Step 3: store the results of the move_forward values
     for t in 1:move_forward
-        push!(renewable_production, value(model[:r][t]))
-        push!(storage_level, value(model[:s][t]))
+        for key in (:r, :p, :c, :d)
+            sol_complete[key][offset+t] = value(model[key][t])
+        end
+        sol_complete[:s][offset+t+1] = value(model[:s][t])
     end
-    push!(plots, plot_solution(model, offset))
+    sol_window = Dict(key => value.(model[key]) for key in (:r, :p, :s, :c, :d))
+    push!(sol_windows, offset => sol_window)
 end
 
-# We can now plot the solution to the week-long problem:
+# ## Solution
+
+# Here is a function to plot the solution at each of the time-steps to help
+# visualize the rolling horizon scheme:
+
+function plot_solution(sol; offset = 0, kwargs...)
+    plot = Plots.plot(;
+        ylabel = "MW",
+        xlims = (0, total_time_length),
+        xticks = 0:12:total_time_length,
+        kwargs...,
+    )
+    y = hcat(sol[:p], sol[:r], sol[:d])
+    x = offset .+ (1:size(y, 1))
+    if offset == 0
+        Plots.areaplot!(x, y; label = ["thermal" "solar" "discharge"])
+        Plots.areaplot!(x, -sol[:c]; label = "charge")
+    else
+        Plots.areaplot!(x, y; label = false)
+        Plots.areaplot!(x, -sol[:c]; label = false)
+    end
+    return plot
+end
 
 Plots.plot(
-    [time_series.demand_MW, renewable_production, storage_level[2:end]];
-    label = ["demand" "solar" "battery"],
-    linewidth = 3,
-    xlabel = "Hours",
-    ylabel = "MW",
-    xticks = 0:12:total_time_length,
-)
-
-# and visualize each of the rolling horizon subplots:
-
-Plots.plot(
-    plots...;
-    layout = (length(plots), 1),
+    [plot_solution(sol; offset) for (offset, sol) in sol_windows]...;
+    layout = (length(sol_windows), 1),
     size = (600, 800),
     margin = 3Plots.mm,
 )
+
+# We can re-use the function to plot the recovered solution of the full problem:
+
+plot_solution(sol_complete; offset = 0, xlabel = "Hour")
 
 # ## Final remark
 
