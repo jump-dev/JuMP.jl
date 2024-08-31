@@ -72,7 +72,7 @@ import Plots
 # For the constraints, we must balance power generation and consumption in all
 # time periods:
 #
-# $$p_t + r_t + d_t = D_t + c_t \forall t$$
+# $$p_t + r_t + d_t = D_t + c_t, \forall t$$
 #
 # We need to account for the dynamics of the battery storage:
 #
@@ -136,14 +136,14 @@ solar_investment = 150;
 time_series.solar_MW = solar_investment * time_series.solar_pu;
 
 # In addition, we can determine some basic information about the rolling
-# horizon, such as the number of windows that we are going to optimize given the
-# problem's time horizon.
+# horizon, such as the number of data points we have:
 
 total_time_length = size(time_series, 1)
 
-# The total number of time windows we will solve for is:
+# adn the number of windows that we are going to optimize given the problem's
+# time horizon:
 
-ceil(Int, total_time_length / move_forward)
+(total_time_length + move_forward - optimization_window) / move_forward
 
 # Finally, we can see a plot representing the first two optimization windows and
 # the move forward parameter to have a better idea of how the rolling horizon
@@ -174,6 +174,12 @@ Plots.plot(
 
 # We have all the information we need to create a JuMP model to solve a single
 # window of our rolling horizon problem.
+
+# As the optimizer, we use `POI.Optimizer`, which is part of
+# [ParametricOptInterface.jl](@ref). `POI.Optimizer` converts the [`Parameter`](@ref)
+# decision variables into constants in the underlying optimization model, and it
+# efficiently updates the solver in-place when we call [`set_parameter_value`](@ref)
+# which avoids having to rebuild the problem each time we call [`optimize!`](@ref).
 
 model = Model(() -> POI.Optimizer(HiGHS.Optimizer()))
 set_silent(model)
@@ -224,22 +230,21 @@ sol_windows = Pair{Int,Dict{Symbol,Vector{Float64}}}[]
 # 2. solve the model for that window
 # 3. store the results for later analysis
 
-for offset in 0:move_forward:total_time_length-1
+offsets = 0:move_forward:total_time_length-optimization_window
+for offset in offsets
     ## Step 1: update the parameter values over the optimization_window
     for t in 1:optimization_window
-        ## This row computation just let's us "wrap around" the `time_series`
-        ## DataFrame, so that the forecast for demand and solar MW in day 8 is
-        ## the same as day 1. In real models, you might choose to do something
-        ## different.
-        row = 1 + mod(offset + t, size(time_series, 1))
-        set_parameter_value(model[:D][t], time_series[row, :demand_MW])
-        set_parameter_value(model[:A][t], time_series[row, :solar_MW])
+        set_parameter_value(model[:D][t], time_series[offset+t, :demand_MW])
+        set_parameter_value(model[:A][t], time_series[offset+t, :solar_MW])
     end
-    set_parameter_value(model[:S_0], sol_complete[:s][end])
+    ## Set the starting storage level as the value from the end of the previous
+    ## solve. The `+1` accounts for the initial storage value in time step "t=0"
+    set_parameter_value(model[:S_0], sol_complete[:s][offset+1])
     ## Step 2: solve the model
     optimize!(model)
-    ## Step 3: store the results of the move_forward values
-    for t in 1:move_forward
+    ## Step 3: store the results of the move_forward values, except in the last
+    ##         horizon where we store the full `optimization_window`.
+    for t in 1:(offset == last(offsets) ? optimization_window : move_forward)
         for key in (:r, :p, :c, :d)
             sol_complete[key][offset+t] = value(model[key][t])
         end
