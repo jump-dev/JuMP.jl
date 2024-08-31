@@ -140,7 +140,7 @@ time_series.solar_MW = solar_investment * time_series.solar_pu;
 
 total_time_length = size(time_series, 1)
 
-# adn the number of windows that we are going to optimize given the problem's
+# and the number of windows that we are going to optimize given the problem's
 # time horizon:
 
 (total_time_length + move_forward - optimization_window) / move_forward
