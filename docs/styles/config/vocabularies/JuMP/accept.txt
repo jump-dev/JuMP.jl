@@ -42,6 +42,7 @@ preprint
 README
 recurse
 reimplemented
+renewables
 runtime(?s)
 [Ss]tacktrace
 subexpression(?s)
@@ -256,6 +257,7 @@ Sungho
 Taccari
 Tanneau
 Teghem
+Tejada
 Tillmann
 Ulungu
 Vandenberghe
