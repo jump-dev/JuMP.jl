@@ -130,7 +130,7 @@ time_series[1:21:end, :]
 
 solar_investment = 150;
 
-# We multiple the level of solar investment by the time series of availability
+# We multiply the level of solar investment by the time series of availability
 # to get actual MW generated.
 
 time_series.solar_MW = solar_investment * time_series.solar_pu;
@@ -189,7 +189,7 @@ set_silent(model)
     0 <= s[1:optimization_window] <= 40
     0 <= c[1:optimization_window] <= 10
     0 <= d[1:optimization_window] <= 10
-    ## Initialize empty parameters. These values will get updated layer
+    ## Initialize empty parameters. These values will get updated later
     D[t in 1:optimization_window] in Parameter(0)
     A[t in 1:optimization_window] in Parameter(0)
     S_0 in Parameter(0)
