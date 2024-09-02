@@ -2118,4 +2118,43 @@ function test_issue_3812()
     return
 end
 
+function _test_shape(primal, dual, con::VectorConstraint)
+    vec_primal = vectorize(primal, con.shape)
+    vec_dual = vectorize(dual, dual_shape(con.shape))
+    @test primal == reshape_vector(vec_primal, con.shape)
+    @test dual == reshape_vector(vec_dual, dual_shape(con.shape))
+    moi_dot = MOI.Utilities.set_dot(vec_primal, vec_dual, con.set)
+    @test dot(primal, dual) == moi_dot
+    return
+end
+
+function test_symmetric_adjoint_shape()
+    model = Model()
+    @variable(model, x[1:2, 1:2], Symmetric)
+    c = @constraint(model, x == LinearAlgebra.Symmetric([1 2; 2 3]))
+    _test_shape([1 2; 2 3], [1 1; 1 1], constraint_object(c))
+    return
+end
+
+function test_symmetric_shape()
+    model = Model()
+    @variable(model, x[1:2, 1:2], PSD)
+    c = @constraint(model, x == LinearAlgebra.Symmetric([1 2; 2 3]))
+    _test_shape([1 2; 2 3], [1 1; 1 1], constraint_object(c))
+    return
+end
+
+function test_hermitian_shape()
+    model = Model()
+    @variable(model, x[1:2, 1:2], Hermitian)
+    c = @constraint(model, x == LinearAlgebra.Symmetric([1 2; 2 3]))
+    _test_shape([1 2; 2 3], [2 4; 4 6], constraint_object(c))
+    model = Model()
+    @variable(model, x[1:2, 1:2], Hermitian)
+    primal = [1 2+4im; 2-4im 3]
+    d = @constraint(model, x == LinearAlgebra.Hermitian(primal))
+    _test_shape(primal, [2 4+8im; 4-8im 6], constraint_object(d))
+    return
+end
+
 end  # module
