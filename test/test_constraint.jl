@@ -2124,7 +2124,7 @@ function _test_shape(primal, dual, con::VectorConstraint)
     @test primal == reshape_vector(vec_primal, con.shape)
     @test dual == reshape_vector(vec_dual, dual_shape(con.shape))
     moi_dot = MOI.Utilities.set_dot(vec_primal, vec_dual, con.set)
-    @test dot(primal, dual) == moi_dot
+    @test LinearAlgebra.dot(primal, dual) == moi_dot
     return
 end
 
