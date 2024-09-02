@@ -82,3 +82,17 @@ Use the following checklist when adding a new solver to the JuMP documentation.
 
  - [ ] Add package metadata to `docs/packages.toml`
 ````
+
+## Adding a new shape
+
+Use the following checklist when adding a new `AbstractShape`
+
+````
+## Basic
+
+ - [ ] Add a new subtype of `AbstractShape`
+ - [ ] Implement `vectorize(data, ::NewShape)::Vector`
+ - [ ] Implement `reshape_vector(vector, ::NewShape)`
+ - [ ] Implement `dual_shape`, or verify that the shape is self-dual
+ - [ ] Add the tests from https://github.com/jump-dev/JuMP.jl/pull/3816
+````
