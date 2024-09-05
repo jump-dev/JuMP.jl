@@ -17,6 +17,7 @@ jobs:
           - package: 'InfiniteOpt'
           - package: 'LinearFractional'
           - package: 'PiecewiseAffineApprox'
+          - package: 'PiecewiseLinearOpt'
           - package: 'Plasmo'
           - package: 'PolyJuMP'
           - package: 'PowerModels'
@@ -24,6 +25,7 @@ jobs:
           - package: 'SetProg'
           - package: 'SparseVariables'
           - package: 'SumOfSquares'
+          - package: 'TimeStruct'
           - package: 'UnitJuMP'
     steps:
       - uses: actions/checkout@v4
