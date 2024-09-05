@@ -16,6 +16,7 @@ jobs:
           - package: 'DisjunctiveProgramming'
           - package: 'InfiniteOpt'
           - package: 'LinearFractional'
+          - package: 'PiecewiseAffineApprox'
           - package: 'Plasmo'
           - package: 'PolyJuMP'
           - package: 'PowerModels'
