@@ -25,10 +25,37 @@ Welcome to the documentation for JuMP.
 
 [JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
 language for [mathematical optimization](https://en.wikipedia.org/wiki/Mathematical_optimization)
-embedded in [Julia](https://julialang.org/). It currently supports a number of
-open-source and commercial solvers for a variety of problem classes, including
-linear, mixed-integer, second-order conic, semidefinite, and nonlinear
-programming.
+embedded in [Julia](https://julialang.org/).
+
+JuMP makes it easy to formulate and solve a range of problem classes, including
+linear programs, integer programs, conic programs, semidefinite programs, and
+constrained nonlinear programs. Here’s an example:
+
+```julia
+julia> using JuMP, Ipopt
+
+julia> function solve_constrained_least_squares_regression(A::Matrix, b::Vector)
+           m, n = size(A)
+           model = Model(Ipopt.Optimizer)
+           set_silent(model)
+           @variable(model, x[1:n])
+           @variable(model, residuals[1:m])
+           @constraint(model, residuals == A * x - b)
+           @constraint(model, sum(x) == 1)
+           @objective(model, Min, sum(residuals.^2))
+           optimize!(model)
+           return value.(x)
+       end
+solve_constrained_least_squares_regression (generic function with 1 method)
+
+julia> A, b = rand(10, 3), rand(10);
+
+julia> x = solve_constrained_least_squares_regression(A, b)
+3-element Vector{Float64}:
+ 0.4137624719002825
+ 0.09707679853084578
+ 0.48916072956887174
+```
 
 !!! tip
     If you aren't sure if you should use JuMP, read [Should you use JuMP?](@ref).
