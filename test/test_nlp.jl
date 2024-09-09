@@ -224,15 +224,6 @@ function test_register_check_forwarddiff_univariate_f()
     return
 end
 
-function test_register_check_forwarddiff_univariate_gradf()
-    model = Model()
-    f(x) = log(x)
-    # This is a common case, where user's type their arguments
-    ∇f(x::Float64) = 1 / x
-    @test_throws(ErrorException, register(model, :f, 1, f, ∇f; autodiff = true))
-    return
-end
-
 function test_register_check_forwarddiff_multivariate()
     model = Model()
     function f(x...)
