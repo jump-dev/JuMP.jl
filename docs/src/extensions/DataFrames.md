@@ -114,7 +114,7 @@ julia> @constraint(
 ### DataFrame-native syntax
 
 While you can use indexing in JuMP's `@expression` and `@constraint` macros, it
-may be more convienent to use DataFrames.jl split-apply-combine framework. For
+may be more convenient to use DataFrames.jl split-apply-combine framework. For
 example, `expr` can be equivalently written as:
 
 ```jldoctest ext_data_frames
