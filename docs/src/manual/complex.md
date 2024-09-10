@@ -11,7 +11,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 This page explains the complex-valued variables and constraints that JuMP
 supports. For a worked-example using these features, read the
-[Quantum state discrimination](@ref) tutorial.
+[Example: quantum state discrimination](@ref) tutorial.
 
 ## Complex-valued variables
 

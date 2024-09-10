@@ -655,7 +655,7 @@ MOIU.CachingOptimizer
 Bridges can be added and removed from a [`MOI.Bridges.LazyBridgeOptimizer`](@ref)
 using [`add_bridge`](@ref) and [`remove_bridge`](@ref). Use
 [`print_active_bridges`](@ref) to see which bridges are used to reformulate the
-model. Read the [Ellipsoid approximation](@ref) tutorial for more details.
+model. Read the [Example: ellipsoid approximation](@ref) tutorial for more details.
 
 ### Unsafe backend
 

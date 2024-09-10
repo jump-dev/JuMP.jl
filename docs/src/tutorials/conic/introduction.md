@@ -39,12 +39,11 @@ will help you know where to look for certain things.
    then formulate it in mathematics, and then solve it in JuMP. This usually
    involves some sort of visualization of the solution. Start here if you are
    new to JuMP.
-   * [Experiment design](@ref)
-   * [Logistic regression](@ref)
- * The [Tips and tricks](@ref conic_tips_and_tricks) tutorial contains a
-   number of helpful reformulations and tricks you can use when modeling
-   conic programs. Look here if you are stuck trying to formulate a problem
-   as a conic program.
+   * [Example: experiment design](@ref)
+   * [Example: logistic regression](@ref)
+ * The [Modeling with cones](@ref) tutorial contains a number of helpful
+   reformulations and tricks you can use when modeling conic programs. Look here
+   if you are stuck trying to formulate a problem as a conic program.
  * The remaining tutorials are less verbose and styled in the form of short code
    examples. These tutorials have less explanation, but may contain useful
    code snippets, particularly if they are similar to a problem you are trying

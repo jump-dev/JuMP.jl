@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # [Modeling with cones](@id conic_tips_and_tricks)
+# # Modeling with cones
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 

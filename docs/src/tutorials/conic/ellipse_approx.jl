@@ -12,7 +12,7 @@
 
 # The model comes from Section 4.9 of [BenTal2001](@cite).
 
-# For a related example, see also the [Minimal ellipses](@ref) tutorial.
+# For a related example, see also the [Example: minimal ellipses](@ref) tutorial.
 
 # ## Required packages
 

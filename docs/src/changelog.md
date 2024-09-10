@@ -596,7 +596,7 @@ changes which might be breaking for a very small number of users.
  - Clarified the documentation to say that matrices in [`HermitianPSDCone`](@ref)
    must be `LinearAlgebra.Hermitian` (#3241)
  - Minor style fixes to internal macro code (#3247)
- - Add [Quantum state discrimination](@ref) tutorial (#3250)
+ - Add [Example: quantum state discrimination](@ref) tutorial (#3250)
  - Improve error message when `begin...end` not passed to plural macros (#3255)
  - Document how to register function with varying number of input arguments
    (#3258)
@@ -653,12 +653,12 @@ changes which might be breaking for a very small number of users.
 
  - Minor fixes to the documentation (#3200) (#3201) (#3203) (#3210)
  - Added tutorial [Constraint programming](@ref) (#3202)
- - Added more examples to [Tips and Tricks](@ref conic_tips_and_tricks)
+ - Added more examples to [Modeling with cones](@ref)
  - Remove `_distance_to_set` in favor of `MOI.Utilities.distance_to_set` (#3209)
  - Improve [The diet problem](@ref) tutorial by adding the variable as a column
    in the dataframe (#3213)
  - Improve [The knapsack problem example](@ref) tutorial (#3216) (#3217)
- - Added the [Ellipsoid approximation](@ref) tutorial (#3218)
+ - Added the [Example: ellipsoid approximation](@ref) tutorial (#3218)
 
 ## Version 1.7.0 (January 25, 2023)
 

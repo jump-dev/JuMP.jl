@@ -20,7 +20,7 @@
 # matrix cones such as the  [`HermitianPSDCone`](@ref) object.
 
 # For another example of modeling with complex decision variables, see the
-# [Quantum state discrimination](@ref) tutorial, and see the
+# [Example: quantum state discrimination](@ref) tutorial, and see the
 # [Complex number support](@ref) section of the manual for more details.
 
 # This tutorial takes a matrix-oriented approach focused on network nodes
