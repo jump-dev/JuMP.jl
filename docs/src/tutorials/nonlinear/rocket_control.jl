@@ -3,7 +3,7 @@
 # This work is licensed under a Creative Commons Attribution-ShareAlike 4.0     #src
 # International License. URL: http://creativecommons.org/licenses/by-sa/4.0.    #src
 
-# # Nonlinear optimal control of a rocket
+# # Example: nonlinear optimal control of a rocket
 
 # **This tutorial was originally contributed by Iain Dunning.**
 
