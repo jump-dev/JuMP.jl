@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Ellipsoid approximation
+# # Example: ellipsoid approximation
 
 # This tutorial considers the problem of computing _extremal ellipsoids_:
 # finding ellipsoids that best approximate a given set. As an extension, we show
@@ -13,6 +13,17 @@
 # The model comes from Section 4.9 of [BenTal2001](@cite).
 
 # For a related example, see also the [Minimal ellipses](@ref) tutorial.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import LinearAlgebra
+import Plots
+import Random
+import SCS
+import Test
 
 # ## Problem formulation
 
@@ -39,17 +50,6 @@
 # \end{aligned}
 # ```
 # where ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
-
-# ## Required packages
-
-# This tutorial uses the following packages:
-
-using JuMP
-import LinearAlgebra
-import Plots
-import Random
-import SCS
-import Test
 
 # ## Data
 

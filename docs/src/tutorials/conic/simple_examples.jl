@@ -5,10 +5,12 @@
 
 # # Simple semidefinite programming examples
 
-# This tutorial is a collection of examples of small conic programs from the field of
-# [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming) (SDP).
-#
-# This tutorial makes use of the following packages:
+# The purpose of this tutorial is to provide a collection of examples of small
+# conic programs from the field of [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming) (SDP).
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import LinearAlgebra

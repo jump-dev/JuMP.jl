@@ -18,27 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Experiment design
+# # Example: experiment design
 
 # **This tutorial was originally contributed by Arpit Bhatia and Chris Coey.**
 
 # This tutorial covers experiment design examples (D-optimal, A-optimal, and
 # E-optimal) from section 7.5 of [Boyd2004](@cite).
 
-# The tutorial uses the following packages
+# ## Required packages
+
+# This tutorial uses the following packages:
+
 using JuMP
 import SCS
 import LinearAlgebra
+import MathOptInterface as MOI
 import Random
-
-# !!! info
-#     This tutorial uses sets from [MathOptInterface](@ref moi_documentation).
-#     By default, JuMP exports the `MOI` symbol as an alias for the
-#     MathOptInterface.jl package. We recommend making this more explicit in
-#     your code by adding the following lines:
-#     ```julia
-#     import MathOptInterface as MOI
-#     ```
 
 # We set a seed so the random numbers are repeatable:
 Random.seed!(1234)

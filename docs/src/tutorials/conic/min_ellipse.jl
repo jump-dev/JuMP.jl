@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Minimal ellipses
+# # Example: minimal ellipses
 
 # This example comes from section 8.4.1 of the book *Convex Optimization* by
 # [Boyd and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).

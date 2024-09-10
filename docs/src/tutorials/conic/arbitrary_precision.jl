@@ -8,6 +8,8 @@
 # The purpose of this tutorial is to explain how to use a solver which supports
 # arithmetic using a number type other than `Float64`.
 
+# ## Required packages
+
 # This tutorial uses the following packages:
 
 using JuMP

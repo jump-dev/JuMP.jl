@@ -18,35 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # [Tips and Tricks](@id conic_tips_and_tricks)
+# # [Modeling with cones](@id conic_tips_and_tricks)
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# This tutorial is aimed at providing a simplistic introduction to conic
-# programming using JuMP.
-
-# It uses the following packages:
-
-using JuMP
-import SCS
-import LinearAlgebra
-
-# !!! info
-#     This tutorial uses sets from [MathOptInterface](@ref moi_documentation).
-#     By default, JuMP exports the `MOI` symbol as an alias for the
-#     MathOptInterface.jl package. We recommend making this more explicit in
-#     your code by adding the following lines:
-#     ```julia
-#     import MathOptInterface as MOI
-#     ```
-
-import Random      # hide
-Random.seed!(1234) # hide
-nothing            # hide
+# The purpose of this tutorial is to show how you can model various common
+# problems using conic optimization.
 
 # !!! tip
 #     A good resource for learning more about functions which can be modeled
 #     using cones is the [MOSEK Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/index.html).
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import LinearAlgebra
+import MathOptInterface as MOI
+import SCS
+
+import Random      # hide
+Random.seed!(1234) # hide
+nothing            # hide
 
 # ## Background theory
 
