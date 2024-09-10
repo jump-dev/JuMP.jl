@@ -27,7 +27,6 @@ import SQLite: DBInterface
 import Tables
 import Test
 
-
 # ## Formulation
 
 # The multi-commondity flow problem is a simple extension of
@@ -179,16 +178,17 @@ demand = natural_join(
 # The SQLite queries can be arbitrarily complex. For example, here's a query
 # which builds every possible origin-destination pair:
 
-od_pairs = DBInterface.execute(
-    db,
-    """
-    SELECT a.location as 'origin',
-           b.location as 'destination'
-    FROM locations a
-    INNER JOIN locations b
-    ON a.type = 'origin' AND b.type = 'destination'
-    """,
-) |> DataFrames.DataFrame
+od_pairs =
+    DBInterface.execute(
+        db,
+        """
+        SELECT a.location as 'origin',
+            b.location as 'destination'
+        FROM locations a
+        INNER JOIN locations b
+        ON a.type = 'origin' AND b.type = 'destination'
+        """,
+    ) |> DataFrames.DataFrame
 
 # With a constraint that we cannot send more than 625 units between each pair:
 
@@ -207,4 +207,4 @@ solution_summary(model)
 # and obtain the solution:
 
 x.value = value.(x.value)
-x[x.value .> 0, :]
+x[x.value.>0, :]
