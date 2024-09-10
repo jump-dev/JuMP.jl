@@ -127,10 +127,10 @@ m[2]
 # | `@constraint(model, [t; v] in SecondOrderCone())`        | `cone(v, t)`         | `{v, t} == lorentz(length(v))`           |
 # | `@constraint(model, [x, y, z] in MOI.ExponentialCone())` | `expcone([x, y, z])` | `{x, y, z} == exponential(1)`            |
 
-# Like YALMIP and CVX, JuMP is smart enough to not generate redundant 
-# constraints when declaring equality constraints between `Symmetric` or 
-# `Hermitian` matrices. In these cases `@constraint(model, m == c)` will not 
-# generate constraints for the lower diagonal and the imaginary part of the 
+# Like YALMIP and CVX, JuMP is smart enough to not generate redundant
+# constraints when declaring equality constraints between `Symmetric` or
+# `Hermitian` matrices. In these cases `@constraint(model, m == c)` will not
+# generate constraints for the lower diagonal and the imaginary part of the
 # diagonal (in the complex case).
 
 # Experienced MATLAB users will probably be relieved to see that you must pass
@@ -233,7 +233,7 @@ objective_value(model)
 # JuMP does no such thing: it only reformulates objectives into objectives, and
 # constraints into constraints, and is fairly conservative at that. As a result,
 # you might need to do some reformulations manually, for which a good guide is
-# the [Tips and tricks](@ref conic_tips_and_tricks) tutorial.
+# the [Modeling with cones](@ref) tutorial.
 
 # ## Vectorization
 

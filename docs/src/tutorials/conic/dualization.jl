@@ -6,8 +6,9 @@
 # # Dualization
 
 # The purpose of this tutorial is to explain how to use [Dualization.jl](@ref) to
-# improve the performance of some conic optimization models. There are two
-# important takeaways:
+# improve the performance of some conic optimization models.
+
+# There are two important takeaways:
 #
 #  1. JuMP reformulates problems to meet the input requirements of the
 #     solver, potentially increasing the problem size by adding slack variables
@@ -18,7 +19,9 @@
 # [Dualization.jl](@ref) is a package which fixes these problems, allowing you
 # to solve the dual instead of the primal with a one-line change to your code.
 
-# This tutorial uses the following packages
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Dualization

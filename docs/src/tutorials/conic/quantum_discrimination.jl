@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Quantum state discrimination
+# # Example: quantum state discrimination
 
 # This tutorial solves the problem of [quantum state discrimination](https://en.wikipedia.org/wiki/Quantum_state_discrimination).
 
@@ -13,7 +13,7 @@
 
 # ## Required packages
 
-# This tutorial makes use of the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import LinearAlgebra

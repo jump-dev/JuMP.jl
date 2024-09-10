@@ -9,22 +9,23 @@
 # solution. This can improve performance, particularly if you are repeatedly
 # solving a sequence of related problems.
 
+# The purpose of this tutorial is to demonstrate how to write a function that
+# sets the primal and dual starts as the optimal solution stored in a model. It
+# is intended to be a starting point for which you can modify if you want to do
+# something similar in your own code.
+
 # !!! tip
 #     See [`set_start_values`](@ref) for a generic implementation of this
 #     function that was added to JuMP after this tutorial was written.
 
-# In this tutorial, we demonstrate how to write a function that sets the primal
-# and dual starts as the optimal solution stored in a model. It is intended to
-# be a starting point for which you can modify if you want to do something
-# similar in your own code.
-
-# !!! warning
-#     This tutorial does not set start values for nonlinear models.
+# ## Required packages
 
 # This tutorial uses the following packages:
 
 using JuMP
 import SCS
+
+# ## A basic function
 
 # The main component of this tutorial is the following function. The most
 # important observation is that we cache all of the solution values first, and
@@ -60,6 +61,8 @@ function set_optimal_start_values(model::Model)
     return
 end
 
+# ## Testing the function
+
 # To test our function, we use the following linear program:
 
 model = Model(SCS.Optimizer)
@@ -81,8 +84,11 @@ optimize!(model)
 # Now the optimization terminates after 0 iterations because our starting point
 # is already optimal.
 
-# Note that some solvers do not support setting some parts of the starting
-# solution, for example, they may support only `set_start_value` for variables.
+# ## Caveats
+
+# Some solvers do not support setting some parts of the starting solution, for
+# example, they may support only `set_start_value` for variables.
+
 # If you encounter an `UnsupportedSupported` attribute error for
 # [`MOI.VariablePrimalStart`](@ref), [`MOI.ConstraintPrimalStart`](@ref), or
 # [`MOI.ConstraintDualStart`](@ref), comment out the corresponding part of the

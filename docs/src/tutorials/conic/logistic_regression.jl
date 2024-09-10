@@ -20,19 +20,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Logistic regression
+# # Example: logistic regression
 
 # **This tutorial was originally contributed by François Pacaud.**
 
-# This tutorial shows how to solve a logistic regression problem
-# with JuMP. Logistic regression is a well known method in machine learning,
-# useful when we want to classify binary variables with the help of
-# a given set of features. To this goal,
-# we find the optimal combination of features maximizing
-# the (log)-likelihood onto a training set. From a modern optimization glance,
-# the resulting problem is convex and differentiable. On a modern optimization
-# glance, it is even conic representable.
-#
+# This tutorial shows how to solve a logistic regression problem with JuMP.
+# Logistic regression is a well known method in machine learning, useful when we
+# want to classify binary variables with the help of a given set of features. To
+# this goal, we find the optimal combination of features maximizing the
+# (log)-likelihood onto a training set.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import MathOptInterface as MOI
+import Random
+import SCS
+
+Random.seed!(2713);
+
 # ## Formulating the logistic regression problem
 #
 # Suppose we have a set of training data-point $i = 1, \cdots, n$, where
@@ -122,22 +130,6 @@
 # Thus, if $n \gg 1$, we get a large number of variables and constraints.
 
 # ## Fitting logistic regression with a conic solver
-#
-# It is now time to pass to the implementation. We choose SCS as a conic solver.
-using JuMP
-import Random
-import SCS
-
-# !!! info
-#     This tutorial uses sets from [MathOptInterface](@ref moi_documentation).
-#     By default, JuMP exports the `MOI` symbol as an alias for the
-#     MathOptInterface.jl package. We recommend making this more explicit in
-#     your code by adding the following lines:
-#     ```julia
-#     import MathOptInterface as MOI
-#     ```
-
-Random.seed!(2713);
 
 # We start by implementing a function to generate a fake dataset, and where
 # we could tune the correlation between the feature variables. The function
