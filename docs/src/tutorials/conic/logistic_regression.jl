@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Logistic regression
+# # Example: logistic regression
 
 # **This tutorial was originally contributed by François Pacaud.**
 
