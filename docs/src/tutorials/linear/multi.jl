@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # The multi-commodity flow problem
+# # Working with SQLite and DataFrames
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
@@ -23,10 +23,10 @@ using JuMP
 import DataFrames
 import HiGHS
 import SQLite
+import SQLite: DBInterface
 import Tables
 import Test
 
-const DBInterface = SQLite.DBInterface
 
 # ## Formulation
 
@@ -119,38 +119,62 @@ products =
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
-@variable(model, x[origins, destinations, products] >= 0)
+@variable(
+    model,
+    x[origin in origins, destination in destinations, product in products] >= 0,
+    container = DataFrames.DataFrame,
+)
 
 # One approach when working with databases is to extract all of the data into a
-# Julia datastructure. For example, let's pull the cost table into a DataFrame
-# and then construct our objective by iterating over the rows of the DataFrame:
+# Julia datastructure. For example, let's pull the cost table into a DataFrame:
 
 cost = DBInterface.execute(db, "SELECT * FROM cost") |> DataFrames.DataFrame
-@objective(
-    model,
-    Max,
-    sum(r.cost * x[r.origin, r.destination, r.product] for r in eachrow(cost)),
-);
 
-# If we don't want to use a DataFrame, we can use a `Tables.rowtable` instead:
+# and then join the decision variables:
 
-supply = DBInterface.execute(db, "SELECT * FROM supply") |> Tables.rowtable
-for r in supply
-    @constraint(model, sum(x[r.origin, :, r.product]) <= r.supply)
+function natural_join(left, right)
+    on_names = intersect(names(left), names(right))
+    return DataFrames.innerjoin(left, right; on = on_names)
 end
 
-# Another approach is to execute the query, and then to iterate through the rows
-# of the query using `Tables.rows`:
+cost_x = natural_join(cost, x)
 
-demand = DBInterface.execute(db, "SELECT * FROM demand")
-for r in Tables.rows(demand)
-    @constraint(model, sum(x[:, r.destination, r.product]) == r.demand)
+# We've defined a new function, `natural_join`, to simplify the process of
+# joining two DataFrames. This fuction acts like the `NATURAL JOIN` statment in
+# SQL.
+
+# Our objective is the inner product of two columns:
+
+@objective(model, Max, cost_x.cost' * cost_x.value);
+
+# The supply constraint is more complicated. A useful utility is a function that
+# sums the `.value` column after grouping on a set of columns:
+
+function sum_value_by(df, cols)
+    gdf = DataFrames.groupby(df, cols)
+    return DataFrames.combine(gdf, :value => sum => :value)
 end
 
-# !!! warning
-#     Iterating through the rows of a query result works by incrementing a
-#     cursor inside the database. As a consequence, you cannot call
-#     `Tables.rows` twice on the same query result.
+# Here is it in action:
+
+sum_value_by(x, [:origin, :product])
+
+# The constraint that the supply must be less than or equal to a capacity can
+# now be written as:
+
+supply = natural_join(
+    DBInterface.execute(db, "SELECT * FROM supply") |> DataFrames.DataFrame,
+    sum_value_by(x, [:origin, :product]),
+)
+@constraint(model, supply.value .<= supply.supply);
+
+# The demand constraint ca be written similarly:
+
+demand = natural_join(
+    DBInterface.execute(db, "SELECT * FROM demand") |> DataFrames.DataFrame,
+    sum_value_by(x, [:destination, :product]),
+)
+@constraint(model, demand.value .== demand.demand);
 
 # The SQLite queries can be arbitrarily complex. For example, here's a query
 # which builds every possible origin-destination pair:
@@ -164,13 +188,12 @@ od_pairs = DBInterface.execute(
     INNER JOIN locations b
     ON a.type = 'origin' AND b.type = 'destination'
     """,
-)
+) |> DataFrames.DataFrame
 
 # With a constraint that we cannot send more than 625 units between each pair:
 
-for r in Tables.rows(od_pairs)
-    @constraint(model, sum(x[r.origin, r.destination, :]) <= 625)
-end
+od = natural_join(od_pairs, sum_value_by(x, [:origin, :destination]))
+@constraint(model, od.value .<= 625);
 
 # ## Solution
 
@@ -181,12 +204,7 @@ Test.@test is_solved_and_feasible(model)
 Test.@test objective_value(model) == 225_700.0      #src
 solution_summary(model)
 
-# and print the solution:
+# and obtain the solution:
 
-begin
-    println("         ", join(products, ' '))
-    for o in origins, d in destinations
-        v = lpad.([round(Int, value(x[o, d, p])) for p in products], 5)
-        println(o, " ", d, " ", join(replace.(v, "   0" => "  . "), " "))
-    end
-end
+x.value = value.(x.value)
+x[x.value .> 0, :]
