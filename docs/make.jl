@@ -195,6 +195,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
 end
 push!(
     _LIST_OF_EXTENSIONS,
+    "JuliaData/DataFrames.jl" => "extensions/DataFrames.md",
     "rafaqz/DimensionalData.jl" => "extensions/DimensionalData.md",
 )
 
