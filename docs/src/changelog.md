@@ -261,7 +261,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `Percival.jl` (#3567)
  - Added new tutorials:
     - [Approximating nonlinear functions](@ref) (#3563)
-    - [Exmaple: classification problems](@ref) (#3569)
+    - [Example: classification problems](@ref) (#3569)
  - Improved documentation for:
     - [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) variables (#3562)
     - [`SOS1`](@ref) and [`SOS2`](@ref) (#3565)
