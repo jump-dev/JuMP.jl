@@ -139,7 +139,7 @@ end
 cost_x = natural_join(cost, x)
 
 # We've defined a new function, `natural_join`, to simplify the process of
-# joining two DataFrames. This fuction acts like the `NATURAL JOIN` statment in
+# joining two DataFrames. This function acts like the `NATURAL JOIN` statement in
 # SQL.
 
 # Our objective is the inner product of two columns:
