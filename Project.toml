@@ -9,32 +9,36 @@ MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [weakdeps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 
 [extensions]
+JuMPDataFramesExt = "DataFrames"
 JuMPDimensionalDataExt = "DimensionalData"
 
 [compat]
+DataFrames = "1"
 DimensionalData = "0.24, 0.25, 0.26.2, 0.27"
 LinearAlgebra = "<0.0.1, 1.6"
 MacroTools = "0.5"
 MathOptInterface = "1.25.2"
 MutableArithmetics = "1.1"
 OrderedCollections = "1"
-Printf = "<0.0.1, 1.6"
 PrecompileTools = "1"
+Printf = "<0.0.1, 1.6"
 SparseArrays = "<0.0.1, 1.6"
 Test = "<0.0.1, 1.6"
 julia = "1.6"
 
 [extras]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["DimensionalData", "Test"]
+test = ["DataFrames", "DimensionalData", "Test"]
