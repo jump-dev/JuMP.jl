@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Working with SQLite and DataFrames
+# # The multi-commodity flow problem
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
