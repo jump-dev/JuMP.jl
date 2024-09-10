@@ -49,6 +49,8 @@
 # ``\mu`` is a vector of weights corresponding to the Lagrangian dual of the
 # constraints.
 
+# ## Required packages
+
 # This tutorial uses the following packages:
 
 using JuMP

@@ -26,6 +26,8 @@
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
 
+# ## Required packages
+
 # This tutorial uses the following packages:
 
 using JuMP

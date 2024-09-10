@@ -37,13 +37,9 @@ will help you know where to look for certain things.
    then formulate it in mathematics, and then solve it in JuMP. This usually
    involves some sort of visualization of the solution. Start here if you are
    new to JuMP.
-   * [Rocket Control](@ref)
-   * [Optimal control for a Space Shuttle reentry trajectory](@ref)
-   * [Portfolio optimization](@ref)
- * The [Tips and tricks](@ref nonlinear_tips_and_tricks) tutorial contains a
-   number of helpful reformulations and tricks you can use when modeling
-   nonlinear programs. Look here if you are stuck trying to formulate a problem
-   as a nonlinear program.
+   * [Example: nonlinear optimal control of a rocket](@ref)
+   * [Example: optimal control for a Space Shuttle reentry trajectory](@ref)
+   * [Example: portfolio optimization](@ref)
  * The [Computing Hessians](@ref) is an advanced tutorial which explains how to
    compute the Hessian of the Lagrangian of a nonlinear program. This is useful
    only in particular cases.

@@ -5,8 +5,11 @@
 
 # # Simple examples
 
-# This tutorial is a collection of examples of small nonlinear programs. It uses
-# the following packages:
+# This tutorial is a collection of examples of small nonlinear programs.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Ipopt

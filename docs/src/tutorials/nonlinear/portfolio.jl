@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Portfolio optimization
+# # Example: portfolio optimization
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
@@ -31,7 +31,7 @@
 
 # ## Required packages
 
-# This tutorial uses the following packages
+# This tutorial uses the following packages:
 
 using JuMP
 import DataFrames

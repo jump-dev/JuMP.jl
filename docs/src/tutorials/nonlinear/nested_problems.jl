@@ -20,26 +20,30 @@
 
 # # Nested optimization problems
 
-# In this tutorial we explain how to write a *nested* optimization problem,
-# where an *upper* problem uses the results from the optimization of a *lower*
-# subproblem.
+# The purpose of this tutorial is to show how to solve a *nested* optimization
+# problem, where an *upper* problem uses the results from the optimization of a
+# *lower* subproblem.
 #
 # To model the problem, we define a user-defined operator to handle the
 # decomposition of the lower problem inside the upper one. Finally, we show how
 # to improve the performance by using a cache that avoids resolving the lower
 # problem.
 #
-# For a simpler example of writing a user-defined operator,
-# see the [User-defined Hessians](@ref) tutorial.
+# For a simpler example of writing a user-defined operator, see the
+# [User-defined Hessians](@ref) tutorial.
 
 # !!! info
-#     The JuMP extension [BilevelJuMP.jl](../../packages/BilevelJuMP.md) can also be used to model and
-#     solve bilevel optimization problems.
+#     The JuMP extension [BilevelJuMP.jl](../../packages/BilevelJuMP.md) can
+#     also be used to model and solve bilevel optimization problems.
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 
 using JuMP
 import Ipopt
+
+# ## Formulation
 
 # In the rest of this tutorial, our goal is to solve the bilevel
 # optimization problem:
