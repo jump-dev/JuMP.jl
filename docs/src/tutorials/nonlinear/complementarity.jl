@@ -3,9 +3,12 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Mixed complementarity problems
+# # Example: mixed complementarity problems
 
-# This tutorial is a collection of mixed complementarity programs.
+# The purpose of this tutorial is to provide a collection of mixed
+# complementarity programs.
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

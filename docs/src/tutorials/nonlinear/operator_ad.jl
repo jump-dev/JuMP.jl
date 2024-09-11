@@ -29,6 +29,8 @@
 #     operator is necessary, consider using the default of `@operator(model, op_f, N, f)`
 #     instead of passing explicit [Gradients and Hessians](@ref).
 
+# ## Required packages
+
 # This tutorial uses the following packages:
 
 using JuMP
@@ -36,6 +38,8 @@ import Enzyme
 import ForwardDiff
 import Ipopt
 import Test
+
+# ## Primal function
 
 # As a simple example, we consider the Rosenbrock function:
 

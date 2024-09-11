@@ -3,7 +3,7 @@
 # This work is licensed under a Creative Commons Attribution-ShareAlike 4.0     #src
 # International License. URL: http://creativecommons.org/licenses/by-sa/4.0.    #src
 
-# # Rocket Control
+# # Example: nonlinear optimal control of a rocket
 
 # **This tutorial was originally contributed by Iain Dunning.**
 
@@ -15,6 +15,8 @@
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
 #     used to model and solve optimal control problems.
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

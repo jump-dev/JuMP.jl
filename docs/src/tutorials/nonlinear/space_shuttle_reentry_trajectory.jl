@@ -20,22 +20,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE   #src
 # SOFTWARE.                                                                       #src
 
-# # Optimal control for a Space Shuttle reentry trajectory
+# # Example: optimal control for a Space Shuttle reentry trajectory
 
 # **This tutorial was originally contributed by Henrique Ferrolho.**
 
 # This tutorial demonstrates how to compute a reentry trajectory for the
-# [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle),
-# by formulating and solving a nonlinear programming problem.
-# The problem was drawn from Chapter 6 of [Betts2010](@cite).
+# [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle), by formulating
+# and solving a nonlinear programming problem. The problem was drawn from
+# Chapter 6 of [Betts2010](@cite).
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
 #     used to model and solve optimal control problems.
 
 # !!! tip
-#     This tutorial is a more-complicated version of the [Rocket Control](@ref) example.
-#     If you are new to solving nonlinear programs in JuMP, you may want to start there instead.
+#     This tutorial is a more-complicated version of the [Example: nonlinear optimal control of a rocket](@ref)
+#     tutorial. If you are new to solving nonlinear programs in JuMP, you may
+#     want to start there instead.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import Interpolations
+import Ipopt
+
+# ## Formulation
 
 # The motion of the vehicle is defined by the following set of DAEs:
 #
@@ -122,10 +133,6 @@
 #     no mesh refinement going on, which can lead to unrealistic trajectories
 #     having position and velocity errors with orders of magnitude $10^4$ ft and
 #     $10^2$ ft/sec, respectively.
-
-using JuMP
-import Interpolations
-import Ipopt
 
 ## Global variables
 const w = 203000.0  # weight (lb)

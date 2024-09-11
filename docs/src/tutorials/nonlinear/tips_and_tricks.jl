@@ -3,16 +3,20 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # [Tips and tricks](@id nonlinear_tips_and_tricks)
+# # User-defined operators with vector outputs
 
-# This example collates some tips and tricks you can use when formulating
-# nonlinear programs. It uses the following packages:
+# The purpose of this tutorial is to demonstrate how to write a user-defined
+# operator with a vector-valued output.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Ipopt
 import Test
 
-# ## User-defined operators with vector outputs
+# ## Motivation
 
 # A common situation is to have a user-defined operator like the following that
 # returns multiple outputs (we define `function_calls` to keep track of how
@@ -57,6 +61,8 @@ Test.@test objective_value(model) ≈ √3 atol = 1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Naive approach: function calls = $(function_calls)")
 naive_approach = function_calls  #src
+
+# ## Memoization
 
 # An alternative approach is to use _memoization_, which uses a cache to store
 # the result of function evaluations. We can write a memoization function as
