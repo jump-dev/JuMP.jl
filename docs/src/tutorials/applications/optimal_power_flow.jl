@@ -26,7 +26,7 @@
 #     that simplifies the construction of semidefinite programs.
 #     Another approach is to formulate the problem focusing on network lines
 #     (known as a _branch model_) where it is easier to work with flow 
-#     constraints. A general approach is provided by the Julia/JuMP package 
+#     constraints. A general approach is provided by
 #     [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
 #     an open-source framework to a broad range of power flow model formulations
 #     along with utilities for working with detailed network data.
