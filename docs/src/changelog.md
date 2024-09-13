@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added more tests for shapes and dual shapes (#3816)
  - Added more packages to `extension-tests.yml` (#3817) (#3818)
  - Removed an unnecessary test(#3819)
- - Documentation improvements (#3820) (#3822) (#3923)
+ - Documentation improvements (#3820) (#3822) (#3823)
+ - Added [PiecewiseLinearOpt.jl](@ref) to the docs (#3824)
 
 ## Version 1.23.1 (August 30, 2024)
 
