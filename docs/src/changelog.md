@@ -7,6 +7,21 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.23.2 (September 13, 2024)
+
+### Fixed
+
+ - Fixed an illegal simplification in `MA.operate!!` for `NonlinearExpr` (#3826)
+
+### Other
+
+ - Added [Rolling horizon problems](@ref) tutorial (#3815)
+ - Added more tests for shapes and dual shapes (#3816)
+ - Added more packages to `extension-tests.yml` (#3817) (#3818)
+ - Removed an unnecessary test(#3819)
+ - Documentation improvements (#3820) (#3822) (#3823)
+ - Added [PiecewiseLinearOpt.jl](@ref) to the docs (#3824)
+
 ## Version 1.23.1 (August 30, 2024)
 
 ### Fixed
