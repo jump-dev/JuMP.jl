@@ -1,11 +1,9 @@
-# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
+# Copyright (c) 2023 James Foster and contributors                              #src
 # This Source Code Form is subject to the terms of the Mozilla Public License   #src
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
 # # Optimal power flow
-
-# *This tutorial was originally contributed by James Foster (@jd-foster).*
 
 # This tutorial formulates and solves an alternating current optimal power flow
 # (AC-OPF) problem, a much-studied nonlinear problem from the field of
@@ -23,13 +21,15 @@
 # [Example: quantum state discrimination](@ref) tutorial, and see the
 # [Complex number support](@ref) section of the manual for more details.
 
-# This tutorial takes a matrix-oriented approach focused on network nodes
-# that simplifies the construction of semidefinite programs.
-# Another approach is to formulate the problem focusing on network lines
-# where it is easier to work with flow constraints. A general approach is
-# provided by the Julia/JuMP package [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
-# an open-source framework to a broad range of power flow model formulations
-# along with utilities for working with detailed network data.
+# !!! info
+#     This tutorial takes a matrix-oriented approach focused on network nodes
+#     that simplifies the construction of semidefinite programs.
+#     Another approach is to formulate the problem focusing on network lines
+#     (known as a _branch model_) where it is easier to work with flow 
+#     constraints. A general approach is provided by the Julia/JuMP package 
+#     [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
+#     an open-source framework to a broad range of power flow model formulations
+#     along with utilities for working with detailed network data.
 
 # ## Required packages
 
