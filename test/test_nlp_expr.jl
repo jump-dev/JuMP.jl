@@ -878,6 +878,7 @@ function test_ma_operate!!_nested_sum()
     @variable(model, x)
     y = NonlinearExpr(:+, Any[x])
     z = MA.operate!!(MA.add_mul, y, y)
+    @test isequal_canonical(y, @force_nonlinear(+x))
     @test isequal_canonical(z, @force_nonlinear(+(+x, +x)))
     return
 end
