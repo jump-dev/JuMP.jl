@@ -5,7 +5,7 @@ autodiff
 arXiv
 backports
 bikeshedding
-(Bb)ivariate
+[Bb]ivariate
 blogposts
 broadcasted
 [Bb]ugfix(?(es))
