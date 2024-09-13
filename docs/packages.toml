@@ -66,7 +66,7 @@
 [KNITRO]
     rev = "v0.14.4"
 [MiniZinc]
-    rev = "v0.3.11"
+    rev = "v0.3.12"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
@@ -75,7 +75,7 @@
 [NEOSServer]
     rev = "v1.1.1"
 [NLopt]
-    rev = "v1.1.0"
+    rev = "v1.1.1"
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
