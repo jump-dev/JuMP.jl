@@ -408,10 +408,15 @@ function _MA.operate!!(
     _throw_if_not_real(x)
     if any(isequal(_MA.Zero()), args)
         return x
-    elseif x.head == :+
-        push!(x.args, *(args...))
-        return x
     end
+    # It may seem like we should do this performance optimization, but it is NOT
+    # safe. See JuMP#3825. The issue is that even though we're calling operate!!
+    # `x` is not mutable, because it may, amoungst other things, be aliased in
+    # one of the args
+    # elseif x.head == :+
+    #     push!(x.args, *(args...))
+    #     return x
+    # end
     return +(x, *(args...))
 end
 

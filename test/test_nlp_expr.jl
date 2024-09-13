@@ -873,6 +873,16 @@ function test_ma_zero_in_operate!!()
     return
 end
 
+function test_ma_operate!!_nested_sum()
+    model = Model()
+    @variable(model, x)
+    y = NonlinearExpr(:+, Any[x])
+    z = MA.operate!!(MA.add_mul, y, y)
+    @test isequal_canonical(y, @force_nonlinear(+x))
+    @test isequal_canonical(z, @force_nonlinear(+(+x, +x)))
+    return
+end
+
 function test_nonlinear_operator_inferred()
     model = Model()
     @variable(model, x)
