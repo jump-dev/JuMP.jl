@@ -97,7 +97,7 @@ import SCS
 # a small negative number. Yet when we solve this problem, we get:
 
 model = Model(HiGHS.Optimizer)
-set_silent(mode)
+set_silent(model)
 @variable(model, x >= 0)
 @constraint(model, x == -1e-8)
 optimize!(model)
