@@ -41,7 +41,7 @@
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.
 #     It's in the "Getting started" section to give you an early preview of how
-#     to debug JuMP models. However, if you are new to JuMP, you may want to
+#     tolerances affect JuMP models. However, if you are new to JuMP, you may want to
 #     briefly skim the tutorial, and come back to it once you have written a few
 #     JuMP models.
 
@@ -208,7 +208,7 @@ value(x[1])
 # For example, SCS is a first-order solver. This means it uses only local
 # gradient information at update each iteration. SCS took 100 iterations to
 # solve the problem with the default tolerance of `1e-4`, and 550 iterations to
-# solve the problem with `1e-5`. SCS may not be find a solution to our
+# solve the problem with `1e-5`. SCS may not be able to find a solution to our
 # problem with a tighter tolerance in a reasonable amount of time.
 
 # ## Integrality
