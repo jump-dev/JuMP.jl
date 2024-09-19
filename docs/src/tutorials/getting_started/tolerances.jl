@@ -88,7 +88,7 @@ import SCS
 
 # The primal feasibility tolerance controls how primal constraints are
 # evaluated. For example, the constraint ``2x = 1`` is actually implemented as
-# ``\varepsilon \le 2x - 1\le \varepsilon``, where ``\varepsilon`` is a small
+# ``|2x - 1| \le \varepsilon``, where ``\varepsilon`` is a small
 # solver-dependent primal feasibility tolerance that is typically on the order
 # of `1e-8`.
 
@@ -149,7 +149,7 @@ value(x[1])
 # The answer is very wrong, and there is no indication from the solver that
 # anything untoward happened. What's going on?
 
-# One useful debuggging tool is [`primal_feasibility_report`](@ref):
+# One useful debugging tool is [`primal_feasibility_report`](@ref):
 
 report = primal_feasibility_report(model)
 
@@ -182,10 +182,6 @@ report[LowerBoundRef(y)]
 # of the constraints, our optimal solution is very far from the theoretical
 # optimal.
 
-# !!! warning
-#     There is no direct relationship between the size of feasibility tolerance
-#     and the quality of the solution.
-
 # We can "fix" our model by decreasing `eps_abs` and `eps_rel`, which SCS uses
 # to control the absolute and relative feasibility tolerances. Now the solver
 # finds the correct solution:
@@ -193,11 +189,17 @@ report[LowerBoundRef(y)]
 set_attribute(model, "eps_abs", 1e-5)
 set_attribute(model, "eps_rel", 1e-5)
 optimize!(model)
+
+#-
+
 @assert is_solved_and_feasible(model)  #src
 @assert is_solved_and_feasible(model)
 value(x[1])
 
 # ### Why you shouldn't use a small tolerance
+
+# There is no direct relationship between the size of feasibility tolerance and
+# the quality of the solution.
 
 # You might surmise from this section that you should set the tightest
 # feasibility tolerance possible. However, tighter tolerances come at the cost
@@ -206,7 +208,7 @@ value(x[1])
 # For example, SCS is a first-order solver. This means it uses only local
 # gradient information at update each iteration. SCS took 100 iterations to
 # solve the problem with the default tolerance of `1e-4`, and 550 iterations to
-# solve the the problem with `1e-5`. SCS may not be find a solution to our
+# solve the problem with `1e-5`. SCS may not be find a solution to our
 # problem with a tighter tolerance in a reasonable amount of time.
 
 # ## Integrality
@@ -250,29 +252,34 @@ is_solved_and_feasible(model)
 
 # Integrality tolerances are particularly important when you have big-M type
 # constraints. Small non-integer values in the integer variables can cause
-# "leakage" flows even when the big-M switch is "off". Consider this example:
+# "leakage" flows even when the big-M switch is "off." Consider this example:
 
 M = 1e6
 model = Model()
 @variable(model, x >= 0)
 @variable(model, y, Bin)
 @constraint(model, x <= M * y)
+print(model)
 
 # This model has a feasible solution (to tolerances) of `(x, y) = (1, 1e-6)`.
 # There can be a non-zero value of `x` even when `y` is (approximately) `0`.
 
-# ### Can't you just round the solution
+primal_feasibility_report(model, Dict(x => 1, y => 1e-6))
+
+# ### Rounding the solution
 
 # Integrality tolerances are why JuMP does not return `Int` for `value(x)` of an
 # integer variable or `Bool` for `value(x)` of a binary variable.
 
 # In most cases, it is safe to post-process the solution using
-# `x_int = round(Int, value(x))`. However, in some cases "fixing" the
+# `y_int = round(Int, value(y))`. However, in some cases "fixing" the
 # integrality like this can cause violations in primal feasibility that exceed
 # the primal feasibility tolerance. For example, if we rounded our
 # `(x, y) = (1, 1e-6)` solution to `(x, y) = (1, 0)`, then the constraint
-# `x <= M * y` is now violated by a value of `1.0` which is much greater than a
+# `x <= M * y` is now violated by a value of `1.0`, which is much greater than a
 # typical feasibility tolerance of `1e-8`.
+
+primal_feasibility_report(model, Dict(x => 1, y => 0))
 
 # ### Why you shouldn't use a small tolerance
 
