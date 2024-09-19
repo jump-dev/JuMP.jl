@@ -313,7 +313,7 @@ primal_feasibility_report(model, Dict(x => 0.0, y => -1e-8))
 
 # This happens because there are two basic solutions. The first is infeasible at
 # `(x, y) = (-1, 0)` and the second is feasible `(x, y) = (0, -1e-8)`. Different
-# algorthims may terminate at either of these bases.
+# algorithms may terminate at either of these bases.
 
 # Another example is a variation on our integrality eample, but this time, there
 # is are constraint that `x >= 1` and `y <= 0.5`:
@@ -334,7 +334,7 @@ is_solved_and_feasible(model)
 
 primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
 
-# This happens becauuse the presolve routine deduces that the `y <= 0.5`
+# This happens because the presolve routine deduces that the `y <= 0.5`
 # constraint forces the binary variable `y` to take the value `0`. Substituting
 # the value for `y` into the last constraint, presolve may also deduce that
 # `x <= 0`, which violates the bound of `x >= 1` and so the problem is
@@ -352,7 +352,7 @@ optimize!(model)
 @assert is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
-# ### Contradictory are not a bug in the solver
+# ### Contradictory results are not a bug in the solver
 
 # These contradictory examples are not bugs in the HiGHS solver. They are an
 # expected result of the interaction between the tolerances and the solution
