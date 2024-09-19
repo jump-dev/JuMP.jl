@@ -264,7 +264,7 @@ print(model)
 # This model has a feasible solution (to tolerances) of `(x, y) = (1, 1e-6)`.
 # There can be a non-zero value of `x` even when `y` is (approximately) `0`.
 
-primal_feasibility_report(model, Dict(x => 1, y => 1e-6))
+primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
 
 # ### Rounding the solution
 
@@ -279,7 +279,7 @@ primal_feasibility_report(model, Dict(x => 1, y => 1e-6))
 # `x <= M * y` is now violated by a value of `1.0`, which is much greater than a
 # typical feasibility tolerance of `1e-8`.
 
-primal_feasibility_report(model, Dict(x => 1, y => 0))
+primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
 
 # ### Why you shouldn't use a small tolerance
 
