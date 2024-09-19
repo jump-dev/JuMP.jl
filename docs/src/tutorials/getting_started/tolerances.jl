@@ -285,3 +285,77 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
 
 # Just like primal feasibility tolerances, using a smaller value for the
 # integrality tolerance and lead to greatly increased solve times.
+
+# ## Contradictory results
+
+# The distinction between feasible and infeasible can be surprisingly nuanced.
+# Solver A might decide the problem is feasible while solver B might decide it
+# is infeasible. Different algorithms _within_ solver A (like simplex and
+# barrier) may also come to different conclusions. Even changing settings like
+# turning presolve on and off can make a difference.
+
+# Here is an example where HiGHS reports the problem is infeasible, but there
+# exists a feasible (to tolerance) solution:
+
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x >= 0)
+@variable(model, y >= 0)
+@constraint(model, x + 1e8 * y == -1)
+optimize!(model)
+@assert !is_solved_and_feasible(model)  #src
+is_solved_and_feasible(model)
+
+# The feasible solution `(x, y) = (0.0, -1e-8)` has a maximum primal violation
+# of `1e-8` which is the HiGHS feasibility tolerance:
+
+primal_feasibility_report(model, Dict(x => 0.0, y => -1e-8))
+
+# This happens because there are two basic solutions. The first is infeasible at
+# `(x, y) = (-1, 0)` and the second is feasible `(x, y) = (0, -1e-8)`. Different
+# algorthims may terminate at either of these bases.
+
+# Another example is a variation on our integrality eample, but this time, there
+# is are constraint that `x >= 1` and `y <= 0.5`:
+
+M = 1e6
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x >= 1)
+@variable(model, y, Bin)
+@constraint(model, y <= 0.5)
+@constraint(model, x <= M * y)
+optimize!(model)
+@assert !is_solved_and_feasible(model)  #src
+is_solved_and_feasible(model)
+
+# HiGHS reports the problem is infeasible, but there is a feasible (to
+# tolerance) solution of:
+
+primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
+
+# This happens becauuse the presolve routine deduces that the `y <= 0.5`
+# constraint forces the binary variable `y` to take the value `0`. Substituting
+# the value for `y` into the last constraint, presolve may also deduce that
+# `x <= 0`, which violates the bound of `x >= 1` and so the problem is
+# infeasible.
+
+# We can work around this by providing HiGHS with the feasible starting
+# solution:
+
+set_start_value(x, 1)
+set_start_value(y, 1e-6)
+
+# Now HiGHS will report that the problem is feasible:
+
+optimize!(model)
+@assert is_solved_and_feasible(model)  #src
+is_solved_and_feasible(model)
+
+# ### Contradictory are not a bug in the solver
+
+# These contradictory examples are not bugs in the HiGHS solver. They are an
+# expected result of the interaction between the tolerances and the solution
+# algorithm. There will always be models in the gray boundary at the edge of
+# feasibility, for which the question of feasibility is not a clear true or
+# false.
