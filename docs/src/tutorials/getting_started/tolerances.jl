@@ -26,8 +26,9 @@
 # solution is in fact optimal. However, like all numerical algorithms that use
 # floating point arithmetic, optimization solvers use tolerances to check
 # whether a solution satisfies the constraints. In the best case, the solution
-# satisfies the original constraints to machine precision. In most cases, the
-# solution satisfies the constraints to some very small tolerance that has no
+# satisfies the original constraints to 
+# [machine precision](https://en.wikipedia.org/wiki/Machine_epsilon). In most cases,
+# the solution satisfies the constraints to some very small tolerance that has no
 # noticeable impact on the quality of the optimal solution. In the worst case,
 # the solver can return a "wrong" solution, or fail to find one even if it
 # exists. (In the last case, the solution is wrong only in the sense of user
@@ -284,7 +285,7 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
 # ### Why you shouldn't use a small tolerance
 
 # Just like primal feasibility tolerances, using a smaller value for the
-# integrality tolerance and lead to greatly increased solve times.
+# integrality tolerance can lead to greatly increased solve times.
 
 # ## Contradictory results
 
@@ -315,8 +316,8 @@ primal_feasibility_report(model, Dict(x => 0.0, y => -1e-8))
 # `(x, y) = (-1, 0)` and the second is feasible `(x, y) = (0, -1e-8)`. Different
 # algorithms may terminate at either of these bases.
 
-# Another example is a variation on our integrality eample, but this time, there
-# is are constraint that `x >= 1` and `y <= 0.5`:
+# Another example is a variation on our integrality example, but this time, there
+# are constraints that `x >= 1` and `y <= 0.5`:
 
 M = 1e6
 model = Model(HiGHS.Optimizer)
