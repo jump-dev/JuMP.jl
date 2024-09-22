@@ -42,6 +42,13 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
+      - name: MOI
+        shell: julia --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.add([
+              PackageSpec(name="MutableArithmetics", rev="bl/zero_number"),
+          ])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
