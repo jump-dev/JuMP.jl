@@ -1355,6 +1355,20 @@ julia> parameter_value.(p)
  3.0
 ```
 
+Use [`is_parameter`](@ref) and [`ParameterRef`](@ref) to check if the variable
+is a parameter and to get the constraint that makes the variable a parameter.
+
+```jldoctest nonlinear_parameters
+julia> is_parameter(p[1])
+true
+
+julia> is_parameter(x)
+false
+
+julia> ParameterRef(p[2])
+p[2] ∈ MathOptInterface.Parameter{Float64}(3.0)
+```
+
 ### Limitations
 
 Parameters are implemented as decision variables belonging to the [`Parameter`](@ref)
