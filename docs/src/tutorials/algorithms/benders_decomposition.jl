@@ -168,9 +168,8 @@ objective_value(model)
 
 # and the optimal flows are:
 
-function optimal_flows(x_sol)
-    flows = [(i, j) => value(x[i, j]) for i in 1:n for j in 1:n]
-    return filter!(flow -> last(flow) > 0, flows)
+function optimal_flows(x)
+    return [(i, j) => x[i, j] for i in 1:n for j in 1:n if x[i, j] > 0]
 end
 
 monolithic_solution = optimal_flows(value.(y))
