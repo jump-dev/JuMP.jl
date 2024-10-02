@@ -68,21 +68,22 @@ import Test  #src
 # V_2(\bar{x}) = & \text{min}  \ & c_2(y)\\
 #          & \text{subject to} \ & f_2(y) \in S_2 \\
 #          &                     & f_3(x, y) \in S_3 \\
-#          &                     & x = \bar{x} \\
+#          &                     & x = \bar{x} & \ [\pi] \\
 #          &                     & y \in \mathbb{R}^n \\
 # \end{aligned}
 # ```
 # Note that we have included a "copy" of the `x` variable to simplify computing
-# the dual of $V_2$ with respect to $\bar{x}$. Because this is a linear program,
-# it is easy to solve.
+# $\pi$, which is the dual of $V_2$ with respect to $\bar{x}$.
+#
+# Because this model is a linear program, it is easy to solve.
 
 # Replacing the ``c_2(y)`` component of the objective in our original problem
 # with ``V_2`` yields:
 # ```math
 # \begin{aligned}
-# V_1 = \text{min}        \ & c_1(x) + V_2(x) \\
-# \text{subject to} \ & f_1(x) \in S_1 \\
-#                     & x \in \mathbb{Z}^m.
+# V_1 = & \text{min}        \ & c_1(x) + V_2(x) \\
+# & \text{subject to} \ & f_1(x) \in S_1 \\
+# &                     & x \in \mathbb{Z}^m.
 # \end{aligned}
 # ```
 # This problem looks a lot simpler to solve because it involves only $x$ and a
@@ -157,12 +158,12 @@ set_silent(model)
 @constraint(model, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(model, Min, 0.1 * sum(x) - sum(y[1, :]))
 optimize!(model)
-@assert is_solved_and_feasible(model)  #src
+Test.@test is_solved_and_feasible(model)  #src
 solution_summary(model)
 
 # The optimal objective value is -5.1:
 
-@assert isapprox(objective_value(model), -5.1; atol = 1e-4)  #src
+Test.@test isapprox(objective_value(model), -5.1; atol = 1e-4)  #src
 objective_value(model)
 
 # and the optimal flows are:
@@ -264,7 +265,7 @@ x_optimal = value.(x)
 optimal_ret = solve_subproblem(x_optimal)
 iterative_solution = optimal_flows(optimal_ret.y)
 
-# which is the same as the monolithic_solution:
+# which is the same as the monolithic solution:
 
 iterative_solution == monolithic_solution
 
@@ -340,7 +341,7 @@ callback_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-@assert callback_solution == monolithic_solution  #src
+Test.@test callback_solution == monolithic_solution  #src
 callback_solution == monolithic_solution
 
 # ## In-place iterative method
@@ -416,7 +417,7 @@ inplace_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-@assert inplace_solution == monolithic_solution  #src
+Test.@test inplace_solution == monolithic_solution  #src
 inplace_solution == monolithic_solution
 
 # ## Feasibility cuts
@@ -516,5 +517,5 @@ feasible_inplace_solution = optimal_flows(optimal_ret.y)
 # which is the same as the monolithic solution (because `sum(y) >= 1` in the
 # monolithic solution):
 
-@assert feasible_inplace_solution == monolithic_solution  #src
+Test.@test feasible_inplace_solution == monolithic_solution  #src
 feasible_inplace_solution == monolithic_solution
