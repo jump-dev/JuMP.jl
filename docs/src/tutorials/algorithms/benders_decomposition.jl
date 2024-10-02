@@ -216,7 +216,7 @@ end
 
 # Note that `solve_subproblem` returns a `NamedTuple` of the objective value,
 # the optimal primal solution for `y`, and the optimal dual solution for `π`,
-# which we obtained from the reduced cost of the `x` variables.
+# which we obtained from the [`reduced_cost`](@ref) of the `x` variables.
 
 # We're almost ready for our optimization loop, but first, here's a helpful
 # function for logging:
@@ -369,11 +369,11 @@ set_silent(subproblem)
 @constraint(subproblem, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
 @constraint(subproblem, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(subproblem, Min, -sum(y[1, :]))
+subproblem
 
-# Our function to solve the subproblem is also slightly different. First, we
+# Our function to solve the subproblem is also slightly different because we
 # need to fix the value of the `x_copy` variables to the value of `x` from the
-# first-stage problem, and second, we compute the dual using the
-# [`reduced_cost`](@ref) of `x_copy`:
+# first-stage problem:
 
 function solve_subproblem(model, x)
     fix.(model[:x_copy], x)
@@ -425,9 +425,9 @@ inplace_solution == monolithic_solution
 # first-stage values of `x`, the subproblem might be infeasible. The solution is
 # to add a Benders feasibility cut:
 # ```math
-# v_k + u_k^\top (x - x_k) \le 0.
+# v_k + u_k^\top (x - x_k) \le 0
 # ```
-# where $u_k$ is an dual unbounded ray of the subproblem, and $v_k$ is the
+# where $u_k$ is a dual unbounded ray of the subproblem and $v_k$ is the
 # intercept of the unbounded ray.
 
 # As a variation of our example which leads to infeasibilities, we add a
@@ -442,6 +442,7 @@ set_silent(model)
 @variable(model, θ >= M)
 @constraint(model, sum(x) <= 11)
 @objective(model, Min, 0.1 * sum(x) + θ)
+model
 
 # But the subproblem has a new constraint that `sum(y) >= 1`:
 
@@ -456,6 +457,7 @@ set_attribute(subproblem, "presolve", "off")
 @constraint(subproblem, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
 @constraint(subproblem, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(subproblem, Min, -sum(y[1, :]))
+subproblem
 
 # The function to solve the subproblem now checks for feasibility, and returns
 # the dual objective value and an dual unbounded ray if the subproblem is
