@@ -39,8 +39,8 @@ import Test  #src
 # following mixed-integer linear program:
 # ```math
 # \begin{aligned}
-# \text{min}        \ & c_1^\top x+c_2^\top y   \\
-# \text{subject to} \ & A_1 x+ A_2 y \le b      \\
+# \text{min}        \ & c_1^\top x + c_2^\top y \\
+# \text{subject to} \ & A_1 x + A_2 y \le b     \\
 #                     & x \ge 0                 \\
 #                     & y \ge 0                 \\
 #                     & x \in \mathbb{Z}^n
@@ -57,17 +57,19 @@ import Test  #src
 # only continuous variables. Hopefully, the linear program will be much easier
 # to solve in isolation than in the full mixed-integer linear program.
 
-# For example, if we knew a feasible solution for ``x``, we could obtain a
+# For example, if we knew a feasible solution for ``\bar{x}``, we could obtain a
 # solution for ``y`` by solving:
 # ```math
 # \begin{aligned}
-# V_2(x) = & \text{min}          \ & c_2^\top y                        \\
-#          & \text{subject to}   \ & A_2 y \le b - A_1 x & \quad [\pi] \\
+# V_2(\bar{x}) = & \text{min}    \ & c_2^\top y                        \\
+#          & \text{subject to}   \ & A_1 x + A_2 y \le b               \\
+#          &                       & x = \bar{x}         & \quad [\pi] \\
 #          &                       & y \ge 0,
 # \end{aligned}
 # ```
-# where ``\pi`` is the dual variable associated with the constraints. Because
-# this is a linear program, it is easy to solve.
+# Note that we have included a "copy" of the `x` variable to simplify computing
+# the dual of $V_2$ with respect to $\bar{x}$. Because this is a linear program,
+# it is easy to solve.
 
 # Replacing the ``c_2^\top y`` component of the objective in our original
 # problem with ``V_2`` yields:
@@ -81,15 +83,15 @@ import Test  #src
 # This problem looks a lot simpler to solve, but we need to do something else
 # with ``V_2`` first.
 
-# Because ``x`` is a constant that appears on the right-hand side of the
-# constraints, ``V_2`` is a convex function with respect to ``x``, and the dual
-# variable ``\pi`` can be multiplied by ``-A_1`` to obtain a subgradient of
-# ``V_2(x)`` with respect to ``x``. Therefore, if we have a candidate solution
-# ``x_k``, then we can solve ``V_2(x_k)`` and obtain a feasible dual vector
-# ``\pi_k``. Using these values, we can construct a first-order Taylor-series
-# approximation of ``V_2`` about the point ``x_k``:
+# Because ``\bar{x}`` is a constant that appears on the right-hand side of the
+# constraints, ``V_2`` is a convex function with respect to ``\bar{x}``, and the
+# dual variable ``\pi`` is a subgradient of ``V_2(x)`` with respect to ``x``.
+# Therefore, if we have a candidate solution ``x_k``, then we can solve
+# ``V_2(x_k)`` and obtain a feasible dual vector ``\pi_k``. Using these values,
+# we can construct a first-order Taylor-series approximation of ``V_2`` about
+# the point ``x_k``:
 # ```math
-# V_2(x) \ge V_2(x_k) + -\pi_k^\top A_1 (x - x_k).
+# V_2(x) \ge V_2(x_k) + \pi_k^\top (x - x_k).
 # ```
 # By convexity, we know that this inequality holds for all ``x``, and we call
 # these inequalities _cuts_.
@@ -158,18 +160,20 @@ print(model)
 # solution `x` and returns the optimal solution from the second-stage
 # subproblem:
 
-function solve_subproblem(x)
+function solve_subproblem(x_bar::Vector)
     model = Model(GLPK.Optimizer)
+    @variable(model, x[i in 1:dim_x] == x_bar[i])
     @variable(model, y[1:dim_y] >= 0)
-    con = @constraint(model, A_2 * y .<= b - A_1 * x)
+    @constraint(model, A_1 * x + A_2 * y .<= b)
     @objective(model, Min, c_2' * y)
     optimize!(model)
     @assert is_solved_and_feasible(model; dual = true)
-    return (obj = objective_value(model), y = value.(y), π = dual.(con))
+    return (obj = objective_value(model), y = value.(y), π = reduced_cost.(x))
 end
 
 # Note that `solve_subproblem` returns a `NamedTuple` of the objective value,
-# the optimal primal solution for `y`, and the optimal dual solution for `π`.
+# the optimal primal solution for `y`, and the optimal dual solution for `π`,
+# which we obtained from the reduced cost of the `x` variables.
 
 # We're almost ready for our optimization loop, but first, here's a helpful
 # function for logging:
@@ -205,7 +209,7 @@ for k in 1:MAXIMUM_ITERATIONS
         println("Terminating with the optimal solution")
         break
     end
-    cut = @constraint(model, θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
+    cut = @constraint(model, θ >= ret.obj + ret.π' * (x .- x_k))
     @info "Adding the cut $(cut)"
 end
 
@@ -259,7 +263,7 @@ function my_callback(cb_data)
     ret = solve_subproblem(x_k)
     if θ_k < (ret.obj - 1e-6)
         ## Only add the constraint if θ_k violates the constraint
-        cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
+        cut = @build_constraint(θ >= ret.obj + ret.π' * (x .- x_k))
         MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), cut)
     end
     return
@@ -314,14 +318,10 @@ subproblem = Model(GLPK.Optimizer)
 @objective(subproblem, Min, c_2' * y)
 print(subproblem)
 
-# This formulation is slightly different. We have included a copy of the x
-# variables, `x_copy`, and used `x_copy` in the left-hand side of the
-# constraints.
-
 # Our function to solve the subproblem is also slightly different. First, we
 # need to fix the value of the `x_copy` variables to the value of `x` from the
 # first-stage problem, and second, we compute the dual using the
-# [`reduced_cost`](@ref) of `x_copy`, not the dual of the linear constraints:
+# [`reduced_cost`](@ref) of `x_copy`:
 
 function solve_subproblem(model, x)
     fix.(model[:x_copy], x)
@@ -334,12 +334,7 @@ function solve_subproblem(model, x)
     )
 end
 
-# Now we're ready to iterate our in-place Benders decomposition, but this time
-# the cut computation is slightly different. Because we used
-# [`reduced_cost`](@ref) on the `x_copy` variables, the value of `π` is a valid
-# subgradient on the objective of `subproblem` with respect to `x`. Therefore,
-# we don't need to multiply the duals by `-A_1`, and so our cut uses `ret.π'`
-# instead of `-ret.π' * A_1`:
+# Now we're ready to iterate our in-place Benders decomposition:
 
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
@@ -371,11 +366,3 @@ x_optimal = value.(x)
 optimal_ret = solve_subproblem(subproblem, x_optimal)
 Test.@test optimal_ret.y == [0.0, 0.0]  #src
 y_optimal = optimal_ret.y
-
-# For larger problems, the benefit of re-using the same subproblem and not
-# needing to multiply the duals by `A_1` in the cut coefficient usually
-# outweights the cost of needing a copy of the `x` variables in the subproblem.
-
-# As a secondary benefit, because we no longer need an explicit representation
-# of `A_1` in the cut, we can build the `model` and `subproblem` formulations
-# using arbitrary JuMP syntax; they do not need to be in matrix form.
