@@ -384,7 +384,7 @@ is_solved_and_feasible(model)
 
 model = Model()
 @variable(model, x)
-@constraint(model, 1e-8 * x == 1-4)
+@constraint(model, 1e-8 * x == 1e-4)
 
 # This should have the solution that $x = 10^4$, but because the feasibility
 # tolerance of this constraint is $|10^{-4} - 10^{-8} * x| < 10^{-8}$, it
@@ -468,3 +468,7 @@ model = Model()
 
 # This problem is equivalent to the original problem, but it has much better
 # problem scaling.
+
+# As a general rule, to fix problem scaling you must simultaneously scale both
+# variables and constraints. It is usually not sufficient to scale variables or
+# constraints in isolation.
