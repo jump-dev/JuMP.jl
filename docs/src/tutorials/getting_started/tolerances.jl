@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Tolerances
+# # Tolerances and numerical issues
 
 # Optimization solvers can seem like magic black boxes that take in an algebraic
 # formulation of a problem and return a solution. It is tempting to treat their
@@ -26,25 +26,31 @@
 # solution is in fact optimal. However, like all numerical algorithms that use
 # floating point arithmetic, optimization solvers use tolerances to check
 # whether a solution satisfies the constraints. In the best case, the solution
-# satisfies the original constraints to 
-# [machine precision](https://en.wikipedia.org/wiki/Machine_epsilon). In most cases,
-# the solution satisfies the constraints to some very small tolerance that has no
-# noticeable impact on the quality of the optimal solution. In the worst case,
-# the solver can return a "wrong" solution, or fail to find one even if it
-# exists. (In the last case, the solution is wrong only in the sense of user
-# expectation. It will satisfy the solution to the tolerances that are
+# satisfies the original constraints to
+# [machine precision](https://en.wikipedia.org/wiki/Machine_epsilon). In most
+# cases, the solution satisfies the constraints to some very small tolerance
+# that has no noticeable impact on the quality of the optimal solution. In the
+# worst case, the solver can return a "wrong" solution, or fail to find one even
+# if it exists. (In the last case, the solution is wrong only in the sense of
+# user expectation. It will satisfy the solution to the tolerances that are
 # provided.)
 
 # The purpose of this tutorial is to explain the various types of tolerances
 # that are used in optimization solvers and what you can reasonably expect from
 # a solution.
 
+# There are a few sources of additional information:
+#  * Ambros Gleixner has an excellennt YouTube talk
+#    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared).
+#  * Gurobi has a series of articles in their documentation called
+#    [Guidelines for Numerical Issues](https://www.gurobi.com/documentation/current/refman/guidelines_for_numerical_i.html)
+
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.
 #     It's in the "Getting started" section to give you an early preview of how
-#     tolerances affect JuMP models. However, if you are new to JuMP, you may want to
-#     briefly skim the tutorial, and come back to it once you have written a few
-#     JuMP models.
+#     tolerances affect JuMP models. However, if you are new to JuMP, you may
+#     want to briefly skim the tutorial, and come back to it once you have
+#     written a few JuMP models.
 
 # ## Required packages
 
@@ -360,3 +366,105 @@ is_solved_and_feasible(model)
 # algorithm. There will always be models in the gray boundary at the edge of
 # feasibility, for which the question of feasibility is not a clear true or
 # false.
+
+# ## Problem scaling
+
+# Problem scaling refers to the absolute magnitudes of the data in your problem.
+# We say that a problem is poorly scaled if there are very small ($< 10^{-3}$)
+# or very large ($> 10^6$) coefficients in the problem, or if the ratio of the
+# largest to smallest coefficient is large.
+
+# Numerical issues related to the feasibility tolerances most commonly arise
+# because of poor problem scaling.
+
+# ### Small magnitudes
+
+# If the problem data is too small, then the feasibility tolerance can be too
+# easily satisfied. For example, consider:
+
+model = Model()
+@variable(model, x)
+@constraint(model, 1e-8 * x == 1-4)
+
+# This should have the solution that $x = 10^4$, but because the feasibility
+# tolerance of this constraint is $|10^{-4} - 10^{-8} * x| < 10^{-8}$, it
+# actually permits any value of `x` between 9999 and 10,001, which is a larger
+# range of feasible values than you might have expected.
+
+# ### Large magnitudes
+
+# If the problem data is too large, then the feasibility tolerance can be too
+# difficult to satisfy.
+
+model = Model()
+@variable(model, x)
+@constraint(model, 1e12 * x == 1e4)
+
+# This should have the solution that $x = 10^{-8}$, but because the feasibility
+# tolerance of this constraint is $|10^{12}x - 10^{4}| < 10^{-8}$, it
+# actually permits any value of `x` in $10^{-8} \pm 10^{-20}$, which is a
+# smaller range of feasible values than you might have expected.
+
+# ### Large magnitude ratios
+
+# If the ratio of the smallest to the largest magnitude is too large, then the
+# tolerances or small changes in the input data can lead to large changes in the
+# optimal solution. We have already seen an example with the integrality
+# tolerance, but we can exacerbate the behavior by putting a small coefficient
+# on `x`:
+
+model = Model()
+@variable(model, x >= 0)
+@variable(model, y, Bin)
+@constraint(model, 1e-6x <= 1e6 * y)
+
+# This problem has a feasible (to tolerance) solution of:
+
+primal_feasibility_report(model, Dict(x => 1_000_000.01, y => 1e-6))
+
+# If you intended the constraint to read that if `x` is non-zero then `y = 1`,
+# this solution might be unexpected.
+
+# ### Recommended values
+
+# There are no hard rules that you must follow, and the interaction between
+# tolerances, problem scaling, and the solution is problem dependent. You should
+# always check the solution returned by the solver to check it makes sense for
+# your application.
+
+# With that caveat in mind, a general rule of thumb to follow is:
+
+# Try to keep the ratio of the smallest to largest coefficient less than $10^6$
+# in any row and column, and try to keep most values between $10^{-3}$ and
+# $10^6$.
+
+# ### Choosing the correct units
+
+# The best way to fix problem scaling is by changing the units of your variables
+# and constraints. Here's an example. Suppose we are choosing the level of
+# capacity investment in a new power plant. We can install up to 1 GW of
+# capacity at a cost of $1.78/W, and we have a budget of $200 million.
+
+model = Model()
+@variable(model, 0 <= x_capacity_W <= 10^9)
+@constraint(model, 1.78 * x_capacity_W <= 200e6)
+
+# This constraint violates the recommendations because there are values greater
+# than $10^6$, and the ratio of the coefficients in the constraint is $10^8$.
+
+# One fix is the convert our capacity variable from Watts to Megawatts. This
+# yields:
+
+model = Model()
+@variable(model, 0 <= x_capacity_MW <= 10^3)
+@constraint(model, 1.78e6 * x_capacity_MW <= 200e6)
+
+# We can improve our model further by dividing the constraint by $10^6$ to
+# change the units from dollars to million dollars.
+
+model = Model()
+@variable(model, 0 <= x_capacity_MW <= 10^3)
+@constraint(model, 1.78 * x_capacity_MW <= 200)
+
+# This problem is equivalent to the original problem, but it has much better
+# problem scaling.
