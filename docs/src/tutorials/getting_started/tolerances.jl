@@ -370,12 +370,16 @@ is_solved_and_feasible(model)
 # ## Problem scaling
 
 # Problem scaling refers to the absolute magnitudes of the data in your problem.
+# The data is any numbers in the objective, the constraints, or the variable
+# bounds.
+#
 # We say that a problem is poorly scaled if there are very small ($< 10^{-3}$)
 # or very large ($> 10^6$) coefficients in the problem, or if the ratio of the
 # largest to smallest coefficient is large.
 
 # Numerical issues related to the feasibility tolerances most commonly arise
-# because of poor problem scaling.
+# because of poor problem scaling. The next examples assume a primal feasibility
+# tolerance of 1e-8, but actual tolerances may vary from one solver to another.
 
 # ### Small magnitudes
 
