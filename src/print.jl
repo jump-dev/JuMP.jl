@@ -78,6 +78,8 @@ function _escape_if_scientific(::MIME"text/latex", x::String)
     return "$(m[1]) \\times 10^{$(m[2])}"
 end
 
+_string_round(x) = _string_round(MIME("text/plain"), x)
+
 # Helper function that rounds carefully for the purposes of printing Reals
 # for example, 5.3  =>  5.3, and 1.0  =>  1
 function _string_round(mode, x::Union{Float32,Float64})

@@ -887,73 +887,66 @@ function test_print_hermitian_psd_cone()
 end
 
 function test_print_complex_string_round()
-    @test JuMP._string_round(1.0 + 0.0im) == "1"
-    @test JuMP._string_round(-1.0 + 0.0im) == "-1"
-    @test JuMP._string_round(1.0 - 0.0im) == "1"
-    @test JuMP._string_round(-1.0 - 0.0im) == "-1"
-    @test JuMP._string_round(0.0 + 1.0im) == "im"
-    @test JuMP._string_round(-0.0 + 1.0im) == "im"
-    @test JuMP._string_round(0.0 - 1.0im) == "-im"
-    @test JuMP._string_round(-0.0 - 1.0im) == "-im"
-    @test JuMP._string_round(1.0 + 2.0im) == "(1 + 2im)"
-    @test JuMP._string_round(1.0 - 2.0im) == "(1 - 2im)"
-    @test JuMP._string_round(-1.0 + 2.0im) == "(-1 + 2im)"
-    @test JuMP._string_round(-1.0 - 2.0im) == "(-1 - 2im)"
-    @test JuMP._string_round(1.0 + 1.0im) == "(1 + im)"
-    @test JuMP._string_round(1.0 - 1.0im) == "(1 - im)"
-    @test JuMP._string_round(-1.0 + 1.0im) == "(-1 + im)"
-    @test JuMP._string_round(-1.0 - 1.0im) == "(-1 - im)"
+    for (test, result) in Any[
+        1.0 + 0.0im => "1",
+        -1.0 + 0.0im => "-1",
+        1.0 - 0.0im => "1",
+        -1.0 - 0.0im => "-1",
+        0.0 + 1.0im => "im",
+        -0.0 + 1.0im => "im",
+        0.0 - 1.0im => "-im",
+        -0.0 - 1.0im => "-im",
+        1.0 + 2.0im => "(1 + 2im)",
+        1.0 - 2.0im => "(1 - 2im)",
+        -1.0 + 2.0im => "(-1 + 2im)",
+        -1.0 - 2.0im => "(-1 - 2im)",
+        1.0 + 1.0im => "(1 + im)",
+        1.0 - 1.0im => "(1 - im)",
+        -1.0 + 1.0im => "(-1 + im)",
+        -1.0 - 1.0im => "(-1 - im)",
+    ]
+        @test JuMP._string_round(MIME("text/plain"), test) == result
+    end
     return
 end
 
 function test_print_huge_integer_string_round()
-    @test JuMP._string_round(-1 + Float32(typemax(Int32))) == "2147483648"
-    @test JuMP._string_round(-1 + Float32(typemin(Int32))) == "-2147483648"
-    @test JuMP._string_round(-1 + Float64(typemax(Int32))) == "2147483646"
-    @test JuMP._string_round(-1 + Float64(typemin(Int32))) == "-2147483649"
-
-    @test JuMP._string_round(Float32(typemax(Int32))) == "2147483648"
-    @test JuMP._string_round(Float32(typemin(Int32))) == "-2147483648"
-    @test JuMP._string_round(Float64(typemax(Int32))) == "2147483647"
-    @test JuMP._string_round(Float64(typemin(Int32))) == "-2147483648"
-
-    @test JuMP._string_round(1 + Float32(typemax(Int32))) == "2147483648"
-    @test JuMP._string_round(1 + Float32(typemin(Int32))) == "-2147483648"
-    @test JuMP._string_round(1 + Float64(typemax(Int32))) == "2147483648"
-    @test JuMP._string_round(1 + Float64(typemin(Int32))) == "-2147483647"
-
-    @test JuMP._string_round(2 * Float32(typemax(Int32))) == "4294967296"
-    @test JuMP._string_round(2 * Float32(typemin(Int32))) == "-4294967296"
-    @test JuMP._string_round(2 * Float64(typemax(Int32))) == "4294967294"
-    @test JuMP._string_round(2 * Float64(typemin(Int32))) == "-4294967296"
-
-    @test JuMP._string_round(-1 + Float32(typemax(Int64))) == "9.223372e18"
-    @test JuMP._string_round(-1 + Float32(typemin(Int64))) ==
-          "-9223372036854775808"
-    @test JuMP._string_round(-1 + Float64(typemax(Int64))) ==
-          "9.223372036854776e18"
-    @test JuMP._string_round(-1 + Float64(typemin(Int64))) ==
-          "-9223372036854775808"
-
-    @test JuMP._string_round(Float32(typemax(Int64))) == "9.223372e18"
-    @test JuMP._string_round(Float32(typemin(Int64))) == "-9223372036854775808"
-    @test JuMP._string_round(Float64(typemax(Int64))) == "9.223372036854776e18"
-    @test JuMP._string_round(Float64(typemin(Int64))) == "-9223372036854775808"
-
-    @test JuMP._string_round(1 + Float32(typemax(Int64))) == "9.223372e18"
-    @test JuMP._string_round(1 + Float32(typemin(Int64))) ==
-          "-9223372036854775808"
-    @test JuMP._string_round(1 + Float64(typemax(Int64))) ==
-          "9.223372036854776e18"
-    @test JuMP._string_round(1 + Float64(typemin(Int64))) ==
-          "-9223372036854775808"
-
-    @test JuMP._string_round(2 * Float32(typemax(Int64))) == "1.8446744e19"
-    @test JuMP._string_round(2 * Float32(typemin(Int64))) == "-1.8446744e19"
-    @test JuMP._string_round(2 * Float64(typemax(Int64))) ==
-          "1.8446744073709552e19"
-    @test JuMP._string_round(2 * Float64(typemin(Int64))) ==
-          "-1.8446744073709552e19"
+    for (test, result) in Any[
+        -1 + Float32(typemax(Int32)) => "2147483648",
+        -1 + Float32(typemin(Int32)) => "-2147483648",
+        -1 + Float64(typemax(Int32)) => "2147483646",
+        -1 + Float64(typemin(Int32)) => "-2147483649",
+        Float32(typemax(Int32)) => "2147483648",
+        Float32(typemin(Int32)) => "-2147483648",
+        Float64(typemax(Int32)) => "2147483647",
+        Float64(typemin(Int32)) => "-2147483648",
+        1 + Float32(typemax(Int32)) => "2147483648",
+        1 + Float32(typemin(Int32)) => "-2147483648",
+        1 + Float64(typemax(Int32)) => "2147483648",
+        1 + Float64(typemin(Int32)) => "-2147483647",
+        2 * Float32(typemax(Int32)) => "4294967296",
+        2 * Float32(typemin(Int32)) => "-4294967296",
+        2 * Float64(typemax(Int32)) => "4294967294",
+        2 * Float64(typemin(Int32)) => "-4294967296",
+        -1 + Float32(typemax(Int64)) => "9.223372e18",
+        -1 + Float32(typemin(Int64)) => "-9223372036854775808",
+        -1 + Float64(typemax(Int64)) => "9.223372036854776e18",
+        -1 + Float64(typemin(Int64)) => "-9223372036854775808",
+        Float32(typemax(Int64)) => "9.223372e18",
+        Float32(typemin(Int64)) => "-9223372036854775808",
+        Float64(typemax(Int64)) => "9.223372036854776e18",
+        Float64(typemin(Int64)) => "-9223372036854775808",
+        1 + Float32(typemax(Int64)) => "9.223372e18",
+        1 + Float32(typemin(Int64)) => "-9223372036854775808",
+        1 + Float64(typemax(Int64)) => "9.223372036854776e18",
+        1 + Float64(typemin(Int64)) => "-9223372036854775808",
+        2 * Float32(typemax(Int64)) => "1.8446744e19",
+        2 * Float32(typemin(Int64)) => "-1.8446744e19",
+        2 * Float64(typemax(Int64)) => "1.8446744073709552e19",
+        2 * Float64(typemin(Int64)) => "-1.8446744073709552e19",
+    ]
+        @test JuMP._string_round(MIME("text/plain"), test) == result
+    end
     return
 end
 
@@ -965,7 +958,7 @@ function test_print_model_with_huge_integers()
     @test sprint(io -> show(io, MIME("text/plain"), c)) == "1.0e20 x $eq 42"
     eq = JuMP._math_symbol(MIME("text/latex"), :eq)
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
-          "\$\$ 1.0e20 x $eq 42 \$\$"
+          "\$\$ 1.0 \\times 10^{20} x $eq 42 \$\$"
     return
 end
 
