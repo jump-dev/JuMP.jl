@@ -34,8 +34,8 @@
 # This tutorial uses the following packages:
 
 using JuMP
-import Enzyme
 import DifferentiationInterface
+import Enzyme
 import ForwardDiff
 import Ipopt
 import Test
@@ -330,7 +330,7 @@ enzyme_rosenbrock()
 
 # Julia offers [many different autodiff packages](https://juliadiff.org/).
 # [DifferentiationInterface.jl](https://github.com/gdalle/DifferentiationInterface.jl)
-# is a package that provides an abstraction layer across multiple underlying
+# is a package that provides an abstraction layer across a few underlying
 # autodiff libraries.
 
 # All the necessary information about your choice of underlying autodiff
