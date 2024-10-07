@@ -600,8 +600,7 @@ function nonlinear_constraint_string(
     body = nonlinear_expr_string(model, mode, constraint.expression)
     lhs = _set_lhs(constraint.set)
     rhs = _set_rhs(constraint.set)
-    output =
-        "$body $(_math_symbol(mode, rhs[1])) $(_string_round(mode, rhs[2]))"
+    output = "$body $(_math_symbol(mode, rhs[1])) $(_string_round(mode, rhs[2]))"
     if lhs === nothing
         return output
     end
