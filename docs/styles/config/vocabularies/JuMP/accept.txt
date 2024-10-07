@@ -86,6 +86,7 @@ nl|NL
 [Nn]on(posi|nega)tiv(e|es|ity)
 [Nn]onseparable
 [Nn]onsmooth
+[Nn]umerics
 [Oo]ptigraph(?s)
 [Oo]ptinode(?s)
 [Oo]ptiedge(?s)
@@ -171,6 +172,7 @@ Umfpack
 (Xpress|XPRESS)
 
 % People
+Ambros
 Arpit
 Baldick
 Barvinok
@@ -197,6 +199,7 @@ Ferrolho
 Fourer
 Frobenius
 Garfinkel
+Gleixner
 Goemans
 Grothey
 Habibi

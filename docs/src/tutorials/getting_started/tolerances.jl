@@ -40,7 +40,7 @@
 # a solution.
 
 # There are a few sources of additional information:
-#  * Ambros Gleixner has an excellennt YouTube talk
+#  * Ambros Gleixner has an excellent YouTube talk
 #    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared).
 #  * Gurobi has a series of articles in their documentation called
 #    [Guidelines for Numerical Issues](https://www.gurobi.com/documentation/current/refman/guidelines_for_numerical_i.html)
