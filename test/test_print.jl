@@ -1124,4 +1124,16 @@ function test_show_generic_model_bigfloat()
     return
 end
 
+function test_small_number_latex()
+    model = Model()
+    @variable(model, x)
+    y = 1e-8 * x
+    @test function_string(MIME("text/latex"), y) == "1.0 \\times 10^{-8} x"
+    @test function_string(MIME("text/plain"), y) == "1.0e-8 x"
+    y = 0.23e-8 * x
+    @test function_string(MIME("text/latex"), y) == "2.3 \\times 10^{-9} x"
+    @test function_string(MIME("text/plain"), y) == "2.3e-9 x"
+    return
+end
+
 end  # TestPrint
