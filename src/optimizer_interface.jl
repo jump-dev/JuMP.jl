@@ -1251,6 +1251,10 @@ function get_attribute(
     return get_attribute(model, String(name))
 end
 
+_string_if_abstract_string(value) = value
+_string_if_abstract_string(value::String) = value
+_string_if_abstract_string(value::AbstractString) = String(value)
+
 """
     set_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute, value)
     set_attribute(x::GenericVariableRef, attr::MOI.AbstractVariableAttribute, value)
@@ -1285,7 +1289,7 @@ function set_attribute(
     attr::MOI.AbstractModelAttribute,
     value,
 )
-    MOI.set(model, attr, value)
+    MOI.set(model, attr, _string_if_abstract_string(value))
     return
 end
 
@@ -1294,7 +1298,7 @@ function set_attribute(
     attr::MOI.AbstractVariableAttribute,
     value,
 )
-    MOI.set(owner_model(x), attr, x, value)
+    MOI.set(owner_model(x), attr, x, _string_if_abstract_string(value))
     return
 end
 
@@ -1303,7 +1307,7 @@ function set_attribute(
     attr::MOI.AbstractConstraintAttribute,
     value,
 )
-    MOI.set(owner_model(cr), attr, cr, value)
+    MOI.set(owner_model(cr), attr, cr, _string_if_abstract_string(value))
     return
 end
 
@@ -1344,7 +1348,7 @@ function set_attribute(
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
-    MOI.set(model, attr, value)
+    MOI.set(model, attr, _string_if_abstract_string(value))
     return
 end
 

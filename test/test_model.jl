@@ -1313,4 +1313,27 @@ function test_is_solved_and_feasible()
     return
 end
 
+function test_set_abstract_string()
+    abstract_string = split("foo.bar", ".")[1]
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    set_attribute(model, MOI.Name(), abstract_string)
+    @test get_attribute(model, MOI.Name()) == "foo"
+    @variable(model, x)
+    set_attribute(x, MOI.VariableName(), abstract_string)
+    ret = get_attribute(x, MOI.VariableName())
+    @test ret isa String && ret == "foo"
+    c = @constraint(model, 2x >= 1)
+    set_attribute(c, MOI.ConstraintName(), abstract_string)
+    ret = get_attribute(c, MOI.ConstraintName())
+    @test ret isa String && ret == "foo"
+    set_attribute(model, abstract_string, abstract_string)
+    ret = get_attribute(model, abstract_string)
+    @test ret isa String && ret == "foo"
+    return
+end
+
 end  # module TestModels
