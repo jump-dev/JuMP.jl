@@ -1332,7 +1332,9 @@ function test_set_abstract_string()
     @test ret isa String && ret == "foo"
     set_attribute(model, abstract_string, abstract_string)
     ret = get_attribute(model, abstract_string)
-    @test ret isa String && ret == "foo"
+    # This `ret` is NOT a `::String` because we don't know the value type of the
+    # attribute.
+    @test ret isa typeof(abstract_string) && ret == "foo"
     return
 end
 

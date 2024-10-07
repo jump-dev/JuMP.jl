@@ -1251,9 +1251,25 @@ function get_attribute(
     return get_attribute(model, String(name))
 end
 
-_string_if_abstract_string(value) = value
-_string_if_abstract_string(value::String) = value
-_string_if_abstract_string(value::AbstractString) = String(value)
+# Some MOI attributes have a strict value type, like ::String or ::Float64, but
+# users may pass other generic subtypes, like SubString instead of String.
+# Rather than throw obtuse errors, we can catch and fix some common cases. We
+# shouldn't fix every case (e.g., AbstractString -> String) because users might
+# intentionally want the other subtype.
+#
+# The default case is to do nothing:
+_to_concrete_value_type_if_needed(::MOI.AnyAttribute, value) = value
+
+# A common case is passing an AbstractString instead of a String.
+function _to_concrete_value_type_if_needed(
+    attr::MOI.AnyAttribute,
+    value::AbstractString,
+)
+    if !(value isa String) && MOI.attribute_value_type(attr) === String
+        return String(value)
+    end
+    return value
+end
 
 """
     set_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute, value)
@@ -1289,7 +1305,7 @@ function set_attribute(
     attr::MOI.AbstractModelAttribute,
     value,
 )
-    MOI.set(model, attr, _string_if_abstract_string(value))
+    MOI.set(model, attr, _to_concrete_value_type_if_needed(attr, value))
     return
 end
 
@@ -1298,7 +1314,8 @@ function set_attribute(
     attr::MOI.AbstractVariableAttribute,
     value,
 )
-    MOI.set(owner_model(x), attr, x, _string_if_abstract_string(value))
+    model = owner_model(x)
+    MOI.set(model, attr, x, _to_concrete_value_type_if_needed(attr, value))
     return
 end
 
@@ -1307,7 +1324,8 @@ function set_attribute(
     attr::MOI.AbstractConstraintAttribute,
     value,
 )
-    MOI.set(owner_model(cr), attr, cr, _string_if_abstract_string(value))
+    model = owner_model(cr)
+    MOI.set(model, attr, cr, _to_concrete_value_type_if_needed(attr, value))
     return
 end
 
@@ -1348,7 +1366,7 @@ function set_attribute(
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
-    MOI.set(model, attr, _string_if_abstract_string(value))
+    MOI.set(model, attr, _to_concrete_value_type_if_needed(attr, value))
     return
 end
 
