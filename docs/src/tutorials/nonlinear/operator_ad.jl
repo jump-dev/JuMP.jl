@@ -331,9 +331,9 @@ enzyme_rosenbrock()
 # Julia offers [many different autodiff packages](https://juliadiff.org/).
 # [DifferentiationInterface.jl](https://github.com/gdalle/DifferentiationInterface.jl)
 # is a package that provides an abstraction layer across multiple underlying
-# autodiff libaries.
+# autodiff libraries.
 
-# All the necessary information about your choice of underlyingg autodiff
+# All the necessary information about your choice of underlying autodiff
 # package is encoded in a "backend object" like this one:
 
 DifferentiationInterface.AutoForwardDiff()
