@@ -1126,6 +1126,9 @@ function test_small_number_latex()
     y = 0.23e-8 * x
     @test function_string(MIME("text/latex"), y) == "2.3 \\times 10^{-9} x"
     @test function_string(MIME("text/plain"), y) == "2.3e-9 x"
+    y = 1.23 * x
+    @test function_string(MIME("text/latex"), y) == "1.23 x"
+    @test function_string(MIME("text/plain"), y) == "1.23 x"
     return
 end
 
