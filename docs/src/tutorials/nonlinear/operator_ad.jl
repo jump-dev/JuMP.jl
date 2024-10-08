@@ -333,6 +333,11 @@ enzyme_rosenbrock()
 # is a package that provides an abstraction layer across a few underlying
 # autodiff libraries.
 
+# !!! warning
+#     While DI makes it easier to experiment with different autodiff tools, this comes at a cost.
+#     In particular, DI may produce slower derivatives than using an AD tool directly, and sometimes fail to work at all.
+#     For example, in this code passing AutoEnzyme to DI fails to differentiate the code which is supported when directly calling Enzyme, like above.
+
 # All the necessary information about your choice of underlying autodiff
 # package is encoded in a "backend object" like this one:
 
