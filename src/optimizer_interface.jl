@@ -1254,8 +1254,8 @@ end
 # Some MOI attributes have a strict value type, like ::String or ::Float64, but
 # users may pass other generic subtypes, like SubString instead of String.
 # Rather than throw obtuse errors, we can catch and fix some common cases. We
-# shouldn't fix every case (e.g., AbstractString -> String) because users might
-# intentionally want the other subtype.
+# shouldn't fix every case (for example, AbstractString -> String) because
+# users might intentionally want the other subtype.
 #
 # The default case is to do nothing:
 _to_concrete_value_type_if_needed(::MOI.AnyAttribute, value) = value
