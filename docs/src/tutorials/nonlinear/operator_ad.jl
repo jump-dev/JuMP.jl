@@ -333,6 +333,13 @@ enzyme_rosenbrock()
 # is a package that provides an abstraction layer across a few underlying
 # autodiff libraries.
 
+# !!! warning
+#     The JuMP developers cannot help you debug error messages related to
+#     DifferentiationInterface. If the operator works, it works. If not, we
+#     suggest you directly try using a different automatic differentiation
+#     library rather than the DI wrapper. See [juliadiff.org](https://juliadiff.org/)
+#     for details.
+
 # All the necessary information about your choice of underlying autodiff
 # package is encoded in a "backend object" like this one:
 
