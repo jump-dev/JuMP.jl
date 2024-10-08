@@ -334,9 +334,11 @@ enzyme_rosenbrock()
 # autodiff libraries.
 
 # !!! warning
-#     While DI makes it easier to experiment with different autodiff tools, this comes at a cost.
-#     In particular, DI may produce slower derivatives than using an AD tool directly, and sometimes fail to work at all.
-#     For example, in this code passing AutoEnzyme to DI fails to differentiate the code which is supported when directly calling Enzyme, like above.
+#     The JuMP developers cannot help you debug error messages related to
+#     DifferentiationInterface. If the operator works, it works. If not, we
+#     suggest you directly try using a different automatic differentiation
+#     library rather than the DI wrapper. See [juliadiff.org](https://juliadiff.org/)
+#     for details.
 
 # All the necessary information about your choice of underlying autodiff
 # package is encoded in a "backend object" like this one:
