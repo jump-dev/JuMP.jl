@@ -215,6 +215,8 @@ while 1 < length(cycle) < n
     global cycle = subtour(iterative_model[:x])
 end
 
+#-
+
 objective_value(iterative_model)
 
 #-
@@ -264,6 +266,9 @@ set_attribute(
     subtour_elimination_callback,
 )
 optimize!(lazy_model)
+
+#-
+
 @assert is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
 
