@@ -84,10 +84,10 @@ julia> @expression(model, @force_nonlinear(x * 2.0 * (1 + x) * x))
 x * 2.0 * (1 + x) * x
 
 julia> @allocated @expression(model, x * 2.0 * (1 + x) * x)
-3200
+2640
 
 julia> @allocated @expression(model, @force_nonlinear(x * 2.0 * (1 + x) * x))
-640
+672
 ```
 """
 macro force_nonlinear(expr)
