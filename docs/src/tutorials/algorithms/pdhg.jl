@@ -24,7 +24,13 @@
 # interface to MathOptInterface. As a motivating example, we implement the
 # Primal Dual Hybrid Gradient (PDHG) method. PDHG is a first-order method that
 # can solve convex optimization problems.
-# Google has a [good introduction to the math behind PDLP](https://developers.google.com/optimization/lp/pdlp_math).
+#
+# Google has a [good introduction to the math behind PDLP](https://developers.google.com/optimization/lp/pdlp_math),
+# which is a variant of PDHG specialized for linear programs.
+
+# ## Required packages
+
+# This tutorial requires the following packages:
 
 using JuMP
 import LinearAlgebra
@@ -34,7 +40,8 @@ import SparseArrays
 
 # ## Primal Dual Hybrid Gradient
 
-# Here is a pedagogical implementation of PDHG that solves the linear program:
+# The following function is a pedagogical implementation of PDHG that solves the
+# linear program:
 # ```math
 # \begin{aligned}
 # \text{min}        \ & c^\top x   \\
@@ -73,7 +80,7 @@ function solve_pdhg(
         k += 1
         pfeas = LinearAlgebra.norm(A * x - b)
         dfeas = LinearAlgebra.norm(max.(0.0, -A' * y - c))
-        objfeas = abs(c' * x + b' * y)
+        objfeas = abs(c' * x - -b' * y)
         if pfeas <= tol && dfeas <= tol && objfeas <= tol
             status = MOI.OPTIMAL
         elseif k == maximum_iterations
@@ -112,11 +119,12 @@ y
 
 # ## The MOI interface
 
-# Converting example linear program from the modeler's form into the `A`, `b`,
-# and `c` matrices of the standard form required by our implementation of PDHG
-# is tedious and error-prone. This section walks through how to implement a
-# basic interface to MathOptInterface, so that we can use our algorithm from
-# JuMP.
+# Converting a linear program from the modeler's form into the `A`, `b`, and `c`
+# matrices of the standard form required by our implementation of PDHG is
+# tedious and error-prone. This section walks through how to implement a basic
+# interface to MathOptInterface, so that we can use our algorithm from JuMP.
+
+# For a more comprehensive guide, see [Implementing a solver interface](@ref).
 
 # ### The Optimizer type
 
@@ -132,7 +140,9 @@ y
 Create a new optimizer for PDHG.
 """
 mutable struct Optimizer <: MOI.AbstractOptimizer
+    ## A mapping from variable to column
     x_to_col::Dict{MOI.VariableIndex,Int}
+    ## A mapping from constraint to rows
     ci_to_rows::Dict{
         MOI.ConstraintIndex{MOI.VectorAffineFunction{Float64},MOI.Zeros},
         Vector{Int},
@@ -147,7 +157,7 @@ mutable struct Optimizer <: MOI.AbstractOptimizer
     obj_value::Float64
 
     function Optimizer()
-        F = MOI.VectorAffineFunction{Float64}
+        F =
         return new(
             Dict{MOI.VariableIndex,Int}(),
             Dict{MOI.ConstraintIndex{F,MOI.Zeros},Vector{Int}}(),
@@ -208,8 +218,7 @@ function MOI.supports_add_constrained_variables(
     return true
 end
 
-# Finally, the objective function that we support is
-# [`MOI.ScalarAffineFunction`](@ref):
+# The objective function that we support is [`MOI.ScalarAffineFunction`](@ref):
 
 function MOI.supports(
     ::Optimizer,
@@ -234,13 +243,18 @@ MOI.get(::Optimizer, ::MOI.SolverName) = "PDHG"
 # Since matrix input is a common requirement of solvers, MOI includes utilities
 # to simplify the process.
 
-# The downside of the utility is that involves a highly parameterized type with
-# a large number of possible configurations.The upside of the utility is that,
-# once setup, it requires few lines of code to extract the constraint matrices.
+# The downside of the utilities is that they involve a highly parameterized type
+# with a large number of possible configurations.The upside of the utilities is
+# that, once setup, they requires few lines of code to extract the problem
+# matrices.
 
-# Define the set of sets that our standard form supports. For PDHG, we support
-# only `Ax + b in {0}`:
+# First, we need to define the set of sets that our standard form supports. For
+# PDHG, we support only `Ax + b in {0}`:
+
 MOI.Utilities.@product_of_sets(SetOfZeros, MOI.Zeros)
+
+# Then, we define a [`MOI.Utilities.GenericModel`](@ref). This is the highly
+# parameterized type that can be customized.
 
 const CacheModel = MOI.Utilities.GenericModel{
     ## The coefficient type is Float64
@@ -296,27 +310,25 @@ end
 
 # ### The optimize method
 
+# Now we define the most important method for our optimizer.
+
 function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
+    ## In addition to the values returned by `solve_pdhg`, it may be useful to
+    ## record other attributes, such as the solve time.
     start_time = time()
+    ## Construct a cache to store our problem data:
     cache = CacheModel()
+    ## MOI includes a utility to copy an arbitrary `src` model into `cache`. The
+    ## return, `index_map`, is a mapping from indices in `src` to indices in
+    ## `dest`.
     index_map = MOI.copy_to(cache, src)
-    ## Create a map of the constraint indices to their row in the `dest` matrix
-    F, S = MOI.VectorAffineFunction{Float64}, MOI.Zeros
-    for src_ci in MOI.get(src, MOI.ListOfConstraintIndices{F,S}())
-        dest_ci = index_map[src_ci]
-        dest.ci_to_rows[dest_ci] =
-            MOI.Utilities.rows(cache.constraints.sets, dest_ci)
-    end
-    ## Create a map of the variable indices to their column in the `dest` matrix
-    for (i, src_x) in enumerate(MOI.get(src, MOI.ListOfVariableIndices()))
-        dest.x_to_col[index_map[src_x]] = i
-    end
     ## Now we can access the `A` matrix:
     A = convert(
         SparseArrays.SparseMatrixCSC{Float64,Int},
         cache.constraints.coefficients,
     )
-    ## MOI models Ax = b as Ax + b in {0}, so b differs by -
+    ## and the b vector (note that MOI models Ax = b as Ax + b in {0}, so b
+    ## differs by -):
     b = -cache.constraints.constants
     ## The `c` vector is more involved, because we need to account for the
     ## objective sense:
@@ -329,8 +341,20 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     end
     ## Now we can solve the problem with PDHG and record the solution:
     dest.status, dest.iterations, dest.x, dest.y = solve_pdhg(A, b, c)
-    ## as well as record two derived quantities: the objective value and the
-    ## solve time
+    ## To help assign the values of the x and y vectors to the appropriate
+    ## variables and constrats, we need a map of the constraint indices to their
+    ## row in the `dest` matrix and a map of the variable indices to their
+    # column in the `dest` matrix:
+    F, S = MOI.VectorAffineFunction{Float64}, MOI.Zeros
+    for src_ci in MOI.get(src, MOI.ListOfConstraintIndices{F,S}())
+        dest.ci_to_rows[index_map[src_ci]] =
+            MOI.Utilities.rows(cache.constraints.sets, index_map[src_ci])
+    end
+    for (i, src_x) in enumerate(MOI.get(src, MOI.ListOfVariableIndices()))
+        dest.x_to_col[index_map[src_x]] = i
+    end
+    ## We can now record two derived quantities: the primal objective value and
+    ## the solve time.
     dest.obj_value = obj.constant + sense * c' * dest.x
     dest.solve_time = time() - start_time
     ## We need to return the index map, and `false`, to indicate to MOI that we
@@ -340,7 +364,7 @@ end
 
 # ## Solutions
 
-# Now that we've solved a model, let's implement the required solution
+# Now that we know how to solve a model, let's implement the required solution
 # attributes.
 
 # First, we need to tell MOI how many solutions we found via
