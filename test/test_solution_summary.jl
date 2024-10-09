@@ -164,4 +164,45 @@ function test_solution_summary()
     return
 end
 
+function test_solution_summary_vector_dual()
+    model = Model() do
+      return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x[1:2])
+    @constraint(model, c, x >= 0)
+    optimize!(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.RawStatusString(), "solver specific string")
+    MOI.set(mock, MOI.ResultCount(), 1)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index.(x), [1.0, 2.0])
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
+    ret = """
+    * Solver : Mock
+
+    * Status
+      Result count       : 1
+      Termination status : OPTIMAL
+      Message from the solver:
+      "solver specific string"
+
+    * Candidate solution (result #1)
+      Primal status      : FEASIBLE_POINT
+      Dual status        : FEASIBLE_POINT
+      Objective value    : 0.00000e+00
+      Dual objective value : 0.00000e+00
+      Primal solution :
+        x[1] : 1.00000e+00
+        x[2] : 2.00000e+00
+      Dual solution :
+        c : [3.00000e+00,4.00000e+00]
+
+    * Work counters
+    """
+    @test sprint(show, solution_summary(model; verbose = true)) == ret
+    return
 end
+
+end  # module
