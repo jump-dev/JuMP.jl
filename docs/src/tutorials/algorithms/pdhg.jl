@@ -198,7 +198,6 @@ end
 
 MOI.get(::Optimizer, ::MOI.SolverName) = "PDHG"
 
-
 MOI.Utilities.@product_of_sets(LinearZero, MOI.Zeros)
 
 const Cache = MOI.Utilities.GenericModel{
@@ -265,7 +264,6 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     dest.solve_time = time() - start_time
     return index_map, false
 end
-
 
 function MOI.get(model::Optimizer, ::MOI.ResultCount)
     return model.status == MOI.OPTIMAL ? 1 : 0
