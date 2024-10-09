@@ -21,7 +21,7 @@ struct _SolutionSummary{T}
     relative_gap::Union{Missing,T}
     dual_objective_value::Union{Missing,T}
     primal_solution::Union{Missing,Dict{String,T}}
-    dual_solution::Union{Missing,Dict{String,T}}
+    dual_solution::Union{Missing,Dict{String,Any}}
     # Work counters
     solve_time::Union{Missing,Float64}
     barrier_iterations::Union{Missing,Int}
@@ -232,7 +232,7 @@ function _get_solution_dict(model, result)
 end
 
 function _get_constraint_dict(model, result)
-    dict = Dict{String,value_type(typeof(model))}()
+    dict = Dict{String,Any}()
     for (F, S) in list_of_constraint_types(model)
         for constraint in all_constraints(model, F, S)
             constraint_name = name(constraint)
