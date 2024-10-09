@@ -132,6 +132,11 @@ y
 Create a new optimizer for PDHG.
 """
 mutable struct Optimizer <: MOI.AbstractOptimizer
+    x_to_col::Dict{MOI.VariableIndex,Int}
+    ci_to_rows::Dict{
+        MOI.ConstraintIndex{MOI.VectorAffineFunction{Float64},MOI.Zeros},
+        Vector{Int},
+    }
     ## Information from solve_pdhg
     status::MOI.TerminationStatusCode
     iterations::Int
@@ -142,7 +147,17 @@ mutable struct Optimizer <: MOI.AbstractOptimizer
     obj_value::Float64
 
     function Optimizer()
-        return new(MOI.OPTIMIZE_NOT_CALLED, 0, Float64[], Float64[], 0.0, 0.0)
+        F = MOI.VectorAffineFunction{Float64}
+        return new(
+            Dict{MOI.VariableIndex,Int}(),
+            Dict{MOI.ConstraintIndex{F,MOI.Zeros},Vector{Int}}(),
+            MOI.OPTIMIZE_NOT_CALLED,
+            0,
+            Float64[],
+            Float64[],
+            0.0,
+            0.0,
+        )
     end
 end
 
@@ -151,11 +166,13 @@ end
 # needs to ensure that the optimizer is in a clean state.
 
 function MOI.is_empty(model::Optimizer)
-    ## You might want to check every field, not just the status
-    return model.status == MOI.OPTIMIZE_NOT_CALLED
+    ## You might want to check every field, not just a few
+    return isempty(model.x_to_col) && model.status == MOI.OPTIMIZE_NOT_CALLED
 end
 
 function MOI.empty!(model::Optimizer)
+    empty!(model.x_to_col)
+    empty!(model.ci_to_rows)
     model.status = MOI.OPTIMIZE_NOT_CALLED
     model.iterations = 0
     model.solve_time = 0.0
@@ -221,6 +238,8 @@ MOI.get(::Optimizer, ::MOI.SolverName) = "PDHG"
 # a large number of possible configurations.The upside of the utility is that,
 # once setup, it requires few lines of code to extract the constraint matrices.
 
+# Define the set of sets that our standard form supports. For PDHG, we support
+# only `Ax + b in {0}`:
 MOI.Utilities.@product_of_sets(SetOfZeros, MOI.Zeros)
 
 const CacheModel = MOI.Utilities.GenericModel{
@@ -264,6 +283,10 @@ MOI.Utilities.MutableSparseMatrixCSC{
 #     The best place to look at how to configure `GenericModel` is to find an
 #     existing solver with the same input standard form that you require.
 
+# We need to make one modification to `CacheModel` to tell MOI that
+# $x \in \mathbb{R}_+$ is equivalent to adding variables in
+# [`MOI.GreaterThan`](@ref):
+
 function MOI.add_constrained_variables(model::CacheModel, set::MOI.Nonnegatives)
     x = MOI.add_variables(model, MOI.dimension(set))
     MOI.add_constraint.(model, x, MOI.GreaterThan(0.0))
@@ -271,16 +294,32 @@ function MOI.add_constrained_variables(model::CacheModel, set::MOI.Nonnegatives)
     return x, ci
 end
 
+# ### The optimize method
+
 function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     start_time = time()
     cache = CacheModel()
     index_map = MOI.copy_to(cache, src)
+    ## Create a map of the constraint indices to their row in the `dest` matrix
+    F, S = MOI.VectorAffineFunction{Float64}, MOI.Zeros
+    for src_ci in MOI.get(src, MOI.ListOfConstraintIndices{F,S}())
+        dest_ci = index_map[src_ci]
+        dest.ci_to_rows[dest_ci] =
+            MOI.Utilities.rows(cache.constraints.sets, dest_ci)
+    end
+    ## Create a map of the variable indices to their column in the `dest` matrix
+    for (i, src_x) in enumerate(MOI.get(src, MOI.ListOfVariableIndices()))
+        dest.x_to_col[index_map[src_x]] = i
+    end
+    ## Now we can access the `A` matrix:
     A = convert(
         SparseArrays.SparseMatrixCSC{Float64,Int},
         cache.constraints.coefficients,
     )
     ## MOI models Ax = b as Ax + b in {0}, so b differs by -
     b = -cache.constraints.constants
+    ## The `c` vector is more involved, because we need to account for the
+    ## objective sense:
     sense = ifelse(cache.objective.sense == MOI.MAX_SENSE, -1, 1)
     F = MOI.ScalarAffineFunction{Float64}
     obj = MOI.get(src, MOI.ObjectiveFunction{F}())
@@ -288,9 +327,14 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     for term in obj.terms
         c[term.variable.value] += sense * term.coefficient
     end
+    ## Now we can solve the problem with PDHG and record the solution:
     dest.status, dest.iterations, dest.x, dest.y = solve_pdhg(A, b, c)
-    dest.obj_value = obj.constant + c' * dest.x
+    ## as well as record two derived quantities: the objective value and the
+    ## solve time
+    dest.obj_value = obj.constant + sense * c' * dest.x
     dest.solve_time = time() - start_time
+    ## We need to return the index map, and `false`, to indicate to MOI that we
+    ## do not support incremental modification of the model.
     return index_map, false
 end
 
@@ -343,17 +387,17 @@ function MOI.get(
     x::MOI.VariableIndex,
 )
     MOI.check_result_index_bounds(model, attr)
-    return model.x[x.value]
+    return model.x[model.x_to_col[x]]
 end
 
 function MOI.get(
     model::Optimizer,
     attr::MOI.ConstraintDual,
-    ci::MOI.ConstraintIndex,
+    ci::MOI.ConstraintIndex{MOI.VectorAffineFunction{Float64},MOI.Zeros},
 )
     MOI.check_result_index_bounds(model, attr)
     ## MOI models Ax = b as Ax + b in {0}, so the dual differs by -
-    return -model.y[ci.value]
+    return -model.y[model.ci_to_rows[ci]]
 end
 
 # Some other useful result quantities are [`MOI.SolveTimeSec`](@ref) and
@@ -364,7 +408,20 @@ MOI.get(model::Optimizer, ::MOI.BarrierIterations) = model.iterations
 
 # ## A JuMP example
 
-# Now we can solve an arbitrary linear program with JuMP:
+# Now we can solve an arbitrary linear program with JuMP. Here's the same
+# standard form as before:
+
+model = Model(Optimizer)
+@variable(model, x[1:5] >= 0)
+@objective(model, Min, c' * x)
+@constraint(model, c3, A * x == b)
+optimize!(model)
+
+#-
+
+solution_summary(model; verbose = true)
+
+# But we could also have written:
 
 model = Model(Optimizer)
 @variable(model, x >= 0)
@@ -377,3 +434,18 @@ optimize!(model)
 #-
 
 solution_summary(model; verbose = true)
+
+# Other variations are also possible:
+
+model = Model(Optimizer)
+@variable(model, x[1:5] >= 0)
+@objective(model, Max, -c' * x)
+@constraint(model, c4, A * x .== b)
+optimize!(model)
+
+#-
+
+solution_summary(model; verbose = true)
+
+# Behind the scenes, JuMP and MathOptInterface reformulate the problem from the
+# modeller's form into the standard form defined by our `Optimizer`.
