@@ -344,7 +344,7 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     ## To help assign the values of the x and y vectors to the appropriate
     ## variables and constrats, we need a map of the constraint indices to their
     ## row in the `dest` matrix and a map of the variable indices to their
-    # column in the `dest` matrix:
+    ## column in the `dest` matrix:
     F, S = MOI.VectorAffineFunction{Float64}, MOI.Zeros
     for src_ci in MOI.get(src, MOI.ListOfConstraintIndices{F,S}())
         dest.ci_to_rows[index_map[src_ci]] =
