@@ -447,7 +447,7 @@ primal_feasibility_report(model, Dict(x => 1_000_000.01, y => 1e-6))
 # The best way to fix problem scaling is by changing the units of your variables
 # and constraints. Here's an example. Suppose we are choosing the level of
 # capacity investment in a new power plant. We can install up to 1 GW of
-# capacity at a cost of $1.78/W, and we have a budget of $200 million.
+# capacity at a cost of \$1.78/W, and we have a budget of \$200 million.
 
 model = Model()
 @variable(model, 0 <= x_capacity_W <= 10^9)
