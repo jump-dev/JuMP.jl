@@ -116,7 +116,7 @@ import Plots
 # The vertices are assumed to be randomly distributed in the Euclidean space;
 # thus, the weight (distance) of each edge is defined as follows.
 
-function generate_distance_matrix(n; random_seed = 1)
+function generate_distance_matrix(n; random_seed = 1234)
     rng = Random.MersenneTwister(random_seed)
     X = 100 * rand(rng, n)
     Y = 100 * rand(rng, n)
