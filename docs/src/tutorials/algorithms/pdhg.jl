@@ -36,11 +36,11 @@ import SparseArrays
 
 # Here is a pedagogical implementation of PDHG that solves the linear program:
 # ```math
-# \\begin{aligned}
-# \\text{min}        \\ & c^\\top x \\
-# \\text{subject to} \\ & Ax = b \\
-#                       & x \\ge 0.
-# \\end{aligned}
+# \begin{aligned}
+# \text{min}        \ & c^\top x   \\
+# \text{subject to} \ & Ax = b     \\
+#                     & x \ge 0.
+# \end{aligned}
 # ```
 #
 # Note that this implementation is intentionally kept simple. It is not robust
