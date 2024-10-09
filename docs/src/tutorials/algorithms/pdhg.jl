@@ -52,7 +52,8 @@ import SparseArrays
 #
 # Note that this implementation is intentionally kept simple. It is not robust
 # nor efficient, and it does not incorporate the theoretical improvements in the
-# PDLP paper.
+# PDLP paper. It does use two workspace vectors so that the body of the
+# iteration loop is non-allocating.
 
 function solve_pdhg(
     A::SparseArrays.SparseMatrixCSC{Float64,Int},
@@ -67,20 +68,42 @@ function solve_pdhg(
     printf(x::Int) = Printf.@sprintf("%6d", x)
     m, n = size(A)
     η = τ = 1 / LinearAlgebra.norm(A) - 1e-6
-    x, y, k, status = zeros(n), zeros(m), 0, MOI.OTHER_ERROR
+    x, x_next, y, k, status = zeros(n), zeros(n), zeros(m), 0, MOI.OTHER_ERROR
+    m_workspace, n_workspace = zeros(m), zeros(n)
     if verbose
         println(
             "  iter      pobj          dobj         pfeas         dfeas       objfeas",
         )
     end
     while status == MOI.OTHER_ERROR
-        x_next = max.(0.0, x - η * (A' * y + c))
-        y += τ * (A * (2 * x_next - x) - b)
-        x = x_next
         k += 1
-        pfeas = LinearAlgebra.norm(A * x - b)
-        dfeas = LinearAlgebra.norm(max.(0.0, -A' * y - c))
-        objfeas = abs(c' * x - -b' * y)
+        ## =====================================================================
+        ## This block computes x_next = max.(0.0, x - η * (A' * y + c))
+        LinearAlgebra.mul!(x_next, A', y)
+        LinearAlgebra.axpby!(-η, c, -η, x_next)
+        x_next .+= x
+        x_next .= max.(0.0, x_next)
+        ## =====================================================================
+        ## This block computes y += τ * (A * (2 * x_next - x) - b)
+        copy!(n_workspace, x_next)
+        LinearAlgebra.axpby!(-1.0, x, 2.0, n_workspace)
+        LinearAlgebra.mul!(y, A, n_workspace, τ, 1.0)
+        LinearAlgebra.axpy!(-τ, b, y)
+        ## =====================================================================
+        copy!(x, x_next)
+        ## =====================================================================
+        ## This block computes pfeas = LinearAlgebra.norm(A * x - b)
+        LinearAlgebra.mul!(m_workspace, A, x)
+        m_workspace .-= b
+        pfeas = LinearAlgebra.norm(m_workspace)
+        ## =====================================================================
+        ## This block computes dfeas = LinearAlgebra.norm(min.(0.0, A' * y + c))
+        LinearAlgebra.mul!(n_workspace, A', y)
+        n_workspace .+= c
+        n_workspace .= min.(0.0, n_workspace)
+        dfeas = LinearAlgebra.norm(n_workspace)
+        ## =====================================================================
+        objfeas = abs(LinearAlgebra.dot(c, x) + LinearAlgebra.dot(b, y))
         if pfeas <= tol && dfeas <= tol && objfeas <= tol
             status = MOI.OPTIMAL
         elseif k == maximum_iterations
