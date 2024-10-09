@@ -20,7 +20,11 @@
 
 # # Writing a solver interface
 
-# The purpose of this tutorial is to demonstrate
+# The purpose of this tutorial is to demonstrate how to implement a basic solver
+# interface to MathOptInterface. As a motivating example, we implement the
+# Primal Dual Hybrid Gradient (PDHG) method. PDHG is a first-order method that
+# can solve convex optimization problems.
+# Google has a [good introduction to the math behind PDLP](https://developers.google.com/optimization/lp/pdlp_math).
 
 using JuMP
 import LinearAlgebra
@@ -28,42 +32,21 @@ import MathOptInterface as MOI
 import Printf
 import SparseArrays
 
-# ## PDHG
+# ## Primal Dual Hybrid Gradient
 
-"""
-    solve_pdhg(
-        A::SparseArrays.SparseMatrixCSC{Float64,Int},
-        b::Vector{Float64},
-        c::Vector{Float64};
-        maximum_iterations::Int = 10_000,
-        tol::Float64 = 1e-4,
-        verbose::Bool = true,
-        log_frequency::Int = 1_000,
-    ) -> status, iterations, x, y
+# Here is a pedagogical implementation of PDHG that solves the linear program:
+# ```math
+# \\begin{aligned}
+# \\text{min}        \\ & c^\\top x \\
+# \\text{subject to} \\ & Ax = b \\
+#                       & x \\ge 0.
+# \\end{aligned}
+# ```
+#
+# Note that this implementation is intentionally kept simple. It is not robust
+# nor efficient, and it does not incorporate the theoretical improvements in the
+# PDLP paper.
 
-A pedagogical implementation of PDHG that solves the linear program:
-
-```math
-\\begin{aligned}
-\\text{min}        \\ & c^\\top x \\
-\\text{subject to} \\ & Ax = b \\
-                      & x \\ge 0.
-\\end{aligned}
-```
-
-Note that this implementation is intentionally kept simple. It is not robust nor
-efficient, and it does not incorporate the theoretical improvements in the PDLP
-paper.
-
-## Keyword arguments
-
- * `maximum_iterations::Int = 10_000`: the maximum number of iterations before
-   termination.
- * `tol::Float64 = 1e-4`: the combined primal, dual, and strong duality
-   tolerance.
- * `verbose::Bool = true`: print iteration logs
- * `log_frequency::Int = 1_000`: print iteration logs every N iterations
-"""
 function solve_pdhg(
     A::SparseArrays.SparseMatrixCSC{Float64,Int},
     b::Vector{Float64},
@@ -109,14 +92,39 @@ end
 A = [0.0 -1.0 -1.0 0.0 0.0; 6.0 8.0 0.0 -1.0 0.0; 7.0 12.0 0.0 0.0 -1.0]
 b = [-3.0, 100.0, 120.0]
 c = [12.0, 20.0, 0.0, 0.0, 0.0]
-status, k, x, y = solve_pdhg(SparseArrays.sparse(A), b, c)
+status, k, x, y = solve_pdhg(SparseArrays.sparse(A), b, c);
+
+# The termination status is:
+
+status
+
+# The solve took the following number of iterations:
+
+k
+
+# The primal solution is:
+
+x
+
+# The dual multipliers are:
+
+y
 
 # ## The MOI interface
 
-# Converting example linear program from the modeler's form into the standard
-# form required by PDHG is tedious and error-prone. This section walks through
-# how to implement a basic interface to MathOptInterface, so that we can use our
-# algorithm from JuMP.
+# Converting example linear program from the modeler's form into the `A`, `b`,
+# and `c` matrices of the standard form required by our implementation of PDHG
+# is tedious and error-prone. This section walks through how to implement a
+# basic interface to MathOptInterface, so that we can use our algorithm from
+# JuMP.
+
+# ### The Optimizer type
+
+# Create an optimizer by subtyping [`MOI.AbstractOptimizer`](@ref). By
+# convention, the name of this type is `Optimizer`, and most optimizers are
+# available as `PackageName.Optimizer`.
+
+# The fields inside the optimizer are arbitrary. Store whatever is useful.
 
 """
     Optimizer()
@@ -138,9 +146,9 @@ mutable struct Optimizer <: MOI.AbstractOptimizer
     end
 end
 
-# First, we need to implement two methods: [`MOI.is_empty`](@ref) and
-# [`MOI.empty!`](@ref). These are called whenever MOI needs to ensure that the
-# optimizer is in a clean state.
+# Now that we have an `Optimizer`, we need to implement two methods:
+# [`MOI.is_empty`](@ref) and [`MOI.empty!`](@ref). These are called whenever MOI
+# needs to ensure that the optimizer is in a clean state.
 
 function MOI.is_empty(model::Optimizer)
     ## You might want to check every field, not just the status
@@ -198,9 +206,24 @@ end
 
 MOI.get(::Optimizer, ::MOI.SolverName) = "PDHG"
 
-MOI.Utilities.@product_of_sets(LinearZero, MOI.Zeros)
+# ### GenericModel
 
-const Cache = MOI.Utilities.GenericModel{
+# The simplest way to solve a problem with your optimizer is to implement the
+# method `MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)`, where `src` is an
+# input model and `dest` is your empty optimizer.
+
+# To implement this method you would need to query the variables and constraints
+# in `src` and the convert these into the matrix data expected by `solve_pdhg`.
+# Since matrix input is a common requirement of solvers, MOI includes utilities
+# to simplify the process.
+
+# The downside of the utility is that involves a highly parameterized type with
+# a large number of possible configurations.The upside of the utility is that,
+# once setup, it requires few lines of code to extract the constraint matrices.
+
+MOI.Utilities.@product_of_sets(SetOfZeros, MOI.Zeros)
+
+const CacheModel = MOI.Utilities.GenericModel{
     ## The coefficient type is Float64
     Float64,
     ## We use the default objective container
@@ -222,20 +245,26 @@ const Cache = MOI.Utilities.GenericModel{
         },
         ## The vector type `b` is a Julia `Vector`
         Vector{Float64},
-        ## The set type `K` is the LinearZero set we defined above
-        LinearZero{Float64},
+        ## The set type `K` is the SetOfZeros type we defined above
+        SetOfZeros{Float64},
     },
 }
 
-# If you were interfacing with a solver written in C that expected zero-based
-# indices, you might use instead:
+# As one example of possible alternate configuration, if you were interfacing
+# with a solver written in C that expected zero-based indices, you might use
+# instead:
+
 MOI.Utilities.MutableSparseMatrixCSC{
     Cdouble,
     Cint,
     MOI.Utilities.ZeroBasedIndexing,
 }
 
-function MOI.add_constrained_variables(model::Cache, set::MOI.Nonnegatives)
+# !!! tip
+#     The best place to look at how to configure `GenericModel` is to find an
+#     existing solver with the same input standard form that you require.
+
+function MOI.add_constrained_variables(model::CacheModel, set::MOI.Nonnegatives)
     x = MOI.add_variables(model, MOI.dimension(set))
     MOI.add_constraint.(model, x, MOI.GreaterThan(0.0))
     ci = MOI.ConstraintIndex{MOI.VectorOfVariables,MOI.Nonnegatives}(x[1].value)
@@ -244,7 +273,7 @@ end
 
 function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     start_time = time()
-    cache = Cache()
+    cache = CacheModel()
     index_map = MOI.copy_to(cache, src)
     A = convert(
         SparseArrays.SparseMatrixCSC{Float64,Int},
@@ -252,10 +281,10 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     )
     ## MOI models Ax = b as Ax + b in {0}, so b differs by -
     b = -cache.constraints.constants
-    c = zeros(size(A, 2))
     sense = ifelse(cache.objective.sense == MOI.MAX_SENSE, -1, 1)
     F = MOI.ScalarAffineFunction{Float64}
     obj = MOI.get(src, MOI.ObjectiveFunction{F}())
+    c = zeros(size(A, 2))
     for term in obj.terms
         c[term.variable.value] += sense * term.coefficient
     end
@@ -265,11 +294,31 @@ function MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)
     return index_map, false
 end
 
+# ## Solutions
+
+# Now that we've solved a model, let's implement the required solution
+# attributes.
+
+# First, we need to tell MOI how many solutions we found via
+# [`MOI.ResultCount`](@ref):
+
 function MOI.get(model::Optimizer, ::MOI.ResultCount)
     return model.status == MOI.OPTIMAL ? 1 : 0
 end
 
-MOI.get(model::Optimizer, ::MOI.RawStatusString) = string(model.status)
+# and implement [`MOI.RawStatusString`](@ref) to provide a user-readable string
+# that describes what happened:
+
+function MOI.get(model::Optimizer, ::MOI.RawStatusString)
+    if model.status == MOI.OPTIMAL
+        return "found a primal-dual optimal solution (subject to tolerances)"
+    end
+    return "failed to solve"
+end
+
+# Then, we need to implement the three types of problem status:
+# [`MOI.TerminationStatus`](@ref), [`MOI.PrimalStatus`](@ref) and
+# [`MOI.DualStatus`](@ref):
 
 MOI.get(model::Optimizer, ::MOI.TerminationStatus) = model.status
 
@@ -324,4 +373,7 @@ model = Model(Optimizer)
 @constraint(model, c1, 6x + 8y >= 100)
 @constraint(model, c2, 7x + 12y >= 120)
 optimize!(model)
+
+#-
+
 solution_summary(model; verbose = true)
