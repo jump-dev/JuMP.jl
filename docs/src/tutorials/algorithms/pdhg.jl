@@ -157,7 +157,7 @@ mutable struct Optimizer <: MOI.AbstractOptimizer
     obj_value::Float64
 
     function Optimizer()
-        F =
+        F = MOI.VectorAffineFunction{Float64}
         return new(
             Dict{MOI.VariableIndex,Int}(),
             Dict{MOI.ConstraintIndex{F,MOI.Zeros},Vector{Int}}(),
