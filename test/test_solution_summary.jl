@@ -166,7 +166,7 @@ end
 
 function test_solution_summary_vector_dual()
     model = Model() do
-      return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
     end
     @variable(model, x[1:2])
     @constraint(model, c, x >= 0)
