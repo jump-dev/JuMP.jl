@@ -124,7 +124,7 @@ function generate_distance_matrix(n; random_seed = 1)
     return X, Y, d
 end
 
-n = 40
+n = 20
 X, Y, d = generate_distance_matrix(n)
 
 # For the JuMP model, we first initialize the model object. Then, we create the
@@ -252,7 +252,6 @@ function subtour_elimination_callback(cb_data)
     if !(1 < length(cycle) < n)
         return  # Only add a constraint if there is a cycle
     end
-    println("Found cycle of length $(length(cycle))")
     S = [(i, j) for (i, j) in Iterators.product(cycle, cycle) if i < j]
     con = @build_constraint(
         sum(lazy_model[:x][i, j] for (i, j) in S) <= length(cycle) - 1,
