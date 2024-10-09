@@ -380,6 +380,7 @@ const _PAGES = [
             "tutorials/algorithms/tsp_lazy_constraints.md",
             "tutorials/algorithms/rolling_horizon.md",
             "tutorials/algorithms/parallelism.md",
+            "tutorials/algorithms/pdhg.md",
         ],
         "Applications" => [
             "tutorials/applications/power_systems.md",
