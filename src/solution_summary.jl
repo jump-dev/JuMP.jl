@@ -20,7 +20,7 @@ struct _SolutionSummary{T}
     objective_bound::Union{Missing,T,Vector{T}}
     relative_gap::Union{Missing,T}
     dual_objective_value::Union{Missing,T}
-    primal_solution::Union{Missing,Dict{String,T}}
+    primal_solution::Union{Missing,Dict{String,Union{Missing,T}}}
     dual_solution::Union{Missing,Dict{String,Any}}
     # Work counters
     solve_time::Union{Missing,Float64}
@@ -182,21 +182,35 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     if summary.verbose && summary.has_values
         println(io, "  Primal solution :")
         for variable_name in sort(collect(keys(summary.primal_solution)))
-            _print_if_not_missing(
-                io,
-                "    $(variable_name) : ",
-                summary.primal_solution[variable_name],
-            )
+            if summary.primal_solution[variable_name] === missing
+                println(
+                    io,
+                    "    $variable_name : multiple variables with the same name",
+                )
+            else
+                _print_if_not_missing(
+                    io,
+                    "    $(variable_name) : ",
+                    summary.primal_solution[variable_name],
+                )
+            end
         end
     end
     if summary.verbose && summary.has_duals
         println(io, "  Dual solution :")
         for constraint_name in sort(collect(keys(summary.dual_solution)))
-            _print_if_not_missing(
-                io,
-                "    $(constraint_name) : ",
-                summary.dual_solution[constraint_name],
-            )
+            if summary.dual_solution[constraint_name] === missing
+                println(
+                    io,
+                    "    $constraint_name : multiple constraints with the same name",
+                )
+            else
+                _print_if_not_missing(
+                    io,
+                    "    $(constraint_name) : ",
+                    summary.dual_solution[constraint_name],
+                )
+            end
         end
     end
     return
@@ -221,10 +235,14 @@ function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
 end
 
 function _get_solution_dict(model, result)
-    dict = Dict{String,value_type(typeof(model))}()
+    dict = Dict{String,Union{Missing,value_type(typeof(model))}}()
     for x in all_variables(model)
         variable_name = name(x)
-        if !isempty(variable_name)
+        if isempty(variable_name)
+            continue
+        elseif haskey(dict, variable_name)
+            dict[variable_name] = missing
+        else
             dict[variable_name] = value(x; result = result)
         end
     end
@@ -236,7 +254,11 @@ function _get_constraint_dict(model, result)
     for (F, S) in list_of_constraint_types(model)
         for constraint in all_constraints(model, F, S)
             constraint_name = name(constraint)
-            if !isempty(constraint_name)
+            if isempty(constraint_name)
+                continue
+            elseif haskey(dict, constraint_name)
+                dict[constraint_name] = missing
+            else
                 dict[constraint_name] = dual(constraint; result = result)
             end
         end
