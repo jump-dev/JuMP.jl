@@ -211,9 +211,11 @@ function test_solution_summary_same_names()
     end
     @variable(model, x[1:2])
     @variable(model, y)
+    z = @variable(model)
     set_name.(x, "x")
     @constraint(model, c, x .>= 0)
     @constraint(model, d, 2x[1] <= 1)
+    e = @constraint(model, 2x[2] == 1)
     optimize!(model)
     mock = unsafe_backend(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
@@ -223,8 +225,10 @@ function test_solution_summary_same_names()
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index.(x), [1.0, 2.0])
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 3.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(z), 4.0)
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(d), 5.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(e), 6.0)
     ret = """
     * Solver : Mock
 
