@@ -417,7 +417,7 @@ end
 # it makes sense for this line to be the bottleneck.
 
 # If a wide bar points to code inside JuMP or a related Julia package, please
-# open an issue on GitHub or the [community forum](https://jump.dev/forum).
+# open an issue on GitHub or post on the [community forum](https://jump.dev/forum).
 
 # If `@time foo()` takes longer than a few minutes to run, then either make the
 # problem smaller by using a smaller dataset, or do the following.
@@ -428,5 +428,5 @@ end
 # 3. If the time increases by a lot (from seconds or minutes to hours), look
 #    for $O(N^2)$ or worse scaling behavior. Is there a better way to write the
 #    code that you are trying to execute?
-# 4. If the time increases by more than expected, but it still takes second or
+# 4. If the time increases by more than expected, but it still takes seconds or
 #    minutes to execute, use `ProfileView` to look for obvious bottlenecks.
