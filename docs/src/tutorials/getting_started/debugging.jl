@@ -355,3 +355,78 @@ for var in all_variables(model)
         println("Variable `$(name(var))` may be unbounded")
     end
 end
+
+# ## Debugging performance problems
+
+# There are two common sources for a model that takes a long time to solve:
+#
+# 1. JuMP builds the problem quickly, but the solver takes a long time to run or
+#    prove optimality. This commonly happens for mixed-integer programs, and you
+#    should see the solver print logs indicating slow but steady progress. There
+#    is no easy fix for this, other than choosing a different solver or
+#    reformulating your model.
+# 2. JuMP builds the problem slowly, and even if you wait a while, the solver
+#    may ever start running or displaying output.
+
+# This section explains how to debug the second case.
+
+# As a rule of thumb, we never expect JuMP to be the bottleneck in the solution
+# process. If your model takes longer to build than to solve, or if it takes
+# longer than a small number of minutes to build, then you have a fixable
+# performance problem. JuMP models should never take hours to build.
+
+# ### Common sources
+
+# Common sources of performance problems are:
+#
+# * Writing Julia code that has $O(N^2)$ or worse scaling behavior. As one
+#   common example, see [Performance problems with sum-if formulations](@ref).
+# * Building a model with a very large ($>10^8$) number of variables or
+#   constraints. Here the most likely cause of the performance problem is that
+#   you do not have enough memory to store the model. Use a computer with more
+#   RAM.
+
+# ### Strategies
+
+# The strategy to debug JuMP models that have performance problems depends on
+# how long your model takes to build.
+
+# As a first step, encapsulate everything you want to debug into a single
+# function `foo`, so you can run it with `@time foo()`.
+
+# Can you run `@time foo()` in seconds to minutes?
+
+# If the answer is "yes", then you can use [ProfileView.jl](https://github.com/timholy/ProfileView.jl)
+# to find the bottleneck.
+
+# To use ProfileView, do:
+# ```julia
+# julia> using ProfileView
+#
+# julia> @profview foo();  # run once to trigger compilation. Ignore the output.
+#
+# julia> @profview foo()
+# ```
+# This will open a flamegraph. The x-axis of the graph is time, so that wider
+# bars take more time. The bars are stacked so that the `foo()` call is on the
+# bottom, and subsequent calls within `foo` are stacked on top.
+
+# Reading a flamegraph can take some experience, but if you click on a bar it
+# will print the line number to the REPL. Hunt around until you find the widest
+# bar that points to a line of code that you have written, then ask yourself if
+# it makes sense for this line to be the bottleneck.
+
+# If a wide bar points to code inside JuMP or a related Julia package, please
+# open an issue on GitHub or the [community forum](https://jump.dev/forum).
+
+# If `@time foo()` takes longer than a few minutes to run, then either make the
+# problem smaller by using a smaller dataset, or do the following.
+#
+# 1. Comment out everything in the function, then, line by line (or block by
+#    block):
+# 2. Uncomment some code and re-run `@time foo()`
+# 3. If the time increases by a lot (from seconds or minutes to hours), look
+#    for $O(N^2)$ or worse scaling behavior. Is there a better way to write the
+#    code that you are trying to execute?
+# 4. If the time increases by more than expected, but it still takes second or
+#    minutes to execute, use `ProfileView` to look for obvious bottlenecks.
