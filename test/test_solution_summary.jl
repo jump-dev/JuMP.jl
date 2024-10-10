@@ -211,4 +211,55 @@ function test_solution_summary_vector_dual()
     return
 end
 
+function test_solution_summary_same_names()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x[1:2])
+    @variable(model, y)
+    z = @variable(model)
+    set_name.(x, "x")
+    @constraint(model, c, x .>= 0)
+    @constraint(model, d, 2x[1] <= 1)
+    e = @constraint(model, 2x[2] == 1)
+    optimize!(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.RawStatusString(), "solver specific string")
+    MOI.set(mock, MOI.ResultCount(), 1)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index.(x), [1.0, 2.0])
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 3.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(z), 4.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(d), 5.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(e), 6.0)
+    ret = """
+    * Solver : Mock
+
+    * Status
+      Result count       : 1
+      Termination status : OPTIMAL
+      Message from the solver:
+      "solver specific string"
+
+    * Candidate solution (result #1)
+      Primal status      : FEASIBLE_POINT
+      Dual status        : FEASIBLE_POINT
+      Objective value    : 0.00000e+00
+      Dual objective value : 1.10000e+01
+      Primal solution :
+        x : multiple variables with the same name
+        y : 3.00000e+00
+      Dual solution :
+        c : multiple constraints with the same name
+        d : 5.00000e+00
+
+    * Work counters
+    """
+    @test sprint(show, solution_summary(model; verbose = true)) == ret
+    return
+end
+
 end  # module
