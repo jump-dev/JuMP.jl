@@ -396,7 +396,7 @@ end
 
 # Can you run `@time foo()` in seconds to minutes?
 
-# If the answer is "yes", then you can use [ProfileView.jl](https://github.com/timholy/ProfileView.jl)
+# If the answer is "yes," then you can use [ProfileView.jl](https://github.com/timholy/ProfileView.jl)
 # to find the bottleneck.
 
 # To use ProfileView, do:
@@ -424,7 +424,7 @@ end
 #
 # 1. Comment out everything in the function, then, line by line (or block by
 #    block):
-# 2. Uncomment some code and re-run `@time foo()`
+# 2. Un-comment some code and re-run `@time foo()`
 # 3. If the time increases by a lot (from seconds or minutes to hours), look
 #    for $O(N^2)$ or worse scaling behavior. Is there a better way to write the
 #    code that you are trying to execute?
