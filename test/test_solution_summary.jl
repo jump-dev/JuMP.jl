@@ -242,7 +242,7 @@ function test_solution_summary_same_names()
       Primal status      : FEASIBLE_POINT
       Dual status        : FEASIBLE_POINT
       Objective value    : 0.00000e+00
-      Dual objective value : 5.00000e+00
+      Dual objective value : 1.10000e+01
       Primal solution :
         x : multiple variables with the same name
         y : 3.00000e+00
