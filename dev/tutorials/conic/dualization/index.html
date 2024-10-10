@@ -53,12 +53,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.16e-04
-    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  1.94e-04
+     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.26e-04
+    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.04e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.95e-04s = setup: 3.95e-05s + solve: 1.56e-04s
-	 lin-sys: 1.11e-05s, cones: 5.98e-05s, accel: 2.60e-06s
+timings: total: 2.05e-04s = setup: 4.01e-05s + solve: 1.65e-04s
+	 lin-sys: 1.09e-05s, cones: 5.95e-05s, accel: 2.61e-06s
 ------------------------------------------------------------------
 objective = -4.000000
 ------------------------------------------------------------------</code></pre><p>(There are five rows in the constraint matrix because SCS expects problems in geometric conic form, and so JuMP has reformulated the <code>X, PSD</code> variable constraint into the affine constraint <code>X .+ 0 in PSDCone()</code>.)</p><p>The solution we obtain is:</p><pre><code class="language-julia hljs">value.(X)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Float64}:
@@ -83,12 +83,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.20e-04
-    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.17e-04
+     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  9.57e-05
+    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  1.76e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.18e-04s = setup: 4.09e-05s + solve: 1.77e-04s
-	 lin-sys: 9.34e-06s, cones: 7.51e-05s, accel: 2.71e-06s
+timings: total: 1.77e-04s = setup: 4.14e-05s + solve: 1.35e-04s
+	 lin-sys: 9.19e-06s, cones: 5.90e-05s, accel: 2.65e-06s
 ------------------------------------------------------------------
 objective = 4.000000
 ------------------------------------------------------------------</code></pre><p>and the solution we obtain is:</p><pre><code class="language-julia hljs">dual.(dual_c)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Float64}:
@@ -113,12 +113,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.13e-04
-    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  1.95e-04
+     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.22e-04
+    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.04e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.96e-04s = setup: 3.85e-05s + solve: 1.57e-04s
-	 lin-sys: 9.43e-06s, cones: 5.98e-05s, accel: 2.70e-06s
+timings: total: 2.05e-04s = setup: 4.02e-05s + solve: 1.65e-04s
+	 lin-sys: 9.29e-06s, cones: 5.96e-05s, accel: 2.74e-06s
 ------------------------------------------------------------------
 objective = 4.000000
 ------------------------------------------------------------------</code></pre><p>The performance is the same as if we solved <code>model_dual</code>, and the correct solution is returned to <code>X</code>:</p><pre><code class="language-julia hljs">value.(X)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Float64}:
@@ -144,12 +144,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.11e-04
-    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  1.90e-04
+     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.25e-04
+    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.03e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.91e-04s = setup: 5.16e-05s + solve: 1.39e-04s
-	 lin-sys: 1.08e-05s, cones: 5.94e-05s, accel: 2.81e-06s
+timings: total: 2.04e-04s = setup: 4.79e-05s + solve: 1.57e-04s
+	 lin-sys: 1.08e-05s, cones: 5.73e-05s, accel: 2.70e-06s
 ------------------------------------------------------------------
 objective = -4.000000
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">dual.(dual_c)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Float64}:
@@ -185,12 +185,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 4.73e+00  1.00e+00  2.92e+00  1.23e+00  1.00e-01  1.54e-04
-   150| 1.01e-04  3.07e-05  6.08e-05  1.33e+00  1.00e-01  7.22e-04
+     0| 4.73e+00  1.00e+00  2.92e+00  1.23e+00  1.00e-01  1.50e-04
+   150| 1.01e-04  3.07e-05  6.08e-05  1.33e+00  1.00e-01  7.17e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 7.23e-04s = setup: 6.30e-05s + solve: 6.60e-04s
-	 lin-sys: 9.40e-05s, cones: 3.94e-04s, accel: 3.52e-05s
+timings: total: 7.18e-04s = setup: 6.44e-05s + solve: 6.54e-04s
+	 lin-sys: 9.38e-05s, cones: 3.91e-04s, accel: 3.63e-05s
 ------------------------------------------------------------------
 objective = 1.333363
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">set_optimizer(model, Dualization.dual_optimizer(SCS.Optimizer))
@@ -212,12 +212,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 3.71e+01  1.48e+00  2.23e+02 -1.13e+02  1.00e-01  9.62e-05
-   150| 1.57e-04  2.28e-05  2.08e-04 -1.33e+00  1.00e-01  6.77e-04
+     0| 3.71e+01  1.48e+00  2.23e+02 -1.13e+02  1.00e-01  9.16e-05
+   150| 1.57e-04  2.28e-05  2.08e-04 -1.33e+00  1.00e-01  6.88e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 6.78e-04s = setup: 7.23e-05s + solve: 6.06e-04s
-	 lin-sys: 9.95e-05s, cones: 4.03e-04s, accel: 2.13e-05s
+timings: total: 6.89e-04s = setup: 6.88e-05s + solve: 6.20e-04s
+	 lin-sys: 1.00e-04s, cones: 4.17e-04s, accel: 2.15e-05s
 ------------------------------------------------------------------
 objective = -1.333460
-------------------------------------------------------------------</code></pre><p>For this problem, SCS reports that the primal has <code>variables n: 11, constraints m: 24</code> and that the dual has <code>variables n: 14, constraints m: 24</code>. Therefore, we should probably use the primal formulation because it has fewer variables and the same number of constraints.</p><h2 id="When-to-use-dual_optimizer"><a class="docs-heading-anchor" href="#When-to-use-dual_optimizer">When to use <code>dual_optimizer</code></a><a id="When-to-use-dual_optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#When-to-use-dual_optimizer" title="Permalink"></a></h2><p>Because it can make the problem larger or smaller, depending on the problem and the choice of solver, there is no definitive rule on when you should use <code>dual_optimizer</code>. However, you should try <code>dual_optimizer</code> if your conic optimization problem takes a long time to solve, or if you need to repeatedly solve similarly structured problems with different data. In some cases solving the dual instead of the primal can make a large difference.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Modeling with cones</a><a class="docs-footer-nextpage" href="../arbitrary_precision/">Arbitrary precision arithmetic »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.6.0 on <span class="colophon-date" title="Thursday 10 October 2024 01:51">Thursday 10 October 2024</span>. Using Julia version 1.11.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+------------------------------------------------------------------</code></pre><p>For this problem, SCS reports that the primal has <code>variables n: 11, constraints m: 24</code> and that the dual has <code>variables n: 14, constraints m: 24</code>. Therefore, we should probably use the primal formulation because it has fewer variables and the same number of constraints.</p><h2 id="When-to-use-dual_optimizer"><a class="docs-heading-anchor" href="#When-to-use-dual_optimizer">When to use <code>dual_optimizer</code></a><a id="When-to-use-dual_optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#When-to-use-dual_optimizer" title="Permalink"></a></h2><p>Because it can make the problem larger or smaller, depending on the problem and the choice of solver, there is no definitive rule on when you should use <code>dual_optimizer</code>. However, you should try <code>dual_optimizer</code> if your conic optimization problem takes a long time to solve, or if you need to repeatedly solve similarly structured problems with different data. In some cases solving the dual instead of the primal can make a large difference.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Modeling with cones</a><a class="docs-footer-nextpage" href="../arbitrary_precision/">Arbitrary precision arithmetic »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.6.0 on <span class="colophon-date" title="Thursday 10 October 2024 04:51">Thursday 10 October 2024</span>. Using Julia version 1.11.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
