@@ -193,9 +193,10 @@ Where:
 Use [AmplNLWriter](https://github.com/jump-dev/AmplNLWriter.jl) to access
 solvers that support the [NL format](https://en.wikipedia.org/wiki/Nl_(format)).
 
-Some solvers, such as [Bonmin](https://github.com/coin-or/Bonmin) and
-[Couenne](https://github.com/coin-or/Couenne) can be installed via the Julia
-package manager. Others need to be manually installed.
+Some solvers, such as [Bonmin](https://github.com/coin-or/Bonmin),
+[Couenne](https://github.com/coin-or/Couenne) and [SHOT](https://github.com/coin-or/SHOT)
+can be installed via the Julia package manager. Others need to be manually
+installed.
 
 Consult the AMPL documentation for a [complete list of supported solvers](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
