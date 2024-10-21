@@ -296,7 +296,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Invalid indicator constraints (#3584)
  - Added new solvers to the documentation:
     - `EAGO.jl` (#3560) (#3561)
-    - [Manopt.jl](@ref) (#3568)
+    - `Manopt.jl` (#3568)
     - `Percival.jl` (#3567)
  - Added new tutorials:
     - [Approximating nonlinear functions](@ref) (#3563)
