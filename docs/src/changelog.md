@@ -7,6 +7,30 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.23.3 (October 21, 2024)
+
+### Fixed
+
+ - Fixed a printing bug with scientific numbers in `MIME"text/latex"` (#3838)
+ - Fixed support for `AbstractString` in [`set_attribute`](@ref) (#3840)
+ - Fixed a bug reporting vector-valued duals in [`solution_summary`](@ref)
+   (#3846)
+ - Fixed [`solution_summary`](@ref) when there are duplicate variable and
+   constraint names (#3848)
+
+### Other
+
+ - Documentation improvements (#3828) (#3831) (#3841) (#3843) (#3845)
+ - Added the tutorial [Tolerances and numerical issues](@ref) (#3829) (#3830)
+   (#3835)
+ - Improved the [Benders decomposition](@ref benders_decomposition_classical)
+   tutorial (#38232) (#3833) (#3834)
+ - Added `DifferentiationInterface.jl` to [Automatic differentiation of user-defined operators](@ref)
+   (#3836) (#3842)
+ - Added the tutorial [Writing a solver interface](@ref) (#3844)
+ - Added the section [Debugging performance problems](@ref) (#3850)
+ - Formatting improvements (#3849)
+
 ## Version 1.23.2 (September 13, 2024)
 
 ### Fixed
@@ -272,7 +296,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Invalid indicator constraints (#3584)
  - Added new solvers to the documentation:
     - `EAGO.jl` (#3560) (#3561)
-    - [Manopt.jl](@ref) (#3568)
+    - `Manopt.jl` (#3568)
     - `Percival.jl` (#3567)
  - Added new tutorials:
     - [Approximating nonlinear functions](@ref) (#3563)

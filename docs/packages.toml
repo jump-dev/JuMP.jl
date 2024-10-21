@@ -32,7 +32,7 @@
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
-    rev = "v1.2.1"
+    rev = "v1.2.2"
 [BARON]
     rev = "v0.8.5"
 [Cbc]
@@ -55,9 +55,9 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.3.0"
+    rev = "9bafe7d3e4ed198b97836362a62bb48a14d408bc"
 [HiGHS]
-    rev = "v1.9.2"
+    rev = "v1.10.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
@@ -79,7 +79,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.8.1"
+    rev = "v0.8.2"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -108,7 +108,7 @@
     rev = "v0.7.3"
     extension = true
 [Xpress]
-    rev = "v0.17.0"
+    rev = "v0.17.1"
 
 # =========================== non-jump-dev packages ========================== #
 
@@ -171,7 +171,7 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.0"
+    rev = "v0.5.3"
     filename = "Readme.md"
 [Optim]
     user = "JuliaNLSolvers"
@@ -181,13 +181,13 @@
     rev = "v0.8.1"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.7.7"
+    rev = "v1.7.8"
 [Percival]
     user = "JuliaSmoothOptimizers"
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.2"
+    rev = "v0.6.3"
     has_html = true
     extension = true
 [ProxSDP]
@@ -199,7 +199,7 @@
     rev = "v0.11.14"
 [SDDP]
     user = "odow"
-    rev = "v1.8.1"
+    rev = "v1.9.0"
     has_html = true
     extension = true
 [Tulip]
