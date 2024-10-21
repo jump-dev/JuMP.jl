@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
- - Fixed a printing bug with scientific nuumbers in `MIME"text/latex"` (#3838)
+ - Fixed a printing bug with scientific numbers in `MIME"text/latex"` (#3838)
  - Fixed support for `AbstractString` in [`set_attribute`](@ref) (#3840)
  - Fixed a bug reporting vector-valued duals in [`solution_summary`](@ref)
    (#3846)

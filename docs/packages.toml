@@ -55,7 +55,7 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.3.1"
+    rev = "9bafe7d3e4ed198b97836362a62bb48a14d408bc"
 [HiGHS]
     rev = "v1.10.0"
 [Hypatia]
