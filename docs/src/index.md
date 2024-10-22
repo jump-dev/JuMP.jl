@@ -19,7 +19,8 @@
 Welcome to the documentation for JuMP.
 
 !!! note
-    This documentation is also available in PDF format: [JuMP.pdf](JuMP.pdf).
+    This documentation is also available in PDF format: [JuMP.pdf](JuMP_documentation.pdf).  
+    <!-- i have another pull request for converting md into pdf if that is accepted then this url will work -->
 
 ## What is JuMP?
 
@@ -58,15 +59,15 @@ julia> x = solve_constrained_least_squares_regression(A, b)
 ```
 
 !!! tip
-    If you aren't sure if you should use JuMP, read [Should you use JuMP?](@ref).
+    If you aren't sure if you should use JuMP, read [Should you use JuMP?](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/should_i_use.md).
 
 ## Resources for getting started
 
 There are a few ways to get started with JuMP:
 
-* Read the [Installation Guide](@ref).
-* Read the introductory tutorials [Getting started with Julia](@ref) and
-  [Getting started with JuMP](@ref).
+* Read the [Installation Guide](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md).
+* Read the introductory tutorials [Getting started with Julia](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/introduction.md) and
+  [Getting started with JuMP](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/introduction.md).
 * Browse some of our modeling tutorials, including classics such as
   [The diet problem](@ref), or the [Maximum likelihood estimation](@ref) problem
   using nonlinear programming.
