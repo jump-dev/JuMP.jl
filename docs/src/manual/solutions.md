@@ -79,12 +79,12 @@ julia> solution_summary(model)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Objective value    : -2.05143e+02
-  Objective bound    : -0.00000e+00
-  Relative gap       : Inf
+  Objective bound    : -2.05143e+02
+  Relative gap       : 1.38546e-16
   Dual objective value : -2.05143e+02
 
 * Work counters
-  Solve time (sec)   : 6.70987e-04
+  Solve time (sec)   : 6.01048e-04
   Simplex iterations : 2
   Barrier iterations : 0
   Node count         : -1
@@ -102,8 +102,8 @@ julia> solution_summary(model; verbose = true)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Objective value    : -2.05143e+02
-  Objective bound    : -0.00000e+00
-  Relative gap       : Inf
+  Objective bound    : -2.05143e+02
+  Relative gap       : 1.38546e-16
   Dual objective value : -2.05143e+02
   Primal solution :
     x : 1.54286e+01
@@ -113,7 +113,7 @@ julia> solution_summary(model; verbose = true)
     c1 : 1.71429e+00
 
 * Work counters
-  Solve time (sec)   : 6.70987e-04
+  Solve time (sec)   : 6.01048e-04
   Simplex iterations : 2
   Barrier iterations : 0
   Node count         : -1
@@ -186,8 +186,8 @@ the value of the dual objective can be obtained via
 julia> objective_value(model)
 -205.14285714285714
 
-julia> objective_bound(model)  # HiGHS only implements objective bound for MIPs
--0.0
+julia> objective_bound(model)
+-205.1428571428571
 
 julia> dual_objective_value(model)
 -205.1428571428571
@@ -423,7 +423,7 @@ julia> set_upper_bound(x, 1)
 
 julia> x_val = value(x)
 ┌ Warning: The model has been modified since the last call to `optimize!` (or `optimize!` has not been called yet). If you are iteratively querying solution information and modifying a model, query all the results first, then modify the model.
-└ @ JuMP ~/work/JuMP.jl/JuMP.jl/src/optimizer_interface.jl:712
+└ @ JuMP ~/.julia/dev/JuMP/src/optimizer_interface.jl:1085
 ERROR: OptimizeNotCalled()
 Stacktrace:
 [...]
@@ -716,11 +716,11 @@ julia> solution_summary(model; result = 1)
   Dual status        : NO_SOLUTION
   Objective value    : [0.00000e+00,0.00000e+00]
   Objective bound    : [0.00000e+00,-9.00000e+00]
-  Relative gap       : Inf
-  Dual objective value : -9.00000e+00
+  Relative gap       : 0.00000e+00
+  Dual objective value : -3.33067e-16
 
 * Work counters
-  Solve time (sec)   : 1.82720e-03
+  Solve time (sec)   : 5.34880e-01
   Simplex iterations : 0
   Barrier iterations : 0
   Node count         : -1

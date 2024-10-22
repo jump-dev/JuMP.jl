@@ -472,6 +472,11 @@ Presolving model
 0 rows, 0 cols, 0 nonzeros  0s
 Presolve: Optimal
 
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work
+     Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+         0       0         0   0.00%   2               2                  0.00%        0      0      0         0     0.0s
+
 Solving report
   Status            Optimal
   Primal bound      2
