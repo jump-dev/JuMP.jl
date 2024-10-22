@@ -300,11 +300,11 @@ Therefore, the result of [`build_constraint`](@ref) is converted in a call to
 """
 model_convert(::AbstractModel, rhs::Any) = rhs
 
-function model_convert(model::AbstractModel, set::MOI.AbstractScalarSet)
-    if MOI.Utilities.supports_shift_constant(typeof(set))
-        T = value_type(typeof(model))
-        return MOI.Utilities.shift_constant(set, zero(T))
-    end
+function model_convert(::AbstractModel, set::MOI.AbstractScalarSet)
+    #if MOI.Utilities.supports_shift_constant(typeof(set))
+    #    T = value_type(typeof(model))
+    #    return MOI.Utilities.shift_constant(set, zero(T))
+    #end
     return set
 end
 
