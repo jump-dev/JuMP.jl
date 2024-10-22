@@ -1,0 +1,53 @@
+\usepackage{geometry}
+\geometry{
+    a4paper,         % Use A4 paper size
+    left=2.5cm,     % Left margin
+    right=2.5cm,    % Right margin
+    top=2.5cm,      % Top margin
+    bottom=2.5cm,   % Bottom margin
+    headheight=15pt, % Space for headers
+    headsep=25pt,    % Space between header and text
+}
+
+\usepackage{listings}
+\lstset{ 
+    language=Julia,
+    basicstyle=\ttfamily\footnotesize, % Set the font style
+    keywordstyle=\color{blue}, % Keyword color
+    commentstyle=\color{green}, % Comment color
+    stringstyle=\color{red}, % String color
+    numbers=left, % Line numbers on the left
+    numberstyle=\tiny\color{gray}, % Style of line numbers
+    stepnumber=1, % Number every line
+    numbersep=10pt, % Distance of numbers from the code
+    backgroundcolor=\color{white}, % Background color
+    showspaces=false, % Show spaces
+    showstringspaces=false, % Show string spaces
+    frame=single, % Frame around the code
+    tabsize=2, % Tab size
+    breaklines=true, % Automatically break long lines
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}, % Indicate line breaks
+    xleftmargin=15pt, % Left padding for code
+    xrightmargin=15pt, % Right padding for code
+    aboveskip=10pt, % Space above code block
+    belowskip=10pt, % Space below code block
+}
+
+\usepackage{setspace} % For line spacing
+\setstretch{1.2} % Set line spacing to 1.2
+
+\usepackage{microtype} % For better justification and line breaking
+\sloppy % Allows LaTeX to be more lenient with line breaks
+
+\usepackage{hyperref} % For hyperlinks
+\hypersetup{
+    colorlinks=true,   % false: boxed links; true: colored links
+    linkcolor=blue,    % color of internal links
+    citecolor=blue,    % color of citations
+    urlcolor=blue,     % color of external links
+    pdfborder={0 0 0}, % Remove borders
+    pdfborderstyle={/S/S/W 0.5} % Set border width
+}
+
+% Underline links
+\renewcommand{\url}[1]{\underline{\texttt{#1}}} % Underline URLs

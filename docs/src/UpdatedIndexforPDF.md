@@ -1,31 +1,20 @@
-```@raw html
-<img class="display-light-only" src="assets/logo-with-text.svg" alt="JuMP logo"/>
-<img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
-```
-
-```@meta
-# These comments do not display in the HTML output.
-# See https://github.com/JuliaDocs/Documenter.jl/issues/674.
-```
-
 # Introduction
 
-```@raw latex
 \begin{figure}[h]
+  \centering
   \includegraphics[width=0.5\textwidth]{assets/logo-with-text.pdf}
+  \caption{JuMP logo}
 \end{figure}
-```
 
 Welcome to the documentation for JuMP.
 
 !!! note
-This documentation is also available in PDF format: [JuMP.pdf](JuMP_documentation.pdf).
+This documentation is also available in md format: [\underline{index.md}](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/index.md).
 
 ## What is JuMP?
 
-[JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
-language for [mathematical optimization]
-(https://en.wikipedia.org/wiki/Mathematical_optimization)
+[\underline{JuMP}](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
+language for [\underline{mathematical optimization}](https://en.wikipedia.org/wiki/Mathematical_optimization)
 embedded in [Julia](https://julialang.org/).
 
 JuMP makes it easy to formulate and solve a range of problem classes, including
@@ -59,21 +48,21 @@ julia> x = solve_constrained_least_squares_regression(A, b)
 ```
 
 !!! tip
-If you aren't sure if you should use JuMP, read [Should you use JuMP?](@ref).
+If you aren't sure if you should use JuMP, read [\underline{Should you use JuMP?}](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/should_i_use.md).
 
 ## Resources for getting started
 
 There are a few ways to get started with JuMP:
 
-- Read the [Installation Guide](@ref).
-- Read the introductory tutorials [Getting started with Julia](@ref) and
-  [Getting started with JuMP](@ref).
+- Read the [\underline{Installation Guide}](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md).
+- Read the introductory tutorials [\underline{Getting started with Julia}](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/introduction.md) and
+  [\underline{Getting started with JuMP}](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/introduction.md).
 - Browse some of our modeling tutorials, including classics such as
   [The diet problem](@ref), or the [Maximum likelihood estimation](@ref) problem
   using nonlinear programming.
 
 !!! tip
-Need help? Join the [community forum](https://jump.dev/forum)
+Need help? Join the [\underline{community forum}](https://jump.dev/forum)
 to search for answers to commonly asked questions.
 
     Before asking a question, make sure to read the post [make it easier to help you]
@@ -112,13 +101,14 @@ you know where to look for certain things.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([preprint](https://arxiv.org/abs/2206.03866)):
+following paper ([\underline{preprint}](https://arxiv.org/abs/2206.03866)):
 
 ```bibtex
 @article{Lubin2023,
     author = {Miles Lubin and Oscar Dowson and Joaquim {Dias Garcia} and 
               Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
-    title = {{JuMP} 1.0: {R}ecent improvements to a modeling language for mathematical optimization},
+    title = {{JuMP} 1.0: {R}ecent improvements to a modeling language
+             for mathematical optimization},
     journal = {Mathematical Programming Computation},
     year = {2023},
     doi = {10.1007/s12532-023-00239-3}
@@ -132,9 +122,9 @@ following paper ([preprint](https://arxiv.org/abs/2206.03866)):
 JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the
 United States. NumFOCUS provides JuMP with fiscal, legal, and administrative
 support to help ensure the health and sustainability of the project. Visit
-[numfocus.org](https://numfocus.org) for more information.
+[\underline{numfocus.org}](https://numfocus.org) for more information.
 
-You can support JuMP by [donating](https://numfocus.org/donate-to-jump).
+You can support JuMP by [\underline{donating}](https://numfocus.org/donate-to-jump).
 
 Donations to JuMP are managed by NumFOCUS. For donors in the United States,
 your gift is tax-deductible to the extent provided by law. As with any donation,
@@ -146,9 +136,9 @@ opportunities that arise to support JuMP development.
 
 ## License
 
-JuMP is licensed under the [MPL-2.0 software license](https://mozilla.org/MPL/2.0/).
-Consult the [license](https://github.com/jump-dev/JuMP.jl/blob/master/LICENSE.md)
-and the [Mozilla FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
+JuMP is licensed under the [\underline{MPL-2.0 software license}](https://mozilla.org/MPL/2.0/).
+Consult the [\underline{license}](https://github.com/jump-dev/JuMP.jl/blob/master/LICENSE.md)
+and the [\underline{Mozilla FAQ}](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
 information. In addition, JuMP is typically used in conjunction with solver
 packages and extensions which have their own licences. Consult their package
 repositories for the specific licenses that apply.
