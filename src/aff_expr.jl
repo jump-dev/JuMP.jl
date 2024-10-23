@@ -523,10 +523,10 @@ julia> @variable(model, x[1:2])
  x[1]
  x[2]
 
-julia> ex1 = @expression(m, sum(x[1:2]))
+julia> ex1 = @expression(model, sum(x[1:2]))
 x[1] + x[2]
 
-julia> ex2 = @expression(m, 2 * sum(x[1:2]))
+julia> ex2 = @expression(model, 2 * sum(x[1:2]))
 2 x[1] + 2 x[2]
 
 julia> add_to_expression!(ex1, ex2)
