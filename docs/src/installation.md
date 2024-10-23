@@ -160,6 +160,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Manualᴹ | CC BY-SA | LP, SDP                  |
 | [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | Manualᴹ | GPL      | LP, SOCP, SDP            |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | Manualᴹ | GPL      | LP, SOCP, SDP            |
+| [SHOT](https://github.com/coin-or/SHOT)                                        | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL       | (MI)NLP                  |
 | [StatusSwitchingQP.jl](https://github.com/PharosAbad/StatusSwitchingQP.jl)     |                                                                                  |        | MIT       | LP, QP                   |
 | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |        | MPL-2     | LP                       |
 
@@ -192,9 +193,10 @@ Where:
 Use [AmplNLWriter](https://github.com/jump-dev/AmplNLWriter.jl) to access
 solvers that support the [NL format](https://en.wikipedia.org/wiki/Nl_(format)).
 
-Some solvers, such as [Bonmin](https://github.com/coin-or/Bonmin) and
-[Couenne](https://github.com/coin-or/Couenne) can be installed via the Julia
-package manager. Others need to be manually installed.
+Some solvers, such as [Bonmin](https://github.com/coin-or/Bonmin),
+[Couenne](https://github.com/coin-or/Couenne) and [SHOT](https://github.com/coin-or/SHOT)
+can be installed via the Julia package manager. Others need to be manually
+installed.
 
 Consult the AMPL documentation for a [complete list of supported solvers](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
