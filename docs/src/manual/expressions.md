@@ -126,7 +126,10 @@ julia> add_to_expression!(ex, 1.0, y)
 2 x + y - 1
 ```
 
-This is an efficient way to combine previously created expressions.
+In the next example, we present an efficient way to combine
+previously created expressions.
+As highlighted above, the first expression is modified in-place
+while the second expression remains the same.
 
 ```jldoctest
 julia> model = Model();
