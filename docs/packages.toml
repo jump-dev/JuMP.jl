@@ -173,6 +173,14 @@
     user = "JuliaManifolds"
     rev = "v0.5.3"
     filename = "Readme.md"
+[MathOptAI]
+    user = "lanl-ansi"
+    rev = "v0.1.2"
+    extension = true
+[MathOptSymbolicAD]
+    user = "lanl-ansi"
+    rev = "aabf987fb1e25f68053390b6a44716cb28a881b0"
+    extension = true
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v1.9.4"
