@@ -126,10 +126,8 @@ julia> add_to_expression!(ex, 1.0, y)
 2 x + y - 1
 ```
 
-In the next example, we present an efficient way to combine
-previously created expressions.
-As highlighted above, the first expression is modified in-place
-while the second expression remains the same.
+[`add_to_expression!`](@ref) can also be used to sum expressions
+in-place:
 
 ```jldoctest
 julia> model = Model();
@@ -139,10 +137,10 @@ julia> @variable(model, x[1:2])
  x[1]
  x[2]
 
-julia> ex1 = @expression(model, sum(x[1:2]))
+julia> @expression(model, ex1, sum(x))
 x[1] + x[2]
 
-julia> ex2 = @expression(model, 2 * sum(x[1:2]))
+julia> @expression(model, ex2, 2 * sum(x))
 2 x[1] + 2 x[2]
 
 julia> add_to_expression!(ex1, ex2)
