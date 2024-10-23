@@ -126,6 +126,33 @@ julia> add_to_expression!(ex, 1.0, y)
 2 x + y - 1
 ```
 
+[`add_to_expression!`](@ref) can also be used to sum expressions
+in-place:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia> @expression(model, ex1, sum(x))
+x[1] + x[2]
+
+julia> @expression(model, ex2, 2 * sum(x))
+2 x[1] + 2 x[2]
+
+julia> add_to_expression!(ex1, ex2)
+3 x[1] + 3 x[2]
+
+julia> ex1
+3 x[1] + 3 x[2]
+
+julia> ex2
+2 x[1] + 2 x[2]
+```
+
 !!! warning
     Read the section [Initializing arrays](@ref) for some cases to be careful
     about when using [`add_to_expression!`](@ref).
