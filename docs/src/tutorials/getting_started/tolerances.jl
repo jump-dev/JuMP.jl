@@ -221,7 +221,7 @@ value(x[1])
 # ## Integrality
 
 # Integrality tolerances control how the solver decides if a variable satisfies
-# an integrality of binary constraint. The tolerance is typically defined as:
+# an integrality or binary constraint. The tolerance is typically defined as:
 # ``|x - \lfloor x + 0.5 \rfloor | \le \varepsilon``, which you can read as the
 # absolute distance to the nearest integer.
 
@@ -268,15 +268,16 @@ model = Model()
 @constraint(model, x <= M * y)
 print(model)
 
-# This model has a feasible solution (to tolerances) of `(x, y) = (1, 1e-6)`.
-# There can be a non-zero value of `x` even when `y` is (approximately) `0`.
+# This model has a feasible solution (to tolerances) of `(x, y) = (1, 1e-6)`;
+# there can be a non-zero value of `x` even when `y` is (approximately) `0`.
 
 primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
 
 # ### Rounding the solution
 
-# Integrality tolerances are why JuMP does not return `Int` for `value(x)` of an
-# integer variable or `Bool` for `value(x)` of a binary variable.
+# Integrality tolerances are the reason why JuMP does not return `::Int` for
+# `value(x)` of an integer variable or `::Bool` for `value(x)` of a binary
+# variable.
 
 # In most cases, it is safe to post-process the solution using
 # `y_int = round(Int, value(y))`. However, in some cases "fixing" the
@@ -379,7 +380,7 @@ is_solved_and_feasible(model)
 
 # Numerical issues related to the feasibility tolerances most commonly arise
 # because of poor problem scaling. The next examples assume a primal feasibility
-# tolerance of 1e-8, but actual tolerances may vary from one solver to another.
+# tolerance of `1e-8`, but actual tolerances may vary from one solver to another.
 
 # ### Small magnitudes
 
@@ -391,7 +392,7 @@ model = Model()
 @constraint(model, 1e-8 * x == 1e-4)
 
 # This should have the solution that $x = 10^4$, but because the feasibility
-# tolerance of this constraint is $|10^{-4} - 10^{-8} * x| < 10^{-8}$, it
+# tolerance of this constraint is $|10^{-4} - 10^{-8} x| < 10^{-8}$, it
 # actually permits any value of `x` between 9999 and 10,001, which is a larger
 # range of feasible values than you might have expected.
 
