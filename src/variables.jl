@@ -1971,9 +1971,12 @@ function _moi_add_variable(
     v::ScalarVariable,
     name::String,
 ) where {T}
-    index = MOI.add_variable(moi_backend)
+    # index = MOI.add_variable(moi_backend)
+    lower_bound = v.info.has_lb ? v.info.lower_bound : nothing
+    upper_bound = v.info.has_ub ? v.info.upper_bound : nothing
+    index = MOI.Utilities.add_variable_and_bounds(moi_backend, lower_bound, upper_bound)
     var_ref = GenericVariableRef(model, index)
-    _moi_constrain_variable(moi_backend, index, v.info, T)
+    _moi_constrain_variable(moi_backend, index, v.info, T, add_bounds = false)
     if !isempty(name) &&
        MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
         set_name(var_ref, name)
@@ -2006,25 +2009,29 @@ function _moi_constrain_variable(
     moi_backend::MOI.ModelLike,
     index,
     info,
-    ::Type{T},
+    ::Type{T};
+    add_bounds = true,
 ) where {T}
     # We don't call the _moi* versions (for example, _moi_set_lower_bound)
     # because they have extra checks that are not necessary for newly created
     # variables.
-    if info.has_lb
-        _moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
-        )
+    if add_bounds
+        if info.has_lb
+            _moi_add_constraint(
+                moi_backend,
+                index,
+                MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
+            )
+        end
+        if info.has_ub
+            _moi_add_constraint(
+                moi_backend,
+                index,
+                MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
+            )
+        end
     end
-    if info.has_ub
-        _moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
-        )
-    end
+    # TODO: also handle fix
     if info.has_fix
         _moi_add_constraint(
             moi_backend,
@@ -2046,6 +2053,7 @@ function _moi_constrain_variable(
             _to_value(T, info.start, "start value"),
         )
     end
+    return
 end
 
 """
@@ -2115,7 +2123,7 @@ function _moi_add_constrained_variable(
     ::Type{T},
 ) where {T}
     var_index, con_index = MOI.add_constrained_variable(moi_backend, set)
-    _moi_constrain_variable(moi_backend, var_index, scalar_variable.info, T)
+    _moi_constrain_variable(moi_backend, var_index, scalar_variable.info, T, add_bounds = true)
     if !isempty(name)
         MOI.set(moi_backend, MOI.VariableName(), var_index, name)
     end
@@ -2209,7 +2217,7 @@ function _moi_add_constrained_variables(
         var_indices, con_index = MOI.add_constrained_variables(moi_backend, set)
     end
     for (index, variable) in zip(var_indices, scalar_variables)
-        _moi_constrain_variable(moi_backend, index, variable.info, T)
+        _moi_constrain_variable(moi_backend, index, variable.info, T, add_bounds = true)
     end
     if names !== nothing
         for (var_index, name) in zip(var_indices, names)
