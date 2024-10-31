@@ -1993,6 +1993,7 @@ function _moi_add_variable(
     # because they have extra checks that are not necessary for newly created
     # variables.
     index = nothing
+    info = v.info
     if info.has_lb
         set_lb =
             MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound"))
