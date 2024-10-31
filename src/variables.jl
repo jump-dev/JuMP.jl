@@ -2013,11 +2013,14 @@ function _moi_add_variable(
     if info.integer
         index = _moi_add_constrained_variable(moi_backend, index, MOI.Integer())
     end
+    if index === nothing
+        index = MOI.add_variable(moi_backend)
+    end
+    x = GenericVariableRef(model, index::MOI.VariableIndex)
     if info.has_start && info.start !== nothing
         start = _to_value(T, info.start, "start value")
         MOI.set(moi_backend, MOI.VariablePrimalStart(), index, start)
     end
-    x = GenericVariableRef(model, index)
     if !isempty(name)
         if MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
             set_name(x, name)
