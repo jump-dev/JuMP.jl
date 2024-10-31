@@ -1965,20 +1965,64 @@ function add_variable(model::GenericModel, v::ScalarVariable, name::String = "")
     return _moi_add_variable(backend(model), model, v, name)
 end
 
+function _moi_add_constrained_variable(
+    moi_backend::MOI.ModelLike,
+    ::Nothing,
+    set::MOI.AbstractScalarSet,
+)
+    x, _ = MOI.add_constrained_variable(moi_backend, set)
+    return x
+end
+
+function _moi_add_constrained_variable(
+    moi_backend::MOI.ModelLike,
+    x::MOI.VariableIndex,
+    set::MOI.AbstractScalarSet,
+)
+    MOI.add_constraint(moi_backend, x, set)
+    return x
+end
+
 function _moi_add_variable(
     moi_backend,
     model::GenericModel{T},
     v::ScalarVariable,
     name::String,
 ) where {T}
-    index = MOI.add_variable(moi_backend)
-    var_ref = GenericVariableRef(model, index)
-    _moi_constrain_variable(moi_backend, index, v.info, T)
-    if !isempty(name) &&
-       MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
-        set_name(var_ref, name)
+    # We don't call the _moi* versions (for example, _moi_set_lower_bound)
+    # because they have extra checks that are not necessary for newly created
+    # variables.
+    index = nothing
+    if info.has_lb
+        set_lb =
+            MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound"))
+        index = _moi_add_constrained_variable(moi_backend, index, set_lb)
     end
-    return var_ref
+    if info.has_ub
+        set_ub = MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound"))
+        index = _moi_add_constrained_variable(moi_backend, index, set_ub)
+    end
+    if info.has_fix
+        set_eq = MOI.EqualTo{T}(_to_value(T, info.fixed_value, "fixed value"))
+        index = _moi_add_constrained_variable(moi_backend, index, set_eq)
+    end
+    if info.binary
+        index = _moi_add_constrained_variable(moi_backend, index, MOI.ZeroOne())
+    end
+    if info.integer
+        index = _moi_add_constrained_variable(moi_backend, index, MOI.Integer())
+    end
+    if info.has_start && info.start !== nothing
+        start = _to_value(T, info.start, "start value")
+        MOI.set(moi_backend, MOI.VariablePrimalStart(), index, start)
+    end
+    x = GenericVariableRef(model, index)
+    if !isempty(name)
+        if MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
+            set_name(x, name)
+        end
+    end
+    return x
 end
 
 _to_value(::Type{T}, value::T, ::String) where {T} = value
@@ -2012,25 +2056,16 @@ function _moi_constrain_variable(
     # because they have extra checks that are not necessary for newly created
     # variables.
     if info.has_lb
-        _moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
-        )
+        lb = _to_value(T, info.lower_bound, "lower bound")
+        _moi_add_constraint(moi_backend, index, MOI.GreaterThan{T}(lb))
     end
     if info.has_ub
-        _moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
-        )
+        ub = _to_value(T, info.upper_bound, "upper bound")
+        _moi_add_constraint(moi_backend, index, MOI.LessThan{T}(ub))
     end
     if info.has_fix
-        _moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.EqualTo{T}(_to_value(T, info.fixed_value, "fixed value")),
-        )
+        eq = _to_value(T, info.fixed_value, "fixed value")
+        _moi_add_constraint(moi_backend, index, MOI.EqualTo{T}(eq))
     end
     if info.binary
         _moi_add_constraint(moi_backend, index, MOI.ZeroOne())
@@ -2039,13 +2074,10 @@ function _moi_constrain_variable(
         _moi_add_constraint(moi_backend, index, MOI.Integer())
     end
     if info.has_start && info.start !== nothing
-        MOI.set(
-            moi_backend,
-            MOI.VariablePrimalStart(),
-            index,
-            _to_value(T, info.start, "start value"),
-        )
+        start = _to_value(T, info.start, "start value")
+        MOI.set(moi_backend, MOI.VariablePrimalStart(), index, start)
     end
+    return
 end
 
 """
