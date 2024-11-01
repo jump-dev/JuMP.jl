@@ -1680,4 +1680,24 @@ function test_add_constrained_variable()
     return
 end
 
+function test_add_variable_in_set()
+    model = Model()
+    @variable(model, x1 >= 0, set = MOI.Integer())
+    @test has_lower_bound(x1)
+    @test is_integer(x1)
+    @variable(model, x2 <= 0, set = MOI.Integer())
+    @test has_upper_bound(x2)
+    @test is_integer(x2)
+    @variable(model, x3 == 0, set = MOI.Integer())
+    @test is_fixed(x3)
+    @test is_integer(x3)
+    @variable(model, x4 in MOI.EqualTo(3.0), Int)
+    @test is_fixed(x4)
+    @test is_integer(x4)
+    @variable(model, x5 in MOI.EqualTo(3.0), Bin)
+    @test is_fixed(x5)
+    @test is_binary(x5)
+    return
+end
+
 end  # module TestVariable
