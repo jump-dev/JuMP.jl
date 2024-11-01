@@ -2004,7 +2004,6 @@ function _moi_add_variable(
         index = _moi_add_constrained_variable(moi_backend, index, set_ub)
     end
     if info.has_fix
-        @show info
         set_eq = MOI.EqualTo{T}(_to_value(T, info.fixed_value, "fixed value"))
         index = _moi_add_constrained_variable(moi_backend, index, set_eq)
     end
