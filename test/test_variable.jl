@@ -1662,4 +1662,22 @@ function test_value_number()
     return
 end
 
+function test_add_constrained_variable()
+    model = Model()
+    @variable(model, x1 >= 0)
+    @test has_lower_bound(x1)
+    @variable(model, x2 <= 0)
+    @test has_upper_bound(x2)
+    @variable(model, x3 == 0)
+    @test is_fixed(x3)
+    @variable(model, x4, Int)
+    @test is_integer(x4)
+    @variable(model, x5, Bin)
+    @test is_binary(x5)
+    @variable(model, x6 >= 0, Int)
+    @test has_lower_bound(x6)
+    @test is_integer(x6)
+    return
+end
+
 end  # module TestVariable
