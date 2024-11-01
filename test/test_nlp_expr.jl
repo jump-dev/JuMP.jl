@@ -857,6 +857,7 @@ function test_linear_algebra_errors()
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.qr(x)
     y = 2.0 .* x[:, 2] .+ 1.0
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y, 2)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(y)
     return
 end

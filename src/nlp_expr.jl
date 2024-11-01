@@ -1171,6 +1171,10 @@ function LinearAlgebra.logdet(::AbstractMatrix{<:AbstractJuMPScalar})
     return throw(MOI.UnsupportedNonlinearOperator(:logdet))
 end
 
+function LinearAlgebra.norm(::AbstractArray{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:norm))
+end
+
 function LinearAlgebra.norm(::AbstractArray{<:AbstractJuMPScalar}, ::Real)
     return throw(MOI.UnsupportedNonlinearOperator(:norm))
 end
