@@ -1981,6 +1981,15 @@ function _moi_add_constrained_variable(
     return x
 end
 
+function _moi_add_constrained_variable(
+    moi_backend::MOI.ModelLike,
+    ::Nothing,
+    set::Tuple{MOI.GreaterThan{T},MOI.LessThan{T}}
+) where {T}
+    x, _ = MOI.add_constrained_variable(moi_backend, set)
+    return x
+end
+
 function _moi_add_variable(
     moi_backend,
     model::GenericModel{T},
@@ -1992,12 +2001,17 @@ function _moi_add_variable(
     # variables.
     index = nothing
     info = v.info
-    if info.has_lb
+    if info.has_lb && info.has_ub
+        set = (
+            MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
+            MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
+        )
+        index = _moi_add_constrained_variable(moi_backend, index, set)
+    elseif info.has_lb
         set_lb =
             MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound"))
         index = _moi_add_constrained_variable(moi_backend, index, set_lb)
-    end
-    if info.has_ub
+    elseif info.has_ub
         set_ub = MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound"))
         index = _moi_add_constrained_variable(moi_backend, index, set_ub)
     end
