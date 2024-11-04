@@ -1151,7 +1151,7 @@ function test_show_objective_summary()
     @variable(model, x)
     @objective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
-          "Objective function type: VariableRef\n"
+          "Objective function type: JuMP.VariableRef\n"
     @NLobjective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
           "Objective function type: Nonlinear\n"
@@ -1164,7 +1164,7 @@ function test_show_constraints_summary()
     @constraint(model, x >= 1)
     @NLconstraint(model, sin(x) == 1)
     @test sprint(show_constraints_summary, model) ==
-          "`AffExpr`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint\nNonlinear: 1 constraint\n"
+          "`JuMP.AffExpr`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint\nNonlinear: 1 constraint\n"
     return
 end
 
