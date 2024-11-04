@@ -80,7 +80,7 @@ end
 
 # Helper function that rounds carefully for the purposes of printing Reals
 # for example, 5.3  =>  5.3, and 1.0  =>  1
-function _string_round(mode, x::Union{Float32,Float64})
+function _string_round(mode::MIME, x::Union{Float32,Float64})
     if isinteger(x) && typemin(Int64) <= x <= typemax(Int64)
         return string(round(Int64, x))
     end
@@ -1054,7 +1054,7 @@ function in_set_string(mode::MIME, set::MOI.EqualTo)
     return string(_math_symbol(mode, :eq), " ", _string_round(mode, set.value))
 end
 
-function in_set_string(::MIME"text/latex", set::MOI.Interval)
+function in_set_string(mode::MIME"text/latex", set::MOI.Interval)
     lower = _string_round(mode, set.lower)
     upper = _string_round(mode, set.upper)
     return string("\\in [", lower, ", ", upper, "]")
