@@ -17,6 +17,8 @@ using JuMP
 using LinearAlgebra
 using Test
 
+include("JuMPExtension.jl")
+
 # Helper function to test IO methods work correctly
 function _io_test_show(::MIME"text/plain", obj, exp_str)
     @test sprint(show, obj) == exp_str
@@ -1133,6 +1135,43 @@ function test_small_number_latex()
     y = 1.23 * x
     @test function_string(MIME("text/latex"), y) == "1.23 x"
     @test function_string(MIME("text/plain"), y) == "1.23 x"
+    return
+end
+
+function test_print_summary()
+    model = JuMPExtension.MyModel()
+    @variable(model, x)
+    @objective(model, Min, x)
+    @test occursin("Minimization problem with:", sprint(show, model))
+    return
+end
+
+function test_show_objective_summary()
+    model = Model()
+    @variable(model, x)
+    @objective(model, Min, x)
+    @test sprint(show_objective_function_summary, model) ==
+          "Objective function type: VariableRef\n"
+    @NLobjective(model, Min, x)
+    @test sprint(show_objective_function_summary, model) ==
+          "Objective function type: Nonlinear\n"
+    return
+end
+
+function test_show_constraints_summary()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, x >= 1)
+    @NLconstraint(model, sin(x) == 1)
+    @test sprint(show_constraints_summary, model) ==
+          "`AffExpr`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint\nNonlinear: 1 constraint\n"
+    return
+end
+
+function test_show_backend_summary()
+    model = Model()
+    @test sprint(show_backend_summary, model) ==
+          "Model mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached."
     return
 end
 
