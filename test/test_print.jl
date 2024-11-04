@@ -964,8 +964,10 @@ end
 
 function test_print_text_latex_interval_set()
     @test in_set_string(MIME("text/latex"), MOI.Interval(1, 2)) == "\\in [1, 2]"
-    @test in_set_string(MIME("text/latex"), MOI.Interval(1.0, 2.0)) == "\\in [1, 2]"
-    @test in_set_string(MIME("text/latex"), MOI.Interval(1.5, 2.5)) == "\\in [1.5, 2.5]"
+    @test in_set_string(MIME("text/latex"), MOI.Interval(1.0, 2.0)) ==
+          "\\in [1, 2]"
+    @test in_set_string(MIME("text/latex"), MOI.Interval(1.5, 2.5)) ==
+          "\\in [1.5, 2.5]"
     return
 end
 
