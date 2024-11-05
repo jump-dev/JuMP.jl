@@ -269,10 +269,10 @@ function test_extension_operator_warn(
     for i in 1:20_001
         # Triggers the increment of operator_counter since lhs has more than
         # 50 terms
-        if i <= 20_000
-            lhs + rhs
-        else
+        if i == 20_001 && ModelType <: Model
             @test_logs (:warn,) lhs + rhs
+        else
+            lhs + rhs
         end
         if ModelType <: Model
             # The following check verifies that this test covers the code
