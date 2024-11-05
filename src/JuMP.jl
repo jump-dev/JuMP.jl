@@ -1381,7 +1381,7 @@ PrecompileTools.@compile_workload begin
             @expressions(model, begin
                 a, -1 + x1 + x2
                 b, 1 + x1^2 + x2
-                nl_expr, sin(x)
+                nl_expr, sin(x1)
             end)
             @constraints(model, begin
                 c1, a >= 0
