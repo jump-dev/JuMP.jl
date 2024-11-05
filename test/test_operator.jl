@@ -264,11 +264,21 @@ function test_extension_operator_warn(
     if ModelType <: Model
         @test model.operator_counter == 0
     end
-    # Triggers the increment of operator_counter since sum(x) has more than 50 terms
-    @test_expression(sum(x) + 2x[1])
-    if ModelType <: Model
-        # The following check verifies that this test covers the code incrementing `operator_counter`
-        @test model.operator_counter == 1
+    lhs = sum(x)
+    rhs = 2 * x[1]
+    for i in 1:20_001
+        # Triggers the increment of operator_counter since lhs has more than
+        # 50 terms
+        if i == 20_001 && ModelType <: Model
+            @test_logs (:warn,) lhs + rhs
+        else
+            lhs + rhs
+        end
+        if ModelType <: Model
+            # The following check verifies that this test covers the code
+            # incrementing `operator_counter`
+            @test model.operator_counter == i
+        end
     end
     return
 end
@@ -720,6 +730,15 @@ function test_hermitian_and_symmetric()
         @test x - y isa LinearAlgebra.Hermitian
         @test x - y == x .- y
     end
+    return
+end
+
+function test_is_symmetric()
+    model = Model()
+    @variable(model, x[1:3])
+    @test !LinearAlgebra.issymmetric([x[1] x[2]; x[3] x[3]])
+    @test !LinearAlgebra.issymmetric([x[1] x[2]])
+    @test LinearAlgebra.issymmetric([x[1] x[2]; x[2] x[3]])
     return
 end
 

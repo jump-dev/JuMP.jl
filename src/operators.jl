@@ -445,10 +445,15 @@ Base.transpose(x::AbstractJuMPScalar) = x
 Base.conj(x::GenericVariableRef) = x
 # Can remove the following code once == overloading is removed
 
-function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}
-    (n = size(x, 1)) == size(x, 2) || return false
+function LinearAlgebra.issymmetric(x::Matrix{<:_JuMPTypes})
+    n = size(x, 1)
+    if n != size(x, 2)
+        return false
+    end
     for i in 1:n, j in (i+1):n
-        isequal(x[i, j], x[j, i]) || return false
+        if !isequal(x[i, j], x[j, i])
+            return false
+        end
     end
     return true
 end

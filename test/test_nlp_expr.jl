@@ -1122,4 +1122,16 @@ function test_error_legacy_parameter_constructor()
     return
 end
 
+function test_promote_type()
+    F = GenericNonlinearExpr{GenericVariableRef{Int}}
+    G = GenericNonlinearExpr{GenericVariableRef{Float64}}
+    @test_throws(
+        ErrorException(
+            "Unable to promote two different types of nonlinear expression",
+        ),
+        MA.promote_operation(+, F, G),
+    )
+    return
+end
+
 end  # module
