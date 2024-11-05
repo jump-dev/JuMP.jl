@@ -376,7 +376,7 @@ function test_extension_variable_name(
     @variable(model, x)
     _test_variable_name_util(x, "x")
     set_name(x, "y")
-    @test variable_by_name(model, "x") isa Nothing
+    @test variable_by_name(model, "x") === nothing
     _test_variable_name_util(x, "y")
     y = @variable(model, base_name = "y")
     err(name) = ErrorException("Multiple variables have the name $name.")
@@ -386,7 +386,7 @@ function test_extension_variable_name(
     _test_variable_name_util(y, "x")
     set_name(x, "x")
     @test_throws err("x") variable_by_name(model, "x")
-    @test variable_by_name(model, "y") isa Nothing
+    @test variable_by_name(model, "y") === nothing
     set_name(y, "y")
     _test_variable_name_util(x, "x")
     _test_variable_name_util(y, "y")

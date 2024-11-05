@@ -984,6 +984,7 @@ function test_optimize_not_called_warning()
     end
     @variable(model, x >= 0)
     @constraint(model, c, 2x <= 1)
+    @test_throws OptimizeNotCalled value(x)
     optimize!(model)
     set_start_value(x, 0.0)
     @test_logs (:warn,) (@test_throws OptimizeNotCalled objective_value(model))
@@ -1345,6 +1346,21 @@ function test_iterate_scalar()
     @test !isempty(x)
     @test iterate(x) == (x, true)
     @test iterate(x, true) === nothing
+    return
+end
+
+function test_optimizer_index()
+    model = Model() do
+        inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
+        return MOI.Utilities.MockOptimizer(inner)
+    end
+    @variable(model, x)
+    @test_throws(
+        ErrorException(
+            "There is no `optimizer_index` as the optimizer is not synchronized with the cached model. Call `MOIU.attach_optimizer(model)` to synchronize it.",
+        ),
+        optimizer_index(x),
+    )
     return
 end
 

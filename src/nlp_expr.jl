@@ -632,15 +632,13 @@ function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
             )
         elseif node.type == MOI.Nonlinear.NODE_MOI_VARIABLE
             V(model, MOI.VariableIndex(node.index))
-        elseif node.type == MOI.Nonlinear.NODE_PARAMETER
-            NonlinearParameter(model, node.index)
-        elseif node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
-            NonlinearExpression(model, node.index)
         elseif node.type == MOI.Nonlinear.NODE_VALUE
             expr.values[node.index]
         else
             # node.type == MOI.Nonlinear.NODE_COMPARISON
             # node.type == MOI.Nonlinear.NODE_LOGIC
+            # node.type == MOI.Nonlinear.NODE_PARAMETER
+            # node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
             error("Unsupported node")
         end
     end

@@ -621,7 +621,7 @@ function _test_constraint_name_util(ModelType, VariableRefType)
         MOI.EqualTo{Float64},
     )
     set_name(con, "kon")
-    @test constraint_by_name(model, "con") isa Nothing
+    @test constraint_by_name(model, "con") === nothing
     _test_constraint_name_util(
         con,
         "kon",
@@ -646,7 +646,7 @@ function _test_constraint_name_util(ModelType, VariableRefType)
     )
     set_name(con, "con")
     @test_throws err("con") constraint_by_name(model, "con")
-    @test constraint_by_name(model, "kon") isa Nothing
+    @test constraint_by_name(model, "kon") === nothing
     set_name(kon, "kon")
     _test_constraint_name_util(
         con,
@@ -2154,6 +2154,20 @@ function test_hermitian_shape()
     primal = [1 2+4im; 2-4im 3]
     d = @constraint(model, x == LinearAlgebra.Hermitian(primal))
     _test_shape(primal, [2 4+8im; 4-8im 6], constraint_object(d))
+    return
+end
+
+function test_constraint_by_name()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, 2x <= 1)
+    @test constraint_by_name(model, "c") === c
+    @test constraint_by_name(model, "d") === nothing
+    F, S1, S2 = AffExpr, MOI.LessThan{Float64}, MOI.GreaterThan{Float64}
+    @test constraint_by_name(model, "c", F, S1) === c
+    @test constraint_by_name(model, "c", F, S2) === nothing
+    @test constraint_by_name(model, "d", F, S1) === nothing
+    @test constraint_by_name(model, "d", F, S2) === nothing
     return
 end
 

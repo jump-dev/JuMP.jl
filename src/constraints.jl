@@ -465,11 +465,10 @@ function constraint_by_name end
 
 function constraint_by_name(model::GenericModel, name::String)
     index = MOI.get(backend(model), MOI.ConstraintIndex, name)
-    if index isa Nothing
+    if index === nothing
         return nothing
-    else
-        return constraint_ref_with_index(model, index)
     end
+    return constraint_ref_with_index(model, index)
 end
 
 function constraint_by_name(
@@ -479,7 +478,7 @@ function constraint_by_name(
     ::Type{S},
 ) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
     index = MOI.get(backend(model), MOI.ConstraintIndex{F,S}, name)
-    if index isa Nothing
+    if index === nothing
         return nothing
     end
     return constraint_ref_with_index(model, index)
