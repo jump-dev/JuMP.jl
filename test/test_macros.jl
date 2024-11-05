@@ -2445,28 +2445,28 @@ end
 
 function test_set_bounds_twice_error()
     model = Model()
-    @test_throws_runtime(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x >= 0, lower_bound = 1)`: " *
             "Cannot specify variable lower_bound twice",
         ),
         @variable(model, x >= 0, lower_bound = 1),
     )
-    @test_throws_runtime(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x <= 0, upper_bound = 1)`: " *
             "Cannot specify variable upper_bound twice",
         ),
         @variable(model, x <= 0, upper_bound = 1),
     )
-    @test_throws_runtime(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x, Bin, binary = true)`: " *
             "'Bin' and 'binary' keyword argument cannot both be specified.",
         ),
         @variable(model, x, Bin, binary = true),
     )
-    @test_throws_runtime(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x, Int, integer = true)`: " *
             "'Int' and 'integer' keyword argument cannot both be specified.",
