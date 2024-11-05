@@ -1068,15 +1068,6 @@ function Base.getindex(m::AbstractModel, name::Symbol)
     obj_dict = object_dictionary(m)
     if !haskey(obj_dict, name)
         throw(KeyError(name))
-    elseif obj_dict[name] === nothing
-        error(
-            "There are multiple variables and/or constraints named $name " *
-            "that are already attached to this model. If creating variables " *
-            "programmatically, use the anonymous variable syntax " *
-            "`x = @variable(m, [1:N], ...)`. If creating constraints " *
-            "programmatically, use the anonymous constraint syntax " *
-            "`con = @constraint(m, ...)`.",
-        )
     end
     return obj_dict[name]
 end
