@@ -571,5 +571,4 @@ function test_LinearTermIterator_eltype()
     return
 end
 
-
 end  # TestExpr
