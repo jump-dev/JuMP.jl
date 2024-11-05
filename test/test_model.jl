@@ -1338,4 +1338,14 @@ function test_set_abstract_string()
     return
 end
 
+function test_iterate_scalar()
+    model = Model()
+    @variable(model, x)
+    @test collect(x) == [x]
+    @test !isempty(x)
+    @test iterate(x) == (x, true)
+    @test iterate(x, true) === nothing
+    return
+end
+
 end  # module TestModels

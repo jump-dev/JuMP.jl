@@ -2443,4 +2443,48 @@ function test_constraint_vect_vcat()
     return
 end
 
+function test_set_bounds_twice_error()
+    model = Model()
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x >= 0, lower_bound = 1)`: " *
+            "Cannot specify variable lower_bound twice",
+        ),
+        @variable(model, x >= 0, lower_bound = 1),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x <= 0, upper_bound = 1)`: " *
+            "Cannot specify variable upper_bound twice",
+        ),
+        @variable(model, x <= 0, upper_bound = 1),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x, Bin, binary = true)`: " *
+            "'Bin' and 'binary' keyword argument cannot both be specified.",
+        ),
+        @variable(model, x, Bin, binary = true),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x, Int, integer = true)`: " *
+            "'Int' and 'integer' keyword argument cannot both be specified.",
+        ),
+        @variable(model, x, Int, integer = true),
+    )
+    return
+end
+
+function test_array_scalar_sets()
+    model = Model()
+    sets = [Semicontinuous(2, 3), Semiinteger(2, 3)]
+    @variable(model, x[1:2] in sets)
+    c = only(all_constraints(model, VariableRef, MOI.Semicontinuous{Int}))
+    @test constraint_object(c).func == x[1]
+    c = only(all_constraints(model, VariableRef, MOI.Semiinteger{Int}))
+    @test constraint_object(c).func == x[2]
+    return
+end
+
 end  # module
