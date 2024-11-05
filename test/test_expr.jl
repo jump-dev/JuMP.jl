@@ -552,4 +552,24 @@ function test_multiply_expr_MA_Zero()
     return
 end
 
+function test_aff_expr_constructors()
+    model = Model()
+    @variable(model, x)
+    y = 3.0 * x + 1.0
+    @test isequal_canonical(AffExpr(1.0, x => 1.0, x => 2.0), y)
+    @test isequal_canonical(GenericAffExpr(1.0, [x => 1.0, x => 2.0]), y)
+    @test isequal_canonical(AffExpr(2 // 2, x => 1.0, x => 2.0), y)
+    @test isequal_canonical(AffExpr(2 // 2, [x => 1.0, x => 2.0]), y)
+    return
+end
+
+function test_LinearTermIterator_eltype()
+    model = Model()
+    @variable(model, x)
+    y = 3.0 * x + 1.0
+    @test eltype(linear_terms(y)) == Tuple{Float64,VariableRef}
+    return
+end
+
+
 end  # TestExpr

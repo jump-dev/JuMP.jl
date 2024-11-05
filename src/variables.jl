@@ -73,9 +73,7 @@ function _set_upper_bound_or_error(
 end
 
 function _fix_or_error(error_fn::Function, info::_VariableInfoExpr, value)
-    if info.has_fix
-        error_fn("Cannot specify variable fixed value twice")
-    end
+    @assert !info.has_fix
     info.has_fix = true
     info.fixed_value = value
     return
@@ -2206,15 +2204,6 @@ function VariablesConstrainedOnCreation(
     return VariablesConstrainedOnCreation(variables, set, VectorShape())
 end
 
-_vectorize_names(names, shape) = vectorize(names, shape)
-
-# In some cases `names` may be a "" passed in from the macros. For now, this is
-# the only case we support, so throw an assertion error if not empty.
-function _vectorize_names(name::String, ::Any)
-    @assert isempty(name)
-    return
-end
-
 function add_variable(
     model::GenericModel{T},
     variable::VariablesConstrainedOnCreation,
@@ -2224,7 +2213,7 @@ function add_variable(
         backend(model),
         variable.scalar_variables,
         variable.set,
-        _vectorize_names(names, variable.shape),
+        vectorize(names, variable.shape),
         T,
     )
     var_refs =
