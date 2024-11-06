@@ -1367,13 +1367,20 @@ PrecompileTools.@compile_workload begin
     # at lowering time, not much of this would get precompiled without `@eval`
     @eval begin
         let
-            model = Model(
+            # We don't care about this particular optimizer, but it still
+            # exercises generic code paths that calls like
+            # Model(HiGHS.Optimizer) also need.
+            Model(
                 () -> MOI.Utilities.MockOptimizer(
                     MOI.Utilities.UniversalFallback(
                         MOI.Utilities.Model{Float64}(),
                     ),
                 ),
             )
+            # Use an empty model to build, which is a common use-case, and
+            # doesn't bake in Utilities.MockOptimizer.
+            model = Model()
+            set_silent(model)
             @variables(model, begin
                 x1 >= 0
                 0 <= x2 <= 1
@@ -1385,8 +1392,9 @@ PrecompileTools.@compile_workload begin
                 x8[i = 1:3; isodd(i)], (start = i)
             end)
             @expressions(model, begin
-                a, -1 + x1 + x2
+                a, 2 * x1 + 3 * x2
                 b, 1 + x1^2 + x2
+                nl_expr, sin(x1)
             end)
             @constraints(model, begin
                 c1, a >= 0
@@ -1400,42 +1408,22 @@ PrecompileTools.@compile_workload begin
                 [x1, x2, x1] in SecondOrderCone()
                 [1.0*x1 x2; x2 x1] >= 0, PSDCone()
                 1.0 * x1 ⟂ x2
+                nl_expr <= 1
             end)
             @objective(model, Min, x1)
             @objective(model, Max, a)
             @objective(model, Min, b)
-            @NLconstraint(model, c9, 1 * sin(x1) + 2.0 * sin(a) + sin(b) <= 1)
-            @NLparameter(model, p == 2)
-            @NLexpression(model, expr, x1^p)
-            @NLobjective(model, Min, 1 + expr)
+            set_optimizer(
+                model,
+                () -> MOI.Utilities.MockOptimizer(
+                    MOI.Utilities.UniversalFallback(
+                        MOI.Utilities.Model{Float64}(),
+                    ),
+                ),
+            )
             optimize!(model)
-            # This block could sit in MOI, but it's a public API at the JuMP
-            # level, so it can go here.
-            #
-            # We evaluate with a `view` because it's a common type for solvers
-            # like Ipopt to use.
-            d = NLPEvaluator(model)
-            MOI.features_available(d)
-            MOI.initialize(d, [:Grad, :Jac, :Hess])
-            g = zeros(num_nonlinear_constraints(model))
-            v_g = view(g, 1:length(g))
-            x = zeros(num_variables(model))
-            MOI.eval_objective(d, x)
-            MOI.eval_constraint(d, g, x)
-            MOI.eval_constraint(d, v_g, x)
-            MOI.eval_objective_gradient(d, g, x)
-            J = zeros(length(MOI.jacobian_structure(d)))
-            MOI.eval_constraint_jacobian(d, J, x)
-            v_J = view(J, 1:length(J))
-            MOI.eval_constraint_jacobian(d, v_J, x)
-            H = zeros(length(MOI.hessian_lagrangian_structure(d)))
-            v_H = view(H, 1:length(H))
-            MOI.eval_hessian_lagrangian(d, v_H, x, 1.0, v_g)
         end
     end
 end
-
-include("precompile.jl")
-_precompile_()
 
 end
