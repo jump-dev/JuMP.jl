@@ -1371,7 +1371,7 @@ function test_copy_nonlinear()
     @test_throws(
         ErrorException(
             "copy is not supported yet for models with nonlinear constraints" *
-            " and/or nonlinear objective function"
+            " and/or nonlinear objective function",
         ),
         copy_model(model),
     )

@@ -1683,4 +1683,46 @@ function test_get_node_type_comparison()
     return
 end
 
+function test_NL_dot()
+    model = Model()
+    @variable(model, x)
+    y = (; abc = x)
+    @NLexpression(model, ref, y.abc)
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, x) == nlp[index(ref)]
+    return
+end
+
+function test_NL_adjoint()
+    model = Model()
+    @variable(model, x)
+    @NLexpression(model, ref, x')
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, x) == nlp[index(ref)]
+    return
+end
+
+function test_NL_too_many_arguments_errors()
+    model = Model()
+    @test_throws_parsetime(
+        ErrorException(
+            "At `@NLexpression()`: To few arguments (0); must pass the model and nonlinear expression as arguments.",
+        ),
+        @NLexpression(),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            "At `@NLexpression(model, ex, 1, 2)`: To many arguments (4).",
+        ),
+        @NLexpression(model, ex, 1, 2),
+    )
+    @test_throws_parsetime(
+        ErrorException(
+            "At `@NLconstraint(model, ex, 1, 2)`: too many arguments.",
+        ),
+        @NLconstraint(model, ex, 1, 2),
+    )
+    return
+end
+
 end
