@@ -1364,4 +1364,29 @@ function test_optimizer_index()
     return
 end
 
+function test_copy_nonlinear()
+    model = Model()
+    @variable(model, x)
+    @NLconstraint(model, x <= 1)
+    @test_throws(
+        ErrorException(
+            "copy is not supported yet for models with nonlinear constraints" *
+            " and/or nonlinear objective function",
+        ),
+        copy_model(model),
+    )
+    return
+end
+
+function test_deepcopy()
+    model = Model()
+    @test_throws(
+        ErrorException(
+            "`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.",
+        ),
+        deepcopy(model),
+    )
+    return
+end
+
 end  # module TestModels
