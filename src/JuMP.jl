@@ -1307,27 +1307,14 @@ include("print.jl")
 # `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
 # use: `MOI.OPTIMAL`, `JuMP.OPTIMAL`, or `using JuMP; OPTIMAL`.
 
-function _eval_instances_in_jump(moi_enum)
-    for enum in instances(moi_enum)
-        name = Symbol(enum)
-        # `eval` the instance as `const name = MOI.name`.
-        eval(Expr(:const, Expr(:(=), name, enum)))
-        # Documentation is not copied for a `const` expression of an object, so
-        # we need to manually set the docstring.
-        docstr = Docs.docstr(Docs.Binding(MOI, name))
-        Docs.doc!(@__MODULE__, Docs.Binding(@__MODULE__, name), docstr)
+for sym in [:ResultStatusCode, :TerminationStatusCode, :OptimizationSense]
+    @eval const $sym = MOI.$sym
+    for enum in instances(getfield(MOI, sym))
+        @eval const $(Symbol(enum)) = $enum
+        docstr = Docs.docstr(Docs.Binding(MOI, Symbol(enum)))
+        Docs.doc!(@__MODULE__, Docs.Binding(@__MODULE__, Symbol(enum)), docstr)
     end
-    return
 end
-
-const ResultStatusCode = MOI.ResultStatusCode
-_eval_instances_in_jump(MOI.ResultStatusCode)
-
-const TerminationStatusCode = MOI.TerminationStatusCode
-_eval_instances_in_jump(MOI.TerminationStatusCode)
-
-const OptimizationSense = MOI.OptimizationSense
-_eval_instances_in_jump(MOI.OptimizationSense)
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with
