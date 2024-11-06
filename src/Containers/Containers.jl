@@ -19,10 +19,6 @@ module Containers
 
 import OrderedCollections
 
-# Arbitrary typed indices. Linear indexing not supported.
-struct IndexAnyCartesian <: Base.IndexStyle end
-Base.IndexStyle(::IndexAnyCartesian, ::IndexAnyCartesian) = IndexAnyCartesian()
-
 export DenseAxisArray, SparseAxisArray
 
 include("DenseAxisArray.jl")

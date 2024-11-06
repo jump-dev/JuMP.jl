@@ -448,10 +448,6 @@ function Base.setindex!(
     return
 end
 
-function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
-    return IndexAnyCartesian()
-end
-
 function Base.setindex!(
     A::DenseAxisArray{T,N},
     value::DenseAxisArray{T,N},
