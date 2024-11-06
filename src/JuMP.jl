@@ -1372,7 +1372,7 @@ PrecompileTools.@compile_workload begin
             # Model(HiGHS.Optimizer) also need.
             Model(
                 () -> MOI.Utilities.MockOptimizer(
-                MOI.Utilities.UniversalFallback(
+                    MOI.Utilities.UniversalFallback(
                         MOI.Utilities.Model{Float64}(),
                     ),
                 ),
@@ -1416,7 +1416,7 @@ PrecompileTools.@compile_workload begin
             set_optimizer(
                 model,
                 () -> MOI.Utilities.MockOptimizer(
-                MOI.Utilities.UniversalFallback(
+                    MOI.Utilities.UniversalFallback(
                         MOI.Utilities.Model{Float64}(),
                     ),
                 ),
