@@ -1706,19 +1706,19 @@ function test_NL_too_many_arguments_errors()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "At `@NLexpression()`: To few arguments (0); must pass the model and nonlinear expression as arguments.",
+            "In `@NLexpression()`: To few arguments (0); must pass the model and nonlinear expression as arguments.",
         ),
         @NLexpression(),
     )
     @test_throws_parsetime(
         ErrorException(
-            "At `@NLexpression(model, ex, 1, 2)`: To many arguments (4).",
+            "In `@NLexpression(model, ex, 1, 2)`: To many arguments (4).",
         ),
         @NLexpression(model, ex, 1, 2),
     )
     @test_throws_parsetime(
         ErrorException(
-            "At `@NLconstraint(model, ex, 1, 2)`: too many arguments.",
+            "In `@NLconstraint(model, ex, 1, 2)`: too many arguments.",
         ),
         @NLconstraint(model, ex, 1, 2),
     )
