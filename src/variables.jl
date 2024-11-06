@@ -1985,7 +1985,7 @@ function _moi_add_constrained_variable(
     moi_backend::MOI.ModelLike,
     ::Nothing,
     set::Tuple{MOI.GreaterThan{T},MOI.LessThan{T}}
-) where {T}
+) where {T<:Real}
     x, _ = MOI.add_constrained_variable(moi_backend, set)
     return x
 end
