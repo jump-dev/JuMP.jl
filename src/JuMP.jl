@@ -1367,7 +1367,20 @@ PrecompileTools.@compile_workload begin
     # at lowering time, not much of this would get precompiled without `@eval`
     @eval begin
         let
+            # We don't care about this particular optimizer, but it still
+            # exercises generic code paths that calls like
+            # Model(HiGHS.Optimizer) also need.
+            Model(
+                () -> MOI.Utilities.MockOptimizer(
+                MOI.Utilities.UniversalFallback(
+                        MOI.Utilities.Model{Float64}(),
+                    ),
+                ),
+            )
+            # Use an empty model to build, which is a common use-case, and
+            # doesn't bake in Utilities.MockOptimizer.
             model = Model()
+            set_silent(model)
             @variables(model, begin
                 x1 >= 0
                 0 <= x2 <= 1
@@ -1379,7 +1392,7 @@ PrecompileTools.@compile_workload begin
                 x8[i = 1:3; isodd(i)], (start = i)
             end)
             @expressions(model, begin
-                a, -1 + x1 + x2
+                a, 2 * x1 + 3 * x2
                 b, 1 + x1^2 + x2
                 nl_expr, sin(x1)
             end)
@@ -1400,6 +1413,15 @@ PrecompileTools.@compile_workload begin
             @objective(model, Min, x1)
             @objective(model, Max, a)
             @objective(model, Min, b)
+            set_optimizer(
+                model,
+                () -> MOI.Utilities.MockOptimizer(
+                MOI.Utilities.UniversalFallback(
+                        MOI.Utilities.Model{Float64}(),
+                    ),
+                ),
+            )
+            optimize!(model)
         end
     end
 end
