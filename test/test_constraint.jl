@@ -2198,7 +2198,10 @@ function test_shadow_price_errors()
     @variable(model, 0 <= x <= 1)
     set_optimizer(
         model,
-        () -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
+        () -> MOI.Utilities.MockOptimizer(
+            MOI.Utilities.Model{Float64}();
+            eval_variable_constraint_dual = false,
+        ),
     )
     optimize!(model)
     mock = unsafe_backend(model)
