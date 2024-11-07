@@ -266,4 +266,10 @@ function test_add_additional_args()
     return
 end
 
+function test_trailing_semicolon()
+    Containers.@container(x[a in 2:3; ], a)
+    @test x isa DenseAxisArray
+    return
+end
+
 end  # module

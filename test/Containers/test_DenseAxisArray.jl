@@ -874,4 +874,51 @@ function test_multi_arg_eachindex()
     return
 end
 
+function test_LinearIndices()
+    Containers.@container(x[i in 2:3], i)
+    @test_throws(
+        ErrorException("DenseAxisArray does not support this operation."),
+        LinearIndices(x),
+    )
+    return
+end
+
+function test_CartesianIndices()
+    Containers.@container(x[i in 2:3], i)
+    @test CartesianIndices(x) == CartesianIndices((2,))
+    return
+end
+
+function test_show_nd()
+    Containers.@container(
+        x[a in 2:3, b in 2:3, c in 2:14, d in 2:14],
+        (a, b, c, d),
+    )
+    s = sprint(io -> show(IOContext(io, :limit => true), x))
+    limit_indices = [2, 3, 4, 12, 13, 14]
+    for c in 2:14, d in 2:14
+        is_visible = (c in limit_indices && d in limit_indices)
+        @test occursin("[:, :, $c, $d]", s) == is_visible
+        for a in 2:3, b in 2:3
+            @test occursin("($a, $b, $c, $d)", s) == is_visible
+        end
+    end
+    s = sprint(io -> show(IOContext(io, :limit => false), x))
+    limit_indices = [2, 3, 4, 12, 13, 14]
+    for c in 2:14, d in 2:14
+        @test occursin("[:, :, $c, $d]", s)
+        for a in 2:3, b in 2:3
+            @test occursin("($a, $b, $c, $d)", s)
+        end
+    end
+    return
+end
+
+function test_view_DenseAxisArray()
+    Containers.@container(x[a in 2:3], a)
+    @test_throws KeyError view(x, 3:4)
+    @test_throws KeyError view(x, 4)
+    return
+end
+
 end  # module
