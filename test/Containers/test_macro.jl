@@ -267,7 +267,7 @@ function test_add_additional_args()
 end
 
 function test_trailing_semicolon()
-    Containers.@container(x[a in 2:3; ], a)
+    Containers.@container(x[a in 2:3;], a)
     @test x isa DenseAxisArray
     return
 end
