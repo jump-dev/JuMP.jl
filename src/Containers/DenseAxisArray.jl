@@ -12,7 +12,6 @@
 struct _AxisLookup{D}
     data::D
 end
-Base.:(==)(x::_AxisLookup{D}, y::_AxisLookup{D}) where {D} = x.data == y.data
 
 # Default fallbacks.
 Base.getindex(::_AxisLookup, key) = throw(KeyError(key))

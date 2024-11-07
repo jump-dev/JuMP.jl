@@ -1389,4 +1389,27 @@ function test_deepcopy()
     return
 end
 
+struct _ModelNoSolverName <: MOI.AbstractOptimizer end
+
+MOI.is_empty(::_ModelNoSolverName) = true
+
+function test_solver_name_not_implemented()
+    model = direct_model(_ModelNoSolverName())
+    @test solver_name(model) ==
+          "SolverName() attribute not implemented by the optimizer."
+    return
+end
+
+struct _ModelSolverNameError <: MOI.AbstractOptimizer end
+
+MOI.is_empty(::_ModelSolverNameError) = true
+
+MOI.get(::_ModelSolverNameError, ::MOI.SolverName) = error("test")
+
+function test_solver_name_error()
+    model = direct_model(_ModelSolverNameError())
+    @test_throws ErrorException("test") solver_name(model)
+    return
+end
+
 end  # module TestModels

@@ -19,6 +19,7 @@ function test_VectorizedProductIterator()
     @test isempty(collect(Containers.vectorized_product(2, I, 1:0)))
     @test collect(Containers.vectorized_product(2, I)) ==
           [(2, 1) (2, 3) (2, 2) (2, 4)]
+    @test ndims(Containers.vectorized_product(2, I)) == 2
     return
 end
 
@@ -32,6 +33,15 @@ end
 function test_infinite_size()
     f = Iterators.repeated(1)
     @test_throws ErrorException Containers.vectorized_product(f)
+    return
+end
+
+function test_container_two_arg()
+    a = Containers.container(Containers.vectorized_product(2:3, 1:2)) do i, j
+        return (i, j)
+    end
+    Containers.@container(b[i in 2:3, j in 1:2], (i, j))
+    @test a == b
     return
 end
 

@@ -381,4 +381,11 @@ function test_sparseaxisarray_order()
     return
 end
 
+function test_show_empty_limit()
+    x = SparseAxisArray(Dict{Tuple{Int},Int}())
+    @test sprint(io -> show(IOContext(io, :limit => false), x)) ==
+          "$SparseAxisArray{$Int, 1, Tuple{$Int}} with 0 entries"
+    return
+end
+
 end  # module
