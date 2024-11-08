@@ -18,13 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
  - Various minor improvements to the documentation (#3855) (#3860)
- - Added [MathOptAI.jl](@ref) and [MathOptSymbolicAD.jl](@ref) (#3858)
+ - Added [MathOptAI.jl](@ref) and [MathOptSymbolicAD.jl](@ref) to the list of extensions in the documentation (#3858)
  - Clarified [`add_to_expression!`](@ref) can add two expressions (#3859)
  - Added `SHOT` to the installation table (#3853)
  - Improvements to test coverage (#3867) (#3868) (#3869) (#3870) (#3871) (#3872)
    (#3873) (#3874) (#3875)
  - JuMP now uses [`MOI.add_constrained_variable`](@ref) when adding a scalar
-   variable with bounds (#3863) (#3865)
+   variable with bounds for improving model creation performance with some solvers (#3863) (#3865)
 
 ## Version 1.23.3 (October 21, 2024)
 
