@@ -19,14 +19,14 @@
 # Files _must_ be written in Documenter-compatible Markdown, and they _should_
 # follow the style of the READMEs of the jump-dev packages.
 #
-# The `rev` _must_ be a fixed git reference, such as a commit SHA or a tag. It 
+# The `rev` _must_ be a fixed git reference, such as a commit SHA or a tag. It
 # must not be a relative reference such as a branch name.
 #
 # If you develop a new solver or extension, please add it to this list.
 #
 # Periodically, we will bump the `rev` of each package to reflect recent
 # changes. If any solver or extension becomes unmaintained or incompatible with
-# the latest version of JuMP or MathOptInterface, we reserve the right to 
+# the latest version of JuMP or MathOptInterface, we reserve the right to
 # temporarily remove it from the list until it is updated again.
 
 # ============================= jump-dev packages ============================ #
@@ -57,12 +57,12 @@
 [Gurobi]
     rev = "9bafe7d3e4ed198b97836362a62bb48a14d408bc"
 [HiGHS]
-    rev = "v1.10.0"
+    rev = "v1.12.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.6.6"
+    rev = "v1.6.7"
 [KNITRO]
     rev = "v0.14.4"
 [MiniZinc]
@@ -95,7 +95,7 @@
 [SCS]
     rev = "v2.0.1"
 [SDPA]
-    rev = "v0.5.1"
+    rev = "v0.6.0"
 [SDPLR]
     rev = "v0.1.0"
 [SDPNAL]
@@ -146,7 +146,7 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "8bba4cf6d9ef1602b4cfe3ea31b847f21ce25837"
+    rev = "v0.8.2"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
@@ -175,7 +175,7 @@
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.2"
+    rev = "v0.1.6"
     extension = true
 [MathOptSymbolicAD]
     user = "lanl-ansi"
@@ -195,7 +195,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.3"
+    rev = "v0.6.4"
     has_html = true
     extension = true
 [ProxSDP]
@@ -204,7 +204,7 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.11.14"
+    rev = "v0.12.0"
 [SDDP]
     user = "odow"
     rev = "v1.9.0"

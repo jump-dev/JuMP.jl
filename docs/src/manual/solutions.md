@@ -673,7 +673,7 @@ which result to return.
     solution. Use [`objective_value`](@ref) to assess the quality of the
     remaining solutions.
 
-```jldoctest; filter=[r"Solve time.+", r"Dual objective value.+"]
+```jldoctest; filter=[r"Solve time.+"]
 julia> using JuMP
 
 julia> import MultiObjectiveAlgorithms as MOA
@@ -716,14 +716,9 @@ julia> solution_summary(model; result = 1)
   Dual status        : NO_SOLUTION
   Objective value    : [0.00000e+00,0.00000e+00]
   Objective bound    : [0.00000e+00,-9.00000e+00]
-  Relative gap       : 0.00000e+00
-  Dual objective value : -3.33067e-16
 
 * Work counters
   Solve time (sec)   : 5.34880e-01
-  Simplex iterations : 0
-  Barrier iterations : 0
-  Node count         : -1
 
 julia> for i in 1:result_count(model)
            println("Solution $i")
