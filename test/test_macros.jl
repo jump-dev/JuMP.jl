@@ -2563,7 +2563,7 @@ function test_subexpression_kwarg_dict_element()
     @variable(model, x[i in 1:2])
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, ex, Dict((i => x[i] for i = 1:2)), subexpression = true)`: Unable to build a subexpression for the type Dict{Int64, VariableRef}",
+            "In `@expression(model, ex, Dict((i => x[i] for i = 1:2)), subexpression = true)`: Unable to build a subexpression for the type $(Dict{Int,VariableRef})",
         ),
         @expression(
             model,
