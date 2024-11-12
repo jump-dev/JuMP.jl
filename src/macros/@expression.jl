@@ -69,24 +69,30 @@ macro expression(input_args...)
         error_fn,
         input_args;
         num_positional_args = 2:3,
-        valid_kwargs = [:container],
+        valid_kwargs = [:container, :subexpression],
     )
     if Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@expressions`?")
     end
+    is_subexpression = get(kwargs, :subexpression, false)
     name_expr = length(args) == 3 ? args[2] : nothing
     name, index_vars, indices = Containers.parse_ref_sets(
         error_fn,
         name_expr;
         invalid_index_variables = [args[1]],
     )
+    name_expr = Containers.build_name_expr(name, index_vars, kwargs)
     model = esc(args[1])
     expr, build_code = _rewrite_expression(args[end])
     code = quote
         $build_code
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($model, $expr)
+        if $is_subexpression
+            _build_subexpression($error_fn, $model, $expr, $name_expr)
+        else
+            _replace_zero($model, $expr)
+        end
     end
     return _finalize_macro(
         model,
@@ -94,6 +100,41 @@ macro expression(input_args...)
         __source__;
         register_name = name,
         wrap_let = true,
+    )
+end
+
+function _build_subexpression(
+    ::Function,
+    model::AbstractModel,
+    expr::AbstractJuMPScalar,
+    name::String,
+)
+    y = @variable(model)
+    set_name(y, name)
+    @constraint(model, y == expr)
+    return y
+end
+
+function _build_subexpression(
+    ::Function,
+    model::AbstractModel,
+    expr::Array{<:AbstractJuMPScalar},
+    name::String,
+)
+    y = [@variable(model) for _ in expr]
+    set_name.(y, name)
+    @constraint(model, y .== expr)
+    return y
+end
+
+function _build_subexpression(
+    error_fn::Function,
+    ::AbstractModel,
+    expr::Any,
+    ::String,
+)
+    return error_fn(
+        "Unable to build a subexpression for the type $(typeof(expr))",
     )
 end
 

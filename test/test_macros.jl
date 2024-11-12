@@ -2487,4 +2487,92 @@ function test_array_scalar_sets()
     return
 end
 
+function test_subexpression_kwarg()
+    model = Model()
+    @variable(model, x)
+    @expression(model, ex, sin(x), subexpression = true)
+    @test ex isa VariableRef
+    @test model[:ex] isa VariableRef
+    @test model[:ex] === ex
+    @test occursin("ex - sin(x) = 0", sprint(print, model))
+    @test num_variables(model) == 2
+    return
+end
+
+function test_subexpression_kwarg_array()
+    model = Model()
+    @variable(model, x[1:2])
+    @expression(model, ex[i in 1:2], sin(x[i]), subexpression = true)
+    @test ex isa Vector{VariableRef}
+    @test model[:ex] === ex
+    @test occursin("ex[1] - sin(x[1]) = 0", sprint(print, model))
+    @test occursin("ex[2] - sin(x[2]) = 0", sprint(print, model))
+    @test num_variables(model) == 4
+    return
+end
+
+function test_subexpression_kwarg_dense_axis_array()
+    model = Model()
+    @variable(model, x[2:3])
+    @expression(model, ex[i in 2:3], sin(x[i]), subexpression = true)
+    @test ex isa Containers.DenseAxisArray{VariableRef}
+    @test model[:ex] === ex
+    @test occursin("ex[2] - sin(x[2]) = 0", sprint(print, model))
+    @test occursin("ex[3] - sin(x[3]) = 0", sprint(print, model))
+    @test num_variables(model) == 4
+    return
+end
+
+function test_subexpression_kwarg_dense_axis_array()
+    model = Model()
+    @variable(model, x[i in 1:3; isodd(i)])
+    @expression(model, ex[i in 1:3; isodd(i)], sin(x[i]), subexpression = true)
+    @test ex isa Containers.SparseAxisArray{VariableRef}
+    @test model[:ex] === ex
+    @test occursin("ex[1] - sin(x[1]) = 0", sprint(print, model))
+    @test occursin("ex[3] - sin(x[3]) = 0", sprint(print, model))
+    @test num_variables(model) == 4
+    return
+end
+
+function test_subexpression_kwarg_vector_element()
+    model = Model()
+    @variable(model, x[i in 1:2])
+    @expression(model, ex, sin.(x), subexpression = true)
+    @test ex isa Vector{VariableRef}
+    @test model[:ex] === ex
+    @test occursin("ex - sin(x[1]) = 0", sprint(print, model))
+    @test occursin("ex - sin(x[2]) = 0", sprint(print, model))
+    @test num_variables(model) == 4
+    return
+end
+
+function test_subexpression_kwarg_no_name()
+    model = Model()
+    @variable(model, x)
+    ex = @expression(model, sin(x), subexpression = true)
+    @test ex isa VariableRef
+    @test !haskey(model, :ex)
+    @test occursin("_[2] - sin(x) = 0", sprint(print, model))
+    @test num_variables(model) == 2
+    return
+end
+
+function test_subexpression_kwarg_dict_element()
+    model = Model()
+    @variable(model, x[i in 1:2])
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, ex, Dict((i => x[i] for i = 1:2)), subexpression = true)`: Unable to build a subexpression for the type Dict{Int64, VariableRef}",
+        ),
+        @expression(
+            model,
+            ex,
+            Dict(i => x[i] for i in 1:2),
+            subexpression = true,
+        ),
+    )
+    return
+end
+
 end  # module
