@@ -474,3 +474,30 @@ for file in readdir(joinpath(@__DIR__, "macros"))
         include(joinpath(@__DIR__, "macros", file))
     end
 end
+
+# These methods must come after the macros are included, because they use both
+# `@variable` and `@constraint`.
+
+function _build_subexpression(
+    ::Function,
+    model::AbstractModel,
+    expr::AbstractJuMPScalar,
+    name::String,
+)
+    y = @variable(model)
+    set_name(y, name)
+    @constraint(model, y == expr)
+    return y
+end
+
+function _build_subexpression(
+    ::Function,
+    model::AbstractModel,
+    expr::Array{<:AbstractJuMPScalar},
+    name::String,
+)
+    y = [@variable(model) for _ in expr]
+    set_name.(y, name)
+    @constraint(model, y .== expr)
+    return y
+end

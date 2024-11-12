@@ -104,30 +104,6 @@ macro expression(input_args...)
 end
 
 function _build_subexpression(
-    ::Function,
-    model::AbstractModel,
-    expr::AbstractJuMPScalar,
-    name::String,
-)
-    y = @variable(model)
-    set_name(y, name)
-    @constraint(model, y == expr)
-    return y
-end
-
-function _build_subexpression(
-    ::Function,
-    model::AbstractModel,
-    expr::Array{<:AbstractJuMPScalar},
-    name::String,
-)
-    y = [@variable(model) for _ in expr]
-    set_name.(y, name)
-    @constraint(model, y .== expr)
-    return y
-end
-
-function _build_subexpression(
     error_fn::Function,
     ::AbstractModel,
     expr::Any,
