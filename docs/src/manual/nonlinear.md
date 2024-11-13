@@ -174,7 +174,7 @@ julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
 (exp(x[1]) / (0.0 + exp(x[2]) + exp(x[1]))) + (exp(x[2]) / (0.0 + exp(x[2]) + exp(x[1])))
 ```
 In this model, JuMP will compute the value (and derivatives) of the denominator
-twice, without realizing that the same expression appears twice.
+twice, without realizing that it is the same expression.
 
 As a work-around, create a new [`@variable`](@ref) and use an `==`
 [`@constraint`](@ref) to constrain the value of the variable to the
@@ -196,8 +196,9 @@ julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
 
 The reason JuMP does not perform common subexpression elimination automatically
 is for simplicity, and because there is a trade-off: for simple expressions, the
-extra complexity of detecting and merging common subexpressions may outweight
-the cost of computing them independently.
+extra complexity of detecting and merging common subexpressions may outweigh
+the cost of computing them independently. Instead, we leave it to the user to
+decide which expressions to extract as common subexpressions.
 
 ## Automatic differentiation
 
