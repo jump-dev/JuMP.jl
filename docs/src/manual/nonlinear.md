@@ -155,7 +155,8 @@ julia> sin(sin(1.0))
 
 ## Common subexpressions
 
-JuMP does not perform common subexpression elimination. Instead, if you re-use
+JuMP does not perform [common subexpression elimination](https://en.wikipedia.org/wiki/Common_subexpression_elimination).
+Instead, if you re-use
 an expression in multiple places, JuMP will insert a copy of the expression.
 
 JuMP's lack of common subexpression elimination is a common cause of performance
