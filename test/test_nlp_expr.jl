@@ -1134,4 +1134,14 @@ function test_promote_type()
     return
 end
 
+function test_broadcastable()
+    model = Model()
+    @variable(model, x, start = 2)
+    f = sin(x)^2
+    @test Base.broadcastable(f) isa Base.RefValue{NonlinearExpr}
+    @test value(start_value, f) ≈ sin(2)^2
+    @test value.(start_value, f) ≈ sin(2)^2
+    return
+end
+
 end  # module
