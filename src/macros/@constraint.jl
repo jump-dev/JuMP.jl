@@ -475,7 +475,9 @@ function parse_constraint_head(
             "`$ub >= ... >= $lb`.",
         )
     end
-    new_aff, parse_aff = _rewrite_expression(aff)
+    # Add +0 so that it creates a copy that we can mutate in future callers.
+    # We should fix this in MutableArithmetics.
+    new_aff, parse_aff = _rewrite_expression(:($aff + 0))
     new_lb, parse_lb = _rewrite_expression(lb)
     new_ub, parse_ub = _rewrite_expression(ub)
     parse_code = quote
@@ -765,7 +767,9 @@ function parse_constraint_call(
     func,
     set,
 )
-    f, parse_code = _rewrite_expression(func)
+    # Add +0 so that it creates a copy that we can mutate in future callers.
+    # We should fix this in MutableArithmetics.
+    f, parse_code = _rewrite_expression(:($func + 0))
     build_call = if vectorized
         :(build_constraint.($error_fn, _desparsify($f), $(esc(set))))
     else
@@ -1020,6 +1024,9 @@ function _clear_constant!(α::Number)
     return zero(α), α
 end
 
+# !!! warning
+#     This method assumes that we can mutate `expr`. Ensure that this is the
+#     case upstream of this call site.
 function build_constraint(
     ::Function,
     expr::Union{Number,GenericAffExpr,GenericQuadExpr},
