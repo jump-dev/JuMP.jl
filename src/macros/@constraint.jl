@@ -475,9 +475,7 @@ function parse_constraint_head(
             "`$ub >= ... >= $lb`.",
         )
     end
-    # Add +0 so that it creates a copy that we can mutate in future callers.
-    # We should fix this in MutableArithmetics.
-    new_aff, parse_aff = _rewrite_expression(:($aff + 0))
+    new_aff, parse_aff = _rewrite_expression(aff)
     new_lb, parse_lb = _rewrite_expression(lb)
     new_ub, parse_ub = _rewrite_expression(ub)
     parse_code = quote
@@ -767,9 +765,7 @@ function parse_constraint_call(
     func,
     set,
 )
-    # Add +0 so that it creates a copy that we can mutate in future callers.
-    # We should fix this in MutableArithmetics.
-    f, parse_code = _rewrite_expression(:($func + 0))
+    f, parse_code = _rewrite_expression(func)
     build_call = if vectorized
         :(build_constraint.($error_fn, _desparsify($f), $(esc(set))))
     else

@@ -253,6 +253,16 @@ function _rewrite_expression(expr::Expr)
     new_expr = MacroTools.postwalk(_rewrite_to_jump_logic, expr)
     new_aff, parse_aff = _MA.rewrite(new_expr; move_factors_into_sums = false)
     ret = gensym()
+    has_copy_if_mutable = Ref(false)
+    MacroTools.postwalk(parse_aff) do x
+        if x === MutableArithmetics.copy_if_mutable
+            has_copy_if_mutable[] = true
+        end
+        return x
+    end
+    if !has_copy_if_mutable[]
+        new_aff = :($_MA.copy_if_mutable($new_aff))
+    end
     code = quote
         $parse_aff
         $ret = $flatten!($new_aff)
