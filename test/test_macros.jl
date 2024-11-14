@@ -2490,7 +2490,7 @@ end
 function test_do_not_mutate_expression_double_sided_comparison()
     model = Model()
     @variable(model, x)
-    @expression(model, a[1:1], x+1)
+    @expression(model, a[1:1], x + 1)
     @constraint(model, -1 <= a[1] <= 1)
     @test isequal_canonical(a[1], x + 1)
     return
@@ -2499,7 +2499,7 @@ end
 function test_do_not_mutate_expression_single_sided_comparison()
     model = Model()
     @variable(model, x)
-    @expression(model, a[1:1], x+1)
+    @expression(model, a[1:1], x + 1)
     @constraint(model, a[1] >= 1)
     @test isequal_canonical(a[1], x + 1)
     return
@@ -2508,7 +2508,7 @@ end
 function test_do_not_mutate_expression_in_set()
     model = Model()
     @variable(model, x)
-    @expression(model, a[1:1], x+1)
+    @expression(model, a[1:1], x + 1)
     @constraint(model, a[1] in MOI.Interval(-1, 1))
     @test isequal_canonical(a[1], x + 1)
     return
