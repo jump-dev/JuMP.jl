@@ -104,6 +104,8 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     end
 end
 
+Base.broadcastable(f::GenericNonlinearExpr) = Ref(f)
+
 variable_ref_type(::Type{GenericNonlinearExpr}, ::Any) = nothing
 
 function variable_ref_type(::Type{GenericNonlinearExpr}, x::AbstractJuMPScalar)
