@@ -1020,6 +1020,9 @@ function _clear_constant!(α::Number)
     return zero(α), α
 end
 
+# !!! warning
+#     This method assumes that we can mutate `expr`. Ensure that this is the
+#     case upstream of this call site.
 function build_constraint(
     ::Function,
     expr::Union{Number,GenericAffExpr,GenericQuadExpr},
