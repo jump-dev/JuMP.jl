@@ -20,16 +20,11 @@ module JuMP
 import LinearAlgebra
 import MacroTools
 import MathOptInterface as MOI
-import MutableArithmetics
+import MutableArithmetics as _MA
 import OrderedCollections
 import OrderedCollections: OrderedDict
 import Printf
 import SparseArrays
-
-# We can't use import MutableArithmetics as _MA because of a bug in MA.
-# Fixed in MutableArithmetics v1.2.3, but would require bumping the compat
-# bound so we can keep it as this until necessary.
-const _MA = MutableArithmetics
 
 """
     MOIU
