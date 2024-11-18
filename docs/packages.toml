@@ -57,7 +57,7 @@
 [Gurobi]
     rev = "9bafe7d3e4ed198b97836362a62bb48a14d408bc"
 [HiGHS]
-    rev = "v1.12.0"
+    rev = "v1.12.1"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
@@ -138,7 +138,7 @@
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.5.2"
+    rev = "v0.6.0"
 [DisjunctiveProgramming]
     user = "hdavid16"
     rev = "6a4d0ac4a7484e52b1dbff9cee310a73d2d23e81"

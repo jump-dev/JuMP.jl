@@ -7,6 +7,20 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.23.5 (Noveber 19, 2024)
+
+### Fixed
+
+ - Fixed a bug broadcasting over [`GenericNonlinearExpr`](@ref) (#3881)
+ - Fixed a bug in [`@constraint`](@ref) which illegally mutated user expressions
+   (#3883) (#3885)
+
+### Other
+
+ - Updated `upload-artifact` GitHub action (#3877)
+ - Added a section on [Common subexpressions](@ref) (#3879)
+ - Fixed a printing change for DimensionalData.jl (#3880)
+
 ## Version 1.23.4 (November 8, 2024)
 
 ### Fixed
