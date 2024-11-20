@@ -418,6 +418,44 @@ optimize!(model)
 @assert is_solved_and_feasible(model)
 value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 
+# ## NormNuclearCone
+
+# The [`MOI.NormNuclearCone`](@ref) is a cone of the form:
+# ```math
+# K = \{ (t, X) \in \mathbb{R}^{1+m \cdot n} : t \ge \sum_i \sigma_i(X) \}
+# ```
+# where ``\sigma_i`` is the `i` singular value of ``X``.
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, X[1:2, 1:3])
+@objective(model, Min, t)
+@constraint(model, [t; vec(X)] in MOI.NormNuclearCone(2, 3))
+@constraint(model, X .== [1 2 3; 4 5 6])
+optimize!(model)
+@assert is_solved_and_feasible(model)
+value(t), sum(LinearAlgebra.svdvals(value.(X)))
+
+# ## NormSpectralCone
+
+# The [`MOI.NormSpectralCone`](@ref) is a cone of the form:
+# ```math
+# K = \{ (t, X) \in \mathbb{R}^{1+m \cdot n} : t \ge \max_i \sigma_i(X) \}
+# ```
+# where ``\sigma_i`` is the `i` singular value of ``X``.
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, X[1:2, 1:3])
+@objective(model, Min, t)
+@constraint(model, [t; vec(X)] in MOI.NormSpectralCone(2, 3))
+@constraint(model, X .== [1 2 3; 4 5 6])
+optimize!(model)
+@assert is_solved_and_feasible(model)
+value(t), maximum(LinearAlgebra.svdvals(value.(X)))
+
 # ## Other Cones and Functions
 
 # For other cones supported by JuMP, check out the
