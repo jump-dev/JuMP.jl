@@ -115,6 +115,33 @@ S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
 
 S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 
+# ## Low-rank matrix completion
+
+# The matrix completion problem seeks to find the missing entries of a matrix 
+# with a given (possibly random) subset of fixed entries, such that the completed
+# matrix has the lowest attainable rank.
+#
+# For more details, see [RechtFazelParrilo2010](@cite). 
+
+function example_matrix_completion(; svdtol = 1e-6)
+    rng = Random.MersenneTwister(1234)
+    n = 20
+    mask = rand(rng, 1:25, n, n) .== 1
+    B = randn(rng, n, n)
+    model = Model(SCS.Optimizer)
+    @variable(model, X[1:n, 1:n])
+    @constraint(model, X[mask] .== B[mask])
+    @variable(model, t)
+    @constraint(model, [t; vec(X)] in MOI.NormNuclearCone(n, n))
+    @objective(model, Min, t)
+    optimize!(model)
+    @assert is_solved_and_feasible(model)
+    ## Return the approximate rank of the completed matrix to a given tolerance:
+    return sum(LinearAlgebra.svdvals(value.(X)) .> svdtol)
+end
+
+example_matrix_completion()
+
 # ## K-means clustering via SDP
 
 # Given a set of points ``a_1, \ldots, a_m``  in ``\mathbb{R}^n``, allocate them to ``k`` clusters.
