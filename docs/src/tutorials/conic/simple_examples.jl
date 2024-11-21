@@ -136,7 +136,7 @@ function example_matrix_completion(; svdtol = 1e-6)
     @objective(model, Min, t)
     optimize!(model)
     @assert is_solved_and_feasible(model)
-    # Return the approximate rank of the completed matrix to a given tolerance:
+    ## Return the approximate rank of the completed matrix to a given tolerance:
     return sum(LinearAlgebra.svdvals(value.(X)) .> svdtol)
 end
 
