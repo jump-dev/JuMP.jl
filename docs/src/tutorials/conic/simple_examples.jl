@@ -123,7 +123,7 @@ S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 #
 # For more details, see [RechtFazelParrilo2010](@cite). 
 
-function example_matrix_completion(; svdtol=1e-6)
+function example_matrix_completion(; svdtol = 1e-6)
     rng = Random.MersenneTwister(1234)
     n = 20
     mask = rand(rng, 1:25, n, n) .== 1
