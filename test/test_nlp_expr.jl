@@ -371,6 +371,17 @@ function test_extension_recursion_stackoverflow(
     return
 end
 
+function test_evaluate_expr_stackoverflow()
+    N = 10_000
+    model = Model()
+    @variable(model, x[1:N], start = 0)
+    f = prod(sum(x[i-1:i]) for i in 2:N)
+    @test value(start_value, f) == 0.0
+    set_start_value.(x, 1.0)
+    @test value(start_value, f) == Inf
+    return
+end
+
 function test_nlobjective_with_nlexpr()
     model = Model()
     @variable(model, x)

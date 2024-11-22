@@ -673,22 +673,9 @@ function _evaluate_expr(
     return convert(Float64, expr)
 end
 
-function _evaluate_user_defined_function(
-    registry,
-    f,
-    expr::GenericNonlinearExpr,
-)
-    model = owner_model(expr)
-    op, nargs = expr.head, length(expr.args)
-    udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
-    if udf === nothing
-        return error(
-            "Unable to evaluate nonlinear operator $op because it was " *
-            "not added as an operator.",
-        )
-    end
-    args = [_evaluate_expr(registry, f, arg) for arg in expr.args]
-    return first(udf)(args...)
+struct _ConcreteExpression{T}
+    head::Symbol
+    args::Vector{T}
 end
 
 function _evaluate_expr(
@@ -696,27 +683,54 @@ function _evaluate_expr(
     f::Function,
     expr::GenericNonlinearExpr,
 )
-    op = expr.head
-    # TODO(odow): uses private function
-    if !MOI.Nonlinear._is_registered(registry, op, length(expr.args))
-        return _evaluate_user_defined_function(registry, f, expr)
+    ret = _ConcreteExpression{Float64}(expr.head, Float64[])
+    stack = Any[]
+    for arg in reverse(expr.args)
+        push!(stack, (ret, arg))
     end
-    if length(expr.args) == 1 && haskey(registry.univariate_operator_to_id, op)
-        arg = _evaluate_expr(registry, f, expr.args[1])
-        return MOI.Nonlinear.eval_univariate_function(registry, op, arg)
+    while !isempty(stack)
+        parent, arg = pop!(stack)
+        if arg isa MOI.ScalarNonlinearFunction
+            new_ret = _ConcreteExpression{Float64}(arg.head, Float64[])
+            push!(parent.args, new_ret)
+            for child in reverse(arg.args)
+                push!(stack, (new_ret, child))
+            end
+        else
+            push!(parent.args, _evaluate_expr(registry, f, arg))
+        end
+    end
+    return _evaluate_expr(registry, f, ret)
+end
+
+function _evaluate_expr(
+    registry::MOI.Nonlinear.OperatorRegistry,
+    ::Function,
+    expr::_ConcreteExpression,
+)
+    op, args, nargs = expr.head, expr.args, length(expr.args)
+    # TODO(odow): uses private function
+    if !MOI.Nonlinear._is_registered(registry, op, nargs)
+        model = owner_model(expr)
+        udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
+        if udf === nothing
+            return error(
+                "Unable to evaluate nonlinear operator $op because it was " *
+                "not added as an operator.",
+            )
+        end
+        return first(udf)(args...)
+    elseif nargs == 1 && haskey(registry.univariate_operator_to_id, op)
+        return MOI.Nonlinear.eval_univariate_function(registry, op, args[1])
     elseif haskey(registry.multivariate_operator_to_id, op)
-        args = [_evaluate_expr(registry, f, arg) for arg in expr.args]
         return MOI.Nonlinear.eval_multivariate_function(registry, op, args)
     elseif haskey(registry.logic_operator_to_id, op)
-        @assert length(expr.args) == 2
-        x = _evaluate_expr(registry, f, expr.args[1])
-        y = _evaluate_expr(registry, f, expr.args[2])
-        return MOI.Nonlinear.eval_logic_function(registry, op, x, y)
+        @assert nargs == 2
+        return MOI.Nonlinear.eval_logic_function(registry, op, args[1], args[2])
     else
         @assert haskey(registry.comparison_operator_to_id, op)
-        @assert length(expr.args) == 2
-        x = _evaluate_expr(registry, f, expr.args[1])
-        y = _evaluate_expr(registry, f, expr.args[2])
+        @assert nargs == 2
+        x, y = args
         return MOI.Nonlinear.eval_comparison_function(registry, op, x, y)
     end
 end
