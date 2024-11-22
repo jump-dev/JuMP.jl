@@ -673,9 +673,10 @@ function _evaluate_expr(
     return convert(Float64, expr)
 end
 
-struct _ConcreteExpression{T}
+struct _ConcreteExpression
     head::Symbol
-    args::Vector{T}
+    args::Vector{Real}
+    _ConcreteExpression(head::Symbol) = new(head, Real[])
 end
 
 function _evaluate_expr(
@@ -683,7 +684,7 @@ function _evaluate_expr(
     f::Function,
     expr::GenericNonlinearExpr,
 )
-    ret = _ConcreteExpression{Float64}(expr.head, Float64[])
+    ret = _ConcreteExpression(expr.head)
     stack = Any[]
     for arg in reverse(expr.args)
         push!(stack, (ret, arg))
@@ -691,7 +692,7 @@ function _evaluate_expr(
     while !isempty(stack)
         parent, arg = pop!(stack)
         if arg isa MOI.ScalarNonlinearFunction
-            new_ret = _ConcreteExpression{Float64}(arg.head, Float64[])
+            new_ret = _ConcreteExpression(arg.head)
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
