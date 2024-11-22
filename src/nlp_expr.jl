@@ -693,7 +693,7 @@ function _evaluate_expr(
         parent, arg = pop!(stack)
         if arg isa MOI.ScalarNonlinearFunction
             new_ret = _ConcreteExpression(arg.head)
-            push!(parent.args, new_ret)
+            push!(parent.args, (arg, new_ret))
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
             end
@@ -701,18 +701,19 @@ function _evaluate_expr(
             push!(parent.args, _evaluate_expr(registry, f, arg))
         end
     end
-    return _evaluate_expr(registry, f, ret)
+    return _evaluate_expr(registry, f, (expr, ret))
 end
 
 function _evaluate_expr(
     registry::MOI.Nonlinear.OperatorRegistry,
     ::Function,
-    expr::_ConcreteExpression,
+    input::Tuple{<:GenericNonlinearExpr,_ConcreteExpression},
 )
+    f, expr = input
     op, args, nargs = expr.head, expr.args, length(expr.args)
     # TODO(odow): uses private function
     if !MOI.Nonlinear._is_registered(registry, op, nargs)
-        model = owner_model(expr)
+        model = owner_model(f)
         udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
         if udf === nothing
             return error(
