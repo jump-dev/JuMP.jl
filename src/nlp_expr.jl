@@ -673,47 +673,41 @@ function _evaluate_expr(
     return convert(Float64, expr)
 end
 
-struct _ConcreteExpression
-    head::Symbol
-    args::Vector{Real}
-    _ConcreteExpression(head::Symbol) = new(head, Real[])
-end
-
 function _evaluate_expr(
     registry::MOI.Nonlinear.OperatorRegistry,
     f::Function,
     expr::GenericNonlinearExpr,
 )
-    ret = _ConcreteExpression(expr.head)
-    stack = Any[]
-    for arg in reverse(expr.args)
-        push!(stack, (ret, arg))
-    end
+    stack, result_stack = Any[expr], Real[]
     while !isempty(stack)
-        parent, arg = pop!(stack)
-        if arg isa MOI.ScalarNonlinearFunction
-            new_ret = _ConcreteExpression(arg.head)
-            push!(parent.args, (arg, new_ret))
+        arg = pop!(stack)
+        if arg isa GenericNonlinearExpr
+            # wrap arg in a Tuple to catch when we should evaluate.
+            push!(stack, (arg,))
             for child in reverse(arg.args)
-                push!(stack, (new_ret, child))
+                push!(stack, child)
             end
+        elseif arg isa Tuple{<:GenericNonlinearExpr}
+            f_expr = only(arg)
+            args = reverse([pop!(result_stack) for _ in 1:length(f_expr.args)])
+            push!(result_stack, _evaluate_expr(registry, f, f_expr, args))
         else
-            push!(parent.args, _evaluate_expr(registry, f, arg))
+            push!(result_stack, _evaluate_expr(registry, f, arg))
         end
     end
-    return _evaluate_expr(registry, f, (expr, ret))
+    return only(result_stack)
 end
 
 function _evaluate_expr(
     registry::MOI.Nonlinear.OperatorRegistry,
     ::Function,
-    input::Tuple{<:GenericNonlinearExpr,_ConcreteExpression},
+    f_expr::GenericNonlinearExpr,
+    args::Vector
 )
-    f, expr = input
-    op, args, nargs = expr.head, expr.args, length(expr.args)
+    op, nargs = f_expr.head, length(args)
     # TODO(odow): uses private function
     if !MOI.Nonlinear._is_registered(registry, op, nargs)
-        model = owner_model(f)
+        model = owner_model(f_expr)
         udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
         if udf === nothing
             return error(

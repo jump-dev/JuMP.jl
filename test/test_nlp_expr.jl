@@ -375,7 +375,7 @@ function test_evaluate_expr_stackoverflow()
     N = 10_000
     model = Model()
     @variable(model, x[1:N], start = 0)
-    f = prod(sum(x[i-1:i]) for i in 2:N)
+    f = prod(sum(x[1:i]) for i in 1:N)
     @test value(start_value, f) == 0.0
     set_start_value.(x, 1.0)
     @test value(start_value, f) == Inf
