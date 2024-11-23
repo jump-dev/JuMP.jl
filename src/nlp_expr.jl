@@ -678,18 +678,19 @@ function _evaluate_expr(
     f::Function,
     expr::GenericNonlinearExpr,
 )
+    # The result_stack needs to be ::Real because operators like || return a
+    # ::Bool. Also, some inputs may be ::Int.
     stack, result_stack = Any[expr], Real[]
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
-            # wrap arg in a Tuple to catch when we should evaluate.
-            push!(stack, (arg,))
-            for child in reverse(arg.args)
+            push!(stack, (arg,))  # wrap in (,) to catch when we should eval it.
+            for child in arg.args
                 push!(stack, child)
             end
         elseif arg isa Tuple{<:GenericNonlinearExpr}
             f_expr = only(arg)
-            args = reverse([pop!(result_stack) for _ in 1:length(f_expr.args)])
+            args = Real[pop!(result_stack) for _ in 1:length(f_expr.args)]
             push!(result_stack, _evaluate_expr(registry, f, f_expr, args))
         else
             push!(result_stack, _evaluate_expr(registry, f, arg))
@@ -702,7 +703,7 @@ function _evaluate_expr(
     registry::MOI.Nonlinear.OperatorRegistry,
     ::Function,
     f_expr::GenericNonlinearExpr,
-    args::Vector
+    args::Vector,
 )
     op, nargs = f_expr.head, length(args)
     # TODO(odow): uses private function
