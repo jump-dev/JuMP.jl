@@ -54,6 +54,11 @@ function parse_macro_arguments(
                 )
             elseif valid_kwargs !== nothing && !(arg.args[1] in valid_kwargs)
                 error_fn("unsupported keyword argument `$(arg.args[1])`.")
+            elseif !(arg.args[1] isa Symbol)
+                error_fn(
+                    "Invalid keyword argument detected. If you are trying to " *
+                    "construct an equality constraint, use `==` instead of `=`.",
+                )
             end
             kwargs[arg.args[1]] = arg.args[2]
         else

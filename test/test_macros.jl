@@ -2514,4 +2514,16 @@ function test_do_not_mutate_expression_in_set()
     return
 end
 
+function test_malformed_kwarg()
+    model = Model()
+    @variable(model, x[1:1])
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@constraint(model, x[1] = 1)`: Invalid keyword argument detected. If you are trying to construct an equality constraint, use `==` instead of `=`.",
+        ),
+        @constraint(model, x[1] = 1),
+    )
+    return
+end
+
 end  # module
