@@ -76,7 +76,7 @@ julia> ids
 
 ### Thread safety
 
-When working with threads, you need to avoid race conditions, in which two
+When working with threads, you must avoid race conditions, in which two
 threads attempt to write to the same variable at the same time. In the above
 example we avoided a race condition by using `ReentrantLock`. See the
 [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
@@ -222,8 +222,8 @@ A JuMP Model
 ```
 
 !!! warning
-    Do not use multi-threading to build a JuMP model just because your original
-    code is slow. In most cases, we find that the reason for the bottleneck is
+    **Do not use multi-threading to build a JuMP model just because your original
+    code is slow.** In most cases, we find that the reason for the bottleneck is
     not JuMP, but in how you are constructing the problem data, and that with
     changes, it is possible to build a model in a way that is not the bottleneck
     in the solution process. If you need help to make your code run faster, ask
@@ -381,10 +381,10 @@ set_attribute(model, MOI.NumberOfThreads(), 4)
 
 ## GPU parallelism
 
-JuMP does not support GPU programming, and few solvers support execution on a
+JuMP does not support GPU programming, but some solvers support execution on a
 GPU.
 
-One exeption is [SCS.jl](@ref), which supports using a GPU to internally solve
+One example is [SCS.jl](@ref), which supports using a GPU to internally solve
 a system of linear equations. If you are on `x86_64` Linux machine, do:
 ```julia
 using JuMP, SCS, SCS_GPU_jll
