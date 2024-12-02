@@ -4,7 +4,7 @@ The purpose of this tutorial is to give a brief overview of parallelism in
 Julia as it pertains to JuMP, and to explain some of the things to be aware of
 when writing parallel algorithms involving JuMP models.
 
-## Multi-threading and distributed computing
+## Overview
 
 There are two main types of parallelism in Julia:
 
@@ -22,7 +22,7 @@ limitations and benefits to each approach. However, the best choice is highly
 problem dependent, so you may want to experiment with both approaches to
 determine what works for your situation.
 
-### Multi-threading
+## Multi-threading
 
 To use multi-threading with Julia, you must either start Julia with the
 command line flag `--threads=N`, or you must set the `JULIA_NUM_THREADS`
@@ -74,14 +74,163 @@ julia> ids
  3
 ````
 
-!!! warning
-    When working with threads, you need to avoid race conditions, in which two
-    threads attempt to write to the same variable at the same time. In the above
-    example we avoided a race condition by using `ReentrantLock`. See the
-    [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
-    section of the Julia documentation for more details.
+### Thread safety
 
-### Distributed computing
+When working with threads, you must avoid race conditions, in which two
+threads attempt to write to the same variable at the same time. In the above
+example we avoided a race condition by using `ReentrantLock`. See the
+[Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
+section of the Julia documentation for more details.
+
+JuMP models are not thread-safe. Code that uses multi-threading to
+simultaneously modify or optimize a single JuMP model across threads may error,
+crash Julia, or silently produce incorrect results.
+
+For example, the following incorrect use of multi-threading crashes Julia:
+```julia
+julia> using JuMP, HiGHS
+
+julia> function an_incorrect_way_to_use_threading()
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x)
+           Threads.@threads for i in 1:10
+               optimize!(model)
+           end
+           return
+       end
+an_incorrect_way_to_use_threading (generic function with 1 method)
+
+julia> an_incorrect_way_to_use_threading()
+julia(76918,0x16c92f000) malloc: *** error for object 0x600003e52220: pointer being freed was not allocated
+zsh: abort      julia -t 4
+```
+
+To avoid issues with thread safety, create a new instance of a JuMP model in
+each iteration of the for-loop. In addition, you must avoid race conditions in
+the rest of your Julia code, for example, by using a lock when pushing elements
+to a shared vector.
+
+### Example: parameter search with multi-threading
+
+Here is an example of how to use multi-threading to solve a collection of JuMP
+models in parallel.
+````julia
+julia> using JuMP, HiGHS
+
+julia> function a_good_way_to_use_threading()
+           solutions = Pair{Int,Float64}[]
+           my_lock = Threads.ReentrantLock();
+           Threads.@threads for i in 1:10
+               model = Model(HiGHS.Optimizer)
+               set_silent(model)
+               set_attribute(model, MOI.NumberOfThreads(), 1)
+               @variable(model, x >= i)
+               @objective(model, Min, x)
+               optimize!(model)
+               @assert is_solved_and_feasible(model)
+               Threads.lock(my_lock) do
+                   push!(solutions, i => objective_value(model))
+               end
+           end
+           return solutions
+       end
+a_good_way_to_use_threading (generic function with 1 method)
+
+julia> a_good_way_to_use_threading()
+10-element Vector{Pair{Int64, Float64}}:
+  7 => 7.0
+  9 => 9.0
+  4 => 4.0
+  1 => 1.0
+  5 => 5.0
+  2 => 2.0
+  8 => 8.0
+ 10 => 10.0
+  3 => 3.0
+  6 => 6.0
+````
+
+!!! warning
+    For some solvers, it may be necessary to limit the number of threads used
+    internally by the solver to 1 by setting the [`MOI.NumberOfThreads`](@ref)
+    attribute.
+
+### Example: building data structures in parallel
+
+For large problems, building the model in JuMP can be a bottleneck, and you
+may consider trying to write code that builds the model in parallel, for
+example, by wrapping a `for`-loop that adds constraints with
+`Threads.@threads`. Here's an example:
+
+```julia
+julia> using JuMP
+
+julia> function an_incorrect_way_to_build_with_multithreading()
+           model = Model()
+           @variable(model, x[1:10])
+           Threads.@threads for i in 1:10
+               @constraint(model, x[i] <= i)
+           end
+           return model
+       end
+
+julia> an_incorrect_way_to_build_with_multithreading()
+A JuMP Model
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 10
+├ num_constraints: 7
+│ └ AffExpr in MOI.LessThan{Float64}: 7
+└ Names registered in the model
+  └ :x
+```
+
+Unfortunately, this model is wrong. It has only seven constraints instead of the
+expected ten. This happens because JuMP models are not thread-safe. Code that
+uses multi-threading to simultaneously modify or optimize a single JuMP model
+across threads may error, crash Julia, or silently produce incorrect results.
+
+The correct way to build a JuMP model with multi-threading is to build the
+data structures in parallel, but add them to the JuMP model in a thread-safe
+way:
+```julia
+julia> using JuMP
+
+julia> function a_correct_way_to_build_with_multithreading()
+           model = Model()
+           @variable(model, x[1:10])
+           my_lock = Threads.ReentrantLock()
+           Threads.@threads for i in 1:10
+               con = @build_constraint(x[i] <= i)
+               Threads.lock(my_lock) do
+                   add_constraint(model, con)
+               end
+           end
+           return model
+       end
+
+julia> a_correct_way_to_build_with_multithreading()
+A JuMP Model
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 10
+├ num_constraints: 10
+│ └ AffExpr in MOI.LessThan{Float64}: 10
+└ Names registered in the model
+  └ :x
+```
+
+!!! warning
+    **Do not use multi-threading to build a JuMP model just because your original
+    code is slow.** In most cases, we find that the reason for the bottleneck is
+    not JuMP, but in how you are constructing the problem data, and that with
+    changes, it is possible to build a model in a way that is not the bottleneck
+    in the solution process. If you need help to make your code run faster, ask
+    for help on the [community forum](https://jump.dev/forum). Make sure to
+    include a reproducible example of your code.
+
+## Distributed computing
 
 To use distributed computing with Julia, use the `Distributed` package:
 
@@ -175,109 +324,7 @@ julia> @time ids = Distributed.pmap(hard_work, 1:4)
     For more information, read the Julia documentation
     [Distributed Computing](https://docs.julialang.org/en/v1/manual/distributed-computing/).
 
-## Using parallelism the wrong way
-
-### When building a JuMP model
-
-For large problems, building the model in JuMP can be a bottleneck, and you
-may consider trying to write code that builds the model in parallel, for
-example, by wrapping a `for`-loop that adds constraints with
-`Threads.@threads`.
-
-Unfortunately, you cannot build a JuMP model in parallel, and attempting to do
-so may error or produce incorrect results.
-
-In most cases, we find that the reason for the bottleneck is not JuMP, but in
-how you are constructing the problem data, and that with changes, it is
-possible to build a model in a way that is not the bottleneck in the solution
-process.
-
-!!! tip
-    Looking for help to make your code run faster? Ask for help on the
-    [community forum](https://jump.dev/forum). Make sure to include a
-    reproducible example of your code.
-
-### With a single JuMP model
-
-A common approach people try is to use parallelism with a single JuMP model.
-For example, to optimize a model over multiple right-hand side vectors, you
-may try:
-
-```julia
-using JuMP
-import HiGHS
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x)
-@objective(model, Min, x)
-solutions = Pair{Int,Float64}[]
-my_lock = Threads.ReentrantLock()
-Threads.@threads for i in 1:10
-    set_lower_bound(x, i)
-    optimize!(model)
-    @assert is_solved_and_feasible(model)
-    Threads.lock(my_lock) do
-        push!(solutions, i => objective_value(model))
-    end
-end
-```
-
-This will not work, and attempting to do so may error, crash Julia or produce
-incorrect results.
-
-## Using parallelism the right way
-
-To use parallelism with JuMP, the simplest rule to remember is that each
-worker must have its own instance of a JuMP model.
-
-### With multi-threading
-
-With multi-threading, create a new instance of `model` in each iteration of
-the for-loop:
-
-````julia
-julia> using JuMP
-
-julia> import HiGHS
-
-julia> solutions = Pair{Int,Float64}[]
-
-julia> my_lock = Threads.ReentrantLock();
-
-julia> Threads.@threads for i in 1:10
-           model = Model(HiGHS.Optimizer)
-           set_silent(model)
-           set_attribute(model, MOI.NumberOfThreads(), 1)
-           @variable(model, x)
-           @objective(model, Min, x)
-           set_lower_bound(x, i)
-           optimize!(model)
-           @assert is_solved_and_feasible(sudoku)
-           Threads.lock(my_lock) do
-               push!(solutions, i => objective_value(model))
-           end
-       end
-
-julia> solutions
-10-element Vector{Pair{Int64, Float64}}:
-  7 => 7.0
-  4 => 4.0
-  1 => 1.0
-  9 => 9.0
-  5 => 5.0
-  8 => 8.0
- 10 => 10.0
-  2 => 2.0
-  6 => 6.0
-  3 => 3.0
-````
-
-!!! warning
-    For some solvers, it may be necessary to limit the number of threads used
-    internally by the solver to 1 by setting the [`MOI.NumberOfThreads`](@ref)
-    attribute.
-
-### With distributed computing
+### Example: parameter search with distributed computing
 
 With distributed computing, remember to evaluate all of the code on all of the
 processes using `Distributed.@everywhere`, and then write a function which
@@ -316,17 +363,31 @@ julia> solutions = Distributed.pmap(solve_model_with_right_hand_side, 1:10)
  10.0
 ````
 
-## Other types of parallelism
-
-### GPU
-
-JuMP does not support GPU programming, and few solvers support execution on a
-GPU.
-
-### Parallelism within the solver
+## Parallelism within the solver
 
 Many solvers use parallelism internally. For example, commercial solvers like
-[Gurobi](https://github.com/jump-dev/Gurobi.jl) and [CPLEX](https://github.com/jump-dev/CPLEX.jl)
-both parallelize the search in branch-and-bound. Solvers supporting internal
-parallelism will typically support the [`MOI.NumberOfThreads`](@ref) attribute,
-which you can set using [`set_attribute`](@ref).
+[Gurobi.jl](@ref) and [CPLEX.jl](@ref) both parallelize the search in
+branch-and-bound.
+
+Solvers supporting internal parallelism will typically support the
+[`MOI.NumberOfThreads`](@ref) attribute, which you can set using
+[`set_attribute`](@ref):
+
+```julia
+using JuMP, Gurobi
+model = Model(Gurobi.Optimizer)
+set_attribute(model, MOI.NumberOfThreads(), 4)
+```
+
+## GPU parallelism
+
+JuMP does not support GPU programming, but some solvers support execution on a
+GPU.
+
+One example is [SCS.jl](@ref), which supports using a GPU to internally solve
+a system of linear equations. If you are on `x86_64` Linux machine, do:
+```julia
+using JuMP, SCS, SCS_GPU_jll
+model = Model(SCS.Optimizer)
+set_attribute(model, "linear_solver", SCS.GpuIndirectSolver)
+```
