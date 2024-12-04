@@ -334,6 +334,7 @@ For code like libraries that should be more robust to the range of possible
 termination and result statuses, do some variation of the following:
 ```jldoctest solutions
 julia> function solve_and_print_solution(model)
+           optimize!(model)
            status = termination_status(model)
            if status in (OPTIMAL, LOCALLY_SOLVED)
                println("Solution is optimal")
