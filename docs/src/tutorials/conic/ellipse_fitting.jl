@@ -1,4 +1,9 @@
-# # Example: least-squares fitting of circles and ellipses
+# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
+# This Source Code Form is subject to the terms of the Mozilla Public License   #src
+# v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
+# obtain one at https://mozilla.org/MPL/2.0/.                                   #src
+
+# # Example: fitting of circles and ellipses
 
 # Ellipse fitting is a common task in data analysis and computer vision and is of 
 # key importance in many application areas. In this tutorial we show how to fit an
@@ -10,15 +15,14 @@
 
 using JuMP
 import SCS
-import LinearAlgebra
 import Images
 import Wavelets
-using LinearAlgebra
-using DSP
-using Clustering
-using Plots
-using LinearOperatorCollection
-using RegularizedLeastSquares
+import Clustering
+import LinearAlgebra
+import LinearOperatorCollection as LOC
+import RegularizedLeastSquares as RLS
+import Plots
+import DSP
 
 # ## Parametrization of an ellipse
 
@@ -62,10 +66,8 @@ using RegularizedLeastSquares
 # ## Helper functions
 
 # We define some helper functions to help us visualize the results.
-# <details>
-# <summary>Functions</summary>
 function plot_dwt(x, sz = (500, 500))
-    return plt = heatmap(
+    return Plots.heatmap(
         x;
         color = :grays,
         aspect_ratio = 1,
@@ -77,11 +79,10 @@ function plot_dwt(x, sz = (500, 500))
     )
 end
 
-function normalize(x)
-    x = (x .- minimum(x)) ./ (maximum(x) - minimum(x))
-    return x
+function normalize(x::AbstractArray)
+    l, u = extrema(x)
+    return @. (x - l) / (u - l)
 end
-# </details>
 
 # ## Reading the test image
 
@@ -92,11 +93,11 @@ end
 
 # This is just a toy problem with little scientific value, but you can imagine how the 
 # rotation and position of elliptical galaxies can be useful information to astronomers.
-img = load("docs/src/assets/cartwheel_galaxy.png");
+img = load("../../assets/cartwheel_galaxy.png");
 
 # We convert the image to gray scale so that we can work with a single channel.
 
-img_gray = Gray.(img)
+img_gray = Images.Gray.(img)
 mosaicview(img, img_gray; nrow = 1)
 
 # Instead of operating on the entire image, we select a region of interest (roi) which 
@@ -104,11 +105,9 @@ mosaicview(img, img_gray; nrow = 1)
 sz = 256
 X_c = 600
 Y_c = 140
-
 X = X_c:X_c+sz-1
 Y = Y_c:Y_c+sz-1
 roi = (X, Y)
-
 img_roi = img[roi...]
 img_gray_roi = img_gray[roi...]
 mosaicview(img_roi, img_gray_roi; nrow = 1)
@@ -141,70 +140,54 @@ x = convert(Array{Float64}, img_gray_roi)
 # from the [family of Daubechies wavelets](https://en.wikipedia.org/wiki/Daubechies_wavelet). 
 # We use the db4 wavelet which has 4 vanishing moments. We set the number of iterations 
 # to 15.
-reg = L1Regularization(0.1);
-Φ = WaveletOp(Float64; shape = size(x), wt = wavelet(WT.db4));
-solver = createLinearSolver(OptISTA, Φ; reg = reg, iterations = 15);
+reg = RLS.L1Regularization(0.1);
+Φ = LOC.WaveletOp(
+    Float64;
+    shape = size(x),
+    wt = Wavelets.wavelet(Wavelets.WT.db4),
+);
+solver = RLS.createLinearSolver(RLS.OptISTA, Φ; reg = reg, iterations = 15);
 
 # The sampled image in wavelet domain is given by:
 b = Φ * vec(x);
 
 # We can now solve the optimization problem to find the sparse representation of the image.
-x_approx = solve!(solver, b)
+x_approx = RLS.solve!(solver, b)
 x_approx = reshape(x_approx, size(x));
 x_final = normalize(x_approx)
-
-mosaicview(x, Gray.(x_final); nrow = 1)
+mosaicview(x, Images.Gray.(x_final); nrow = 1)
 
 # We then use a binarization algorithm to map each grayscale pixel 
 # ``(x_i, y_i)`` to a binary value so ``x_i, y_i \to \{0, 1\}``.
-x_bin = binarize(x_final, Otsu(); nbins = 128)
+x_bin = Images.binarize(x_final, Images.Otsu(); nbins = 128)
 x_bin = convert(Array{Bool}, x_bin)
-
-plt = plot_dwt(img_roi, (500, 500))
-heatmap!(x_bin; color = :grays, alpha = 0.45)
+plt = plot_dwt(img_roi)
+Plots.heatmap!(x_bin; color = :grays, alpha = 0.45)
 
 # ## Edge detection and clustering
 
 # Now that we have our binary image, we can use edge detection to find the edges of the
 # galaxies. We will use the [Sobel operator](https://en.wikipedia.org/wiki/Sobel_operator) for this task.
-# <details>
-# <summary>Sobel operator</summary>
 function edge_detector(
     f_smooth::Matrix{Float64},
     d1::Float64 = 0.1,
     d2::Float64 = 0.1,
 )
     rows, cols = size(f_smooth)
-
     gradient_magnitude = zeros(Float64, rows, cols)
     laplacian_magnitude = zeros(Float64, rows, cols)
-    edge_matrix = zeros(Bool, rows, cols)  # Binary matrix for edges
-
     sobel_x = [-1 0 1; -2 0 2; -1 0 1]
     sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]
     sobel_xx = [-1 2 -1; 2 -4 2; -1 2 -1]
     sobel_yy = [-1 2 -1; 2 -4 2; -1 2 -1]
-
-    gradient_x = conv(f_smooth, sobel_x)
-    gradient_y = conv(f_smooth, sobel_y)
-
+    gradient_x = DSP.conv(f_smooth, sobel_x)
+    gradient_y = DSP.conv(f_smooth, sobel_y)
     gradient_magnitude = sqrt.(gradient_x .^ 2 + gradient_y .^ 2)
-
-    gradient_xx = conv(f_smooth, sobel_xx)
-    gradient_yy = conv(f_smooth, sobel_yy)
+    gradient_xx = DSP.conv(f_smooth, sobel_xx)
+    gradient_yy = DSP.conv(f_smooth, sobel_yy)
     laplacian_magnitude = sqrt.(gradient_xx .^ 2 + gradient_yy .^ 2)
-
-    for i in 1:rows
-        for j in 1:cols
-            if gradient_magnitude[i, j] > d1 && laplacian_magnitude[i, j] < d2
-                edge_matrix[i, j] = true
-            end
-        end
-    end
-
-    return edge_matrix
+    return @. (gradient_magnitude > d1) & (laplacian_magnitude < d2)
 end
-# </details>
 
 # We apply the Sobel operator to the binary image:
 edges = edge_detector(convert(Matrix{Float64}, x_bin), 1e-1, 1e2)
@@ -216,26 +199,22 @@ edges = thinning(edges; algo = GuoAlgo())
 points = findall(edges)
 points = getfield.(points, :I)
 points = hcat([p[1] for p in points], [p[2] for p in points])'
-result = dbscan(
+result = Clustering.dbscan(
     convert(Matrix{Float64}, points),
     3.0;
     min_neighbors = 2,
-    min_cluster_size = 20,
+    min_cluster_size = 15,
 )
 
 # The result of the clustering is a list of clusters to which we will assign a unique 
 # color. Each cluster is a list of points that belong to the same galaxy.
 clusters = result.clusters
 N_clusters = length(clusters)
-
-# <details>
-# <summary>Plotting code</summary>
-colors = distinguishable_colors(N_clusters + 1)[2:end]
-plt = plot_dwt(img_roi, (600, 600))
-
+colors = Plots.distinguishable_colors(N_clusters + 1)[2:end]
+plt = plot_dwt(img_roi)
 for (i, cluster) in enumerate(clusters)
     p_cluster = points[:, cluster.core_indices]
-    scatter!(
+    Plots.scatter!(
         p_cluster[2, :],
         p_cluster[1, :];
         color = colors[i],
@@ -244,15 +223,13 @@ for (i, cluster) in enumerate(clusters)
         markersize = 1.5,
     )
 end
-
-plot!(
+Plots.plot!(
     plt;
     axis = false,
     legend = :topleft,
     legendcolumns = 1,
     legendfontsize = 12,
 )
-# </details>
 
 # ## Fitting ellipses
 
@@ -261,22 +238,19 @@ plot!(
 # ellipses.
 
 # First, we define the residual distance definition (6) of a point to an ellipse in JuMP:
-function ellipse(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-4)
+function ellipse(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-5)
     model = Model(SCS.Optimizer)
+    set_silent(model)
     N = length(Ξ)
-
     @variable(model, Q[1:2, 1:2], PSD)
     @variable(model, d[1:2])
     @variable(model, e)
-
-    @constraint(model, Q - ϵ * I in PSDCone())
-
+    @constraint(model, Q - ϵ * LinearAlgebra.I in PSDCone())
     @expression(
         model,
         r[i = 1:N],
         [Ξ[i][1], Ξ[i][2], 1]' * [Q d; d' e] * [Ξ[i][1], Ξ[i][2], 1]
     )
-
     return model
 end
 
@@ -287,7 +261,8 @@ end
 # function, also known as the ``L^2`` norm.
 # ```math
 # \begin{equation}
-#     \min_{Q, d, e} P_\text{res}(\mathcal{E}) = \sum_{i \in N} d^2_{\text{res}}(\xi_i, \mathcal{E}) = ||d_{\text{res}}||^2_2
+#     \min_{Q, d, e} P_\text{res}(\mathcal{E}) = \min_{Q, d, e} \sum_{i \in N} 
+#     d^2_{\text{res}}(\xi_i, \mathcal{E}) = \min_{Q, d, e} ||d_{\text{res}}||^2_2
 # \end{equation}
 # ```
 
@@ -302,7 +277,6 @@ end
 # [`MOI.RotatedSecondOrderCone`](@ref) as follows:
 
 ellipses_C1 = Vector{Dict{Symbol,Any}}()
-
 for (i, cluster) in enumerate(clusters)
     p_cluster = points[:, cluster.core_indices]
     Ξ = [(point[1], point[2]) for point in eachcol(p_cluster)]
@@ -322,8 +296,6 @@ for (i, cluster) in enumerate(clusters)
     push!(ellipses_C1, Dict(:Q => Q, :d => d, :e => e))
 end
 
-# <details>
-# <summary>Plotting code</summary>
 W, H = size(img_roi)
 x_range = 0:1:W
 y_range = 0:1:H
@@ -331,8 +303,8 @@ X, Y = [x for x in x_range], [y for y in y_range]
 Z = zeros(length(X), length(Y))
 
 function ellipse_eq(x, y, Q, d, e)
-    for i in 1:length(x)
-        for j in 1:length(y)
+    for i in eachindex(x)
+        for j in eachindex(y)
             ξ = [x[i], y[j]]
             Z[i, j] = [ξ; 1.0]' * [Q d; d' e] * [ξ; 1.0]
         end
@@ -343,7 +315,7 @@ end
 for ellipse in ellipses_C1
     Q, d, e = ellipse[:Q], ellipse[:d], ellipse[:e]
     Z_sq = ellipse_eq(X, Y, Q, d, e)
-    contour!(
+    Plots.contour!(
         plt,
         x_range,
         y_range,
@@ -355,8 +327,7 @@ for ellipse in ellipses_C1
     )
 end
 
-display(plt)
-# </details>
+plt
 
 # ## Objective 2: Minimize the maximum residual distance
 
@@ -364,8 +335,8 @@ display(plt)
 # to the ellipse.
 # ```math	
 # \begin{equation}
-#     \min \max_{\xi_i \in \mathcal{F}} d_\text{res}(\xi_i, \mathcal{E}) = 
-# \min ||d_\text{res}||_\infty
+#     \min_{Q, d, e} \max_{\xi_i \in \mathcal{F}} d_\text{res}(\xi_i, \mathcal{E}) = 
+#     \min_{Q, d, e} ||d_\text{res}||_\infty
 # \end{equation}
 # ```
 
@@ -394,12 +365,10 @@ for (i, cluster) in enumerate(clusters)
     push!(ellipses_C2, Dict(:Q => Q, :d => d, :e => e))
 end
 
-# <details>
-# <summary>Plotting code</summary>
 for ellipse in ellipses_C2
     Q, d, e = ellipse[:Q], ellipse[:d], ellipse[:e]
     Z_sq = ellipse_eq(X, Y, Q, d, e)
-    contour!(
+    Plots.contour!(
         plt,
         x_range,
         y_range,
@@ -410,7 +379,5 @@ for ellipse in ellipses_C2
         cbar = false,
     )
 end
-scatter!([0], [0]; color = :blue, label = "Squared (Objective 1)")
-scatter!([0], [0]; color = :red, label = "Min-Max (Objective 2)")
-display(plt)
-# </details>
+Plots.scatter!([0], [0]; color = :blue, label = "Squared (Objective 1)")
+Plots.scatter!([0], [0]; color = :red, label = "Min-Max (Objective 2)")
