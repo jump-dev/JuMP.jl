@@ -77,10 +77,6 @@ function plot_dwt(x, sz = (500, 500))
     )
 end
 
-function flip(x)
-    return x[end:-1:1, :]
-end
-
 function normalize(x)
     x = (x .- minimum(x)) ./ (maximum(x) - minimum(x))
     return x
