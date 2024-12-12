@@ -206,15 +206,13 @@ function edge_detector(
 end
 # </details>
 
-#  
-# 
 # We apply the Sobel operator to the binary image:
 edges = edge_detector(convert(Matrix{Float64}, x_bin), 1e-1, 1e2)
 edges = thinning(edges; algo = GuoAlgo())
 
 # And finally we cluster the edges using dbscan so we can fit ellipses to individual 
-# galaxies. We can control the minimum size of galaxies by setting the minimum
-# cluster size.
+# galaxies. We can control the minimum size of galaxies by changing the minimum cluster 
+# size.
 points = findall(edges)
 points = getfield.(points, :I)
 points = hcat([p[1] for p in points], [p[2] for p in points])'
@@ -225,8 +223,8 @@ result = dbscan(
     min_cluster_size = 20,
 )
 
-# The result of the clustering is a list of clusters, where each cluster is a list of
-# points to which we will asign a unique color.
+# The result of the clustering is a list of clusters to which we will assign a unique 
+# color. Each cluster is a list of points that belong to the same galaxy.
 clusters = result.clusters
 N_clusters = length(clusters)
 
@@ -301,7 +299,7 @@ end
 # \end{align}
 # ```
 # And hence can be modelled as a second-order cone program (SOCP) using 
-# [`MOI.SecondOrderCone`](@ref) as follows:
+# [`MOI.RotatedSecondOrderCone`](@ref) as follows:
 
 ellipses_C1 = Vector{Dict{Symbol,Any}}()
 
