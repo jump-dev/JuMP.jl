@@ -163,7 +163,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [SHOT](https://github.com/coin-or/SHOT)                                        | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL       | (MI)NLP                  |
 | [StatusSwitchingQP.jl](https://github.com/PharosAbad/StatusSwitchingQP.jl)     |                                                                                  |        | MIT       | LP, QP                   |
 | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |        | MPL-2     | LP                       | 
-|[CAT.jl](https://github.com/fadihamad94/CAT-Journal)                           |   |     | MIT      | NLP |
+|[CATrustRegionMethod.jl](https://github.com/fadihamad94/CATrustRegionMethod.jl)                           |   |     | MIT      | NLP |
 
 Where:
 - LP = Linear programming
