@@ -14,15 +14,15 @@
 # This tutorial uses the following packages:
 
 using JuMP
-import SCS
-import Images
-import Wavelets
 import Clustering
+import DSP
+import Images
 import LinearAlgebra
 import LinearOperatorCollection as LOC
-import RegularizedLeastSquares as RLS
 import Plots
-import DSP
+import RegularizedLeastSquares as RLS
+import SCS
+import Wavelets
 
 # ## Parametrization of an ellipse
 
@@ -93,12 +93,11 @@ end
 
 # This is just a toy problem with little scientific value, but you can imagine how the 
 # rotation and position of elliptical galaxies can be useful information to astronomers.
-img = load("../../assets/cartwheel_galaxy.png");
+img = Images.load("../../assets/cartwheel_galaxy.png");
 
 # We convert the image to gray scale so that we can work with a single channel.
-
 img_gray = Images.Gray.(img)
-mosaicview(img, img_gray; nrow = 1)
+Images.mosaicview(img, img_gray; nrow = 1)
 
 # Instead of operating on the entire image, we select a region of interest (roi) which 
 # is a subset of ``\mathbb{X} \times \mathbb{Y}``.
@@ -110,7 +109,7 @@ Y = Y_c:Y_c+sz-1
 roi = (X, Y)
 img_roi = img[roi...]
 img_gray_roi = img_gray[roi...]
-mosaicview(img_roi, img_gray_roi; nrow = 1)
+Images.mosaicview(img_roi, img_gray_roi; nrow = 1)
 
 # ## Extracting image features
 
@@ -155,7 +154,7 @@ b = Φ * vec(x);
 x_approx = RLS.solve!(solver, b)
 x_approx = reshape(x_approx, size(x));
 x_final = normalize(x_approx)
-mosaicview(x, Images.Gray.(x_final); nrow = 1)
+Images.mosaicview(x, Images.Gray.(x_final); nrow = 1)
 
 # We then use a binarization algorithm to map each grayscale pixel 
 # ``(x_i, y_i)`` to a binary value so ``x_i, y_i \to \{0, 1\}``.
@@ -191,7 +190,7 @@ end
 
 # We apply the Sobel operator to the binary image:
 edges = edge_detector(convert(Matrix{Float64}, x_bin), 1e-1, 1e2)
-edges = thinning(edges; algo = GuoAlgo())
+edges = Images.thinning(edges; algo = Images.GuoAlgo())
 
 # And finally we cluster the edges using dbscan so we can fit ellipses to individual 
 # galaxies. We can control the minimum size of galaxies by changing the minimum cluster 
@@ -211,10 +210,11 @@ result = Clustering.dbscan(
 clusters = result.clusters
 N_clusters = length(clusters)
 colors = Plots.distinguishable_colors(N_clusters + 1)[2:end]
-plt = plot_dwt(img_roi)
+plt = plot_dwt(x_final)
 for (i, cluster) in enumerate(clusters)
     p_cluster = points[:, cluster.core_indices]
     Plots.scatter!(
+        plt,
         p_cluster[2, :],
         p_cluster[1, :];
         color = colors[i],
@@ -280,7 +280,6 @@ ellipses_C1 = Vector{Dict{Symbol,Any}}()
 for (i, cluster) in enumerate(clusters)
     p_cluster = points[:, cluster.core_indices]
     Ξ = [(point[1], point[2]) for point in eachcol(p_cluster)]
-
     model = ellipse(Ξ)
     @variable(model, ζ >= 0)
     @constraint(
@@ -291,7 +290,6 @@ for (i, cluster) in enumerate(clusters)
     obj = @objective(model, Min, ζ)
     set_objective_function(model, obj)
     optimize!(model)
-
     Q, d, e = value.(model[:Q]), value.(model[:d]), value.(model[:e])
     push!(ellipses_C1, Dict(:Q => Q, :d => d, :e => e))
 end
@@ -322,7 +320,7 @@ for ellipse in ellipses_C1
         Z_sq;
         levels = [0.0],
         linewidth = 2,
-        color = :blue,
+        color = :red,
         cbar = false,
     )
 end
@@ -347,20 +345,16 @@ ellipses_C2 = Vector{Dict{Symbol,Any}}()
 for (i, cluster) in enumerate(clusters)
     p_cluster = points[:, cluster.core_indices]
     Ξ = [(point[1], point[2]) for point in eachcol(p_cluster)]
-
     model = ellipse(Ξ)
     N = length(Ξ)
-
     @variable(model, ζ)
     @constraint(
         model,
         [ζ; model[:r]] in MOI.NormInfinityCone(1 + length(model[:r]))
     )
-
     obj = @objective(model, Min, ζ)
     set_objective_function(model, obj)
     optimize!(model)
-
     Q, d, e = value.(model[:Q]), value.(model[:d]), value.(model[:e])
     push!(ellipses_C2, Dict(:Q => Q, :d => d, :e => e))
 end
@@ -375,9 +369,9 @@ for ellipse in ellipses_C2
         Z_sq;
         levels = [0.0],
         linewidth = 2,
-        color = :red,
+        color = :green,
         cbar = false,
     )
 end
-Plots.scatter!([0], [0]; color = :blue, label = "Squared (Objective 1)")
-Plots.scatter!([0], [0]; color = :red, label = "Min-Max (Objective 2)")
+Plots.scatter!([0], [0]; color = :red, label = "Squared (Obj. 1)")
+Plots.scatter!([0], [0]; color = :green, label = "Min-Max (Obj. 2)")
