@@ -213,3 +213,6 @@
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.6"
+[CATrustRegionMethod]
+    user = "fadihamad94"
+    rev = "v0.1.0"
