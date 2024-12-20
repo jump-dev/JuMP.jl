@@ -194,6 +194,7 @@ Dvorkin
 Ehrenmann
 Ehrgott
 Erlangen
+Fadi
 Farkas
 Ferrolho
 Fourer
@@ -203,6 +204,7 @@ Gleixner
 Goemans
 Grothey
 Habibi
+Hamad
 Hande
 Hassan
 Henrique
@@ -224,6 +226,7 @@ Kibaek
 Latorre
 Legat
 Linial
+Lipschitz
 Luangkesorn
 Lubin
 Madani
