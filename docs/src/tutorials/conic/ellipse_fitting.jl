@@ -97,7 +97,8 @@ end
 # how the rotation and position of elliptical galaxies can be useful information
 # to astronomers.
 
-img = Images.load("../../assets/cartwheel_galaxy.png");
+filename = joinpath(@__DIR__, "..", "..", "assets", "cartwheel_galaxy.png")
+img = Images.load(filename);
 
 # We convert the image to gray scale so that we can work with a single channel.
 
