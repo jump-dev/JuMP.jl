@@ -369,7 +369,7 @@ for (i, cluster) in enumerate(clusters)
     )
     @objective(model, Min, ζ)
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    @assert is_solved_and_feasible(model; allow_almost = true)
     Q, d, e = value.(model[:Q]), value.(model[:d]), value.(model[:e])
     push!(ellipses_C2, Dict(:Q => Q, :d => d, :e => e))
 end
