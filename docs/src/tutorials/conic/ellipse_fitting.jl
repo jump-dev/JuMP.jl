@@ -14,6 +14,7 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import Clustering
 import DSP
 import Images
