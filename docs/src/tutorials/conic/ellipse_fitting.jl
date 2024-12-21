@@ -261,7 +261,7 @@ Plots.plot!(
 
 function create_ellipse_model(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-5)
     N = length(Ξ)
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     # set_silent(model)
     @variable(model, Q[1:2, 1:2], PSD)
     @variable(model, d[1:2])
