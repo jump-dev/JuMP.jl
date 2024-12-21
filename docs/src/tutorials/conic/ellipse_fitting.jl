@@ -266,7 +266,6 @@ function create_ellipse_model(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-5)
     @variable(model, Q[1:2, 1:2], PSD)
     @variable(model, d[1:2])
     @variable(model, e)
-    @constraint(model, Q >= ϵ * LinearAlgebra.I(2), PSDCone())
     @expression(
         model,
         r[i in 1:N],
