@@ -22,7 +22,6 @@ import LinearAlgebra
 import LinearOperatorCollection as LOC
 import Plots
 import RegularizedLeastSquares as RLS
-import SCS
 import Wavelets
 
 # ## Parametrization of an ellipse
