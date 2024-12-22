@@ -201,7 +201,7 @@ end
 edges = edge_detector(convert(Matrix{Float64}, x_bin), 1e-1, 1e2)
 edges = Images.thinning(edges; algo = Images.GuoAlgo())
 
-# And finally we cluster the edges using dbscan so we can fit ellipses to
+# And finally we cluster the edges using `dbscan` so we can fit ellipses to
 # individual galaxies. We can control the minimum size of galaxies by changing
 # the minimum cluster size.
 
