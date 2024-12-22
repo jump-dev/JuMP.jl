@@ -28,9 +28,7 @@ import Wavelets
 
 # An ellipse is a set of the form:
 # ```math
-# \begin{equation}
 # \mathcal{E} = \{ \xi : (\xi - c)^\top D (\xi - c) = r^2 \}
-# \end{equation}
 # ```
 # where ``c \in \mathbb{R}^2`` is the center of the ellipse,
 # ``D \in \mathbb{R}^{2 \times 2} \succ 0`` is a symmetric positive definite
@@ -40,9 +38,7 @@ import Wavelets
 # with ``x, y \geq 0``. We use definition (1) to write an ellipse as the root of
 # a quadratic form in homogeneous coordinates:
 # ```math
-# \begin{equation}
-#     \begin{bmatrix} \xi \\ 1 \end{bmatrix}^T \begin{bmatrix} Q & d \\ d^T & e \end{bmatrix} \begin{bmatrix} \xi \\ 1 \end{bmatrix} = 0
-# \end{equation}
+# \begin{bmatrix} \xi \\ 1 \end{bmatrix}^T \begin{bmatrix} Q & d \\ d^T & e \end{bmatrix} \begin{bmatrix} \xi \\ 1 \end{bmatrix} = 0
 # ```
 # where:
 # ```math
@@ -55,9 +51,7 @@ import Wavelets
 # The residual distance ``r_0`` of a random point ``\xi_0 = (x_0, y_0)`` to the
 # ellipse is then given by:
 # ```math
-# \begin{equation}
-#     r_0 \triangleq \begin{bmatrix} \xi_0 \\ 1 \end{bmatrix}^T \begin{bmatrix} Q & d \\ d^T & e \end{bmatrix} \begin{bmatrix} \xi_0 \\ 1 \end{bmatrix}
-# \end{equation}
+# r_0 \triangleq \begin{bmatrix} \xi_0 \\ 1 \end{bmatrix}^T \begin{bmatrix} Q & d \\ d^T & e \end{bmatrix} \begin{bmatrix} \xi_0 \\ 1 \end{bmatrix}
 # ```
 # The value of ``r_0`` is positive if the point is outside the ellipse, zero if
 # it is on the ellipse and negative if it is inside the ellipse. We also see we
@@ -132,9 +126,7 @@ Images.mosaicview(img_roi, img_gray_roi; nrow = 1)
 # Finding a sparse representation amounts to solving the following optimization
 # problem:
 # ```math
-# \begin{equation}
-#     \min_{x} \frac{1}{2} \left\| y - \Phi x \right\|_2^2 + \lambda \left\| x \right\|_1
-# \end{equation}
+# \min_{x} \frac{1}{2} \left\| y - \Phi x \right\|_2^2 + \lambda \left\| x \right\|_1
 # ```
 # where ``y`` is the noisy image, ``\Phi`` is the sparsifying basis, ``x`` is
 # the sparse representation of our image, and ``\lambda`` is the regularization
@@ -278,12 +270,10 @@ end
 
 # For our first objective we will minimize the total squared distance of all
 # points to the ellipse. Hence we will use the sum of the squared distances as
-# our objective function, also known as the ``L^2`` norm.
+# our objective function, also known as the ``L^2`` norm:
 # ```math
-# \begin{equation}
-#     \min_{Q, d, e} P_\text{res}(\mathcal{E}) = \min_{Q, d, e} \sum_{i \in N}
-#     d^2_{\text{res}}(\xi_i, \mathcal{E}) = \min_{Q, d, e} ||d_{\text{res}}||^2_2
-# \end{equation}
+# \min_{Q, d, e} P_\text{res}(\mathcal{E}) = \min_{Q, d, e} \sum_{i \in N}
+# d^2_{\text{res}}(\xi_i, \mathcal{E}) = \min_{Q, d, e} ||d_{\text{res}}||^2_2
 # ```
 
 # This problem is equivalent to:
@@ -344,12 +334,10 @@ plt
 # ## Objective 2: Minimize the maximum residual distance
 
 # For our second objective we will minimize the maximum residual distance of all
-# points to the ellipse.
+# points to the ellipse:
 # ```math
-# \begin{equation}
-#     \min_{Q, d, e} \max_{\xi_i \in \mathcal{F}} d_\text{res}(\xi_i, \mathcal{E}) =
-#     \min_{Q, d, e} ||d_\text{res}||_\infty
-# \end{equation}
+# \min_{Q, d, e} \max_{\xi_i \in \mathcal{F}} d_\text{res}(\xi_i, \mathcal{E}) =
+# \min_{Q, d, e} ||d_\text{res}||_\infty
 # ```
 
 # This objective can be implemented in JuMP using [`MOI.NormInfinityCone`](@ref)
