@@ -5,6 +5,7 @@ autodiff
 arXiv
 backports
 bikeshedding
+binarization
 [Bb]ivariate
 blogposts
 broadcasted
@@ -14,6 +15,7 @@ camelCase
 compat
 dataframe(?s)
 datastructure
+denoise
 destructuring
 dev
 discretize(d|s)
@@ -25,6 +27,7 @@ elementwise
 errored
 flamegraph
 getters
+grayscale
 homebrew
 iterable
 invalidations
@@ -45,6 +48,7 @@ recurse
 reimplemented
 renewables
 runtime(?s)
+sparsifying
 [Ss]tacktrace
 subexpression(?s)
 subgraph(?s)
@@ -52,7 +56,7 @@ sublicense
 subtyping
 sysimage
 threadsafe
-thresholding
+[Tt]hresholding
 TODO
 transpiled
 unexported
@@ -190,6 +194,7 @@ Cholesky
 Coey
 Dantzig
 Das
+Daubechies
 Dvorkin
 Ehrenmann
 Ehrgott
@@ -257,6 +262,7 @@ Schwarz
 Shabbir
 Shuvomoy
 Smeers
+Sobel
 Soodeh
 Steuer
 Stigler
