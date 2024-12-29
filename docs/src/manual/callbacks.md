@@ -89,9 +89,7 @@ information about lazy constraints, see this [blog post by Paul Rubin](https://o
 A lazy constraint callback can be set using the following syntax:
 
 ```jldoctest
-julia> import GLPK
-
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model();
 
 julia> @variable(model, x <= 10, Int)
 x
@@ -117,6 +115,7 @@ julia> function my_callback_function(cb_data)
                con = @build_constraint(x <= 2)
                MOI.submit(model, MOI.LazyConstraint(cb_data), con)
            end
+           return
        end
 my_callback_function (generic function with 1 method)
 
@@ -134,19 +133,21 @@ julia> set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
     solver returning an incorrect solution, or lead to many constraints being
     added, slowing down the solution process.
     ```julia
-    model = Model(GLPK.Optimizer)
+    model = Model()
     @variable(model, x <= 10, Int)
     @objective(model, Max, x)
     function bad_callback_function(cb_data)
         # Don't do this!
         con = @build_constraint(x <= 2)
         MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        return
     end
     function good_callback_function(cb_data)
         if callback_value(x) > 2
             con = @build_constraint(x <= 2)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
+        return
     end
     set_attribute(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
@@ -170,9 +171,7 @@ aforementioned [blog post](https://orinanobworld.blogspot.com/2012/08/user-cuts-
 A user-cut callback can be set using the following syntax:
 
 ```jldoctest
-julia> import GLPK
-
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model();
 
 julia> @variable(model, x <= 10.5, Int)
 x
@@ -184,6 +183,7 @@ julia> function my_callback_function(cb_data)
            x_val = callback_value(cb_data, x)
            con = @build_constraint(x <= floor(x_val))
            MOI.submit(model, MOI.UserCut(cb_data), con)
+           return
        end
 my_callback_function (generic function with 1 method)
 
@@ -221,15 +221,11 @@ solutions from them.
 A heuristic solution callback can be set using the following syntax:
 
 ```jldoctest
-julia> import GLPK
+julia> model = Model();
 
-julia> model = Model(GLPK.Optimizer);
+julia> @variable(model, x <= 10.5, Int);
 
-julia> @variable(model, x <= 10.5, Int)
-x
-
-julia> @objective(model, Max, x)
-x
+julia> @objective(model, Max, x);
 
 julia> function my_callback_function(cb_data)
            x_val = callback_value(cb_data, x)
@@ -237,6 +233,7 @@ julia> function my_callback_function(cb_data)
                model, MOI.HeuristicSolution(cb_data), [x], [floor(Int, x_val)]
            )
            println("I submitted a heuristic solution, and the status was: ", status)
+           return
        end
 my_callback_function (generic function with 1 method)
 
