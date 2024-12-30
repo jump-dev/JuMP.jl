@@ -98,7 +98,7 @@ Test.@test result_count(model) == 1
 solution_summary(model)
 
 # We need to set specific Gurobi parameters to enable the
-# [multiple solution functionality](https://www.gurobi.com/documentation/9.0/refman/finding_multiple_solutions.html).
+# [solution pool](https://docs.gurobi.com/projects/optimizer/en/current/features/solutionpool.html).
 
 # The first setting turns on the exhaustive search mode for multiple solutions:
 
