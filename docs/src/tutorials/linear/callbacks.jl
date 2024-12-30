@@ -161,11 +161,11 @@ function example_solver_dependent_callback()
     @objective(model, Max, y)
     cb_calls = Cint[]
     function my_callback_function(cb_data, cb_where::Cint)
-        # You can reference variables outside the function as normal
+        ## You can reference variables outside the function as normal
         push!(cb_calls, cb_where)
-        # You can select where the callback is run
+        ## You can select where the callback is run
         if cb_where == Gurobi.GRB_CB_MIPNODE
-            # You can query a callback attribute using GRBcbget
+            ## You can query a callback attribute using GRBcbget
             resultP = Ref{Cint}()
             Gurobi.GRBcbget(
                 cb_data,
@@ -179,12 +179,12 @@ function example_solver_dependent_callback()
         elseif cb_where != Gurobi.GRB_CB_MIPSOL
             return
         end
-        # Before querying `callback_value`, you must call:
+        ## Before querying `callback_value`, you must call:
         Gurobi.load_callback_variable_primal(cb_data, cb_where)
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
-        # You can submit solver-independent MathOptInterface attributes such as
-        # lazy constraints, user-cuts, and heuristic solutions.
+        ## You can submit solver-independent MathOptInterface attributes such as
+        ## lazy constraints, user-cuts, and heuristic solutions.
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
@@ -192,11 +192,11 @@ function example_solver_dependent_callback()
             con = @build_constraint(y + x <= 3)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
-        # You can terminate the callback as follows:
+        ## You can terminate the callback as follows:
         Gurobi.GRBterminate(backend(model))
         return
     end
-    # You _must_ set this parameter if using lazy constraints.
+    ## You _must_ set this parameter if using lazy constraints.
     set_attribute(model, "LazyConstraints", 1)
     set_attribute(model, Gurobi.CallbackFunction(), my_callback_function)
     optimize!(model)
