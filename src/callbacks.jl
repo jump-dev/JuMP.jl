@@ -20,6 +20,11 @@ primal solution available from [`callback_value`](@ref) is integer feasible.
 julia> import Gurobi
 
 julia> model = Model(Gurobi.Optimizer);
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 722777
+Set parameter GURO_PAR_SPECIAL
+WLS license 722777 - registered to JuMP Development
 
 julia> set_silent(model)
 
@@ -29,7 +34,9 @@ julia> @objective(model, Max, x);
 
 julia> function my_callback_function(cb_data, cb_where)
            status = callback_node_status(cb_data, model)
-           println("Status is: ", status)
+           if status == MOI.CALLBACK_NODE_STATUS_INTEGER
+               println("Status is: ", status)
+           end
            return
        end
 my_callback_function (generic function with 1 method)
@@ -37,9 +44,7 @@ my_callback_function (generic function with 1 method)
 julia> set_attribute(model, Gurobi.CallbackFunction(), my_callback_function)
 
 julia> optimize!(model)
-Status is: CALLBACK_NODE_STATUS_UNKNOWN
 Status is: CALLBACK_NODE_STATUS_INTEGER
-Status is: CALLBACK_NODE_STATUS_UNKNOWN
 ```
 """
 function callback_node_status(cb_data, model::GenericModel)
@@ -72,6 +77,11 @@ Use [`callback_node_status`](@ref) to check whether a solution is available.
 julia> import Gurobi
 
 julia> model = Model(Gurobi.Optimizer);
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 722777
+Set parameter GURO_PAR_SPECIAL
+WLS license 722777 - registered to JuMP Development
 
 julia> set_silent(model)
 
