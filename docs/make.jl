@@ -346,6 +346,7 @@ const _PAGES = [
             "tutorials/linear/lp_sensitivity.md",
             "tutorials/linear/basis.md",
             "tutorials/linear/mip_duality.md",
+            "tutorials/linear/multiple_solutions.md",
         ],
         "Nonlinear programs" => [
             "tutorials/nonlinear/introduction.md",
