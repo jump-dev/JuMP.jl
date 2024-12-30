@@ -125,7 +125,7 @@ function generate_distance_matrix(n; random_seed = 1)
     return X, Y, d
 end
 
-n = 50
+n = 100
 X, Y, d = generate_distance_matrix(n)
 
 # For the JuMP model, we first initialize the model object. Then, we create the
