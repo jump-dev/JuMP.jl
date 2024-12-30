@@ -31,9 +31,10 @@
 # It uses the following packages:
 
 using JuMP
-import GLPK
-import Random
+import Gurobi
 import Plots
+import Random
+import Test
 
 # ## [Mathematical Formulation](@id tsp_model)
 
@@ -124,7 +125,7 @@ function generate_distance_matrix(n; random_seed = 1)
     return X, Y, d
 end
 
-n = 20
+n = 100
 X, Y, d = generate_distance_matrix(n)
 
 # For the JuMP model, we first initialize the model object. Then, we create the
@@ -133,7 +134,8 @@ X, Y, d = generate_distance_matrix(n)
 # constraints that `x[i, j] == x[j, i]`.
 
 function build_tsp_model(d, n)
-    model = Model(GLPK.Optimizer)
+    model = Model(Gurobi.Optimizer)
+    set_silent(model)
     @variable(model, x[1:n, 1:n], Bin, Symmetric)
     @objective(model, Min, sum(d .* x) / 2)
     @constraint(model, [i in 1:n], sum(x[i, :]) == 2)
@@ -271,14 +273,14 @@ optimize!(lazy_model)
 @assert is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
 
+#-
+
+time_lazy = solve_time(lazy_model)
+
 # This finds the same optimal tour:
 
 plot_tour(X, Y, value.(lazy_model[:x]))
 
-# Surprisingly, for this particular model with GLPK, the solution time is worse
-# than the iterative method:
+# The solution time is faster than the iterative approach:
 
-time_lazy = solve_time(lazy_model)
-
-# In most other cases and solvers, however, the lazy time should be faster than
-# the iterative method.
+Test.@test time_lazy < time_iterated

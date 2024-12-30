@@ -11,7 +11,7 @@
 # The tutorial uses the following packages:
 
 using JuMP
-import GLPK
+import Gurobi
 import Random
 import Test
 
@@ -29,7 +29,8 @@ import Test
 # An example using a lazy constraint callback.
 
 function example_lazy_constraint()
-    model = Model(GLPK.Optimizer)
+    model = Model(Gurobi.Optimizer)
+    set_silent(model)
     @variable(model, 0 <= x <= 2.5, Int)
     @variable(model, 0 <= y <= 2.5, Int)
     @objective(model, Max, y)
@@ -57,6 +58,7 @@ function example_lazy_constraint()
             println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
+        return
     end
     set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
@@ -78,7 +80,11 @@ function example_user_cut_constraint()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-    model = Model(GLPK.Optimizer)
+    model = Model(Gurobi.Optimizer)
+    set_silent(model)
+    ## Turn off "Cuts" parameter so that our new one must be called. In real
+    ## models, you should leave "Cuts" turned on.
+    set_attribute(model, "Cuts", 0)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i in 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i in 1:N))
@@ -115,7 +121,11 @@ function example_heuristic_solution()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-    model = Model(GLPK.Optimizer)
+    model = Model(Gurobi.Optimizer)
+    set_silent(model)
+    ## Turn off "Heuristics" parameter so that our new one must be called. In
+    ## real models, you should leave "Heuristics" turned on.
+    set_attribute(model, "Heuristics", 0)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i in 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i in 1:N))
@@ -140,41 +150,57 @@ end
 
 example_heuristic_solution()
 
-# ## GLPK solver-dependent callback
+# ## Gurobi solver-dependent callback
 
-# An example using GLPK's solver-dependent callback.
+# An example using Gurobi's solver-dependent callback.
 
 function example_solver_dependent_callback()
-    model = Model(GLPK.Optimizer)
+    model = direct_model(Gurobi.Optimizer())
     @variable(model, 0 <= x <= 2.5, Int)
     @variable(model, 0 <= y <= 2.5, Int)
     @objective(model, Max, y)
-    lazy_called = false
-    function my_callback_function(cb_data)
-        lazy_called = true
-        reason = GLPK.glp_ios_reason(cb_data.tree)
-        println("Called from reason = $(reason)")
-        if reason != GLPK.GLP_IROWGEN
+    cb_calls = Cint[]
+    function my_callback_function(cb_data, cb_where::Cint)
+        ## You can reference variables outside the function as normal
+        push!(cb_calls, cb_where)
+        ## You can select where the callback is run
+        if cb_where == Gurobi.GRB_CB_MIPNODE
+            ## You can query a callback attribute using GRBcbget
+            resultP = Ref{Cint}()
+            Gurobi.GRBcbget(
+                cb_data,
+                cb_where,
+                Gurobi.GRB_CB_MIPNODE_STATUS,
+                resultP,
+            )
+            if resultP[] != Gurobi.GRB_OPTIMAL
+                return  # Solution is something other than optimal.
+            end
+        elseif cb_where != Gurobi.GRB_CB_MIPSOL
             return
         end
+        ## Before querying `callback_value`, you must call:
+        Gurobi.load_callback_variable_primal(cb_data, cb_where)
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
+        ## You can submit solver-independent MathOptInterface attributes such as
+        ## lazy constraints, user-cuts, and heuristic solutions.
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
-            println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         elseif y_val + x_val > 3 + 1e-6
-            con = @build_constraint(y - x <= 1)
-            println("Adding $(con)")
+            con = @build_constraint(y + x <= 3)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
+        ## You can terminate the callback as follows:
+        Gurobi.GRBterminate(backend(model))
+        return
     end
-    set_attribute(model, GLPK.CallbackFunction(), my_callback_function)
+    ## You _must_ set this parameter if using lazy constraints.
+    set_attribute(model, "LazyConstraints", 1)
+    set_attribute(model, Gurobi.CallbackFunction(), my_callback_function)
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
-    Test.@test lazy_called
-    Test.@test value(x) == 1
-    Test.@test value(y) == 2
+    Test.@test termination_status(model) == MOI.INTERRUPTED
     return
 end
 

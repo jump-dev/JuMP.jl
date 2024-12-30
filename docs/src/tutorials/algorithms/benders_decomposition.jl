@@ -26,7 +26,7 @@
 # in JuMP. It uses the following packages:
 
 using JuMP
-import GLPK
+import Gurobi
 import HiGHS
 import Printf
 import Test  #src
@@ -283,13 +283,13 @@ objective_value(model)
 # node of the first-stage MILP at each iteration.
 
 # !!! tip
-#     We use GLPK for this model because HiGHS does not support lazy constraints.
-#     For more information on callbacks, read the page
+#     We use Gurobi for this model because HiGHS does not support lazy
+#     constraints. For more information on callbacks, read the page
 #     [Solver-independent callbacks](@ref callbacks_manual).
 
 # As before, we construct the same first-stage subproblem:
 
-lazy_model = Model(GLPK.Optimizer)
+lazy_model = Model(Gurobi.Optimizer)
 set_silent(lazy_model)
 @variable(lazy_model, x[1:n, 1:n], Bin)
 @variable(lazy_model, θ >= M)

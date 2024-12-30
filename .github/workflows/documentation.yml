@@ -16,6 +16,8 @@ jobs:
         with:
           version: '1'
       - name: Install dependencies
+        env:
+          WLSLICENSE: ${{ secrets.WLSLICENSE }}
         shell: julia --color=yes --project=docs/ {0}
         run: |
           using Pkg
@@ -23,6 +25,7 @@ jobs:
           Pkg.instantiate()
       - name: Build and deploy
         env:
+          WLSLICENSE: ${{ secrets.WLSLICENSE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           DOCUMENTER_LATEX_DEBUG: ${{ github.workspace }}/latex-debug-logs
@@ -31,7 +34,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: PDF build logs
-          path: ${{ github.workspace }}/latex-debug-logs      
+          path: ${{ github.workspace }}/latex-debug-logs
       - uses: errata-ai/vale-action@reviewdog
         with:
           version: 3.3.1
