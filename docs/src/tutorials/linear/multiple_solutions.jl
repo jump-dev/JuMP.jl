@@ -97,15 +97,20 @@ Test.@test is_solved_and_feasible(model)
 Test.@test result_count(model) == 1
 solution_summary(model)
 
-# We need to set specific Gurobi parameters to enable the
-# [solution pool](https://docs.gurobi.com/projects/optimizer/en/current/features/solutionpool.html).
-
-# The first setting turns on the exhaustive search mode for multiple solutions:
+# To return multiple solutions, we need to set Gurobi-specific parameters to
+# enable the [solution pool](https://docs.gurobi.com/projects/optimizer/en/current/features/solutionpool.html).
+# Moreover, there is a bug in Gurobi that means the solution pool is not
+# activated if we have already solved the model once. To work around the bug, we
+# need to reset the optimizer. If you turn the solution pool options on before
+# the first solve you do not need to reset the optimizer.
 
 set_optimizer(model, Gurobi.Optimizer)
+
+# The first option turns on the exhaustive search mode for multiple solutions:
+
 set_attribute(model, "PoolSearchMode", 2)
 
-# The second sets a limit for the number of solutions found:
+# The second option sets a limit for the number of solutions found:
 
 set_attribute(model, "PoolSolutions", 100)
 
@@ -122,7 +127,7 @@ solution_summary(model)
 
 Test.@test result_count(model) == 20
 
-# ### Viewing the Results
+# ## Viewing the Results
 
 # Access the various feasible solutions by using the [`value`](@ref) function
 # with the `result` keyword:
