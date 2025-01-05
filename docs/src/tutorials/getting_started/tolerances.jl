@@ -31,9 +31,8 @@
 # cases, the solution satisfies the constraints to some very small tolerance
 # that has no noticeable impact on the quality of the optimal solution. In the
 # worst case, the solver can return a "wrong" solution, or fail to find one even
-# if it exists. (In the last case, the solution is wrong only in the sense of
-# user expectation. It will satisfy the solution to the tolerances that are
-# provided.)
+# if it exists. (The solution is "wrong" only in the sense of user expectation.
+# It will satisfy the solution to the tolerances that are provided.)
 
 # The purpose of this tutorial is to explain the various types of tolerances
 # that are used in optimization solvers and what you can reasonably expect from
@@ -41,7 +40,7 @@
 
 # There are a few sources of additional information:
 #  * Ambros Gleixner has an excellent YouTube talk
-#    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared).
+#    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared)
 #  * Gurobi has a series of articles in their documentation called
 #    [Guidelines for Numerical Issues](https://www.gurobi.com/documentation/current/refman/guidelines_for_numerical_i.html)
 
@@ -117,8 +116,9 @@ value(x)
 
 # In other words, HiGHS thinks that the solution `x = 0` satisfies the
 # constraint `x == -1e-8`. The value of ``\varepsilon`` in HiGHS is controlled
-# by the `primal_feasibility_tolerance` option. If we set this to a smaller
-# value, HiGHS will now correctly deduce that the problem is infeasible:
+# by the `primal_feasibility_tolerance` option. The default is `1e-7`. If we set
+# this to a smaller value, HiGHS will now correctly deduce that the problem is
+# infeasible:
 
 set_attribute(model, "primal_feasibility_tolerance", 1e-10)
 optimize!(model)
@@ -187,7 +187,7 @@ report[LowerBoundRef(y)]
 
 # Despite the small primal feasibility tolerance and the small actual violations
 # of the constraints, our optimal solution is very far from the theoretical
-# optimal.
+# optimum.
 
 # We can "fix" our model by decreasing `eps_abs` and `eps_rel`, which SCS uses
 # to control the absolute and relative feasibility tolerances. Now the solver
@@ -315,7 +315,7 @@ optimize!(model)
 is_solved_and_feasible(model)
 
 # The feasible solution `(x, y) = (0.0, -1e-8)` has a maximum primal violation
-# of `1e-8` which is the HiGHS feasibility tolerance:
+# of `1e-8` which is smaller than the HiGHS feasibility tolerance:
 
 primal_feasibility_report(model, Dict(x => 0.0, y => -1e-8))
 
