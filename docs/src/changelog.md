@@ -21,13 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - [Low-rank matrix completion](@ref) (#3888)
  - Improved the error messagge when `=` is used instead of `==` in macros
    (#2892)
- - Added a section on [Thread safety](@ref) to the parallelism tutornal (#3897)
+ - Added a section on thread safety to the parallelism tutornal (#3897)
  - Various minor fixes to the documentation (#3898) (#3899) (#3901) (#3906)
    (#3907)
  - Added a new solver `CATrustRegionMethod.jl` (#3900)
  - Added a new tutorial [Example: fitting of circles and ellipses](@ref) (#3895)
  - Removed GLPK from the documentation in favor of Gurobi (#3904)
- - Added a new tutorial [Finding multiple feasible solutions](@reff) (#3905)
+ - Added a new tutorial [Finding multiple feasible solutions](@ref) (#3905)
 
 ## Version 1.23.5 (November 19, 2024)
 
