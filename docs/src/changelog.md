@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added new documentation examples for:
    - [NormSpectralCone](@ref) and [NormNuclearCone](@ref) examples (#3887)
    - [Low-rank matrix completion](@ref) (#3888)
- - Improved the error messagge when `=` is used instead of `==` in macros
+ - Improved the error message when `=` is used instead of `==` in macros
    (#2892)
- - Added a section on thread safety to the parallelism tutornal (#3897)
+ - Added a section on thread safety to the parallelism tutorial (#3897)
  - Various minor fixes to the documentation (#3898) (#3899) (#3901) (#3906)
    (#3907)
  - Added a new solver `CATrustRegionMethod.jl` (#3900)
