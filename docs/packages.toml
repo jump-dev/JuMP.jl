@@ -38,7 +38,7 @@
 [Cbc]
     rev = "v1.2.0"
 [Clp]
-    rev = "v1.1.0"
+    rev = "v1.2.2"
 [CPLEX]
     rev = "v1.0.3"
 [CSDP]
@@ -55,20 +55,20 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "9bafe7d3e4ed198b97836362a62bb48a14d408bc"
+    rev = "v1.6.0"
 [HiGHS]
-    rev = "v1.12.1"
+    rev = "v1.13.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.6.7"
+    rev = "v1.7.1"
 [KNITRO]
     rev = "v0.14.4"
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
-    rev = "v0.15.1"
+    rev = "v0.15.4"
 [MultiObjectiveAlgorithms]
     rev = "v1.3.3"
     has_html = true
@@ -93,7 +93,7 @@
     rev = "v0.7.5"
     extension = true
 [SCS]
-    rev = "v2.0.1"
+    rev = "v2.0.2"
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
@@ -119,6 +119,9 @@
     user = "joaquimg"
     rev = "v0.6.2"
     extension = true
+[CATrustRegionMethod]
+    user = "fadihamad94"
+    rev = "v0.1.0"
 [CDCS]
     user = "oxfordcontrol"
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
@@ -131,7 +134,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.19"
+    rev = "v1.1.20"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -204,15 +207,12 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.12.0"
+    rev = "v0.12.1"
 [SDDP]
     user = "odow"
-    rev = "v1.9.0"
+    rev = "v1.10.1"
     has_html = true
     extension = true
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.6"
-[CATrustRegionMethod]
-    user = "fadihamad94"
-    rev = "v0.1.0"

@@ -41,8 +41,7 @@ julia> @variable(
            x[i = 2:4, j = ["a", "b"]] >= i,
            container = DimensionalData.DimArray,
        )
-╭──────────────────────────────╮
-│ 3×2 DimArray{VariableRef, 2} │
+┌ 3×2 DimArray{VariableRef, 2} ┐
 ├──────────────────────────────┴────────────────── dims ┐
   ↓ i Sampled{Int64} 2:4 ForwardOrdered Regular Points,
   → j Categorical{String} ["a", "b"] ForwardOrdered
@@ -72,8 +71,7 @@ julia> @expression(
            sum(x[At(i), At(j)] for i in 2:4),
            container = DimensionalData.DimArray,
        )
-╭────────────────────────────────╮
-│ 2-element DimArray{AffExpr, 1} │
+┌ 2-element DimArray{AffExpr, 1} ┐
 ├────────────────────────────────┴──────────── dims ┐
   ↓ j Categorical{String} ["a", "b"] ForwardOrdered
 └───────────────────────────────────────────────────┘
@@ -88,8 +86,7 @@ julia> @constraint(
            expr[At(j)] <= 1,
            container = DimensionalData.DimArray,
        )
-╭──────────────────────────────────────────────────────────────────────────────╮
-│ 2-element DimArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1} │
+┌ 2-element DimArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1} ┐
 ├──────────────────────────────────────────────────────────────────────── dims ┤
   ↓ j Categorical{String} ["a", "b"] ForwardOrdered
 └──────────────────────────────────────────────────────────────────────────────┘
