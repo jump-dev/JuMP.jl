@@ -74,6 +74,19 @@ julia> ids
  3
 ````
 
+!!! danger
+    The `Threads.threadid()` that a task runs on may change during execution.
+    Therefore, it is not safe to use `Threads.threadid()` to index into, say, a
+    vector of buffer or stateful objects. As an example, do not do:
+    ```julia
+    x = rand(Threads.nthreads())
+    Threads.@threads for i in 1:Threads.nthreads()
+        x[Threads.threadid()] *= 2  # Danger! This use of threadid is not safe
+    end
+    ```
+    For more information, read
+    [PSA: Thread-local state is no longer recommended](https://julialang.org/blog/2023/07/PSA-dont-use-threadid/).
+
 ### Thread safety
 
 When working with threads, you must avoid race conditions, in which two
