@@ -278,18 +278,6 @@ operator_warn(::AbstractModel) = nothing
 
 function operator_warn(model::GenericModel)
     model.operator_counter += 1
-    if model.operator_counter > 20000
-        @warn(
-            "The addition operator has been used on JuMP expressions a large " *
-            "number of times. This warning is safe to ignore but may " *
-            "indicate that model generation is slower than necessary. For " *
-            "performance reasons, you should not add expressions in a loop. " *
-            "Instead of x += y, use add_to_expression!(x,y) to modify x in " *
-            "place. If y is a single variable, you may also use " *
-            "add_to_expression!(x, coef, y) for x += coef*y.",
-            maxlog = 1
-        )
-    end
     return
 end
 
