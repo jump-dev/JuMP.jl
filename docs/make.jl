@@ -11,6 +11,7 @@ import MathOptInterface
 import Pkg
 import Test
 import TOML
+import tectonic_jll
 
 using JuMP
 using JuMP.Containers
@@ -669,11 +670,19 @@ if _PDF
     # `contents` is a big list of docstrings. By default, they'll
     # show up at the `\chapter` level. That's too high.
     _PAGES[4] = section_title => ["Docstrings" => contents]
-    latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
+    latex_platform = if _IS_GITHUB_ACTIONS
+        Documenter.LaTeX(;
+            platform = "tectonic",
+            tectonic = tectonic_jll.tectonic(),
+        )
+    else
+        Documenter.LaTeX(; platform = "native")
+    end
+
     @time Documenter.makedocs(
         sitename = "JuMP",
         authors = "The JuMP core developers and contributors",
-        format = Documenter.LaTeX(; platform = latex_platform),
+        format = latex_platform,
         build = "latex_build",
         pages = _PAGES,
         debug = true,
