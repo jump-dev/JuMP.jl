@@ -148,6 +148,48 @@ function _add_infeasible_constraints(
     return
 end
 
+function _add_infeasible_constraints(
+    model::GenericModel{T},
+    ::Type{F},
+    ::Type{S},
+    violated_constraints::Dict{Any,T},
+    point_f::Function,
+    atol::T,
+) where {T,F<:GenericNonlinearExpr,S}
+    for con in all_constraints(model, F, S)
+        obj = constraint_object(con)
+        # value(::GenericNonlinearExpr) returns `Float64`. Convert it to `T` for
+        # the case where the model is a different number type.
+        fn_value = convert(T, value(point_f, obj.func))
+        d = _distance_to_set(fn_value, obj.set, T)
+        if d > atol
+            violated_constraints[con] = d
+        end
+    end
+    return
+end
+
+function _add_infeasible_constraints(
+    model::GenericModel{T},
+    ::Type{F},
+    ::Type{S},
+    violated_constraints::Dict{Any,T},
+    point_f::Function,
+    atol::T,
+) where {T,F<:Vector{<:GenericNonlinearExpr},S}
+    for con in all_constraints(model, F, S)
+        obj = constraint_object(con)
+        # value(::GenericNonlinearExpr) returns `Float64`. Convert it to `T` for
+        # the case where the model is a different number type.
+        fn_value = convert(Vector{T}, value.(point_f, obj.func))
+        d = _distance_to_set(fn_value, obj.set, T)
+        if d > atol
+            violated_constraints[con] = d
+        end
+    end
+    return
+end
+
 function _add_infeasible_nonlinear_constraints(
     model::GenericModel{T},
     violated_constraints::Dict{Any,T},
