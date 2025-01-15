@@ -197,4 +197,22 @@ function test_nonlinear_missing()
     )
 end
 
+function test_nonlinear_Float32()
+    model = GenericModel{Float32}()
+    @variable(model, x >= 2.0f0)
+    @constraint(model, c1, x == 1.0f0)
+    @constraint(model, c2, x * x == 0.0f0)
+    @constraint(model, c3, cos(x) == 1.0f0)
+    @constraint(model, c4, sqrt(x) == 1.0f0)
+    @constraint(model, c5, [-2 + sqrt(x), 1.0f0] in Nonnegatives())
+    report = primal_feasibility_report(model, Dict(x => 2.0f0))
+    @test length(report) == 5
+    @test report[c1] === 2.0f0 - 1.0f0
+    @test report[c2] === 2.0f0^2
+    @test report[c3] === 1.0f0 - cos(2.0f0)
+    @test report[c4] === sqrt(2.0f0) - 1.0f0
+    @test report[c5] === 2.0f0 - sqrt(2.0f0)
+    return
 end
+
+end  # module
