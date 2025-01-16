@@ -1318,8 +1318,8 @@ requires `MOI.add_constrained_variables`.
 Some solvers have explicit support for parameters, which are constants in the
 model that can be efficiently updated between solves.
 
-JuMP implements parameters by a decision variable constrained on creation to the
-[`Parameter`](@ref) set.
+JuMP implements parameters by a decision variable constrained on creation to a set consisting of a single value, of type 
+[`Parameter`](@ref). For example, the following creates two variables `p[i]` with parameter values 1 and 2, respectively:
 
 ```jldoctest nonlinear_parameters
 julia> model = Model();
