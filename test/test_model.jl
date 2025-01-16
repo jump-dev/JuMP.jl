@@ -1254,6 +1254,7 @@ function test_is_solved_and_feasible()
         MOI.ALMOST_OPTIMAL,
         MOI.ALMOST_LOCALLY_SOLVED,
         MOI.TIME_LIMIT,
+        MOI.OTHER_ERROR,
     ]
         _global = term == MOI.OPTIMAL
         has_local = _global || (term == MOI.LOCALLY_SOLVED)
@@ -1272,6 +1273,8 @@ function test_is_solved_and_feasible()
                 MOI.set(mock, MOI.PrimalStatus(), primal)
                 MOI.set(mock, MOI.DualStatus(), dual)
                 @test is_solved_and_feasible(model) == (has_local && _primal)
+                @test is_solved_and_feasible(model; allow_time_limit = true) ==
+                      (has_local && _primal) || (term == MOI.TIME_LIMIT)
                 @test is_solved_and_feasible(model; dual = true) ==
                       (has_local && _primal && _dual)
                 @test is_solved_and_feasible(model; allow_local = false) ==

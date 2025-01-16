@@ -808,6 +808,7 @@ end
         model::GenericModel;
         allow_local::Bool = true,
         allow_almost::Bool = false,
+        allow_time_limit::Bool = false,
         dual::Bool = false,
         result::Int = 1,
     )
@@ -817,30 +818,50 @@ Return `true` if:
  * the [`termination_status`](@ref) is one of:
    * [`OPTIMAL`](@ref) (the solver found a global optimum)
    * [`LOCALLY_SOLVED`](@ref) (the solver found a local optimum, which may also
-     be the global optimum, but the solver could not prove so).
+     be the global optimum, but the solver could not prove so)
+   * [`TIME_LIMIT`](@ref) (the solver stopped after a user-specified computation
+     time).
  * the [`primal_status`](@ref) of the result index `result` is `FEASIBLE_POINT`.
 
 This function is conservative, in that it returns `false` for situations like
 the solver terminating with a feasible solution due to a time limit.
 
+If this function returns `false`, use [`termination_status`](@ref),
+[`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
+understand what solutions are available (if any).
+
 See also: [`assert_is_solved_and_feasible`](@ref).
 
 ## Keyword arguments
 
+### `allow_local`
+
 If `allow_local = false`, then this function returns `true` only if the
 [`termination_status`](@ref) is [`OPTIMAL`](@ref).
+
+### `allow_almost`
 
 If `allow_almost = true`, then the [`termination_status`](@ref) may additionally
 be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`),
 and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
 [`NEARLY_FEASIBLE_POINT`](@ref).
 
-If `dual`, additionally use [`dual_status`](@ref) to check that a dual feasible
-point is available.
+### `allow_time_limit`
 
-If this function returns `false`, use [`termination_status`](@ref),
-[`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
-understand what solutions are available (if any).
+If `allow_time_limit = true`, then the [`termination_status`](@ref) may
+additionally be [`TIME_LIMIT`](@ref) (the solver stopped after a user-specified
+computation time).
+
+### `dual`
+
+If `dual`, additionally check that an optimal dual solution is available via
+[`dual_status`](@ref). The `allow_` keywords control both the primal and dual
+solutions.
+
+### `result`
+
+The index of the result to query. This value is passed to the `result` keyword
+arguments of [`primal_status`](@ref) and [`dual_status`](@ref)
 
 ## Example
 
@@ -858,6 +879,7 @@ function is_solved_and_feasible(
     dual::Bool = false,
     allow_local::Bool = true,
     allow_almost::Bool = false,
+    allow_time_limit::Bool = false,
     result::Int = 1,
 )
     status = termination_status(model)
@@ -865,7 +887,8 @@ function is_solved_and_feasible(
         (status == OPTIMAL) ||
         (allow_local && (status == LOCALLY_SOLVED)) ||
         (allow_almost && (status == ALMOST_OPTIMAL)) ||
-        (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED))
+        (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED)) ||
+        (allow_time_limit && (status == TIME_LIMIT))
     if ret
         primal = primal_status(model; result)
         ret &=
