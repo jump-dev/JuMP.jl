@@ -1327,7 +1327,7 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @variable(model, p[i = 1:2] in Parameter(2.0 * i))
+julia> @variable(model, p[i in 1:2] in Parameter(2.0 * i))
 2-element Vector{VariableRef}:
  p[1]
  p[2]
