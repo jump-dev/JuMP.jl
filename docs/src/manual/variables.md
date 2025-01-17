@@ -1318,24 +1318,19 @@ requires `MOI.add_constrained_variables`.
 Some solvers have explicit support for parameters, which are constants in the
 model that can be efficiently updated between solves.
 
-JuMP implements parameters by a decision variable constrained on creation to a set consisting of a single value, of type 
-[`Parameter`](@ref). For example, the following creates two variables `p[i]` with parameter values 1 and 2, respectively:
+JuMP implements parameters by a decision variable constrained on creation to a
+value of the [`Parameter`](@ref) set. For example, the following creates two
+parameters, `p[1]` and `p[2]`, with parameter values `2.0` and `4.0`:
 
 ```jldoctest nonlinear_parameters
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @variable(model, p[i = 1:2] in Parameter(i))
+julia> @variable(model, p[i = 1:2] in Parameter(2.0 * i))
 2-element Vector{VariableRef}:
  p[1]
  p[2]
-```
-
-Create anonymous parameters using the `set` keyword:
-```jldoctest nonlinear_parameters
-julia> anon_parameter = @variable(model, set = Parameter(1.0))
-_[4]
 ```
 
 Use [`parameter_value`](@ref) and [`set_parameter_value`](@ref) to query or
@@ -1344,14 +1339,14 @@ update the value of a parameter.
 ```jldoctest nonlinear_parameters
 julia> parameter_value.(p)
 2-element Vector{Float64}:
- 1.0
  2.0
+ 4.0
 
 julia> set_parameter_value(p[2], 3.0)
 
 julia> parameter_value.(p)
 2-element Vector{Float64}:
- 1.0
+ 2.0
  3.0
 ```
 
@@ -1367,6 +1362,12 @@ false
 
 julia> ParameterRef(p[2])
 p[2] ∈ MathOptInterface.Parameter{Float64}(3.0)
+```
+
+Create anonymous parameters using the `set` keyword:
+```jldoctest nonlinear_parameters
+julia> anon_parameter = @variable(model, set = Parameter(1.0))
+_[4]
 ```
 
 ### Limitations
