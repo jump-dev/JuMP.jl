@@ -39,6 +39,7 @@ const _HAS_GUROBI = try
 catch
     false
 end
+@show _HAS_GUROBI
 
 const _GUROBI_EXCLUDES = String[]
 if !_HAS_GUROBI
