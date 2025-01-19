@@ -6,6 +6,7 @@
 import Documenter
 import DocumenterCitations
 import Downloads
+import Gurobi
 import Literate
 import MathOptInterface
 import Pkg
@@ -29,6 +30,23 @@ const _IS_GITHUB_ACTIONS = get(ENV, "GITHUB_ACTIONS", "false") == "true"
 
 # Pass --pdf to build the PDF. On GitHub actions, we always build the PDF.
 const _PDF = findfirst(isequal("--pdf"), ARGS) !== nothing || _IS_GITHUB_ACTIONS
+
+# Exclude these files because they require ${{ secrets.WLSLICENSE }}, which
+# is not available to forks.
+const _HAS_GUROBI = try
+    Gurobi.Env()
+    true
+catch
+    false
+end
+
+const _GUROBI_EXCLUDES = String[]
+if !_HAS_GUROBI
+    push!(_GUROBI_EXCLUDES, "benders_decomposition.jl")
+    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints.jl")
+    push!(_GUROBI_EXCLUDES, "callbacks.jl")
+    push!(_GUROBI_EXCLUDES, "multiple_solutions.jl")
+end
 
 # ==============================================================================
 #  Run literate.jl
@@ -55,10 +73,13 @@ function _link_example(content)
 end
 
 function _file_list(full_dir, relative_dir, extension)
-    return map(
-        file -> joinpath(relative_dir, file),
-        filter(file -> endswith(file, extension), sort(readdir(full_dir))),
-    )
+    function filter_fn(filename)
+        return endswith(filename, extension) &&
+               all(f -> _HAS_GUROBI || !endswith(filename, f), _GUROBI_EXCLUDES)
+    end
+    return map(filter!(filter_fn, sort!(readdir(full_dir)))) do file
+        return joinpath(relative_dir, file)
+    end
 end
 
 """
@@ -302,7 +323,9 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
 # This constant dictates the layout of the documentation. It is manually
 # constructed so that we can have control over the order in which pages are
 # shown. If you add a new page to the documentation, make sure to add it here!
-#
+
+filter_empty(x...) = filter(!isempty, collect(x))
+
 # !!! warning
 #     If you move any of the top-level chapters around, make sure to update the
 #     index of the "release_notes.md" in the section which builds the PDF.
@@ -323,7 +346,7 @@ const _PAGES = [
         ],
         "Transitioning" =>
             ["tutorials/transitioning/transitioning_from_matlab.md"],
-        "Linear programs" => [
+        "Linear programs" => filter_empty(
             "tutorials/linear/introduction.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/diet.md",
@@ -343,12 +366,12 @@ const _PAGES = [
             "tutorials/linear/sudoku.md",
             "tutorials/linear/n-queens.md",
             "tutorials/linear/constraint_programming.md",
-            "tutorials/linear/callbacks.md",
+            _HAS_GUROBI ? "tutorials/linear/callbacks.md" : "",
             "tutorials/linear/lp_sensitivity.md",
             "tutorials/linear/basis.md",
             "tutorials/linear/mip_duality.md",
-            "tutorials/linear/multiple_solutions.md",
-        ],
+            _HAS_GUROBI ? "tutorials/linear/multiple_solutions.md" : "",
+        ),
         "Nonlinear programs" => [
             "tutorials/nonlinear/introduction.md",
             "tutorials/nonlinear/simple_examples.md",
@@ -377,14 +400,14 @@ const _PAGES = [
             "tutorials/conic/ellipse_fitting.md",
             "tutorials/conic/quantum_discrimination.md",
         ],
-        "Algorithms" => [
-            "tutorials/algorithms/benders_decomposition.md",
+        "Algorithms" => filter_empty(
+            _HAS_GUROBI ? "tutorials/algorithms/benders_decomposition.md" : "",
             "tutorials/algorithms/cutting_stock_column_generation.md",
-            "tutorials/algorithms/tsp_lazy_constraints.md",
+            _HAS_GUROBI ? "tutorials/algorithms/tsp_lazy_constraints.md" : "",
             "tutorials/algorithms/rolling_horizon.md",
             "tutorials/algorithms/parallelism.md",
             "tutorials/algorithms/pdhg.md",
-        ],
+        ),
         "Applications" => [
             "tutorials/applications/power_systems.md",
             "tutorials/applications/optimal_power_flow.md",

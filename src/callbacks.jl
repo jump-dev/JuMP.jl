@@ -16,15 +16,10 @@ primal solution available from [`callback_value`](@ref) is integer feasible.
 
 ## Example
 
-```jldoctest; filter=r"CALLBACK_NODE_STATUS_.+"
+```julia
 julia> import Gurobi
 
 julia> model = Model(Gurobi.Optimizer);
-Set parameter WLSAccessID
-Set parameter WLSSecret
-Set parameter LicenseID to value 722777
-Set parameter GURO_PAR_SPECIAL
-WLS license 722777 - registered to JuMP Development
 
 julia> set_silent(model)
 
@@ -73,15 +68,10 @@ Use [`callback_node_status`](@ref) to check whether a solution is available.
 
 ## Example
 
-```jldoctest
+```julia
 julia> import Gurobi
 
 julia> model = Model(Gurobi.Optimizer);
-Set parameter WLSAccessID
-Set parameter WLSSecret
-Set parameter LicenseID to value 722777
-Set parameter GURO_PAR_SPECIAL
-WLS license 722777 - registered to JuMP Development
 
 julia> set_silent(model)
 
