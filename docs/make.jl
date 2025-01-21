@@ -43,10 +43,10 @@ end
 
 const _GUROBI_EXCLUDES = String[]
 if !_HAS_GUROBI
-    push!(_GUROBI_EXCLUDES, "benders_decomposition.jl")
-    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints.jl")
-    push!(_GUROBI_EXCLUDES, "callbacks.jl")
-    push!(_GUROBI_EXCLUDES, "multiple_solutions.jl")
+    push!(_GUROBI_EXCLUDES, "benders_decomposition")
+    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints")
+    push!(_GUROBI_EXCLUDES, "callbacks")
+    push!(_GUROBI_EXCLUDES, "multiple_solutions")
 end
 
 # ==============================================================================
@@ -75,8 +75,12 @@ end
 
 function _file_list(full_dir, relative_dir, extension)
     function filter_fn(filename)
-        return endswith(filename, extension) &&
-               all(f -> _HAS_GUROBI || !endswith(filename, f), _GUROBI_EXCLUDES)
+        if !endswith(filename, extension)
+            return false
+        elseif _HAS_GUROBI
+            return true
+        end
+        return all(f -> !endswith(filename, f * extension), _GUROBI_EXCLUDES)
     end
     return map(filter!(filter_fn, sort!(readdir(full_dir)))) do file
         return joinpath(relative_dir, file)
