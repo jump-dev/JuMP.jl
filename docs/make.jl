@@ -39,13 +39,14 @@ const _HAS_GUROBI = try
 catch
     false
 end
+@show _HAS_GUROBI
 
 const _GUROBI_EXCLUDES = String[]
 if !_HAS_GUROBI
-    push!(_GUROBI_EXCLUDES, "benders_decomposition.jl")
-    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints.jl")
-    push!(_GUROBI_EXCLUDES, "callbacks.jl")
-    push!(_GUROBI_EXCLUDES, "multiple_solutions.jl")
+    push!(_GUROBI_EXCLUDES, "benders_decomposition")
+    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints")
+    push!(_GUROBI_EXCLUDES, "callbacks")
+    push!(_GUROBI_EXCLUDES, "multiple_solutions")
 end
 
 # ==============================================================================
@@ -74,8 +75,12 @@ end
 
 function _file_list(full_dir, relative_dir, extension)
     function filter_fn(filename)
-        return endswith(filename, extension) &&
-               all(f -> _HAS_GUROBI || !endswith(filename, f), _GUROBI_EXCLUDES)
+        if !endswith(filename, extension)
+            return false
+        elseif _HAS_GUROBI
+            return true
+        end
+        return all(f -> !endswith(filename, f * extension), _GUROBI_EXCLUDES)
     end
     return map(filter!(filter_fn, sort!(readdir(full_dir)))) do file
         return joinpath(relative_dir, file)
@@ -323,9 +328,7 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
 # This constant dictates the layout of the documentation. It is manually
 # constructed so that we can have control over the order in which pages are
 # shown. If you add a new page to the documentation, make sure to add it here!
-
-filter_empty(x...) = filter(!isempty, collect(x))
-
+#
 # !!! warning
 #     If you move any of the top-level chapters around, make sure to update the
 #     index of the "release_notes.md" in the section which builds the PDF.
@@ -346,7 +349,7 @@ const _PAGES = [
         ],
         "Transitioning" =>
             ["tutorials/transitioning/transitioning_from_matlab.md"],
-        "Linear programs" => filter_empty(
+        "Linear programs" => [
             "tutorials/linear/introduction.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/diet.md",
@@ -366,12 +369,12 @@ const _PAGES = [
             "tutorials/linear/sudoku.md",
             "tutorials/linear/n-queens.md",
             "tutorials/linear/constraint_programming.md",
-            _HAS_GUROBI ? "tutorials/linear/callbacks.md" : "",
+            "tutorials/linear/callbacks.md",
             "tutorials/linear/lp_sensitivity.md",
             "tutorials/linear/basis.md",
             "tutorials/linear/mip_duality.md",
-            _HAS_GUROBI ? "tutorials/linear/multiple_solutions.md" : "",
-        ),
+            "tutorials/linear/multiple_solutions.md",
+        ],
         "Nonlinear programs" => [
             "tutorials/nonlinear/introduction.md",
             "tutorials/nonlinear/simple_examples.md",
@@ -400,14 +403,14 @@ const _PAGES = [
             "tutorials/conic/ellipse_fitting.md",
             "tutorials/conic/quantum_discrimination.md",
         ],
-        "Algorithms" => filter_empty(
-            _HAS_GUROBI ? "tutorials/algorithms/benders_decomposition.md" : "",
+        "Algorithms" => [
+            "tutorials/algorithms/benders_decomposition.md",
             "tutorials/algorithms/cutting_stock_column_generation.md",
-            _HAS_GUROBI ? "tutorials/algorithms/tsp_lazy_constraints.md" : "",
+            "tutorials/algorithms/tsp_lazy_constraints.md",
             "tutorials/algorithms/rolling_horizon.md",
             "tutorials/algorithms/parallelism.md",
             "tutorials/algorithms/pdhg.md",
-        ),
+        ],
         "Applications" => [
             "tutorials/applications/power_systems.md",
             "tutorials/applications/optimal_power_flow.md",
