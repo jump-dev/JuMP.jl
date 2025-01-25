@@ -297,10 +297,11 @@ objective_value(model)
 
 # As before, we construct the same first-stage subproblem:
 
-lazy_model = Model(Gurobi.Optimizer)
-if !HAS_GUROBI                                  #src
-    set_optimizer(lazy_model, HiGHS.Optimizer)  #src
-end                                             #src
+optimizer = Gurobi.Optimizer
+if !HAS_GUROBI                   #src
+    optimizer = HiGHS.Optimizer  #src
+end                              #src
+lazy_model = Model(optimizer)
 set_silent(lazy_model)
 @variable(lazy_model, x[1:n, 1:n], Bin)
 @variable(lazy_model, θ >= M)

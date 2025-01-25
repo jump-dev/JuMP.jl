@@ -79,7 +79,11 @@ nothing             #src
 # number:
 
 n = 4
-model = Model()
+optimizer = Gurobi.Optimizer
+if !HAS_GUROBI                    #src
+    optimizer = HiGHS.Optimizer   #src
+end                               #src
+model = Model(optimizer)
 set_silent(model)
 @variable(model, 0 <= x_digits[row in 1:n, col in 1:n] <= 9, Int, Symmetric)
 
@@ -101,10 +105,6 @@ x_digits_upper = [x_digits[i, j] for j in 1:n for i in 1:j]
 
 # If we optimize this model, we find that Gurobi has returned one solution:
 
-set_optimizer(model, Gurobi.Optimizer)
-if !HAS_GUROBI                              #src
-    set_optimizer(model, HiGHS.Optimizer)   #src
-end                                         #src
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 Test.@test result_count(model) == 1
@@ -117,7 +117,7 @@ solution_summary(model)
 # need to reset the optimizer. If you turn the solution pool options on before
 # the first solve you do not need to reset the optimizer.
 
-set_optimizer(model, Gurobi.Optimizer)
+MOI.Utilities.reset_optimizer(model)
 
 # The first option turns on the exhaustive search mode for multiple solutions:
 
@@ -132,9 +132,6 @@ set_attribute(model, "PoolSolutions", 100)
 
 # We can then call `optimize!` and view the results.
 
-if !HAS_GUROBI                              #src
-    set_optimizer(model, HiGHS.Optimizer)   #src
-end                                         #src
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 solution_summary(model)

@@ -31,7 +31,7 @@
 # It uses the following packages:
 
 using JuMP
-import HiGHS
+import HiGHS  #src
 import Gurobi
 import Plots
 import Random
@@ -142,8 +142,8 @@ X, Y, d = generate_distance_matrix(n)
 # defining the `x` matrix as `Symmetric`, we do not need to add explicit
 # constraints that `x[i, j] == x[j, i]`.
 
-function build_tsp_model(d, n)
-    model = Model(Gurobi.Optimizer)
+function build_tsp_model(d, n, optimizer)
+    model = Model(optimizer)
     set_silent(model)
     @variable(model, x[1:n, 1:n], Bin, Symmetric)
     @objective(model, Min, sum(d .* x) / 2)
@@ -208,10 +208,11 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 #     the shortest cycle is often sufficient for breaking other subtours and
 #     will keep the model size smaller.
 
-iterative_model = build_tsp_model(d, n)
-if !HAS_GUROBI                                        #src
-    set_optimizer(iterative_model, HiGHS.Optimizer)   #src
-end                                                   #src
+optimizer = Gurobi.Optimizer
+if !HAS_GUROBI                    #src
+    optimizer = HiGHS.Optimizer   #src
+end                               #src
+iterative_model = build_tsp_model(d, n, optimizer)
 optimize!(iterative_model)
 @assert is_solved_and_feasible(iterative_model)
 time_iterated = solve_time(iterative_model)
@@ -263,10 +264,7 @@ plot_tour(X, Y, value.(iterative_model[:x]))
 
 # As before, we construct the same first-stage subproblem:
 
-lazy_model = build_tsp_model(d, n)
-if !HAS_GUROBI                                   #src
-    set_optimizer(lazy_model, HiGHS.Optimizer)   #src
-end                                              #src
+lazy_model = build_tsp_model(d, n, optimizer)
 function subtour_elimination_callback(cb_data)
     status = callback_node_status(cb_data, lazy_model)
     if status != MOI.CALLBACK_NODE_STATUS_INTEGER
