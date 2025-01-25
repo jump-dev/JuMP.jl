@@ -116,7 +116,7 @@ solution_summary(model)
 # need to reset the optimizer. If you turn the solution pool options on before
 # the first solve you do not need to reset the optimizer.
 
-MOI.Utilities.reset_optimizer(model)
+set_optimizer(model, optimizer)
 
 # The first option turns on the exhaustive search mode for multiple solutions:
 
