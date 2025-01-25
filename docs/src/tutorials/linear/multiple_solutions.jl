@@ -38,7 +38,7 @@ import Test
 
 HAS_GUROBI = try    #src
     Gurobi.Env()    #src
-    true            #src
+    false # true            #src
 catch               #src
     false           #src
 end                 #src
@@ -117,6 +117,9 @@ solution_summary(model)
 # the first solve you do not need to reset the optimizer.
 
 set_optimizer(model, optimizer)
+if !HAS_GUROBI                           #src
+    MOI.Utilities.drop_optimizer(model)  #src
+end                                      #src
 
 # The first option turns on the exhaustive search mode for multiple solutions:
 
@@ -131,6 +134,9 @@ set_attribute(model, "PoolSolutions", 100)
 
 # We can then call `optimize!` and view the results.
 
+if !HAS_GUROBI                       #src
+    set_optimizer(model, optimizer)  #src
+end                                  #src
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 solution_summary(model)
