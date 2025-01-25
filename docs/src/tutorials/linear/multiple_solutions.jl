@@ -44,7 +44,6 @@ catch               #src
 end                 #src
 nothing             #src
 
-
 # !!! warning
 #     This tutorial uses [Gurobi.jl](@ref) as the solver because it supports
 #     returning multiple feasible solutions, something that open-source MIP
