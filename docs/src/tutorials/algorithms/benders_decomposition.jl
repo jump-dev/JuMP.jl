@@ -33,7 +33,7 @@ import Test  #src
 
 HAS_GUROBI = try    #src
     Gurobi.Env()    #src
-    false ; #true            #src
+    true            #src
 catch               #src
     false           #src
 end                 #src
