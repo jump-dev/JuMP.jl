@@ -926,7 +926,7 @@ function assert_is_solved_and_feasible(model::GenericModel; kwargs...)
     if !is_solved_and_feasible(model; kwargs...)
         error(
             "The model was not solved correctly. Here is a summary of the " *
-            "solution to help you debug why this happened:\n\n" *
+            "solution to help debug why this happened:\n\n" *
             string(solution_summary(model)),
         )
     end
