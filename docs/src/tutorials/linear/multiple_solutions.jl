@@ -93,7 +93,7 @@ x_digits_upper = [x_digits[i, j] for j in 1:n for i in 1:j]
 
 set_optimizer(model, Gurobi.Optimizer)
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 Test.@test result_count(model) == 1
 solution_summary(model)
 
@@ -120,7 +120,7 @@ set_attribute(model, "PoolSolutions", 100)
 # We can then call `optimize!` and view the results.
 
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # Now Gurobi has found 20 solutions:

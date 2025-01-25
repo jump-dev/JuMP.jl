@@ -141,7 +141,7 @@ julia> function a_good_way_to_use_threading()
                @variable(model, x >= i)
                @objective(model, Min, x)
                optimize!(model)
-               @assert is_solved_and_feasible(model)
+               assert_is_solved_and_feasible(model)
                Threads.lock(my_lock) do
                    push!(solutions, i => objective_value(model))
                end
@@ -357,7 +357,7 @@ julia> Distributed.@everywhere begin
                @objective(model, Min, x)
                set_lower_bound(x, i)
                optimize!(model)
-               @assert is_solved_and_feasible(sudoku)
+               assert_is_solved_and_feasible(sudoku)
                return objective_value(model)
            end
        end

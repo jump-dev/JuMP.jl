@@ -133,7 +133,7 @@ print(model_dual)
 
 set_optimizer(model_primal, SCS.Optimizer)
 optimize!(model_primal)
-@assert is_solved_and_feasible(model_primal; dual = true)
+assert_is_solved_and_feasible(model_primal; dual = true)
 
 # (There are five rows in the constraint matrix because SCS expects problems in
 # geometric conic form, and so JuMP has reformulated the `X, PSD` variable
@@ -157,7 +157,7 @@ objective_value(model_primal)
 
 set_optimizer(model_dual, SCS.Optimizer)
 optimize!(model_dual)
-@assert is_solved_and_feasible(model_dual; dual = true)
+assert_is_solved_and_feasible(model_dual; dual = true)
 
 # and the solution we obtain is:
 
@@ -187,7 +187,7 @@ objective_value(model_dual)
 
 set_optimizer(model_primal, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_primal)
-@assert is_solved_and_feasible(model_primal; dual = true)
+assert_is_solved_and_feasible(model_primal; dual = true)
 
 # The performance is the same as if we solved `model_dual`, and the correct
 # solution is returned to `X`:
@@ -203,7 +203,7 @@ dual.(primal_c)
 
 set_optimizer(model_dual, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_dual)
-@assert is_solved_and_feasible(model_dual; dual = true)
+assert_is_solved_and_feasible(model_dual; dual = true)
 
 #-
 

@@ -44,7 +44,7 @@ set_silent(model)
 @variable(model, x[1:n] >= 0)
 @constraint(model, A * x == b)
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 
 # This has a solution:
 
@@ -96,7 +96,7 @@ set_silent(model)
 @constraint(model, c2, 7x + 12y >= 120)
 @constraint(model, c3, x + y <= 20)
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 
 # A common way to query the basis status of every variable is:
 

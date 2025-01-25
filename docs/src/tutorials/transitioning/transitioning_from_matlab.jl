@@ -375,12 +375,9 @@ function robustness_jump(d)
     set_optimizer(model, Clarabel.Optimizer)
     set_attribute(model, "verbose", true)
     optimize!(model)
-    if is_solved_and_feasible(model)
-        WT = dual(PPT)
-        return value(λ), real(LinearAlgebra.dot(WT, rhoT))
-    else
-        return "Something went wrong: $(raw_status(model))"
-    end
+    assert_is_solved_and_feasible(model)
+    WT = dual(PPT)
+    return value(λ), real(LinearAlgebra.dot(WT, rhoT))
 end
 
 robustness_jump(3)

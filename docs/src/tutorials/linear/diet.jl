@@ -145,7 +145,7 @@ print(model)
 # Let's optimize and take a look at the solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
 solution_summary(model)
 

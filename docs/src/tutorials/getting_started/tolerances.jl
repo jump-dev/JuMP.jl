@@ -107,7 +107,7 @@ set_silent(model)
 @variable(model, x >= 0)
 @constraint(model, x == -1e-8)
 optimize!(model)
-@assert is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
 #-
@@ -142,7 +142,7 @@ optimize!(model)
 
 # SCS reports that it solved the problem to optimality:
 
-@assert is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
 # and that the solution for `x[1]` is nearly zero:
@@ -199,8 +199,8 @@ optimize!(model)
 
 #-
 
-@assert is_solved_and_feasible(model)  #src
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)
 value(x[1])
 
 # ### Why you shouldn't use a small tolerance
@@ -231,7 +231,7 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x == 1 + 1e-6, Int)
 optimize!(model)
-@assert is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
 # HiGHS found an optimal solution, and the value of `x` is:
@@ -357,7 +357,7 @@ set_start_value(y, 1e-6)
 # Now HiGHS will report that the problem is feasible:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
 # ### Contradictory results are not a bug in the solver

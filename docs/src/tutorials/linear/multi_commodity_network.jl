@@ -201,7 +201,7 @@ df = DataFrames.leftjoin(
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # update the solution in the DataFrames:

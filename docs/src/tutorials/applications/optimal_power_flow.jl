@@ -25,7 +25,7 @@
 #     This tutorial takes a matrix-oriented approach focused on network nodes
 #     that simplifies the construction of semidefinite programs.
 #     Another approach is to formulate the problem focusing on network lines
-#     (known as a _branch model_) where it is easier to work with flow 
+#     (known as a _branch model_) where it is easier to work with flow
 #     constraints. A general approach is provided by
 #     [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
 #     an open-source framework to a broad range of power flow model formulations
@@ -137,7 +137,7 @@ println("Objective value (basic lower bound) : $basic_lower_bound")
 
 @constraint(model, sum(P_G) >= sum(P_Demand))
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 better_lower_bound = round(objective_value(model); digits = 2)
 println("Objective value (better lower bound): $better_lower_bound")
 
@@ -281,7 +281,7 @@ P_G = real(S_G)
 # We're finally ready to solve our nonlinear AC-OPF problem:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 Test.@test isapprox(objective_value(model), 3087.84; atol = 1e-2)  #src
 solution_summary(model)
 
@@ -420,7 +420,7 @@ optimize!(model)
 
 #-
 
-Test.@test is_solved_and_feasible(model; allow_almost = true)
+assert_is_solved_and_feasible(model; allow_almost = true)
 sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
 Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)     #src
 println(

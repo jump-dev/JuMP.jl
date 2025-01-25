@@ -115,7 +115,7 @@ function solve_economic_dispatch(generators::Vector, wind, scenario)
     @constraint(model, sum(g[i] for i in 1:N) + w == scenario.demand)
     ## Solve statement
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     ## return the optimal value of the objective function and its minimizers
     return (
         g = value.(g),
@@ -217,7 +217,7 @@ function solve_economic_dispatch_inplace(
             wind.variable_cost * w,
         )
         optimize!(model)
-        @assert is_solved_and_feasible(model)
+        assert_is_solved_and_feasible(model)
         push!(obj_out, objective_value(model))
         push!(w_out, value(w))
         push!(g1_out, value(g[1]))
@@ -528,7 +528,7 @@ function solve_nonlinear_economic_dispatch(
     )
     @constraint(model, sum(g[i] for i in 1:N) + sqrt(w) == scenario.demand)
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return (
         g = value.(g),
         w = value(w),

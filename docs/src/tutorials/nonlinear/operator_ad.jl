@@ -105,7 +105,7 @@ function analytic_rosenbrock()
     @operator(model, op_rosenbrock, 2, f, analytic_∇f, analytic_∇²f)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -202,7 +202,7 @@ function fdiff_rosenbrock()
     @operator(model, op_rosenbrock, 2, f, fdiff_derivatives(f)...)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -320,7 +320,7 @@ function enzyme_rosenbrock()
     @operator(model, op_rosenbrock, 2, f, enzyme_derivatives(f)...)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -429,7 +429,7 @@ function di_rosenbrock(; backend)
     @operator(model, op_rosenbrock, 2, f, di_derivatives(f; backend)...)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return value.(x)
 end
 

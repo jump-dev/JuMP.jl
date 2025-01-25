@@ -158,7 +158,7 @@ set_silent(model)
 @constraint(model, sum(x) <= 1000)
 @constraint(model, r' * x >= 50)
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # The optimal allocation of our assets is:

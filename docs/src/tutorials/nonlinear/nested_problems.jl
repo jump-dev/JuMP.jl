@@ -90,7 +90,7 @@ function solve_lower_level(x...)
     )
     @constraint(model, (y[1] - 10)^2 + (y[2] - 10)^2 <= 25)
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     return objective_value(model), value.(y)
 end
 
@@ -153,7 +153,7 @@ model = Model(Ipopt.Optimizer)
 @operator(model, op_V, 2, V, ∇V, ∇²V)
 @objective(model, Min, x[1]^2 + x[2]^2 + op_V(x[1], x[2]))
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # The optimal objective value is:
@@ -233,7 +233,7 @@ cache = Cache(Float64[], NaN, Float64[])
 )
 @objective(model, Min, x[1]^2 + x[2]^2 + op_cached_f(x[1], x[2]))
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # an we can check we get the same objective value:

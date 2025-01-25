@@ -158,7 +158,7 @@ set_silent(model)
 @constraint(model, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(model, Min, 0.1 * sum(x) - sum(y[1, :]))
 optimize!(model)
-Test.@test is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)  #src
 solution_summary(model)
 
 # The optimal objective value is -5.1:
@@ -210,7 +210,7 @@ function solve_subproblem(x_bar)
     @constraint(model, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
     @objective(model, Min, -sum(y[1, :]))
     optimize!(model)
-    @assert is_solved_and_feasible(model; dual = true)
+    assert_is_solved_and_feasible(model; dual = true)
     return (obj = objective_value(model), y = value.(y), π = reduced_cost.(x))
 end
 
@@ -241,7 +241,7 @@ ABSOLUTE_OPTIMALITY_GAP = 1e-6
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(x_k)
@@ -259,7 +259,7 @@ end
 # Finally, we can obtain the optimal solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
 optimal_ret = solve_subproblem(x_optimal)
 iterative_solution = optimal_flows(optimal_ret.y)
@@ -323,7 +323,7 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 # Now when we optimize!, our callback is run:
 
 optimize!(lazy_model)
-@assert is_solved_and_feasible(lazy_model)
+assert_is_solved_and_feasible(lazy_model)
 
 # For this model, the callback algorithm required more solves of the subproblem:
 
@@ -378,7 +378,7 @@ subproblem
 function solve_subproblem(model, x)
     fix.(model[:x_copy], x)
     optimize!(model)
-    @assert is_solved_and_feasible(model; dual = true)
+    assert_is_solved_and_feasible(model; dual = true)
     return (
         obj = objective_value(model),
         y = value.(model[:y]),
@@ -391,7 +391,7 @@ end
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(subproblem, x_k)
@@ -409,7 +409,7 @@ end
 # Finally, we can obtain the optimal solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
 optimal_ret = solve_subproblem(subproblem, x_optimal)
 inplace_solution = optimal_flows(optimal_ret.y)
@@ -486,7 +486,7 @@ end
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem_with_feasibility(subproblem, x_k)
@@ -510,7 +510,7 @@ end
 # Finally, we can obtain the optimal solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
 optimal_ret = solve_subproblem(subproblem, x_optimal)
 feasible_inplace_solution = optimal_flows(optimal_ret.y)

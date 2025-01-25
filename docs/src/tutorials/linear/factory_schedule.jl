@@ -186,7 +186,7 @@ function solve_factory_scheduling(
         )
     )
     optimize!(model)
-    @assert is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     schedules = Dict{Symbol,Vector{Float64}}(
         Symbol(f) => value.(production[:, f]) for f in factories
     )
