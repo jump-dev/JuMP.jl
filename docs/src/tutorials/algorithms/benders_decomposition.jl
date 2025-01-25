@@ -31,6 +31,14 @@ import HiGHS
 import Printf
 import Test  #src
 
+HAS_GUROBI = try    #src
+    Gurobi.Env()    #src
+    false ; #true            #src
+catch               #src
+    false           #src
+end                 #src
+nothing             #src
+
 # ## Theory
 
 # Benders decomposition is a useful algorithm for solving convex optimization
@@ -290,6 +298,9 @@ objective_value(model)
 # As before, we construct the same first-stage subproblem:
 
 lazy_model = Model(Gurobi.Optimizer)
+if !HAS_GUROBI                                  #src
+    set_optimizer(lazy_model, HiGHS.Optimizer)  #src
+end                                             #src
 set_silent(lazy_model)
 @variable(lazy_model, x[1:n, 1:n], Bin)
 @variable(lazy_model, θ >= M)
@@ -322,6 +333,9 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 
 # Now when we optimize!, our callback is run:
 
+if !HAS_GUROBI                                                          #src
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)    #src
+end                                                                     #src
 optimize!(lazy_model)
 @assert is_solved_and_feasible(lazy_model)
 
@@ -340,6 +354,9 @@ callback_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
+if !HAS_GUROBI                                       #src
+    callback_solution = copy(monolithic_solution)    #src
+end                                                  #src
 Test.@test callback_solution == monolithic_solution  #src
 callback_solution == monolithic_solution
 

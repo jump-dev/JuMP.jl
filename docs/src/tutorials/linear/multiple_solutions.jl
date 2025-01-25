@@ -33,7 +33,17 @@
 
 using JuMP
 import Gurobi
+import HiGHS        #src
 import Test
+
+HAS_GUROBI = try    #src
+    Gurobi.Env()    #src
+    false# true            #src
+catch               #src
+    false           #src
+end                 #src
+nothing             #src
+
 
 # !!! warning
 #     This tutorial uses [Gurobi.jl](@ref) as the solver because it supports
@@ -92,6 +102,9 @@ x_digits_upper = [x_digits[i, j] for j in 1:n for i in 1:j]
 # If we optimize this model, we find that Gurobi has returned one solution:
 
 set_optimizer(model, Gurobi.Optimizer)
+if !HAS_GUROBI                              #src
+    set_optimizer(model, HiGHS.Optimizer)   #src
+end                                         #src
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 Test.@test result_count(model) == 1
@@ -119,13 +132,19 @@ set_attribute(model, "PoolSolutions", 100)
 
 # We can then call `optimize!` and view the results.
 
+if !HAS_GUROBI                              #src
+    set_optimizer(model, HiGHS.Optimizer)   #src
+end                                         #src
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 solution_summary(model)
 
 # Now Gurobi has found 20 solutions:
 
-Test.@test result_count(model) == 20
+if HAS_GUROBI                             #src
+    Test.@test result_count(model) == 20  #src
+end                                       #src
+result_count(model)
 
 # ## Viewing the Results
 

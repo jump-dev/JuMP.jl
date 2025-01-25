@@ -31,10 +31,19 @@
 # It uses the following packages:
 
 using JuMP
+import HiGHS
 import Gurobi
 import Plots
 import Random
 import Test
+
+HAS_GUROBI = try    #src
+    Gurobi.Env()    #src
+    false# true            #src
+catch               #src
+    false           #src
+end                 #src
+nothing             #src
 
 # ## [Mathematical Formulation](@id tsp_model)
 
@@ -200,6 +209,9 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 #     will keep the model size smaller.
 
 iterative_model = build_tsp_model(d, n)
+if !HAS_GUROBI                                        #src
+    set_optimizer(iterative_model, HiGHS.Optimizer)   #src
+end                                                   #src
 optimize!(iterative_model)
 @assert is_solved_and_feasible(iterative_model)
 time_iterated = solve_time(iterative_model)
@@ -244,7 +256,17 @@ plot_tour(X, Y, value.(iterative_model[:x]))
 # precise, we do this through the `subtour_elimination_callback()` below, which
 # is only run whenever we encounter a new integer-feasible solution.
 
+# !!! tip
+#     We use Gurobi for this model because HiGHS does not support lazy
+#     constraints. For more information on callbacks, read the page
+#     [Solver-independent callbacks](@ref callbacks_manual).
+
+# As before, we construct the same first-stage subproblem:
+
 lazy_model = build_tsp_model(d, n)
+if !HAS_GUROBI                                   #src
+    set_optimizer(lazy_model, HiGHS.Optimizer)   #src
+end                                              #src
 function subtour_elimination_callback(cb_data)
     status = callback_node_status(cb_data, lazy_model)
     if status != MOI.CALLBACK_NODE_STATUS_INTEGER
@@ -266,10 +288,10 @@ set_attribute(
     MOI.LazyConstraintCallback(),
     subtour_elimination_callback,
 )
+if !HAS_GUROBI                                                        #src
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)  #src
+end                                                                   #src
 optimize!(lazy_model)
-
-#-
-
 @assert is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
 
@@ -283,4 +305,7 @@ plot_tour(X, Y, value.(lazy_model[:x]))
 
 # The solution time is faster than the iterative approach:
 
+if !HAS_GUROBI       #src
+    time_lazy = 0.0  #src
+end                  #src
 Test.@test time_lazy < time_iterated
