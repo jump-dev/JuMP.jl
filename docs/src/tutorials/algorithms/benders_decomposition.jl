@@ -29,15 +29,15 @@ using JuMP
 import Gurobi
 import HiGHS
 import Printf
-import Test  #src
+import Test  #hide
 
-HAS_GUROBI = try    #src
-    Gurobi.Env()    #src
-    true            #src
-catch               #src
-    false           #src
-end                 #src
-nothing             #src
+HAS_GUROBI = try    #hide
+    Gurobi.Env()    #hide
+    true            #hide
+catch               #hide
+    false           #hide
+end                 #hide
+nothing             #hide
 
 # ## Theory
 
@@ -166,12 +166,12 @@ set_silent(model)
 @constraint(model, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(model, Min, 0.1 * sum(x) - sum(y[1, :]))
 optimize!(model)
-Test.@test is_solved_and_feasible(model)  #src
+Test.@test is_solved_and_feasible(model)  #hide
 solution_summary(model)
 
 # The optimal objective value is -5.1:
 
-Test.@test isapprox(objective_value(model), -5.1; atol = 1e-4)  #src
+Test.@test isapprox(objective_value(model), -5.1; atol = 1e-4)  #hide
 objective_value(model)
 
 # and the optimal flows are:
@@ -298,9 +298,9 @@ objective_value(model)
 # As before, we construct the same first-stage subproblem:
 
 optimizer = Gurobi.Optimizer
-if !HAS_GUROBI                   #src
-    optimizer = HiGHS.Optimizer  #src
-end                              #src
+if !HAS_GUROBI                   #hide
+    optimizer = HiGHS.Optimizer  #hide
+end                              #hide
 lazy_model = Model(optimizer)
 set_silent(lazy_model)
 @variable(lazy_model, x[1:n, 1:n], Bin)
@@ -334,9 +334,9 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 
 # Now when we optimize!, our callback is run:
 
-if !HAS_GUROBI                                                          #src
-    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)    #src
-end                                                                     #src
+if !HAS_GUROBI                                                          #hide
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)    #hide
+end                                                                     #hide
 optimize!(lazy_model)
 @assert is_solved_and_feasible(lazy_model)
 
@@ -355,10 +355,10 @@ callback_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-if !HAS_GUROBI                                       #src
-    callback_solution = copy(monolithic_solution)    #src
-end                                                  #src
-Test.@test callback_solution == monolithic_solution  #src
+if !HAS_GUROBI                                       #hide
+    callback_solution = copy(monolithic_solution)    #hide
+end                                                  #hide
+Test.@test callback_solution == monolithic_solution  #hide
 callback_solution == monolithic_solution
 
 # ## In-place iterative method
@@ -434,7 +434,7 @@ inplace_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-Test.@test inplace_solution == monolithic_solution  #src
+Test.@test inplace_solution == monolithic_solution  #hide
 inplace_solution == monolithic_solution
 
 # ## Feasibility cuts
@@ -536,5 +536,5 @@ feasible_inplace_solution = optimal_flows(optimal_ret.y)
 # which is the same as the monolithic solution (because `sum(y) >= 1` in the
 # monolithic solution):
 
-Test.@test feasible_inplace_solution == monolithic_solution  #src
+Test.@test feasible_inplace_solution == monolithic_solution  #hide
 feasible_inplace_solution == monolithic_solution

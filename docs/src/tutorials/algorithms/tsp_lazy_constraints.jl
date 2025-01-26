@@ -31,19 +31,19 @@
 # It uses the following packages:
 
 using JuMP
-import HiGHS  #src
+import HiGHS  #hide
 import Gurobi
 import Plots
 import Random
 import Test
 
-HAS_GUROBI = try    #src
-    Gurobi.Env()    #src
-    true            #src
-catch               #src
-    false           #src
-end                 #src
-nothing             #src
+HAS_GUROBI = try    #hide
+    Gurobi.Env()    #hide
+    true            #hide
+catch               #hide
+    false           #hide
+end                 #hide
+nothing             #hide
 
 # ## [Mathematical Formulation](@id tsp_model)
 
@@ -209,9 +209,9 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 #     will keep the model size smaller.
 
 optimizer = Gurobi.Optimizer
-if !HAS_GUROBI                    #src
-    optimizer = HiGHS.Optimizer   #src
-end                               #src
+if !HAS_GUROBI                    #hide
+    optimizer = HiGHS.Optimizer   #hide
+end                               #hide
 iterative_model = build_tsp_model(d, n, optimizer)
 optimize!(iterative_model)
 @assert is_solved_and_feasible(iterative_model)
@@ -286,9 +286,9 @@ set_attribute(
     MOI.LazyConstraintCallback(),
     subtour_elimination_callback,
 )
-if !HAS_GUROBI                                                        #src
-    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)  #src
-end                                                                   #src
+if !HAS_GUROBI                                                        #hide
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)  #hide
+end                                                                   #hide
 optimize!(lazy_model)
 @assert is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
@@ -303,7 +303,7 @@ plot_tour(X, Y, value.(lazy_model[:x]))
 
 # The solution time is faster than the iterative approach:
 
-if !HAS_GUROBI       #src
-    time_lazy = 0.0  #src
-end                  #src
+if !HAS_GUROBI       #hide
+    time_lazy = 0.0  #hide
+end                  #hide
 Test.@test time_lazy < time_iterated

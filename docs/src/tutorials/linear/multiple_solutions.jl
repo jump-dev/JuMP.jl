@@ -33,16 +33,16 @@
 
 using JuMP
 import Gurobi
-import HiGHS        #src
+import HiGHS        #hide
 import Test
 
-HAS_GUROBI = try    #src
-    Gurobi.Env()    #src
-    false # true            #src
-catch               #src
-    false           #src
-end                 #src
-nothing             #src
+HAS_GUROBI = try    #hide
+    Gurobi.Env()    #hide
+    true            #hide
+catch               #hide
+    false           #hide
+end                 #hide
+nothing             #hide
 
 # !!! warning
 #     This tutorial uses [Gurobi.jl](@ref) as the solver because it supports
@@ -79,9 +79,9 @@ nothing             #src
 
 n = 4
 optimizer = Gurobi.Optimizer
-if !HAS_GUROBI                    #src
-    optimizer = HiGHS.Optimizer   #src
-end                               #src
+if !HAS_GUROBI                    #hide
+    optimizer = HiGHS.Optimizer   #hide
+end                               #hide
 model = Model(optimizer)
 set_silent(model)
 @variable(model, 0 <= x_digits[row in 1:n, col in 1:n] <= 9, Int, Symmetric)
@@ -117,9 +117,9 @@ solution_summary(model)
 # the first solve you do not need to reset the optimizer.
 
 set_optimizer(model, optimizer)
-if !HAS_GUROBI                           #src
-    MOI.Utilities.drop_optimizer(model)  #src
-end                                      #src
+if !HAS_GUROBI                           #hide
+    MOI.Utilities.drop_optimizer(model)  #hide
+end                                      #hide
 
 # The first option turns on the exhaustive search mode for multiple solutions:
 
@@ -134,18 +134,18 @@ set_attribute(model, "PoolSolutions", 100)
 
 # We can then call `optimize!` and view the results.
 
-if !HAS_GUROBI                       #src
-    set_optimizer(model, optimizer)  #src
-end                                  #src
+if !HAS_GUROBI                       #hide
+    set_optimizer(model, optimizer)  #hide
+end                                  #hide
 optimize!(model)
 Test.@test is_solved_and_feasible(model)
 solution_summary(model)
 
 # Now Gurobi has found 20 solutions:
 
-if HAS_GUROBI                             #src
-    Test.@test result_count(model) == 20  #src
-end                                       #src
+if HAS_GUROBI                             #hide
+    Test.@test result_count(model) == 20  #hide
+end                                       #hide
 result_count(model)
 
 # ## Viewing the Results
