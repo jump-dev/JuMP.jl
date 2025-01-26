@@ -902,7 +902,7 @@ julia> is_solved_and_feasible(model)
 false
 
 julia> assert_is_solved_and_feasible(model)
-ERROR: The model was not solved correctly. Here is a summary of the solution to help you debug why this happened:
+ERROR: The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
 
 * Solver : Ipopt
 
