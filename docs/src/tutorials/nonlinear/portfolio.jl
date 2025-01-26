@@ -210,7 +210,7 @@ set_optimizer_attribute(model, MOA.SolutionLimit(), 50)
 ## a single objective sense `Min`, and negate any `Max` objectives:
 @objective(model, Min, [variance, -expected_return])
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # The algorithm found 50 different solutions. Let's plot them to see how they
