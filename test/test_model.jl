@@ -1320,6 +1320,7 @@ function test_assert_is_solved_and_feasible()
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.NO_SOLUTION)
+    MOI.set(mock, MOI.RawStatusString(), "failed")
     @test assert_is_solved_and_feasible(model) === nothing
     @test_throws(
         ErrorException,
