@@ -98,12 +98,14 @@ end
     SecondOrderCone
 
 Second order cone object that can be used to constrain the euclidean norm of a
-vector `x` to be less than or equal to a nonnegative scalar `t`. This is a
-shortcut for the `MOI.SecondOrderCone`.
+vector `x` to be less than or equal to a nonnegative scalar `t`.
+
+This is a shortcut for the [`MOI.SecondOrderCone`](@ref) set.
 
 ## Example
 
 The following constrains ``\\|(x-1, x-2)\\|_2 \\le t`` and ``t \\ge 0``:
+
 ```jldoctest
 julia> model = Model();
 
@@ -125,8 +127,9 @@ moi_set(::SecondOrderCone, dim::Int) = MOI.SecondOrderCone(dim)
 
 Rotated second order cone object that can be used to constrain the square of the
 euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
-`u` are nonnegative scalars. This is a shortcut for the
-`MOI.RotatedSecondOrderCone`.
+`u` are nonnegative scalars.
+
+This is a shortcut for the [`MOI.RotatedSecondOrderCone`](@ref) set.
 
 ## Example
 
