@@ -166,12 +166,12 @@ set_silent(model)
 @constraint(model, [i = 2:n-1], sum(y[i, :]) == sum(y[:, i]))
 @objective(model, Min, 0.1 * sum(x) - sum(y[1, :]))
 optimize!(model)
-Test.@test is_solved_and_feasible(model)  #hide
+Test.@test is_solved_and_feasible(model)  #src
 solution_summary(model)
 
 # The optimal objective value is -5.1:
 
-Test.@test isapprox(objective_value(model), -5.1; atol = 1e-4)  #hide
+Test.@test isapprox(objective_value(model), -5.1; atol = 1e-4)  #src
 objective_value(model)
 
 # and the optimal flows are:
@@ -434,7 +434,7 @@ inplace_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-Test.@test inplace_solution == monolithic_solution  #hide
+Test.@test inplace_solution == monolithic_solution  #src
 inplace_solution == monolithic_solution
 
 # ## Feasibility cuts
@@ -536,5 +536,5 @@ feasible_inplace_solution = optimal_flows(optimal_ret.y)
 # which is the same as the monolithic solution (because `sum(y) >= 1` in the
 # monolithic solution):
 
-Test.@test feasible_inplace_solution == monolithic_solution  #hide
+Test.@test feasible_inplace_solution == monolithic_solution  #src
 feasible_inplace_solution == monolithic_solution
