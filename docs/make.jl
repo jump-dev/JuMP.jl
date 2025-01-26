@@ -43,10 +43,7 @@ end
 
 const _GUROBI_EXCLUDES = String[]
 if !_HAS_GUROBI
-    push!(_GUROBI_EXCLUDES, "benders_decomposition")
-    push!(_GUROBI_EXCLUDES, "tsp_lazy_constraints")
     push!(_GUROBI_EXCLUDES, "callbacks")
-    push!(_GUROBI_EXCLUDES, "multiple_solutions")
 end
 
 # ==============================================================================
