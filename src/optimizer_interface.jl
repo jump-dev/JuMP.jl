@@ -922,12 +922,16 @@ Stacktrace:
 [...]
 ```
 """
-function assert_is_solved_and_feasible(model::GenericModel; kwargs...)
-    if !is_solved_and_feasible(model; kwargs...)
+function assert_is_solved_and_feasible(
+    model::GenericModel;
+    result::Int = 1,
+    kwargs...,
+)
+    if !is_solved_and_feasible(model; result, kwargs...)
         error(
             "The model was not solved correctly. Here is a summary of the " *
             "solution to help debug why this happened:\n\n" *
-            string(solution_summary(model)),
+            string(solution_summary(model; result)),
         )
     end
     return

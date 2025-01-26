@@ -1323,8 +1323,46 @@ function test_assert_is_solved_and_feasible()
     MOI.set(mock, MOI.RawStatusString(), "failed")
     @test assert_is_solved_and_feasible(model) === nothing
     @test_throws(
-        ErrorException,
+        ErrorException(
+            """
+            The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+
+            * Solver : Mock
+
+            * Status
+              Result count       : 1
+              Termination status : OPTIMAL
+              Message from the solver:
+              "failed"
+
+            * Candidate solution (result #1)
+              Primal status      : FEASIBLE_POINT
+              Dual status        : NO_SOLUTION
+              Objective value    : 0.00000e+00
+              Dual objective value : 0.00000e+00
+
+            * Work counters
+            """,
+        ),
         assert_is_solved_and_feasible(model; dual = true),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+
+            * Solver : Mock
+
+            * Status
+              Result count       : 1
+              Termination status : OPTIMAL
+
+            * Candidate solution (result #2)
+              Primal status      : NO_SOLUTION
+              Dual status        : NO_SOLUTION
+            """,
+        ),
+        assert_is_solved_and_feasible(model; dual = true, result = 2),
     )
     return
 end
