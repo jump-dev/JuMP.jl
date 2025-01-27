@@ -6,6 +6,7 @@
 import Documenter
 import DocumenterCitations
 import Downloads
+import Gurobi
 import Literate
 import MathOptInterface
 import Pkg
@@ -29,6 +30,21 @@ const _IS_GITHUB_ACTIONS = get(ENV, "GITHUB_ACTIONS", "false") == "true"
 
 # Pass --pdf to build the PDF. On GitHub actions, we always build the PDF.
 const _PDF = findfirst(isequal("--pdf"), ARGS) !== nothing || _IS_GITHUB_ACTIONS
+
+# Exclude these files because they require ${{ secrets.WLSLICENSE }}, which
+# is not available to forks.
+const _HAS_GUROBI = try
+    Gurobi.Env()
+    true
+catch
+    false
+end
+@show _HAS_GUROBI
+
+const _GUROBI_EXCLUDES = String[]
+if !_HAS_GUROBI
+    push!(_GUROBI_EXCLUDES, "callbacks")
+end
 
 # ==============================================================================
 #  Run literate.jl
@@ -55,10 +71,17 @@ function _link_example(content)
 end
 
 function _file_list(full_dir, relative_dir, extension)
-    return map(
-        file -> joinpath(relative_dir, file),
-        filter(file -> endswith(file, extension), sort(readdir(full_dir))),
-    )
+    function filter_fn(filename)
+        if !endswith(filename, extension)
+            return false
+        elseif _HAS_GUROBI
+            return true
+        end
+        return all(f -> !endswith(filename, f * extension), _GUROBI_EXCLUDES)
+    end
+    return map(filter!(filter_fn, sort!(readdir(full_dir)))) do file
+        return joinpath(relative_dir, file)
+    end
 end
 
 """
