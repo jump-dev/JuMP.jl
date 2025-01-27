@@ -32,7 +32,7 @@ import Printf
 import Test  #hide
 
 HAS_GUROBI = try    #hide
-    Gurobi.Env()    #hide
+    Gurobi.Env(Dict{String,Any}("output_flag" => 0))  #hide
     true            #hide
 catch               #hide
     false           #hide
