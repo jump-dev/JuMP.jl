@@ -31,10 +31,19 @@
 # It uses the following packages:
 
 using JuMP
+import HiGHS  #hide
 import Gurobi
 import Plots
 import Random
 import Test
+
+HAS_GUROBI = try    #hide
+    Gurobi.Env(Dict{String,Any}("output_flag" => 0))  #hide
+    true            #hide
+catch               #hide
+    false           #hide
+end                 #hide
+nothing             #hide
 
 # ## [Mathematical Formulation](@id tsp_model)
 
@@ -133,8 +142,8 @@ X, Y, d = generate_distance_matrix(n)
 # defining the `x` matrix as `Symmetric`, we do not need to add explicit
 # constraints that `x[i, j] == x[j, i]`.
 
-function build_tsp_model(d, n)
-    model = Model(Gurobi.Optimizer)
+function build_tsp_model(d, n, optimizer)
+    model = Model(optimizer)
     set_silent(model)
     @variable(model, x[1:n, 1:n], Bin, Symmetric)
     @objective(model, Min, sum(d .* x) / 2)
@@ -199,7 +208,11 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 #     the shortest cycle is often sufficient for breaking other subtours and
 #     will keep the model size smaller.
 
-iterative_model = build_tsp_model(d, n)
+optimizer = Gurobi.Optimizer
+if !HAS_GUROBI                    #hide
+    optimizer = HiGHS.Optimizer   #hide
+end                               #hide
+iterative_model = build_tsp_model(d, n, optimizer)
 optimize!(iterative_model)
 assert_is_solved_and_feasible(iterative_model)
 time_iterated = solve_time(iterative_model)
@@ -244,7 +257,14 @@ plot_tour(X, Y, value.(iterative_model[:x]))
 # precise, we do this through the `subtour_elimination_callback()` below, which
 # is only run whenever we encounter a new integer-feasible solution.
 
-lazy_model = build_tsp_model(d, n)
+# !!! tip
+#     We use Gurobi for this model because HiGHS does not support lazy
+#     constraints. For more information on callbacks, read the page
+#     [Solver-independent callbacks](@ref callbacks_manual).
+
+# As before, we construct the same first-stage subproblem:
+
+lazy_model = build_tsp_model(d, n, optimizer)
 function subtour_elimination_callback(cb_data)
     status = callback_node_status(cb_data, lazy_model)
     if status != MOI.CALLBACK_NODE_STATUS_INTEGER
@@ -266,10 +286,10 @@ set_attribute(
     MOI.LazyConstraintCallback(),
     subtour_elimination_callback,
 )
+if !HAS_GUROBI                                                        #hide
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)  #hide
+end                                                                   #hide
 optimize!(lazy_model)
-
-#-
-
 assert_is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
 
@@ -283,4 +303,7 @@ plot_tour(X, Y, value.(lazy_model[:x]))
 
 # The solution time is faster than the iterative approach:
 
+if !HAS_GUROBI       #hide
+    time_lazy = 0.0  #hide
+end                  #hide
 Test.@test time_lazy < time_iterated

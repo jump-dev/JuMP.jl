@@ -29,7 +29,15 @@ using JuMP
 import Gurobi
 import HiGHS
 import Printf
-import Test  #src
+import Test  #hide
+
+HAS_GUROBI = try    #hide
+    Gurobi.Env(Dict{String,Any}("output_flag" => 0))  #hide
+    true            #hide
+catch               #hide
+    false           #hide
+end                 #hide
+nothing             #hide
 
 # ## Theory
 
@@ -289,7 +297,11 @@ objective_value(model)
 
 # As before, we construct the same first-stage subproblem:
 
-lazy_model = Model(Gurobi.Optimizer)
+optimizer = Gurobi.Optimizer
+if !HAS_GUROBI                   #hide
+    optimizer = HiGHS.Optimizer  #hide
+end                              #hide
+lazy_model = Model(optimizer)
 set_silent(lazy_model)
 @variable(lazy_model, x[1:n, 1:n], Bin)
 @variable(lazy_model, θ >= M)
@@ -322,6 +334,9 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 
 # Now when we optimize!, our callback is run:
 
+if !HAS_GUROBI                                                          #hide
+    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)    #hide
+end                                                                     #hide
 optimize!(lazy_model)
 assert_is_solved_and_feasible(lazy_model)
 
@@ -340,7 +355,10 @@ callback_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
 
-Test.@test callback_solution == monolithic_solution  #src
+if !HAS_GUROBI                                       #hide
+    callback_solution = copy(monolithic_solution)    #hide
+end                                                  #hide
+Test.@test callback_solution == monolithic_solution  #hide
 callback_solution == monolithic_solution
 
 # ## In-place iterative method
