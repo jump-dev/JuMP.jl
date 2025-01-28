@@ -808,7 +808,8 @@ end
         model::GenericModel;
         allow_local::Bool = true,
         allow_almost::Bool = false,
-        allow_time_limit::Bool = false,
+        additional_termination_statuses::Vector{MOI.TerminationStatusCode} =
+            MOI.TerminationStatusCode[],
         dual::Bool = false,
         result::Int = 1,
     )
@@ -819,8 +820,6 @@ Return `true` if:
    * [`OPTIMAL`](@ref) (the solver found a global optimum)
    * [`LOCALLY_SOLVED`](@ref) (the solver found a local optimum, which may also
      be the global optimum, but the solver could not prove so)
-   * [`TIME_LIMIT`](@ref) (the solver stopped after a user-specified computation
-     time).
  * the [`primal_status`](@ref) of the result index `result` is `FEASIBLE_POINT`.
 
 This function is conservative, in that it returns `false` for situations like
@@ -846,11 +845,12 @@ be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`
 and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
 [`NEARLY_FEASIBLE_POINT`](@ref).
 
-### `allow_time_limit`
+### `additional_termination_statuses`
 
-If `allow_time_limit = true`, then the [`termination_status`](@ref) may
-additionally be [`TIME_LIMIT`](@ref) (the solver stopped after a user-specified
-computation time).
+If `additional_termination_statuses` is passed, then the [`termination_status`](@ref)
+may additionally be one of the values. This argument should be used to allow
+limit statuses such as [`TIME_LIMIT`](@ref) to return `true` instead of the
+default `false`.
 
 ### `dual`
 
@@ -870,7 +870,12 @@ julia> import Ipopt
 
 julia> model = Model(Ipopt.Optimizer);
 
-julia> is_solved_and_feasible(model)
+julia> is_solved_and_feasible(
+           model;
+           allow_almost = true,
+           additional_termination_statuses = [TIME_LIMIT],
+           dual = true,
+       )
 false
 ```
 """
@@ -879,7 +884,8 @@ function is_solved_and_feasible(
     dual::Bool = false,
     allow_local::Bool = true,
     allow_almost::Bool = false,
-    allow_time_limit::Bool = false,
+    additional_termination_statuses::Vector{MOI.TerminationStatusCode} =
+        MOI.TerminationStatusCode[],
     result::Int = 1,
 )
     status = termination_status(model)
@@ -888,7 +894,7 @@ function is_solved_and_feasible(
         (allow_local && (status == LOCALLY_SOLVED)) ||
         (allow_almost && (status == ALMOST_OPTIMAL)) ||
         (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED)) ||
-        (allow_time_limit && (status == TIME_LIMIT))
+        (status in additional_termination_statuses)
     if ret
         primal = primal_status(model; result)
         ret &=
