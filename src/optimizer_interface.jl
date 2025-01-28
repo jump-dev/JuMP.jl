@@ -884,7 +884,7 @@ function is_solved_and_feasible(
     dual::Bool = false,
     allow_local::Bool = true,
     allow_almost::Bool = false,
-    additional_termination_statuses::Vector{TerminationStatusCode} = TerminationStatusCode[],
+    additional_termination_statuses::Vector{MOI.TerminationStatusCode} = MOI.TerminationStatusCode[],
     result::Int = 1,
 )
     status = termination_status(model)
