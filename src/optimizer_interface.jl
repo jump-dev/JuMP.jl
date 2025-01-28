@@ -812,11 +812,20 @@ end
         result::Int = 1,
     )
 
-Return `true` if the model has a feasible primal solution associated with result
-index `result` and the [`termination_status`](@ref) is [`OPTIMAL`](@ref) (the
-solver found a global optimum) or [`LOCALLY_SOLVED`](@ref) (the solver found a
-local optimum, which may also be the global optimum, but the solver could not
-prove so).
+Return `true` if:
+
+ * the [`termination_status`](@ref) is one of:
+   * [`OPTIMAL`](@ref) (the solver found a global optimum)
+   * [`LOCALLY_SOLVED`](@ref) (the solver found a local optimum, which may also
+     be the global optimum, but the solver could not prove so).
+ * the [`primal_status`](@ref) of the result index `result` is `FEASIBLE_POINT`.
+
+This function is conservative, in that it returns `false` for situations like
+the solver terminating with a feasible solution due to a time limit.
+
+See also: [`assert_is_solved_and_feasible`](@ref).
+
+## Keyword arguments
 
 If `allow_local = false`, then this function returns `true` only if the
 [`termination_status`](@ref) is [`OPTIMAL`](@ref).
@@ -826,7 +835,8 @@ be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`
 and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
 [`NEARLY_FEASIBLE_POINT`](@ref).
 
-If `dual`, additionally check that an optimal dual solution is available.
+If `dual`, additionally use [`dual_status`](@ref) to check that a dual feasible
+point is available.
 
 If this function returns `false`, use [`termination_status`](@ref),
 [`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
@@ -869,6 +879,62 @@ function is_solved_and_feasible(
             (allow_almost && (dual_stat == NEARLY_FEASIBLE_POINT))
     end
     return ret
+end
+
+"""
+    assert_is_solved_and_feasible(model::GenericModel; kwargs...)
+
+A function calls [`is_solved_and_feasible`](@ref) and, if the return is `false`,
+errors with an informative error message describing the state of the solver.
+
+## Keyword arguments
+
+See [`is_solved_and_feasible`](@ref) for a description of all keyword arguments.
+
+## Example
+
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> is_solved_and_feasible(model)
+false
+
+julia> assert_is_solved_and_feasible(model)
+ERROR: The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+
+* Solver : Ipopt
+
+* Status
+  Result count       : 0
+  Termination status : OPTIMIZE_NOT_CALLED
+  Message from the solver:
+  "optimize not called"
+
+* Candidate solution (result #1)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
+
+* Work counters
+
+Stacktrace:
+[...]
+```
+"""
+function assert_is_solved_and_feasible(
+    model::GenericModel;
+    result::Int = 1,
+    kwargs...,
+)
+    if !is_solved_and_feasible(model; result, kwargs...)
+        error(
+            "The model was not solved correctly. Here is a summary of the " *
+            "solution to help debug why this happened:\n\n" *
+            string(solution_summary(model; result)),
+        )
+    end
+    return
 end
 
 """

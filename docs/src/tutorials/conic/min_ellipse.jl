@@ -125,7 +125,7 @@ end
 # Now, solve the program:
 
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # ## Results

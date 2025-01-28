@@ -105,7 +105,7 @@ x_digits_upper = [x_digits[i, j] for j in 1:n for i in 1:j]
 # If we optimize this model, we find that Gurobi has returned one solution:
 
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 Test.@test result_count(model) == 1
 solution_summary(model)
 
@@ -138,7 +138,7 @@ if !HAS_GUROBI                       #hide
     set_optimizer(model, optimizer)  #hide
 end                                  #hide
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # Now Gurobi has found 20 solutions:

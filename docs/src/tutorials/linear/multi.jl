@@ -177,7 +177,7 @@ end
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 Test.@test objective_value(model) == 225_700.0      #src
 solution_summary(model)
 

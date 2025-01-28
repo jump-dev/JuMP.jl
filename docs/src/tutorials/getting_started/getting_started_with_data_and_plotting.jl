@@ -366,7 +366,7 @@ solution_summary(model)
 
 # Just to be sure, check that the solver found an optimal solution:
 
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 
 # ### Solution
 

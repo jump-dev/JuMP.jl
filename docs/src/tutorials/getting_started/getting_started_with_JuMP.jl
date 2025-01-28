@@ -523,5 +523,5 @@ c = [1, 3, 5, 2]
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
 optimize!(vector_model)
-@assert is_solved_and_feasible(vector_model)
+assert_is_solved_and_feasible(vector_model)
 objective_value(vector_model)

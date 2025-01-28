@@ -188,7 +188,7 @@ model = build_logit_model(X, y, λ)
 set_optimizer(model, SCS.Optimizer)
 set_silent(model)
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 
 #-
 
@@ -231,7 +231,7 @@ sparse_model = build_sparse_logit_model(X, y, λ)
 set_optimizer(sparse_model, SCS.Optimizer)
 set_silent(sparse_model)
 optimize!(sparse_model)
-@assert is_solved_and_feasible(sparse_model)
+assert_is_solved_and_feasible(sparse_model)
 
 #-
 

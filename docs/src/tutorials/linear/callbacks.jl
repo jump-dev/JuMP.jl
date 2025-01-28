@@ -62,7 +62,7 @@ function example_lazy_constraint()
     end
     set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     Test.@test lazy_called
     Test.@test value(x) == 1
     Test.@test value(y) == 2
@@ -105,7 +105,7 @@ function example_user_cut_constraint()
     end
     set_attribute(model, MOI.UserCutCallback(), my_callback_function)
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     Test.@test callback_called
     @show callback_called
     return
@@ -143,7 +143,7 @@ function example_heuristic_solution()
     end
     set_attribute(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
-    Test.@test is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model)
     Test.@test callback_called
     return
 end

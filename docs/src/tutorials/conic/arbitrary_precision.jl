@@ -78,7 +78,7 @@ print(model)
 # Let's solve and inspect the solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model; dual = true)
+assert_is_solved_and_feasible(model; dual = true)
 solution_summary(model)
 
 # The value of each decision variable is a `BigFloat`:
@@ -103,7 +103,7 @@ value.(x) .- [3 // 7, 3 // 14]
 set_attribute(model, "tol_gap_abs", 1e-32)
 set_attribute(model, "tol_gap_rel", 1e-32)
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 value.(x) .- [3 // 7, 3 // 14]
 
 # ## Rational arithmetic
@@ -145,7 +145,7 @@ print(model)
 # Let's solve and inspect the solution:
 
 optimize!(model)
-@assert is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model)
 solution_summary(model)
 
 # The optimal values are given in exact rational arithmetic:
