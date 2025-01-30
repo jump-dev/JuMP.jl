@@ -24,20 +24,20 @@
 # almost ready to write your own models, but before you do so there are some
 # important things to be aware of.
 
+# The Julia manual has an excellent section on [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
+# The purpose of this tutorial is to highlight a number of performance issues
+# that are specific to JuMP.
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
 using JuMP
 import HiGHS
 
-# ## Read the Julia performance tips
-
-# The first thing to do is read the [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
-# section of the Julia manual. The most important rule is to avoid global
-# variables. This is particularly important if you're learning JuMP after using
-# a language like MATLAB.
-
 # ## Use macros to build expressions
 
-# Use JuMP's macros (or [`add_to_expression!`](@ref)) to build expressions.
-# Avoid constructing expressions outside the macros.
+# Use JuMP's macros to build expressions.
 
 # Constructing an expression outside the macro results in intermediate copies of
 # the expression. For example,
@@ -73,6 +73,64 @@ model = Model()
 # If we use the [`@expression`](@ref) macro, we get many fewer allocations:
 
 @allocated @expression(model, x[1] + x[2] + x[3])
+
+# ## Use `add_to_expression!` to build summations
+
+# If you don't want to use the expression macros, use
+# [`add_to_expression!`](@ref) to build summations. For example, instead of:
+
+expr = zero(AffExpr)
+for i in 1:3
+    global expr  #hide
+    expr += x[i]
+end
+expr
+
+# do
+
+expr = zero(AffExpr)
+for i in 1:3
+    add_to_expression!(expr, x[i])
+end
+expr
+
+# The former is equivalent to:
+
+expr0 = zero(AffExpr)
+expr1 = expr0 + x[1]
+expr2 = expr1 + x[2]
+expr = expr2 + x[3]
+
+# which allocates four unique [`AffExpr`](@ref) objects. The latter efficiently
+# updates `expr` in-place so that only one [`AffExpr`](@ref) object is
+# allocated.
+
+# The function [`add_to_expression!`](@ref) also supports terms like `y += a * x`
+# where `a` is a constant. For example, instead of:
+
+expr = zero(AffExpr)
+for i in 1:3
+    global expr  #hide
+    expr += i * x[i]
+end
+expr
+
+# do
+
+expr = zero(AffExpr)
+for i in 1:3
+    add_to_expression!(expr, i, x[i])
+end
+expr
+
+# Don't do this, because `i * x[i]` will allocate a new [`AffExpr`](@ref) in
+# each iteration:
+
+expr = zero(AffExpr)
+for i in 1:3
+    add_to_expression!(expr, i * x[i])
+end
+expr
 
 # ## Disable string names
 
