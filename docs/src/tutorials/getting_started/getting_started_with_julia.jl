@@ -62,8 +62,7 @@
 #     ```
 #     $ julia path/to/file.jl
 #     ```
-#     Use the REPL or a notebook instead, and read [The "time-to-first-solve" issue](@ref)
-#     for more information.
+#     Use the REPL or a notebook instead.
 
 # ### Code blocks in this documentation
 

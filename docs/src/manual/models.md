@@ -73,44 +73,6 @@ deleting different constraint types, you may need to use
 [`set_optimizer`](@ref). See [Switching optimizer for the relaxed problem](@ref)
 for an example of when this is useful.
 
-### Reducing time-to-first-solve latency
-
-By default, JuMP uses [bridges](@ref LazyBridgeOptimizer) to reformulate the
-model you are building into an equivalent model supported by the solver.
-
-However, if your model is already supported by the solver, bridges add latency
-(read [The "time-to-first-solve" issue](@ref)). This is particularly noticeable
-for small models.
-
-To reduce the "time-to-first-solve,s" try passing `add_bridges = false`.
-```jldoctest
-julia> model = Model(HiGHS.Optimizer; add_bridges = false);
-```
-or
-```jldoctest
-julia> model = Model();
-
-julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
-```
-
-However, be wary. If your model and solver combination needs bridges, an error
-will be thrown:
-```jldoctest
-julia> model = Model(SCS.Optimizer; add_bridges = false);
-
-
-julia> @variable(model, x)
-x
-
-julia> @constraint(model, 2x <= 1)
-ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
-
-If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
-
-The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
-[...]
-```
-
 ### Solvers which expect environments
 
 Some solvers accept (or require) positional arguments such as a license
