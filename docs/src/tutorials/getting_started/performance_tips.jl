@@ -89,6 +89,7 @@ expr
 
 expr = zero(AffExpr)
 for i in 1:3
+    global expr  #hide
     expr = add_to_expression!(expr, x[i])
 end
 expr
