@@ -81,6 +81,7 @@ model = Model()
 
 expr = zero(AffExpr)
 for i in 1:3
+    global expr  #hide
     expr += x[i]
 end
 expr
@@ -89,8 +90,7 @@ expr
 
 expr = zero(AffExpr)
 for i in 1:3
-    global expr  #hide
-    expr = add_to_expression!(expr, x[i])
+    add_to_expression!(expr, x[i])
 end
 expr
 
@@ -110,6 +110,7 @@ expr = expr2 + x[3]
 
 expr = zero(AffExpr)
 for i in 1:3
+    global expr  #hide
     expr += i * x[i]
 end
 expr
