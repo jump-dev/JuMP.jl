@@ -1465,4 +1465,18 @@ function test_solver_name_error()
     return
 end
 
+function test_copy_base_types()
+    model = Model()
+    @expression(model, a, 1.0)
+    @expression(model, b, "Bb")
+    @expression(model, c, :c)
+    @expression(model, d, BigInt(1) + BigInt(2) * im)
+    new_model = copy(model)
+    @test new_model[:a] === 1.0
+    @test new_model[:b] == "Bb"
+    @test new_model[:c] == :c
+    @test new_model[:d] == BigInt(1) + BigInt(2) * im
+    return
+end
+
 end  # module TestModels

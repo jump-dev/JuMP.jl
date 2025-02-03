@@ -45,6 +45,11 @@ end
 
 const ReferenceMap = GenericReferenceMap{Float64}
 
+# Some fallbacks for Base types that we should pass through un-changed
+Base.getindex(::GenericReferenceMap, x::Number) = x
+Base.getindex(::GenericReferenceMap, x::AbstractString) = x
+Base.getindex(::GenericReferenceMap, x::Symbol) = x
+
 function Base.getindex(map::GenericReferenceMap, vref::GenericVariableRef)
     return GenericVariableRef(map.model, map.index_map[index(vref)])
 end
