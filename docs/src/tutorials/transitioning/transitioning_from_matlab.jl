@@ -368,14 +368,13 @@ function robustness_jump(d)
     rho = random_state_pure(d^2)
     id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
     rhoT = LinearAlgebra.Hermitian(partial_transpose(rho, 1, [d, d]))
-    model = Model()
+    model = Model(Clarabel.Optimizer)
+    set_attribute(model, "verbose", false)
     @variable(model, λ)
     @constraint(model, PPT, rhoT + λ * id in HermitianPSDCone())
     @objective(model, Min, λ)
-    set_optimizer(model, Clarabel.Optimizer)
-    set_attribute(model, "verbose", true)
     optimize!(model)
-    assert_is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model; allow_almost = true)
     WT = dual(PPT)
     return value(λ), real(LinearAlgebra.dot(WT, rhoT))
 end
@@ -393,7 +392,7 @@ robustness_jump(3)
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     lambda = sdpvar;
 #     constraints = [(rhoT + lambda*eye(d^2) >= 0):'PPT'];
-#     ops = sdpsettings(sdpsettings, 'verbose', 1, 'solver', 'sedumi');
+#     ops = sdpsettings(sdpsettings, 'verbose', 0, 'solver', 'sedumi');
 #     sol = optimize(constraints, lambda, ops);
 #     if sol.problem == 0
 #         WT = dual(constraints('PPT'));
