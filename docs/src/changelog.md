@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Fixed [`primal_feasibility_report`](@ref) with non-`Float64` number types
    (#3913)
- - Fixed a bug with `copy(model)` if it containend a registered expression that
+ - Fixed a bug with `copy(model)` if it contained a registered expression that
    did not contain a variable (#3934)
 
 ### Other
