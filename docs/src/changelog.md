@@ -7,6 +7,31 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.24.0 (February 4, 2025)
+
+### Added
+
+ - Added [`assert_is_solved_and_feasible`](@ref) (#3925)
+
+### Fixed
+
+ - Fixed [`primal_feasibility_report`](@ref) with non-`Float64` number types
+   (#3913)
+ - Fixed a bug with `copy(model)` if it contained a registered expression that
+   did not contain a variable (#3934)
+
+### Other
+
+ - Document danger of using `Threads.threadid` (#3909)
+ - Remove `@warn` from `operator_warn` (#3911)
+ - Use `tectonic_jll` in the PDF build of the docs (#3914)
+ - Various improvements to docstrings (#3916) (#3927) (#3932)
+ - Fixed year in this changelog (#3926)
+ - Fixed the documentation to exclude Gurobi if built from a fork (#3919)
+ - Update `docs/Project.toml` (#3928)
+ - Remove documentation section on time-to-first-solve (#3929)
+ - Suggest [`add_to_expression!`](@ref) in performance tips (#3930)
+
 ## Version 1.23.6 (January 6, 2025)
 
 ### Fixed
