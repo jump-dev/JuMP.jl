@@ -405,7 +405,7 @@ end
 # Now, `add_knapsack_constraints_inner` is fast because Julia can compile a
 # specific version that depends on the type of `x` passed as an input argument.
 
-# The downside of function barriers is that they reqire more code. The upside is
+# The downside of function barriers is that they require more code. The upside is
 # faster code and reduced memory allocations. In general, you should add a
 # function barrier only if you have a benchmark showing that the difference is
 # meaningful for your code base. Function barriers are more likely to be useful
