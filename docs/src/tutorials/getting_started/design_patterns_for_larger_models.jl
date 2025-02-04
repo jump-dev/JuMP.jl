@@ -370,6 +370,48 @@ end
 
 solve_knapsack_5(data, BinaryKnapsackConfig())
 
+# ## Function barriers
+
+# Querying a variable like `x = model[:x]` is not type stable. The lack of type
+# stability means that Julia cannot statically prove what the type of `x` will
+# be within a function. As a consequence, the functions
+# `add_knapsack_constraints` and `add_knapsack_objective` are slower than they
+# would be if Julia could prove that `x` was a [`Containers.DenseAxisArray`](@ref).
+
+# One solution to the problem of type stability is to use a function barrier:
+
+function add_knapsack_constraints(
+    model::Model,
+    data::KnapsackData,
+    config::AbstractConfiguration,
+)
+    return add_knapsack_constraints_inner(model, data, config, model[:x])
+end
+
+function add_knapsack_constraints_inner(
+    model::Model,
+    data::KnapsackData,
+    ::AbstractConfiguration,
+    x,
+)
+    @constraint(
+        model,
+        capacity_constraint,
+        sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
+    )
+    return
+end
+
+# Now, `add_knapsack_constraints_inner` is fast because Julia can compile a
+# specific version that depends on the type of `x` passed as an input argument.
+
+# The downside of function barriers is that they reqire more code. The upside is
+# faster code and reduced memory allocations. In general, you should add a
+# function barrier only if you have a benchmark showing that the difference is
+# meaningful for your code base. Function barriers are more likely to be useful
+# if the `_inner` function does a lot of computational work, for example, it
+# adds thousands of constraints or has a summation over thousands of items.
+
 # ## Remove solver dependence, add error checks
 
 # Compared to where we started, our knapsack model is now significantly
@@ -494,9 +536,17 @@ end
 function _add_knapsack_constraints(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::_AbstractConfiguration,
+    config::_AbstractConfiguration,
 )
-    x = model[:x]
+    return _add_knapsack_constraints_inner(model, data, config, model[:x])
+end
+
+function _add_knapsack_constraints_inner(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::_AbstractConfiguration,
+    x,
+)
     JuMP.@constraint(
         model,
         capacity_constraint,
@@ -508,9 +558,17 @@ end
 function _add_knapsack_objective(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::_AbstractConfiguration,
+    config::_AbstractConfiguration,
 )
-    x = model[:x]
+    return _add_knapsack_objective_inner(model, data, config, model[:x])
+end
+
+function _add_knapsack_objective_inner(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::_AbstractConfiguration,
+    x,
+)
     JuMP.@objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
     return
 end
