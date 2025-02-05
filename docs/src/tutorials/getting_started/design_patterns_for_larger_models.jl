@@ -402,12 +402,12 @@ function add_knapsack_constraints_inner(
     return
 end
 
-# Now, `add_knapsack_constraints_inner` is fast because Julia can compile a
+# Now, `add_knapsack_constraints_inner` is faster because Julia can compile a
 # specific version that depends on the type of `x` passed as an input argument.
 
 # The downside of function barriers is that they require more code. The upside is
 # faster code and reduced memory allocations. In general, you should add a
-# function barrier only if you have a benchmark showing that the difference is
+# function barrier if you have a benchmark showing that the difference is
 # meaningful for your code base. Function barriers are more likely to be useful
 # if the `_inner` function does a lot of computational work, for example, it
 # adds thousands of constraints or has a summation over thousands of items.
