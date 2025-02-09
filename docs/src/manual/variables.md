@@ -1083,7 +1083,7 @@ julia> model[:x]
 ## Semidefinite variables
 
 Declare a square matrix of JuMP variables to be positive semidefinite by passing
-`PSD` as an optional positional argument:
+`PSD` as a positional argument:
 
 ```jldoctest
 julia> model = Model();
@@ -1101,6 +1101,55 @@ nonnegative.
     `x` must be a square 2-dimensional `Array` of JuMP variables; it cannot be a
     DenseAxisArray or a SparseAxisArray.
 
+The `PSD` argument must provided explicitly to the macro. Passing it via a
+variable throws an error:
+```jldoctest
+julia> model = Model();
+
+julia> type = :PSD
+:PSD
+
+julia> @variable(model, x[1:2, 1:2], type)
+ERROR: At REPL[12]:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:PSD,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+
+If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
+Stacktrace:
+[...]
+```
+
+Instead, pass [`PSDCone`](@ref) via the `x in Set` syntax:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2] in PSDCone())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> set = PSDCone();
+
+julia> @variable(model, y[1:2, 1:2] in set)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
+```
+or via the `set` keyword:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], set = PSDCone())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> set = PSDCone();
+
+julia> @variable(model, y[1:2, 1:2], set = set)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
+```
+
 ## Symmetric variables
 
 Declare a square matrix of JuMP variables to be symmetric (but not necessarily
@@ -1114,6 +1163,55 @@ julia> @variable(model, x[1:2, 1:2], Symmetric)
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
+```
+
+The `Symmetric` argument must provided explicitly to the macro. Passing it via a
+variable throws an error:
+```jldoctest
+julia> model = Model();
+
+julia> type = :Symmetric
+:Symmetric
+
+julia> @variable(model, x[1:2, 1:2], type)
+ERROR: At REPL[24]:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:Symmetric,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+
+If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
+Stacktrace:
+[...]
+```
+
+Instead, pass [`SymmetricMatrixSpace`](@ref) via the `x in Set` syntax:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> set = SymmetricMatrixSpace();
+
+julia> @variable(model, y[1:2, 1:2] in set)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
+```
+or via the `set` keyword:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], set = SymmetricMatrixSpace())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> set = SymmetricMatrixSpace();
+
+julia> @variable(model, y[1:2, 1:2], set = set)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
 ```
 
 ## [The `@variables` macro](@id variables)
@@ -1221,6 +1319,11 @@ julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
+
+ julia> @variable(model, y[1:2, 1:2], set = PSDCone())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
 ```
 
 ### Example: symmetric variables
@@ -1234,6 +1337,11 @@ julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
+
+julia> @variable(model, y[1:2, 1:2], set = SymmetricMatrixSpace())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ y[1,1]  y[1,2]
+ y[1,2]  y[2,2]
 ```
 
 ### Example: skew-symmetric variables
@@ -1247,6 +1355,11 @@ julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
 2×2 Matrix{AffExpr}:
  0        x[1,2]
  -x[1,2]  0
+
+julia> @variable(model, y[1:2, 1:2], set = SkewSymmetricMatrixSpace())
+2×2 Matrix{AffExpr}:
+ 0        y[1,2]
+ -y[1,2]  0
 ```
 
 !!! note
