@@ -181,6 +181,9 @@ ERROR: At none:1: `@constraint(model, x >= y)`:
 The syntax `x >= y` is ambiguous for matrices because we cannot tell if
 you intend a positive semidefinite constraint or an elementwise
 inequality.
+Stacktrace:
+[...]
+````
 
 To create a positive semidefinite constraint, pass `PSDCone()` or
 `HermitianPSDCone()`:
@@ -197,9 +200,6 @@ broadcasting:
 # or
 @constraint(model, x .>= y)
 ```
-Stacktrace:
-[...]
-````
 
 Instead, use the [Set inequality syntax](@ref) to specify a set like
 [`PSDCone`](@ref) or [`Nonnegatives`](@ref):
