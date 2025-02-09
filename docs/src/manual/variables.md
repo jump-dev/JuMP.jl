@@ -1110,7 +1110,7 @@ julia> type = :PSD
 :PSD
 
 julia> @variable(model, x[1:2, 1:2], type)
-ERROR: At REPL[12]:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:PSD,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:PSD,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
 
 If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
 Stacktrace:
@@ -1174,7 +1174,7 @@ julia> type = :Symmetric
 :Symmetric
 
 julia> @variable(model, x[1:2, 1:2], type)
-ERROR: At REPL[24]:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:Symmetric,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:Symmetric,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
 
 If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
 Stacktrace:
@@ -1320,7 +1320,7 @@ julia> @variable(model, x[1:2, 1:2] in PSDCone())
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 
- julia> @variable(model, y[1:2, 1:2], set = PSDCone())
+julia> @variable(model, y[1:2, 1:2], set = PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  y[1,1]  y[1,2]
  y[1,2]  y[2,2]
