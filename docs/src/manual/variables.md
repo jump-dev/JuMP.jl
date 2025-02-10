@@ -1101,7 +1101,7 @@ nonnegative.
     `x` must be a square 2-dimensional `Array` of JuMP variables; it cannot be a
     DenseAxisArray or a SparseAxisArray.
 
-The `PSD` argument must provided explicitly to the macro. Passing it via a
+The `PSD` argument must be provided explicitly to the macro. Passing it via a
 variable throws an error:
 ```jldoctest
 julia> model = Model();
