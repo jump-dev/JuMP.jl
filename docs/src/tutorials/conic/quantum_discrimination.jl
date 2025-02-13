@@ -16,8 +16,8 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import LinearAlgebra
-import SCS
 
 # ## Formulation
 
@@ -66,7 +66,7 @@ end
 # To model the problem in JuMP, we need a solver that supports positive
 # semidefinite matrices:
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 
 # Then, we construct our set of `E` variables:
@@ -127,7 +127,7 @@ solution = [value.(e) for e in E]
 # equality constraints. We can simplify the problem by replacing ``E_N`` with
 # ``E_N = I - \sum\limits_{i=1}^{N-1} E_i``. This results in:
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N-1]
 E_N = LinearAlgebra.Hermitian(LinearAlgebra.I - sum(E))

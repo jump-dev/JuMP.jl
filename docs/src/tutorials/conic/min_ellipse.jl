@@ -42,9 +42,9 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import LinearAlgebra
 import Plots
-import SCS
 import Test
 
 # ## Data
@@ -93,10 +93,7 @@ plot
 # Now let's build the model, using the change-of-variables `P²` = ``P^2`` and
 # `P_q` = ``P q``. We'll recover the true value of `P` and `q` after the solve.
 
-model = Model(SCS.Optimizer)
-## We need to use a tighter tolerance for this example, otherwise the bounding
-## ellipse won't actually be bounding...
-set_attribute(model, "eps_rel", 1e-6)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 m, n = length(ellipses), size(first(ellipses).A, 1)
 @variable(model, τ[1:m] >= 0)
