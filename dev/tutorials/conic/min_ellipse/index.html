@@ -13,9 +13,9 @@
 \end{bmatrix}
 \preceq 0 \text{ (PSD) } &amp;  i=1, \ldots, m
 \end{aligned}\]</p><p>with helper variables <span>$\tau$</span>.</p><h2 id="Required-packages"><a class="docs-heading-anchor" href="#Required-packages">Required packages</a><a id="Required-packages-1"></a><a class="docs-heading-anchor-permalink" href="#Required-packages" title="Permalink"></a></h2><p>This tutorial uses the following packages:</p><pre><code class="language-julia hljs">using JuMP
+import Clarabel
 import LinearAlgebra
 import Plots
-import SCS
 import Test</code></pre><h2 id="Data"><a class="docs-heading-anchor" href="#Data">Data</a><a id="Data-1"></a><a class="docs-heading-anchor-permalink" href="#Data" title="Permalink"></a></h2><p>First, define the <span>$m$</span> input ellipses (here <span>$m = 6$</span>), parameterized as <span>$x^T A_i x + 2 b_i^T x + c \leq 0$</span>:</p><pre><code class="language-julia hljs">struct Ellipse
     A::Matrix{Float64}
     b::Vector{Float64}
@@ -46,10 +46,7 @@ plot = Plots.plot(; size = (600, 600))
 for ellipse in ellipses
     plot_ellipse(plot, ellipse)
 end
-plot</code></pre><img src="59c8248d.svg" alt="Example block output"/><h2 id="Build-the-model"><a class="docs-heading-anchor" href="#Build-the-model">Build the model</a><a id="Build-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Build-the-model" title="Permalink"></a></h2><p>Now let&#39;s build the model, using the change-of-variables <code>P²</code> = <span>$P^2$</span> and <code>P_q</code> = <span>$P q$</span>. We&#39;ll recover the true value of <code>P</code> and <code>q</code> after the solve.</p><pre><code class="language-julia hljs">model = Model(SCS.Optimizer)
-# We need to use a tighter tolerance for this example, otherwise the bounding
-# ellipse won&#39;t actually be bounding...
-set_attribute(model, &quot;eps_rel&quot;, 1e-6)
+plot</code></pre><img src="9d70357e.svg" alt="Example block output"/><h2 id="Build-the-model"><a class="docs-heading-anchor" href="#Build-the-model">Build the model</a><a id="Build-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Build-the-model" title="Permalink"></a></h2><p>Now let&#39;s build the model, using the change-of-variables <code>P²</code> = <span>$P^2$</span> and <code>P_q</code> = <span>$P q$</span>. We&#39;ll recover the true value of <code>P</code> and <code>q</code> after the solve.</p><pre><code class="language-julia hljs">model = Model(Clarabel.Optimizer)
 set_silent(model)
 m, n = length(ellipses), size(first(ellipses).A, 1)
 @variable(model, τ[1:m] &gt;= 0)
@@ -70,28 +67,29 @@ end</code></pre><p>We cannot directly represent the objective <span>$\log(\det(P
 @constraint(model, [log_det_P; 1; vec(P²)] in MOI.LogDetConeSquare(n))
 @objective(model, Max, log_det_P)</code></pre><p class="math-container">\[ log\_det\_P \]</p><p>Now, solve the program:</p><pre><code class="language-julia hljs">optimize!(model)
 assert_is_solved_and_feasible(model)
-solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">* Solver : SCS
+solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">* Solver : Clarabel
 
 * Status
   Result count       : 1
   Termination status : OPTIMAL
   Message from the solver:
-  &quot;solved&quot;
+  &quot;SOLVED&quot;
 
 * Candidate solution (result #1)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
-  Objective value    : -4.04358e+00
-  Dual objective value : -4.04364e+00
+  Objective value    : -4.04369e+00
+  Dual objective value : -4.04369e+00
 
 * Work counters
-  Solve time (sec)   : 2.19965e-01
+  Solve time (sec)   : 5.06680e-03
+  Barrier iterations : 15
 </code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>After solving the model to optimality we can recover the solution in terms of <span>$P$</span> and <span>$q$</span>:</p><pre><code class="language-julia hljs">P = sqrt(value.(P²))
 q = P \ value.(P_q)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
- -0.3964217693227084
- -0.02139417862146734</code></pre><p>Finally, overlaying the solution in the plot we see the minimal area enclosing ellipsoid:</p><pre><code class="language-julia hljs">Plots.plot!(
+ -0.3964824351357496
+ -0.02122031038251278</code></pre><p>Finally, overlaying the solution in the plot we see the minimal area enclosing ellipsoid:</p><pre><code class="language-julia hljs">Plots.plot!(
     plot,
     [tuple(P \ [cos(θ) - q[1], sin(θ) - q[2]]...) for θ in 0:0.05:(2pi+0.05)];
     c = :crimson,
     label = nothing,
-)</code></pre><img src="3badb26e.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../experiment_design/">« Example: experiment design</a><a class="docs-footer-nextpage" href="../ellipse_approx/">Example: ellipsoid approximation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 10 February 2025 21:46">Monday 10 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre><img src="339b7a9a.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../experiment_design/">« Example: experiment design</a><a class="docs-footer-nextpage" href="../ellipse_approx/">Example: ellipsoid approximation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 14 February 2025 03:04">Friday 14 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

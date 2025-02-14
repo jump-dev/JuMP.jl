@@ -35,9 +35,9 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import MathOptInterface as MOI
 import Random
-import SCS
 
 Random.seed!(2713);
 
@@ -177,7 +177,7 @@ end
 # We generate the dataset.
 #
 # !!! warning
-#     Be careful here, for large n and p SCS could fail to converge.
+#     Be careful here, for large n and p Clarabel could fail to converge.
 #
 n, p = 200, 10
 X, y = generate_dataset(n, p; shift = 10.0);
@@ -185,7 +185,7 @@ X, y = generate_dataset(n, p; shift = 10.0);
 ## We could now solve the logistic regression problem
 λ = 10.0
 model = build_logit_model(X, y, λ)
-set_optimizer(model, SCS.Optimizer)
+set_optimizer(model, Clarabel.Optimizer)
 set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
@@ -228,7 +228,7 @@ count_nonzero(v::Vector; tol = 1e-6) = sum(abs.(v) .>= tol)
 ## We solve the sparse logistic regression problem on the same dataset as before.
 λ = 10.0
 sparse_model = build_sparse_logit_model(X, y, λ)
-set_optimizer(sparse_model, SCS.Optimizer)
+set_optimizer(sparse_model, Clarabel.Optimizer)
 set_silent(sparse_model)
 optimize!(sparse_model)
 assert_is_solved_and_feasible(sparse_model)

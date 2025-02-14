@@ -34,9 +34,9 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import LinearAlgebra
 import MathOptInterface as MOI
-import SCS
 
 import Random      # hide
 Random.seed!(1234) # hide
@@ -84,7 +84,7 @@ nothing            # hide
 
 # It is most commonly used to represent the L2-norm of the vector $x$:
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, x[1:3])
 @variable(model, t)
@@ -107,7 +107,7 @@ value(t), value.(x)
 
 data = [1.0, 2.0, 3.0, 4.0]
 target = [0.45, 1.04, 1.51, 1.97]
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, θ)
 @variable(model, t)
@@ -131,7 +131,7 @@ value(θ), value(t)
 
 # To model ``\exp(x) \le z``, use `(x, 1, z)`:
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, x == 1.5)
 @variable(model, z)
@@ -145,7 +145,7 @@ value(z), exp(1.5)
 
 # To model ``x \le \log(z)``, use `(x, 1, z)`:
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, x)
 @variable(model, z == 1.5)
@@ -161,7 +161,7 @@ value(x), log(1.5)
 
 N = 3
 x0 = rand(N)
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, x[i = 1:N] == x0[i])
 @variable(model, t)
@@ -205,7 +205,7 @@ value(t), log(sum(exp.(x0)))
 
 m, n = 10, 15
 A, b = randn(m, n), rand(m, 1)
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t[1:n])
 @variable(model, x[1:n])
@@ -224,7 +224,7 @@ objective_value(model)
 # There is also the [`MOI.RelativeEntropyCone`](@ref) for explicitly encoding
 # the relative entropy function
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, x[1:n])
@@ -248,7 +248,7 @@ objective_value(model)
 # we can model ``t \ge x^p`` using the power cone ``(t, 1, x)`` with
 # ``\alpha = 1 / p``. Thus, to model ``t \ge x^3`` with ``x \ge 0``
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, x >= 1.5)
@@ -270,7 +270,7 @@ value(t), value(x)
 
 function p_norm(x::Vector, p)
     N = length(x)
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, r[1:N])
     @variable(model, t)
@@ -316,7 +316,7 @@ LinearAlgebra.norm(x, 4), p_norm(x, 4)
 
 A = [3 2 4; 2 0 2; 4 2 3]
 I = Matrix{Float64}(LinearAlgebra.I, 3, 3)
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @objective(model, Min, t)
@@ -332,7 +332,7 @@ objective_value(model)
 # K_{geo} = \{ (t, x) \in \mathbb{R}^n : x \ge 0, t \le \sqrt[n-1]{x_1 x_2 \cdots x_{n-1}} \}
 # ```
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, x[1:4])
 @variable(model, t)
@@ -348,7 +348,7 @@ value(t), value.(x)
 # K = \{ (t, X) \in \mathbb{R}^{1+d^2} : t \le \det(X)^{\frac{1}{d}} \}
 # ```
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, X[1:2, 1:2])
@@ -367,7 +367,7 @@ value(t), sqrt(LinearAlgebra.det(value.(X)))
 # column-wise upper triangle of the matrix as a vector in the order that JuMP
 # requires.
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, X[1:2, 1:2], Symmetric)
@@ -384,7 +384,7 @@ value(t), sqrt(LinearAlgebra.det(value.(X)))
 # K = \{ (t, u, X) \in \mathbb{R}^{2+d^2} : t \le u \log(\det(X / u)) \}
 # ```
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, u)
@@ -405,7 +405,7 @@ value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 # column-wise upper triangle of the matrix as a vector in the order that JuMP
 # requires.
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, u)
@@ -426,7 +426,7 @@ value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 # ```
 # where ``\sigma_i`` is the `i` singular value of ``X``.
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, X[1:2, 1:3])
@@ -445,7 +445,7 @@ value(t), sum(LinearAlgebra.svdvals(value.(X)))
 # ```
 # where ``\sigma_i`` is the `i` singular value of ``X``.
 
-model = Model(SCS.Optimizer)
+model = Model(Clarabel.Optimizer)
 set_silent(model)
 @variable(model, t)
 @variable(model, X[1:2, 1:3])
