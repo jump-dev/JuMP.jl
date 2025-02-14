@@ -69,8 +69,8 @@ function generate_point_cloud(
     return S
 end
 
-# For the sake of this example, let's take ``m = 600``:
-S = generate_point_cloud(600);
+# For the sake of this example, let's take ``m = 100``:
+S = generate_point_cloud(100);
 
 # We will visualise the points (and ellipse) using the Plots package:
 
@@ -234,7 +234,7 @@ g = triangle_vec(LinearAlgebra.Symmetric([s z'; z Z]))
 scale_g = [1.0, sqrt(2), 1.0, sqrt(2), sqrt(2), 1.0]
 @constraint(
     model,
-    scale_g .* g in MOI.Scaled(MOI.PositiveSemidefiniteConeTriangle(1+n)),
+    scale_g .* g in MOI.Scaled(MOI.PositiveSemidefiniteConeTriangle(1 + n)),
 )
 f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 @constraint(model, f in MOI.Nonnegatives(m))
