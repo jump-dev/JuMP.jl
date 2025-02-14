@@ -30,7 +30,7 @@
 # This tutorial uses the following packages:
 
 using JuMP
-import SCS
+import Clarabel
 import LinearAlgebra
 import MathOptInterface as MOI
 import Random
@@ -122,7 +122,7 @@ eye = Matrix{Float64}(LinearAlgebra.I, q, q);
 # \end{aligned}
 # ```
 
-aOpt = Model(SCS.Optimizer)
+aOpt = Model(Clarabel.Optimizer)
 set_silent(aOpt)
 @variable(aOpt, np[1:p], lower_bound = 0, upper_bound = n_max)
 @variable(aOpt, u[1:q], lower_bound = 0)
@@ -166,7 +166,7 @@ value.(np)
 # \end{aligned}
 # ```
 
-eOpt = Model(SCS.Optimizer)
+eOpt = Model(Clarabel.Optimizer)
 set_silent(eOpt)
 @variable(eOpt, 0 <= np[1:p] <= n_max)
 @variable(eOpt, t)
@@ -200,7 +200,7 @@ value.(np)
 # \end{aligned}
 # ```
 
-dOpt = Model(SCS.Optimizer)
+dOpt = Model(Clarabel.Optimizer)
 set_silent(dOpt)
 @variable(dOpt, np[1:p], lower_bound = 0, upper_bound = n_max)
 @variable(dOpt, t)

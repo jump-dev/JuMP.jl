@@ -13,10 +13,10 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import Clarabel
 import LinearAlgebra
 import Plots
 import Random
-import SCS
 import Test
 
 # ## Maximum cut via SDP
@@ -57,7 +57,7 @@ function solve_max_cut_sdp(weights)
     N = size(weights, 1)
     ## Calculate the (weighted) Laplacian of the graph: L = D - W.
     L = LinearAlgebra.diagm(0 => weights * ones(N)) - weights
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, X[1:N, 1:N], PSD)
     for i in 1:N
@@ -128,7 +128,7 @@ function example_matrix_completion(; svdtol = 1e-6)
     n = 20
     mask = rand(rng, 1:25, n, n) .== 1
     B = randn(rng, n, n)
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     @variable(model, X[1:n, 1:n])
     @constraint(model, X[mask] .== B[mask])
     @variable(model, t)
@@ -156,7 +156,7 @@ function example_k_means_clustering()
     for i in 1:m, j in i+1:m
         W[i, j] = W[j, i] = exp(-LinearAlgebra.norm(a[i] - a[j]) / 1.0)
     end
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, Z[1:m, 1:m] >= 0, PSD)
     @objective(model, Min, LinearAlgebra.tr(W * (LinearAlgebra.I - Z)))
@@ -206,7 +206,7 @@ example_k_means_clustering()
 # ```
 
 function example_correlation_problem()
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, X[1:3, 1:3], PSD)
     S = ["A", "B", "C"]
@@ -281,7 +281,7 @@ example_correlation_problem()
 # For more details, see [Matousek2013,Linial2002](@cite).
 
 function example_minimum_distortion()
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     D = [
         0.0 1.0 1.0 1.0
@@ -364,7 +364,7 @@ example_minimum_distortion()
 # For more details, see [Barvinok2002,Knuth1994](@cite).
 
 function example_theta_problem()
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     E = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
     @variable(model, X[1:5, 1:5], PSD)
@@ -403,7 +403,7 @@ function example_robust_uncertainty_sets()
     Σhat = 1 / (d - 1) * (M - ones(d) * μhat')' * (M - ones(d) * μhat')
     Γ1(𝛿, N) = R / sqrt(N) * (2 + sqrt(2 * log(1 / 𝛿)))
     Γ2(𝛿, N) = 2 * R^2 / sqrt(N) * (2 + sqrt(2 * log(2 / 𝛿)))
-    model = Model(SCS.Optimizer)
+    model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, Σ[1:d, 1:d], PSD)
     @variable(model, u[1:d])
