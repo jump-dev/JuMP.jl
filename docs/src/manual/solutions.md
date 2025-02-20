@@ -225,6 +225,48 @@ julia> value(c1)
     Calling [`value`](@ref) on a constraint returns the constraint function
     evaluated at the solution.
 
+### Unbounded rays
+
+If the [`termination_status`](@ref) is [`DUAL_INFEASIBILE`](@ref) and
+[`primal_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
+[`value`](@ref) is a certificate of dual infeasibility. If a feasible primal
+solution exists, this is an unbounded ray of the primal problem. The
+[`objective_value`](@ref) is the value of the objective, evaluated using the
+ray, excluding any constant term. For more details, see
+[Infeasibility certificates](@ref).
+
+```jldoctest
+julia> using HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> set_attribute(model, "presolve", "off")
+
+julia> @variable(model, x[1:2]);
+
+julia> @objective(model, Max, sum(x) + 2.0);
+
+julia> @constraint(model, 2 * x[1] + x[2] <= 0);
+
+julia> optimize!(model)
+
+julia> termination_status(model)
+DUAL_INFEASIBLE::TerminationStatusCode = 3
+
+julia> primal_status(model)
+INFEASIBILITY_CERTIFICATE::ResultStatusCode = 4
+
+julia> d = value.(x)
+2-element Vector{Float64}:
+ -0.5
+  1.0
+
+julia> objective_value(model)
+0.5
+```
+
 ## Dual solutions
 
 ### Dual solution status
@@ -291,6 +333,53 @@ julia> reduced_cost.(y)
 And data, a 2-element Vector{Float64}:
   0.5714285714285694
  -0.0
+```
+
+### Unbounded rays
+
+If the [`termination_status`](@ref) is [`INFEASIBILE`](@ref) and
+[`dual_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
+[`dual`](@ref) is a certificate of primal infeasibility. If a feasible dual
+solution exists, this is an unbounded ray of the dual problem. The
+[`dual_objective_value`](@ref) is the value of the dual objective, evaluated
+using the ray, excluding any constant term. For more details, see
+[Infeasibility certificates](@ref).
+
+Fore more details, see [Infeasibility certificates](@ref).
+
+```jldoctest
+julia> using HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> set_attribute(model, "presolve", "off")
+
+julia> @variable(model, x[1:2] >= 0);
+
+julia> @objective(model, Max, sum(x) + 0.5);
+
+julia> @constraint(model, c, 2 * x[1] + x[2] <= -1);
+
+julia> optimize!(model)
+
+julia> termination_status(model)
+INFEASIBLE::TerminationStatusCode = 2
+
+julia> dual_status(model)
+INFEASIBILITY_CERTIFICATE::ResultStatusCode = 4
+
+julia> d_c = dual(c)
+-1.0
+
+julia> d_x = dual.(LowerBoundRef.(x))
+2-element Vector{Float64}:
+ 2.0
+ 1.0
+
+julia> dual_objective_value(model)
+-1.0
 ```
 
 ## Recommended workflow
