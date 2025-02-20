@@ -230,7 +230,7 @@ julia> value(c1)
 If the [`termination_status`](@ref) is [`DUAL_INFEASIBLE`](@ref) and
 [`primal_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
 [`value`](@ref) is a certificate of dual infeasibility. If a feasible primal
-solution exists, this is an unbounded ray of the primal problem. The
+solution exists, the certificate is an unbounded ray of the primal problem. The
 [`objective_value`](@ref) is the value of the objective, evaluated using the
 ray, excluding any constant term. For more details, see
 [Infeasibility certificates](@ref).
@@ -340,7 +340,7 @@ And data, a 2-element Vector{Float64}:
 If the [`termination_status`](@ref) is [`INFEASIBLE`](@ref) and
 [`dual_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
 [`dual`](@ref) is a certificate of primal infeasibility. If a feasible dual
-solution exists, this is an unbounded ray of the dual problem. The
+solution exists, the certificate is an unbounded ray of the dual problem. The
 [`dual_objective_value`](@ref) is the value of the dual objective, evaluated
 using the ray, excluding any constant term. For more details, see
 [Infeasibility certificates](@ref).
