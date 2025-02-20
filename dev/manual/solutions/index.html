@@ -93,7 +93,35 @@ And data, a 2-element Vector{Float64}:
  1.0
  1.0</code></pre><p><a href="../../api/JuMP/#value"><code>value</code></a> also works on expressions:</p><pre><code class="language-julia-repl hljs">julia&gt; value(my_expr)
 100.57142857142857</code></pre><p>and constraints:</p><pre><code class="language-julia-repl hljs">julia&gt; value(c1)
-120.0</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>Calling <a href="../../api/JuMP/#value"><code>value</code></a> on a constraint returns the constraint function evaluated at the solution.</p></div></div><h2 id="Dual-solutions"><a class="docs-heading-anchor" href="#Dual-solutions">Dual solutions</a><a id="Dual-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solutions" title="Permalink"></a></h2><h3 id="Dual-solution-status"><a class="docs-heading-anchor" href="#Dual-solution-status">Dual solution status</a><a id="Dual-solution-status-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solution-status" title="Permalink"></a></h3><p>Use <a href="../../api/JuMP/#dual_status"><code>dual_status</code></a> to return an <a href="../../moi/reference/models/#MathOptInterface.ResultStatusCode"><code>MOI.ResultStatusCode</code></a> enum describing the status of the dual solution.</p><pre><code class="language-julia-repl hljs">julia&gt; dual_status(model)
+120.0</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>Calling <a href="../../api/JuMP/#value"><code>value</code></a> on a constraint returns the constraint function evaluated at the solution.</p></div></div><h3 id="Unbounded-rays"><a class="docs-heading-anchor" href="#Unbounded-rays">Unbounded rays</a><a id="Unbounded-rays-1"></a><a class="docs-heading-anchor-permalink" href="#Unbounded-rays" title="Permalink"></a></h3><p>If the <a href="../../api/JuMP/#termination_status"><code>termination_status</code></a> is <a href="../../api/JuMP/#DUAL_INFEASIBLE"><code>DUAL_INFEASIBLE</code></a> and <a href="../../api/JuMP/#primal_status"><code>primal_status</code></a> is <a href="../../api/JuMP/#INFEASIBILITY_CERTIFICATE"><code>INFEASIBILITY_CERTIFICATE</code></a>, then the <a href="../../api/JuMP/#value"><code>value</code></a> is a certificate of dual infeasibility. If a feasible primal solution exists, the certificate is an unbounded ray of the primal problem. The <a href="../../api/JuMP/#objective_value"><code>objective_value</code></a> is the value of the objective, evaluated using the ray, excluding any constant term. For more details, see <a href="../../moi/background/infeasibility_certificates/#Infeasibility-certificates">Infeasibility certificates</a>.</p><pre><code class="language-julia-repl hljs">julia&gt; using HiGHS
+
+julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; set_attribute(model, &quot;presolve&quot;, &quot;off&quot;)
+
+julia&gt; @variable(model, x[1:2]);
+
+julia&gt; @objective(model, Max, sum(x) + 2.0);
+
+julia&gt; @constraint(model, 2 * x[1] + x[2] &lt;= 0);
+
+julia&gt; optimize!(model)
+
+julia&gt; termination_status(model)
+DUAL_INFEASIBLE::TerminationStatusCode = 3
+
+julia&gt; primal_status(model)
+INFEASIBILITY_CERTIFICATE::ResultStatusCode = 4
+
+julia&gt; d = value.(x)
+2-element Vector{Float64}:
+ -0.5
+  1.0
+
+julia&gt; objective_value(model)
+0.5</code></pre><h2 id="Dual-solutions"><a class="docs-heading-anchor" href="#Dual-solutions">Dual solutions</a><a id="Dual-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solutions" title="Permalink"></a></h2><h3 id="Dual-solution-status"><a class="docs-heading-anchor" href="#Dual-solution-status">Dual solution status</a><a id="Dual-solution-status-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solution-status" title="Permalink"></a></h3><p>Use <a href="../../api/JuMP/#dual_status"><code>dual_status</code></a> to return an <a href="../../moi/reference/models/#MathOptInterface.ResultStatusCode"><code>MOI.ResultStatusCode</code></a> enum describing the status of the dual solution.</p><pre><code class="language-julia-repl hljs">julia&gt; dual_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1</code></pre><p>Other common returns are <a href="../../api/JuMP/#NO_SOLUTION"><code>NO_SOLUTION</code></a>, and <a href="../../api/JuMP/#INFEASIBILITY_CERTIFICATE"><code>INFEASIBILITY_CERTIFICATE</code></a>. The first means that the solver doesn&#39;t have a solution to return, and the second means that the dual solution is a certificate of primal infeasibility (a dual unbounded ray).</p><p>You can also use <a href="../../api/JuMP/#has_duals"><code>has_duals</code></a>, which returns <code>true</code> if there is a solution that can be queried, and <code>false</code> otherwise.</p><pre><code class="language-julia-repl hljs">julia&gt; has_duals(model)
 true</code></pre><h3 id="Dual-solution-values"><a class="docs-heading-anchor" href="#Dual-solution-values">Dual solution values</a><a id="Dual-solution-values-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solution-values" title="Permalink"></a></h3><p>If the solver has a dual solution to return, use <a href="../../api/JuMP/#dual"><code>dual</code></a> to access it:</p><pre><code class="language-julia-repl hljs">julia&gt; dual(c1)
 1.7142857142857142</code></pre><p>Query the duals of variable bounds using <a href="../../api/JuMP/#LowerBoundRef"><code>LowerBoundRef</code></a>, <a href="../../api/JuMP/#UpperBoundRef"><code>UpperBoundRef</code></a>, and <a href="../../api/JuMP/#FixRef"><code>FixRef</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; dual(LowerBoundRef(x))
@@ -115,7 +143,38 @@ julia&gt; reduced_cost.(y)
     Dimension 1, [:a, :b]
 And data, a 2-element Vector{Float64}:
   0.5714285714285694
- -0.0</code></pre><h2 id="Recommended-workflow"><a class="docs-heading-anchor" href="#Recommended-workflow">Recommended workflow</a><a id="Recommended-workflow-1"></a><a class="docs-heading-anchor-permalink" href="#Recommended-workflow" title="Permalink"></a></h2><p>You should always check whether the solver found a solution before calling solution functions like <a href="../../api/JuMP/#value"><code>value</code></a> or <a href="../../api/JuMP/#objective_value"><code>objective_value</code></a>.</p><p>A simple approach for small scripts and notebooks is to use <a href="../../api/JuMP/#is_solved_and_feasible"><code>is_solved_and_feasible</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; function solve_and_print_solution(model)
+ -0.0</code></pre><h3 id="Unbounded-rays-2"><a class="docs-heading-anchor" href="#Unbounded-rays-2">Unbounded rays</a><a class="docs-heading-anchor-permalink" href="#Unbounded-rays-2" title="Permalink"></a></h3><p>If the <a href="../../api/JuMP/#termination_status"><code>termination_status</code></a> is <a href="../../api/JuMP/#INFEASIBLE"><code>INFEASIBLE</code></a> and <a href="../../api/JuMP/#dual_status"><code>dual_status</code></a> is <a href="../../api/JuMP/#INFEASIBILITY_CERTIFICATE"><code>INFEASIBILITY_CERTIFICATE</code></a>, then the <a href="../../api/JuMP/#dual"><code>dual</code></a> is a certificate of primal infeasibility. If a feasible dual solution exists, the certificate is an unbounded ray of the dual problem. The <a href="../../api/JuMP/#dual_objective_value"><code>dual_objective_value</code></a> is the value of the dual objective, evaluated using the ray, excluding any constant term. For more details, see <a href="../../moi/background/infeasibility_certificates/#Infeasibility-certificates">Infeasibility certificates</a>.</p><p>Fore more details, see <a href="../../moi/background/infeasibility_certificates/#Infeasibility-certificates">Infeasibility certificates</a>.</p><pre><code class="language-julia-repl hljs">julia&gt; using HiGHS
+
+julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; set_attribute(model, &quot;presolve&quot;, &quot;off&quot;)
+
+julia&gt; @variable(model, x[1:2] &gt;= 0);
+
+julia&gt; @objective(model, Max, sum(x) + 0.5);
+
+julia&gt; @constraint(model, c, 2 * x[1] + x[2] &lt;= -1);
+
+julia&gt; optimize!(model)
+
+julia&gt; termination_status(model)
+INFEASIBLE::TerminationStatusCode = 2
+
+julia&gt; dual_status(model)
+INFEASIBILITY_CERTIFICATE::ResultStatusCode = 4
+
+julia&gt; d_c = dual(c)
+-1.0
+
+julia&gt; d_x = dual.(LowerBoundRef.(x))
+2-element Vector{Float64}:
+ 2.0
+ 1.0
+
+julia&gt; dual_objective_value(model)
+-1.0</code></pre><h2 id="Recommended-workflow"><a class="docs-heading-anchor" href="#Recommended-workflow">Recommended workflow</a><a id="Recommended-workflow-1"></a><a class="docs-heading-anchor-permalink" href="#Recommended-workflow" title="Permalink"></a></h2><p>You should always check whether the solver found a solution before calling solution functions like <a href="../../api/JuMP/#value"><code>value</code></a> or <a href="../../api/JuMP/#objective_value"><code>objective_value</code></a>.</p><p>A simple approach for small scripts and notebooks is to use <a href="../../api/JuMP/#is_solved_and_feasible"><code>is_solved_and_feasible</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; function solve_and_print_solution(model)
            optimize!(model)
            if !is_solved_and_feasible(model; dual = true)
                error(
@@ -430,4 +489,4 @@ Dict{Any, Float64} with 1 entry:
   x integer =&gt; 0.1</code></pre><p>You can also use the functional form, where the first argument is a function that maps variables to their primal values:</p><pre><code class="language-julia-repl hljs">julia&gt; optimize!(model)
 
 julia&gt; primal_feasibility_report(v -&gt; value(v), model)
-Dict{Any, Float64}()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../containers/">« Containers</a><a class="docs-footer-nextpage" href="../callbacks/">Solver-independent Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 14 February 2025 03:04">Friday 14 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Dict{Any, Float64}()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../containers/">« Containers</a><a class="docs-footer-nextpage" href="../callbacks/">Solver-independent Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 20 February 2025 06:13">Thursday 20 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
