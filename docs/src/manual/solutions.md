@@ -227,7 +227,7 @@ julia> value(c1)
 
 ### Unbounded rays
 
-If the [`termination_status`](@ref) is [`DUAL_INFEASIBILE`](@ref) and
+If the [`termination_status`](@ref) is [`DUAL_INFEASIBLE`](@ref) and
 [`primal_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
 [`value`](@ref) is a certificate of dual infeasibility. If a feasible primal
 solution exists, this is an unbounded ray of the primal problem. The
@@ -337,7 +337,7 @@ And data, a 2-element Vector{Float64}:
 
 ### Unbounded rays
 
-If the [`termination_status`](@ref) is [`INFEASIBILE`](@ref) and
+If the [`termination_status`](@ref) is [`INFEASIBLE`](@ref) and
 [`dual_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
 [`dual`](@ref) is a certificate of primal infeasibility. If a feasible dual
 solution exists, this is an unbounded ray of the dual problem. The
