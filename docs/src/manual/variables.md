@@ -1495,23 +1495,95 @@ The most important implication of this design is that JuMP treats a parameter
 multiplied by a decision variable as a quadratic expression, even though it is
 equivalent to a linear expression.
 
-```jldoctest nonlinear_parameters
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> @variable(model, p in Parameter(2));
-
-julia> px = @expression(model, p * x)
-p*x
-
-julia> typeof(px)
+```jldoctest
+julia> begin
+           model = Model()
+           @variable(model, x >= 3)
+           @variable(model, p in Parameter(2))
+           @objective(model, Min, p * x)
+           objective_function_type(model)
+       end
 QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
 ```
 
+As a consequence, solving a "linear" program with a solver like HiGHS fails:
+```jldoctest
+julia> using HiGHS
+
+julia> begin
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x >= 3)
+           @variable(model, p in Parameter(2))
+           @objective(model, Min, p * x)
+           optimize!(model)
+           is_solved_and_feasible(model)
+       end
+false
+```
+because the model is equivalent to a quadratic program with an indefinite
+objective:
+```jldoctest
+julia> using HiGHS
+
+julia> begin
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x >= 3)
+           @variable(model, p == 2)
+           @objective(model, Min, p * x)
+           optimize!(model)
+           is_solved_and_feasible(model)
+       end
+false
+```
+
+!!! note
+    The quadratic limitation affects only models with multiplicative parameters
+    such as `p * x`. Functions that depend additively on parameters such as
+    `p + x` do not have the limitation because the resulting function is still
+    affine.
+
+### ParametricOptInterface
+
+To avoid the problem of `p * x` being an indefinite quadratic, use
+[ParametricOptInterface.jl](@ref). ParametricOptInterface provides a
+`POI.Optimizer` layer that will substitute each parameter with its numeric value
+prior to solving. Thus, in the following example, HiGHS will successfully solve
+a linear program instead of failing to solve a quadratic program.
+
+```jldoctest
+julia> using HiGHS
+
+julia> import ParametricOptInterface as POI
+
+julia> begin
+           model = Model(() -> POI.Optimizer(HiGHS.Optimizer()))
+           set_silent(model)
+           @variable(model, x >= 3)
+           @variable(model, p in Parameter(2))
+           @objective(model, Min, p * x)
+           optimize!(model)
+       end
+
+julia> is_solved_and_feasible(model)
+true
+
+julia> objective_value(model)
+6.0
+```
+
+If you use `Parameter`, then in most cases you should also use
+[ParametricOptInterface.jl](@ref). There are two main exceptions:
+
+ 1. your solver natively supports the [`MOI.Parameter`](@ref) set (for example,
+    [Ipopt.jl](@ref))
+ 2. you have only additive parameters (for example, `x + p`), and your solver
+    supports some sort of presolve that can remove fixed variables.
+
 ### When to use a parameter
 
-Parameters are most useful when solving nonlinear models in a sequence:
+Parameters are most useful when solving models in a sequence. For example:
 
 ```@repl
 using JuMP, Ipopt
@@ -1520,11 +1592,14 @@ set_silent(model)
 @variable(model, x)
 @variable(model, p in Parameter(1.0))
 @objective(model, Min, (x - p)^2)
-optimize!(model)
-value(x)
-set_parameter_value(p, 5.0)
-optimize!(model)
-value(x)
+solution = Dict{Int,Float64}();
+for p_value in 1:5
+    set_parameter_value(p, p_value)
+    optimize!(model)
+    assert_is_solved_and_feasible(model)
+    solution[p_value] = value(x)
+end
+solution
 ```
 
 Using parameters can be faster than creating a new model from scratch with
