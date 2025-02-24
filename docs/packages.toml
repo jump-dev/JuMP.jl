@@ -68,7 +68,7 @@
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
-    rev = "8bcdd4607c54a510137a9372a0a19df475dd2c2e"
+    rev = "e6adee5146d503e7b1e5230d18b2b35c21bd3a26"
 [MultiObjectiveAlgorithms]
     rev = "v1.3.5"
     has_html = true

@@ -173,6 +173,7 @@ Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
+Uno
 (Xpress|XPRESS)
 
 % People
