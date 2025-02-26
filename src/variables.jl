@@ -2147,14 +2147,6 @@ function add_variable(
     return add_variable.(model, variables, names)
 end
 
-function add_variable(
-    model::GenericModel,
-    variables::AbstractArray{<:VariableConstrainedOnCreation},
-    name::String,
-)
-    return add_variable.(model, variables, Ref(name))
-end
-
 function _moi_add_constrained_variable(
     moi_backend::MOI.ModelLike,
     scalar_variable::ScalarVariable,
