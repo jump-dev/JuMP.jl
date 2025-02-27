@@ -561,9 +561,7 @@ function test_generate_solve_vector_objective()
 end
 
 function test_optimize_not_called_direct()
-    mock = MOI.Utilities.MockOptimizer(
-        MOI.Utilities.Model{Float64}(),
-    )
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
     model = direct_model(mock)
     @test_throws OptimizeNotCalled objective_value(model)
     return
