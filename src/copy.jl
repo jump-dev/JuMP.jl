@@ -379,12 +379,6 @@ function _set_from_nlpboundspair(bound::MOI.NLPBoundsPair)
 end
 
 function _nlp_model_from_nlpblock(block::MOI.NLPBlockData, evaluator)
-    if !(:ExprGraph in MOI.features_available(evaluator))
-        error(
-            "Unable to copy model because the nonlinear evaluator doesn't " *
-            "support :ExprGraph.",
-        )
-    end
     MOI.initialize(evaluator, [:ExprGraph])
     model = MOI.Nonlinear.Model()
     for (i, bound) in enumerate(block.constraint_bounds)

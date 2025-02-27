@@ -128,9 +128,11 @@ function container(
 end
 
 default_container(::NestedIterator) = SparseAxisArray
+
 # Returns the element type. If it is unknown but it is known to be `N`-tuples,
 # returns `NTuple{N, Any}`.
 _eltype_or_any(indices::Array) = eltype(indices)
+
 function container(
     f::Function,
     indices,

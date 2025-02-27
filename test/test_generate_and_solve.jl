@@ -560,4 +560,22 @@ function test_generate_solve_vector_objective()
     return
 end
 
+function test_optimize_not_called_direct()
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.Model{Float64}(),
+    )
+    model = direct_model(mock)
+    @test_throws OptimizeNotCalled objective_value(model)
+    return
+end
+
+function test_compute_conflict()
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(mock)
+    @test !mock.compute_conflict_called
+    compute_conflict!(model)
+    @test mock.compute_conflict_called
+    return
+end
+
 end  # module

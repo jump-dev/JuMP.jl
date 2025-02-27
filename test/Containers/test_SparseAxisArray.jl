@@ -388,4 +388,11 @@ function test_show_empty_limit()
     return
 end
 
+function test_empty_vector_indices()
+    d = Containers.container(identity, Tuple{Any}[], Containers.SparseAxisArray)
+    @test isempty(d)
+    @test d isa Containers.SparseAxisArray{Any,1,Tuple{Any}}
+    return
+end
+
 end  # module

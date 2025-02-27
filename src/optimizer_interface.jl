@@ -1525,7 +1525,7 @@ function set_attributes(
     return
 end
 
-_moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
+_moi_optimizer_index(model::MOI.ModelLike, index::MOI.Index) = index
 
 function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER

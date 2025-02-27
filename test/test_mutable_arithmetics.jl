@@ -189,7 +189,19 @@ function test_scaling_errors()
     model = Model()
     @variable(model, x)
     @test_throws InexactError JuMP._MA.scaling(x + 1.0)
+    @test JuMP._MA.scaling(zero(AffExpr)) == 0.0
+    @test JuMP._MA.scaling(AffExpr(1.0)) == 1.0
     @test_throws InexactError JuMP._MA.scaling(x^2 + 1.0)
+    @test JuMP._MA.scaling(zero(QuadExpr)) == 0.0
+    @test JuMP._MA.scaling(QuadExpr(AffExpr(1.0))) == 1.0
+    return
+end
+
+function test_operate_zero()
+    model = Model()
+    @variable(model, x)
+    f = 1.0 * x + 2.0
+    @test JuMP._MA.operate!(*, f, 0.0) == zero(AffExpr)
     return
 end
 

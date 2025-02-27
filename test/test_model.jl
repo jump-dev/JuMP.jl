@@ -1479,4 +1479,21 @@ function test_copy_base_types()
     return
 end
 
+function test_optimizer_index_bridged()
+    inner = MOI.instantiate(SimpleLPModel{Float64}; with_bridge_type = Float64)
+    model = direct_model(inner)
+    @variable(model, x)
+    @test optimizer_index(x) ==
+          only(MOI.get(inner, MOI.ListOfVariableIndices()))
+    @constraint(model, c, 1.0 * x in MOI.Interval(1.0, 2.0))
+    CI = typeof(index(c))
+    @test_throws(
+        ErrorException(
+            "There is no `optimizer_index` for $CI constraints because they are bridged.",
+        ),
+        optimizer_index(c),
+    )
+    return
+end
+
 end  # module TestModels
