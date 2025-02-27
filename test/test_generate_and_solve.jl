@@ -418,7 +418,10 @@ end
 function test_generate_solve_unsupported_nonlinear_problems()
     model =
         Model(() -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()))
-    @variable(model, x)
+    # We put some additional constraints here to confuse
+    # JuMP._uses_new_nonlinear_interface.
+    @variable(model, x >= 0)
+    @constraint(model, 2 * x <= 1)
     @NLobjective(model, Min, sin(x))
     err = ErrorException(
         "The solver does not support nonlinear problems " *
