@@ -856,8 +856,11 @@ end
 
 function test_show_latex_parameter()
     model = Model()
+    @variable(model, x)
     @NLparameter(model, p == 1)
-    @test sprint((io, p) -> show(io, MIME("text/latex"), p), p) == "p == 1.0"
+    q = @NLparameter(model, value = 1)
+    @test sprint(show, MIME("text/latex"), p) == "p == 1.0"
+    @test sprint(show, MIME("text/latex"), q) == "parameter[2] == 1.0"
     return
 end
 
@@ -1172,6 +1175,12 @@ function test_show_backend_summary()
     model = Model()
     @test sprint(show_backend_summary, model) ==
           "Model mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached."
+    return
+end
+
+function test_solver_name_not_implemented()
+    model = direct_model(MOI.FileFormats.MPS.Model())
+    @test occursin("Solver name: unknown", sprint(show_backend_summary, model))
     return
 end
 
