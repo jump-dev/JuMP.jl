@@ -579,4 +579,9 @@ function test_compute_conflict()
     return
 end
 
+function test__optimizer_for_precompile_tools()
+    @test JuMP._optimizer_for_precompile_tools() isa MOI.Utilities.MockOptimizer
+    return
+end
+
 end  # module

@@ -1357,25 +1357,21 @@ export MOI
 
 import PrecompileTools
 
-PrecompileTools.@compile_workload begin
-    # Because lots of the work is done by macros, and macros are expanded
-    # at lowering time, not much of this would get precompiled without `@eval`
-    @eval begin
-        let
-            # We don't care about this particular optimizer, but it still
-            # exercises generic code paths that calls like
-            # Model(HiGHS.Optimizer) also need.
-            Model(
-                () -> MOI.Utilities.MockOptimizer(
-                    MOI.Utilities.UniversalFallback(
-                        MOI.Utilities.Model{Float64}(),
-                    ),
-                ),
-            )
-            # Use an empty model to build, which is a common use-case, and
-            # doesn't bake in Utilities.MockOptimizer.
+function _optimizer_for_precompile_tools()
+    return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+end
+
+PrecompileTools.@setup_workload begin
+    PrecompileTools.@compile_workload begin
+        # We don't care about this particular optimizer, but it still
+        # exercises generic code paths that calls like
+        # Model(HiGHS.Optimizer) also need.
+        model = Model(_optimizer_for_precompile_tools)
+        optimize!(model)
+        # Because lots of the work is done by macros, and macros are expanded
+        # at lowering time, not much of this would get precompiled without `@eval`
+        @eval begin
             model = Model()
-            set_silent(model)
             @variables(model, begin
                 x1 >= 0
                 0 <= x2 <= 1
@@ -1408,15 +1404,6 @@ PrecompileTools.@compile_workload begin
             @objective(model, Min, x1)
             @objective(model, Max, a)
             @objective(model, Min, b)
-            set_optimizer(
-                model,
-                () -> MOI.Utilities.MockOptimizer(
-                    MOI.Utilities.UniversalFallback(
-                        MOI.Utilities.Model{Float64}(),
-                    ),
-                ),
-            )
-            optimize!(model)
         end
     end
 end
