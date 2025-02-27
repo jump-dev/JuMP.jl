@@ -258,11 +258,8 @@ macro NLobjective(model, sense, x)
         Containers.build_error_fn(:NLobjective, (model, sense, x), __source__)
     sense_expr = _parse_moi_sense(error_fn, sense)
     esc_model = esc(model)
-    parsing_code, expr = _parse_nonlinear_expression(esc_model, x)
-    code = quote
-        $parsing_code
-        set_nonlinear_objective($esc_model, $sense_expr, $expr)
-    end
+    code, expr = _parse_nonlinear_expression(esc_model, x)
+    push!(code.args, :(set_nonlinear_objective($esc_model, $sense_expr, $expr)))
     return _finalize_macro(esc_model, code, __source__)
 end
 
@@ -320,11 +317,8 @@ macro NLconstraint(m, x, args...)
     # we will wrap in loops to assign to the ConstraintRefs
     name, idxvars, indices =
         Containers.parse_ref_sets(error_fn, c; invalid_index_variables = [m])
-    parsing_code, expr = _parse_nonlinear_expression(esc_m, con)
-    code = quote
-        $parsing_code
-        add_nonlinear_constraint($esc_m, $expr)
-    end
+    code, expr = _parse_nonlinear_expression(esc_m, con)
+    push!(code.args, :(add_nonlinear_constraint($esc_m, $expr)))
     looped =
         Containers.container_code(idxvars, indices, code, requested_container)
     creation_code = quote
@@ -454,11 +448,8 @@ macro NLexpression(args...)
         invalid_index_variables = [args[1]],
     )
     esc_m = esc(m)
-    parsing_code, expr = _parse_nonlinear_expression(esc_m, x)
-    code = quote
-        $parsing_code
-        add_nonlinear_expression($esc_m, $expr)
-    end
+    code, expr = _parse_nonlinear_expression(esc_m, x)
+    push!(code.args, :(add_nonlinear_expression($esc_m, $expr)))
     creation_code =
         Containers.container_code(idxvars, indices, code, requested_container)
     return _finalize_macro(

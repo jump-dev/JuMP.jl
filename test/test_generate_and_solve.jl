@@ -418,7 +418,10 @@ end
 function test_generate_solve_unsupported_nonlinear_problems()
     model =
         Model(() -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()))
-    @variable(model, x)
+    # We put some additional constraints here to confuse
+    # JuMP._uses_new_nonlinear_interface.
+    @variable(model, x >= 0)
+    @constraint(model, 2 * x <= 1)
     @NLobjective(model, Min, sin(x))
     err = ErrorException(
         "The solver does not support nonlinear problems " *
@@ -557,6 +560,22 @@ function test_generate_solve_vector_objective()
 
 * Work counters
 """
+    return
+end
+
+function test_optimize_not_called_direct()
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(mock)
+    @test_throws OptimizeNotCalled objective_value(model)
+    return
+end
+
+function test_compute_conflict()
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(mock)
+    @test !mock.compute_conflict_called
+    compute_conflict!(model)
+    @test mock.compute_conflict_called
     return
 end
 

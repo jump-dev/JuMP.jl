@@ -489,4 +489,82 @@ function test_Free_variable()
     return
 end
 
+function test_fixed_to_set_basic_equality()
+    _test_sensitivity(
+        """
+        variables: x, y
+        maxobjective: 1.0 * x + 1.0 * y
+        c: 1.0 * x + 1.0 * y <= 1.0
+        x == 0.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                0.0,
+                NaN,
+                MOI.NONBASIC_AT_LOWER,
+                (-Inf, Inf),
+            ),
+            "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-1.0, Inf)),
+            ("x", MOI.EqualTo{Float64}) => TestSensitivitySolution(
+                NaN,
+                0.0,
+                MOI.NONBASIC_AT_LOWER,
+                (0.0, 0.0),
+            ),
+            "c" =>
+                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-Inf, Inf)),
+        ),
+    )
+    return
+end
+
+function test_variable_basis_status_error()
+    inner = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(inner)
+    @variable(model, x >= 0)
+    @constraint(model, c, x <= 1)
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(inner, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(inner, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    @test_throws(
+        ErrorException(
+            "Unable to query LP sensitivity information because this solver " *
+            "does not support querying the status of variables in the " *
+            "optimal basis.",
+        ),
+        lp_sensitivity_report(model),
+    )
+    MOI.set(inner, MOI.VariableBasisStatus(), index(x), MOI.BASIC)
+    @test_throws(
+        ErrorException(
+            "Unable to query LP sensitivity information because this solver " *
+            "does not support querying the status of constraints in the " *
+            "optimal basis.",
+        ),
+        lp_sensitivity_report(model),
+    )
+    return
+end
+
+function test_degenerate_error()
+    inner = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(inner)
+    @variable(model, x >= 0)
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(inner, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(inner, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    # If no error, this status should be NONBASIC_AT_LOWER...
+    MOI.set(inner, MOI.VariableBasisStatus(), index(x), MOI.BASIC)
+    @test_throws(
+        ErrorException(
+            "Unable to compute LP sensitivity: problem is degenerate. Try " *
+            "adding variable bounds to free variables",
+        ),
+        lp_sensitivity_report(model),
+    )
+    return
+end
+
 end  # module

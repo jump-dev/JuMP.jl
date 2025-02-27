@@ -675,7 +675,8 @@ function build_variable(
             "docstring for more details.",
         )
     end
-    for (key, _) in kwargs
+    if length(kwargs) > 0
+        key, _ = first(kwargs)
         if key == :Bool
             error_fn(
                 "Unsupported keyword argument: $key.\n\nIf you intended to " *

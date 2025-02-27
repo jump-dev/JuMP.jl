@@ -269,6 +269,10 @@ end
 function test_trailing_semicolon()
     Containers.@container(x[a in 2:3;], a)
     @test x isa DenseAxisArray
+    name, vars, indices = Containers.parse_ref_sets(error, :(x[i in 1:3;]))
+    @test name == :x
+    @test vars == Any[:i]
+    @test occursin("vectorized_product", string(indices))
     return
 end
 

@@ -194,9 +194,9 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
             )
         elseif length(c.args) == 2
             condition = pop!(c.args)
-        else
-            # expr ends in a trailing `;`, but there is no condition
         end
+        # If length(c.args) == 1, expr ends in a trailing `;`, but there is no
+        # condition, so we don't hhave to do anything.
     elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :vect)
         # An expression like `t[i, j; k]` or `[i, j; k]`. The filtering
         # condition is a `:parameters` expression in the first argument.
