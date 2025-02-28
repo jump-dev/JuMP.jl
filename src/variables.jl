@@ -2409,9 +2409,9 @@ function add_variable(
     ret = reshape_vector(GenericVariableRef{T}.(model, x), variable.shape)
     if ci !== nothing  # ci === nothing if variable.set isa MOI.Reals
         model.variable_in_set_ref[ret] = ci
-    end
-    if variable.shape != ScalarShape() && variable.shape != VectorShape()
-        model.shapes[ci] = variable.shape
+        if variable.shape != ScalarShape() && variable.shape != VectorShape()
+            model.shapes[ci] = variable.shape
+        end
     end
     return ret
 end
