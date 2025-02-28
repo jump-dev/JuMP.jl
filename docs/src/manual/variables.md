@@ -1308,6 +1308,40 @@ julia> x = @variable(model, [1:3], set = SecondOrderCone())
     You cannot delete the constraint associated with a variable constrained on
     creation.
 
+To check if a variable was constrained on creation, use [`has_variable_in_set`](@ref),
+and use [`VariableInSetRef`](@ref) to obtain the associated constraint reference:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> has_variable_in_set(x)
+true
+
+julia> c = VariableInSetRef(x)
+[x[1,1]  x[1,2]
+ ⋯       x[2,2]] ∈ PSDCone()
+
+julia> @variable(model, y)
+y
+
+julia> has_variable_in_set(y)
+false
+
+julia> @variable(model, z in Semicontinuous(1, 2))
+z
+
+julia> has_variable_in_set(z)
+true
+
+julia> c_z = VariableInSetRef(z)
+z ∈ MathOptInterface.Semicontinuous{Int64}(1, 2)
+```
+
 ### Example: positive semidefinite variables
 
 An alternative to the syntax in [Semidefinite variables](@ref), declare a matrix
