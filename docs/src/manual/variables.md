@@ -1418,8 +1418,21 @@ julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
 This adds 4 real variables in the [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
 
 ```jldoctest hermitian_psd
-julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle))
-[real(H[1,1]), real(H[1,2]), real(H[2,2]), imag(H[1,2])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
+julia> c = VariableInSetRef(H)
+[real(H[1,1])                    real(H[1,2]) + imag(H[1,2]) im
+ real(H[1,2]) - imag(H[1,2]) im  real(H[2,2])] ∈ HermitianPSDCone()
+
+julia> o = constraint_object(c);
+
+julia> o.func
+4-element Vector{VariableRef}:
+ real(H[1,1])
+ real(H[1,2])
+ real(H[2,2])
+ imag(H[1,2])
+
+julia> o.set
+MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
 ```
 
 ### Example: Hermitian variables

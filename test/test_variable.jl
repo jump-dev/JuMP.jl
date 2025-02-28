@@ -1734,10 +1734,7 @@ end
 
 function test_variable_in_set_vector()
     model = Model()
-    @variable(model, x, set = MOI.Integer())
-    c = VariableInSetRef(x)
-    @test has_variable_in_set(x)
-    @variable(model, y, Int)
+    @variable(model, y[1:2], Int)
     @test !has_variable_in_set(y)
     @test_throws(
         ErrorException("VariableInSetRef does not exist for $y"),
