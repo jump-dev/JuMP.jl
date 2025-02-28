@@ -37,34 +37,34 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.54e-02
-   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  9.43e-02
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.41e-02
+   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  9.24e-02
 ------------------------------------------------------------------
 status:  solved
-timings: total: 9.43e-02s = setup: 3.42e-02s + solve: 6.01e-02s
-	 lin-sys: 5.08e-02s, cones: 2.14e-03s, accel: 8.15e-04s
+timings: total: 9.24e-02s = setup: 3.29e-02s + solve: 5.95e-02s
+	 lin-sys: 5.05e-02s, cones: 2.16e-03s, accel: 6.75e-04s
 ------------------------------------------------------------------
 objective = 0.000024
 ------------------------------------------------------------------</code></pre><p>SCS reports that it solved the problem to optimality:</p><pre><code class="language-julia hljs">is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>and that the solution for <code>x[1]</code> is nearly zero:</p><pre><code class="language-julia hljs">value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.04406873858532e-5</code></pre><p>However, the analytic solution for <code>x[1]</code> is:</p><pre><code class="language-julia hljs">1 - n * ε / 2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479</code></pre><p>The answer is very wrong, and there is no indication from the solver that anything untoward happened. What&#39;s going on?</p><p>One useful debugging tool is <a href="../../../api/JuMP/#primal_feasibility_report"><code>primal_feasibility_report</code></a>:</p><pre><code class="language-julia hljs">report = primal_feasibility_report(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 8192 entries:
-  x[3055] ≥ 0 =&gt; 2.17278e-5
-  x[2854] ≥ 0 =&gt; 1.71395e-5
-  x[4041] ≥ 0 =&gt; 1.8669e-5
-  x[3598] ≥ 0 =&gt; 1.71395e-5
-  x[7863] ≥ 0 =&gt; 2.17278e-5
-  x[2994] ≥ 0 =&gt; 1.8669e-5
-  x[2618] ≥ 0 =&gt; 1.71395e-5
-  x[1538] ≥ 0 =&gt; 1.25513e-5
-  x[1784] ≥ 0 =&gt; 2.17278e-5
-  x[515] ≥ 0  =&gt; 1.10219e-5
-  x[7801] ≥ 0 =&gt; 2.01984e-5
-  x[3222] ≥ 0 =&gt; 1.71395e-5
-  x[4339] ≥ 0 =&gt; 1.71395e-5
-  x[2801] ≥ 0 =&gt; 1.71395e-5
-  x[4568] ≥ 0 =&gt; 2.01984e-5
-  x[4010] ≥ 0 =&gt; 2.01984e-5
-  x[5049] ≥ 0 =&gt; 1.8669e-5
-  x[602] ≥ 0  =&gt; 1.56101e-5
-  x[1247] ≥ 0 =&gt; 1.8669e-5
+  x[1715] ≥ 0 =&gt; 1.71395e-5
+  x[2462] ≥ 0 =&gt; 1.8669e-5
+  x[6330] ≥ 0 =&gt; 1.8669e-5
+  x[2647] ≥ 0 =&gt; 1.71395e-5
+  x[1978] ≥ 0 =&gt; 2.01984e-5
+  x[2538] ≥ 0 =&gt; 1.8669e-5
+  x[5442] ≥ 0 =&gt; 1.56101e-5
+  x[2639] ≥ 0 =&gt; 1.71395e-5
+  x[6085] ≥ 0 =&gt; 1.8669e-5
+  x[3768] ≥ 0 =&gt; 2.17278e-5
+  x[4019] ≥ 0 =&gt; 2.01984e-5
+  x[5930] ≥ 0 =&gt; 1.8669e-5
+  x[6005] ≥ 0 =&gt; 2.01984e-5
+  x[6650] ≥ 0 =&gt; 2.17278e-5
+  x[1185] ≥ 0 =&gt; 1.25513e-5
+  x[7893] ≥ 0 =&gt; 2.01984e-5
+  x[8081] ≥ 0 =&gt; 1.8669e-5
+  x[2808] ≥ 0 =&gt; 2.17278e-5
+  x[874] ≥ 0  =&gt; 1.71395e-5
   ⋮           =&gt; ⋮</code></pre><p><code>report</code> is a dictionary which maps constraints to the violation.  The largest violation is approximately <code>1e-5</code>:</p><pre><code class="language-julia hljs">maximum(values(report))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6.92133754155444e-5</code></pre><p>This makes sense, because the default primal feasibility tolerance for SCS is <code>1e-4</code>.</p><p>Most of the entries are lower bound constraints on the variables. Here are all the variables which violate their lower bound:</p><pre><code class="language-julia hljs">violated_variables = filter(xi -&gt; value(xi) &lt; 0, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8178-element Vector{VariableRef}:
  x[4]
  x[6]
@@ -104,14 +104,14 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.51e-02
-   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.86e-01
-   500| 3.69e-04  5.93e-04  8.84e-05  8.48e-01  6.13e-01  3.39e-01
-   550| 2.66e-06  6.58e-10  1.27e-05  8.48e-01  6.13e-01  3.69e-01
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.42e-02
+   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.95e-01
+   500| 3.69e-04  5.93e-04  8.84e-05  8.48e-01  6.13e-01  3.47e-01
+   550| 2.66e-06  6.58e-10  1.27e-05  8.48e-01  6.13e-01  3.77e-01
 ------------------------------------------------------------------
 status:  solved
-timings: total: 3.69e-01s = setup: 3.40e-02s + solve: 3.35e-01s
-	 lin-sys: 2.74e-01s, cones: 1.16e-02s, accel: 6.47e-03s
+timings: total: 3.77e-01s = setup: 3.30e-02s + solve: 3.44e-01s
+	 lin-sys: 2.76e-01s, cones: 1.16e-02s, accel: 5.85e-03s
 ------------------------------------------------------------------
 objective = 0.847906
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">assert_is_solved_and_feasible(model)
@@ -166,4 +166,4 @@ is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
 @constraint(model, 1.78e6 * x_capacity_MW &lt;= 200e6)</code></pre><p class="math-container">\[ 1780000 x\_capacity\_MW \leq 200000000 \]</p><p>We can improve our model further by dividing the constraint by <span>$10^6$</span> to change the units from dollars to million dollars.</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
-@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Thursday 27 February 2025 08:52">Thursday 27 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Friday 28 February 2025 00:09">Friday 28 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
