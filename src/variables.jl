@@ -2406,10 +2406,11 @@ function add_variable(
         vectorize(names, variable.shape),
         T,
     )
-    var_refs = [GenericVariableRef{T}(model, xi) for xi in x]
-    ret = reshape_vector(var_refs, variable.shape)
-    model.variable_in_set_ref[ret] = ci
-    if !(variable.shape isa ScalarShape) && !(variable.shape isa VectorShape)
+    ret = reshape_vector(GenericVariableRef{T}.(model, x), variable.shape)
+    if ci !== nothing  # ci === nothing if variable.set isa MOI.Reals
+        model.variable_in_set_ref[ret] = ci
+    end
+    if variable.shape != ScalarShape() && variable.shape != VectorShape()
         model.shapes[ci] = variable.shape
     end
     return ret
