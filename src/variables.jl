@@ -1752,6 +1752,188 @@ function parameter_value(x::GenericVariableRef)
     return set.value
 end
 
+# VariableInSetRef
+
+"""
+    is_variable_in_set(
+        model::GenericModel,
+        x::Union{AbstractJuMPScalar,AbstractArray{<:AbstractJuMPScalar}},
+    )::Bool
+
+Return a `Bool` if [`VariableInSetRef`](@ref) returns a valid constraint
+reference without erroring.
+
+## Exceptions
+
+This function does not apply for variable bounds or integrality restrictions of
+a scalar variable. For example:
+
+```jldoctest variable_in_set_ref_docstring
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int)
+x
+
+julia> is_variable_in_set(x)
+false
+```
+
+Use instead [`is_integer`](@ref), [`is_binary`](@ref), [`has_lower_bound`](@ref),
+[`has_upper_bound`](@ref), and [`is_fixed`](@ref).
+
+```jldoctest variable_in_set_ref_docstring
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int)
+x
+
+julia> is_integer(x)
+true
+
+julia> has_lower_bound(x)
+true
+```
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> is_variable_in_set(x)
+true
+
+julia> c = VariableInSetRef(x)
+[x[1,1]  x[1,2]
+ ⋯       x[2,2]] ∈ PSDCone()
+
+julia> @variable(model, y)
+y
+
+julia> is_variable_in_set(y)
+false
+
+julia> @variable(model, z in Semicontinuous(1, 2))
+z
+
+julia> is_variable_in_set(z)
+true
+
+julia> c_z = VariableInSetRef(z)
+z ∈ MathOptInterface.Semicontinuous{Int64}(1, 2)
+```
+"""
+function is_variable_in_set(x::AbstractJuMPScalar)
+    model = owner_model(x)
+    return haskey(model.variable_in_set_ref, x)
+end
+
+function is_variable_in_set(x::AbstractArray{<:AbstractJuMPScalar})
+    model = owner_model(first(x))
+    return haskey(model.variable_in_set_ref, x)
+end
+
+"""
+    VariableInSetRef(
+        model::GenericModel,
+        x::Union{AbstractJuMPScalar,AbstractArray{<:AbstractJuMPScalar}},
+    )
+
+Return the constraint reference associated with `x` when it is constrained on
+creation.
+
+A variable is constrained on creation if it uses the `x in S` or `x, set = S`
+syntax in the [`@variable`](@ref) macro.
+
+This function errors if `x` was not constrained on creation. To check if the
+variable was constrained on creation, use [`is_variable_in_set`](@ref).
+
+## Exceptions
+
+This function does not apply for variable bounds or integrality restrictions of
+a scalar variable. For example:
+
+```jldoctest variable_in_set_ref_docstring
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int)
+x
+
+julia> is_variable_in_set(x)
+false
+```
+
+Use instead [`IntegerRef`](@ref), [`BinaryRef`](@ref), [`LowerBoundRef`](@ref),
+[`UpperBoundRef`](@ref), and [`FixRef`](@ref).
+
+```jldoctest variable_in_set_ref_docstring
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int)
+x
+
+julia> IntegerRef(x)
+x integer
+
+julia> LowerBoundRef(x)
+x ≥ 0
+```
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> is_variable_in_set(x)
+true
+
+julia> c = VariableInSetRef(x)
+[x[1,1]  x[1,2]
+ ⋯       x[2,2]] ∈ PSDCone()
+
+julia> @variable(model, y)
+y
+
+julia> is_variable_in_set(y)
+false
+
+julia> @variable(model, z in Semicontinuous(1, 2))
+z
+
+julia> is_variable_in_set(z)
+true
+
+julia> c_z = VariableInSetRef(z)
+z ∈ MathOptInterface.Semicontinuous{Int64}(1, 2)
+```
+"""
+function VariableInSetRef(x::AbstractJuMPScalar)
+    model = owner_model(x)
+    ci = get(model.variable_in_set_ref, x, nothing)
+    if ci === nothing
+        error("`VariableInSetRef` does not exist for `$x`")
+    end
+    return constraint_ref_with_index(model, ci)
+end
+
+function VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar})
+    model = owner_model(first(x))
+    ci = get(model.variable_in_set_ref, x, nothing)
+    if ci === nothing
+        error("`VariableInSetRef` does not exist for `$x`")
+    end
+    return constraint_ref_with_index(model, ci)
+end
+
 # MOI.VariablePrimalStart
 
 """
@@ -1968,8 +2150,7 @@ function _moi_add_constrained_variable(
     ::Nothing,
     set::MOI.AbstractScalarSet,
 )
-    x, _ = MOI.add_constrained_variable(moi_backend, set)
-    return x
+    return MOI.add_constrained_variable(moi_backend, set)
 end
 
 function _moi_add_constrained_variable(
@@ -1977,8 +2158,8 @@ function _moi_add_constrained_variable(
     x::MOI.VariableIndex,
     set::MOI.AbstractScalarSet,
 )
-    MOI.add_constraint(moi_backend, x, set)
-    return x
+    ci = MOI.add_constraint(moi_backend, x, set)
+    return x, ci
 end
 
 function _moi_add_constrained_variable(
@@ -1986,8 +2167,7 @@ function _moi_add_constrained_variable(
     ::Nothing,
     set::Tuple{MOI.GreaterThan{T},MOI.LessThan{T}},
 ) where {T<:Real}
-    x, _ = MOI.add_constrained_variable(moi_backend, set)
-    return x
+    return MOI.add_constrained_variable(moi_backend, set)
 end
 
 function _moi_add_variable(
@@ -2006,24 +2186,26 @@ function _moi_add_variable(
             MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
             MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
         )
-        index = _moi_add_constrained_variable(moi_backend, index, set)
+        index, _ = _moi_add_constrained_variable(moi_backend, index, set)
     elseif info.has_lb
         set_lb =
             MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound"))
-        index = _moi_add_constrained_variable(moi_backend, index, set_lb)
+        index, _ = _moi_add_constrained_variable(moi_backend, index, set_lb)
     elseif info.has_ub
         set_ub = MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound"))
-        index = _moi_add_constrained_variable(moi_backend, index, set_ub)
+        index, _ = _moi_add_constrained_variable(moi_backend, index, set_ub)
     end
     if info.has_fix
         set_eq = MOI.EqualTo{T}(_to_value(T, info.fixed_value, "fixed value"))
-        index = _moi_add_constrained_variable(moi_backend, index, set_eq)
+        index, _ = _moi_add_constrained_variable(moi_backend, index, set_eq)
     end
     if info.binary
-        index = _moi_add_constrained_variable(moi_backend, index, MOI.ZeroOne())
+        index, _ =
+            _moi_add_constrained_variable(moi_backend, index, MOI.ZeroOne())
     end
     if info.integer
-        index = _moi_add_constrained_variable(moi_backend, index, MOI.Integer())
+        index, _ =
+            _moi_add_constrained_variable(moi_backend, index, MOI.Integer())
     end
     if index === nothing
         index = MOI.add_variable(moi_backend)
@@ -2129,14 +2311,16 @@ function add_variable(
     variable::VariableConstrainedOnCreation,
     name::String,
 ) where {T}
-    var_index = _moi_add_constrained_variable(
+    x, ci = _moi_add_constrained_variable(
         backend(model),
         variable.scalar_variable,
         variable.set,
         name,
         T,
     )
-    return GenericVariableRef(model, var_index)
+    ret = GenericVariableRef(model, x)
+    model.variable_in_set_ref[ret] = ci
+    return ret
 end
 
 function add_variable(
@@ -2159,7 +2343,7 @@ function _moi_add_constrained_variable(
     if !isempty(name)
         MOI.set(moi_backend, MOI.VariableName(), var_index, name)
     end
-    return var_index
+    return var_index, con_index
 end
 
 """
@@ -2215,16 +2399,21 @@ function add_variable(
     variable::VariablesConstrainedOnCreation,
     names,
 ) where {T}
-    var_indices = _moi_add_constrained_variables(
+    x, ci = _moi_add_constrained_variables(
         backend(model),
         variable.scalar_variables,
         variable.set,
         vectorize(names, variable.shape),
         T,
     )
-    var_refs =
-        [GenericVariableRef{T}(model, var_index) for var_index in var_indices]
-    return reshape_vector(var_refs, variable.shape)
+    ret = reshape_vector(GenericVariableRef{T}.(model, x), variable.shape)
+    if ci !== nothing  # ci === nothing if variable.set isa MOI.Reals
+        model.variable_in_set_ref[ret] = ci
+        if variable.shape != ScalarShape() && variable.shape != VectorShape()
+            model.shapes[ci] = variable.shape
+        end
+    end
+    return ret
 end
 
 function _moi_add_constrained_variables(
@@ -2234,11 +2423,7 @@ function _moi_add_constrained_variables(
     names::Union{Vector{String},Nothing},
     ::Type{T},
 ) where {T}
-    if set isa MOI.Reals
-        var_indices = MOI.add_variables(moi_backend, MOI.dimension(set))
-    else
-        var_indices, con_index = MOI.add_constrained_variables(moi_backend, set)
-    end
+    var_indices, con_index = MOI.add_constrained_variables(moi_backend, set)
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(moi_backend, index, variable.info, T)
     end
@@ -2249,7 +2434,28 @@ function _moi_add_constrained_variables(
             end
         end
     end
-    return var_indices
+    return var_indices, con_index
+end
+
+function _moi_add_constrained_variables(
+    moi_backend::MOI.ModelLike,
+    scalar_variables::Vector{<:ScalarVariable},
+    set::MOI.Reals,
+    names::Union{Vector{String},Nothing},
+    ::Type{T},
+) where {T}
+    var_indices = MOI.add_variables(moi_backend, MOI.dimension(set))
+    for (index, variable) in zip(var_indices, scalar_variables)
+        _moi_constrain_variable(moi_backend, index, variable.info, T)
+    end
+    if names !== nothing
+        for (var_index, name) in zip(var_indices, names)
+            if !isempty(name)
+                MOI.set(moi_backend, MOI.VariableName(), var_index, name)
+            end
+        end
+    end
+    return var_indices, nothing
 end
 
 """

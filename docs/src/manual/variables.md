@@ -1308,6 +1308,40 @@ julia> x = @variable(model, [1:3], set = SecondOrderCone())
     You cannot delete the constraint associated with a variable constrained on
     creation.
 
+To check if a variable was constrained on creation, use [`is_variable_in_set`](@ref),
+and use [`VariableInSetRef`](@ref) to obtain the associated constraint reference:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> is_variable_in_set(x)
+true
+
+julia> c = VariableInSetRef(x)
+[x[1,1]  x[1,2]
+ ⋯       x[2,2]] ∈ PSDCone()
+
+julia> @variable(model, y)
+y
+
+julia> is_variable_in_set(y)
+false
+
+julia> @variable(model, z in Semicontinuous(1, 2))
+z
+
+julia> is_variable_in_set(z)
+true
+
+julia> c_z = VariableInSetRef(z)
+z ∈ MathOptInterface.Semicontinuous{Int64}(1, 2)
+```
+
 ### Example: positive semidefinite variables
 
 An alternative to the syntax in [Semidefinite variables](@ref), declare a matrix
@@ -1384,8 +1418,21 @@ julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
 This adds 4 real variables in the [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
 
 ```jldoctest hermitian_psd
-julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle))
-[real(H[1,1]), real(H[1,2]), real(H[2,2]), imag(H[1,2])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
+julia> c = VariableInSetRef(H)
+[real(H[1,1])                    real(H[1,2]) + imag(H[1,2]) im
+ real(H[1,2]) - imag(H[1,2]) im  real(H[2,2])] ∈ HermitianPSDCone()
+
+julia> o = constraint_object(c);
+
+julia> o.func
+4-element Vector{VariableRef}:
+ real(H[1,1])
+ real(H[1,2])
+ real(H[2,2])
+ imag(H[1,2])
+
+julia> o.set
+MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
 ```
 
 ### Example: Hermitian variables
