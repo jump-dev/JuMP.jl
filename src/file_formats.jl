@@ -95,20 +95,20 @@ multiple solvers.
 
 To write a file to disk using the solver's internal API, use
 [`direct_model`](@ref) and
-```jldoctest filter=["Running", r"Writing the model to.+.mps"]
+```jldoctest; filter=["Running .+ terms", r"Writing the model to.+.mps"]
 julia> import HiGHS
 
 julia> model = direct_model(HiGHS.Optimizer());
 
 julia> @variable(model, x >= 0);
-Running HiGHS 1.8.0 (git hash: fcfb53414): Copyright (c) 2024 HiGHS under MIT licence terms
+Running HiGHS 1.8.0 (git hash: fcfb534146): Copyright (c) 2024 HiGHS under MIT licence terms
 
 julia> @objective(model, Min, 2 * x + 1);
 
 julia> filename = joinpath(mktempdir(), "model.mps");
 
 julia> HiGHS.Highs_writeModel(backend(model), filename);
-Writing the model to /var/folders/bg/dzq_hhvx1dxgy6gb5510pxj80000gn/T/jl_Cl1NmR/model.mps
+Writing the model to /tmp/model.mps
 WARNING: There are empty or excessively-long column names: using constructed names with prefix "c"
 
 julia> print(read(filename, String))
@@ -181,13 +181,13 @@ NAME
 ROWS
  N  OBJ
 COLUMNS
-    C1        OBJ       2
+    x         OBJ       2
 RHS
     rhs       OBJ       -1
 RANGES
 BOUNDS
- LO bounds    C1        0
- PL bounds    C1
+ LO bounds    x         0
+ PL bounds    x
 ENDATA
 ```
 """
