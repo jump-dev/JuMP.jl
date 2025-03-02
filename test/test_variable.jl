@@ -1708,7 +1708,7 @@ function test_variable_in_set_scalar()
     @variable(model, y, Int)
     @test !has_variable_in_set(y)
     @test_throws(
-        ErrorException("VariableInSetRef does not exist for $y"),
+        ErrorException("`VariableInSetRef` does not exist for `$y`"),
         VariableInSetRef(y),
     )
     for set in (
@@ -1737,7 +1737,7 @@ function test_variable_in_set_vector()
     @variable(model, y[1:2], Int)
     @test !has_variable_in_set(y)
     @test_throws(
-        ErrorException("VariableInSetRef does not exist for $y"),
+        ErrorException("`VariableInSetRef` does not exist for `$y`"),
         VariableInSetRef(y),
     )
     for set in (

@@ -1920,7 +1920,7 @@ function VariableInSetRef(x::AbstractJuMPScalar)
     model = owner_model(x)
     ci = get(model.variable_in_set_ref, x, nothing)
     if ci === nothing
-        error("VariableInSetRef does not exist for $x")
+        error("`VariableInSetRef` does not exist for `$x`")
     end
     return constraint_ref_with_index(model, ci)
 end
@@ -1929,7 +1929,7 @@ function VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar})
     model = owner_model(first(x))
     ci = get(model.variable_in_set_ref, x, nothing)
     if ci === nothing
-        error("VariableInSetRef does not exist for $x")
+        error("`VariableInSetRef` does not exist for `$x`")
     end
     return constraint_ref_with_index(model, ci)
 end
