@@ -100,16 +100,15 @@ julia> import HiGHS
 
 julia> model = direct_model(HiGHS.Optimizer());
 
+julia> set_silent(model)
+
 julia> @variable(model, x >= 0);
-Running HiGHS 1.8.0 (git hash: fcfb534146): Copyright (c) 2024 HiGHS under MIT licence terms
 
 julia> @objective(model, Min, 2 * x + 1);
 
 julia> filename = joinpath(mktempdir(), "model.mps");
 
 julia> HiGHS.Highs_writeModel(backend(model), filename);
-Writing the model to /tmp/model.mps
-WARNING: There are empty or excessively-long column names: using constructed names with prefix "c"
 
 julia> print(read(filename, String))
 NAME
