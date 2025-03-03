@@ -90,12 +90,12 @@ solver's internal API to write a model to disk.
 For MPS files in particular, [`write_to_file`](@ref) may not support the full
 range of features that a solver's internal API supports. This is because some
 solvers have defined solver-specific extensions to the MPS format, whereas our
-Julia implementation supports only features where are standardized across
+Julia implementation supports only features which are standardized across
 multiple solvers.
 
 To write a file to disk using the solver's internal API, use
-[`direct_model`](@ref) and
-```jldoctest; filter=["Running .+ terms", r"Writing the model to.+.mps"]
+[`direct_model`](@ref) and call the solver's C API. For example:
+```jldoctest
 julia> import HiGHS
 
 julia> model = direct_model(HiGHS.Optimizer());
