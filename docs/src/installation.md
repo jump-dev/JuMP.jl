@@ -78,9 +78,9 @@ julia> using HiGHS
 
 julia> model = Model(HiGHS.Optimizer);
 
-julia> set_attribute(model, "output_flag" => false)
+julia> set_attribute(model, "output_flag",false)
 
-julia> set_attribute(model, "primal_feasibility_tolerance" => 1e-8)
+julia> set_attribute(model, "primal_feasibility_tolerance", 1e-8)
 ```
 
 !!! note
