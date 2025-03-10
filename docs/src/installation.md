@@ -71,16 +71,16 @@ julia> Pkg.add("HiGHS")
 
 Once installed, you can use HiGHS as a solver with JuMP as follows, using
 [`set_attribute`](@ref) to set solver-specific options:
-```julia
+```jldoctest
 julia> using JuMP
 
 julia> using HiGHS
 
 julia> model = Model(HiGHS.Optimizer);
 
-julia> set_attribute(model, "output_flag" => false)
+julia> set_attribute(model, "output_flag", false)
 
-julia> set_attribute(model, "primal_feasibility_tolerance" => 1e-8)
+julia> set_attribute(model, "primal_feasibility_tolerance", 1e-8)
 ```
 
 !!! note
