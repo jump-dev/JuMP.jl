@@ -158,7 +158,7 @@ function example_k_means_clustering()
     end
     model = Model(Clarabel.Optimizer)
     set_silent(model)
-    @variable(model, Z[1:m, 1:m] >= 0 in PSDCone())
+    @variable(model, Z[1:m, 1:m] >= 0, set = PSDCone())
     @objective(model, Min, LinearAlgebra.tr(W * (LinearAlgebra.I - Z)))
     @constraint(model, [i = 1:m], sum(Z[i, :]) .== 1)
     @constraint(model, LinearAlgebra.tr(Z) == num_clusters)
