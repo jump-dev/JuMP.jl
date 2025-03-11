@@ -95,7 +95,7 @@ model = Model(Clarabel.Optimizer)
 set_silent(model)
 m, n = size(S)
 @variable(model, z[1:n])
-@variable(model, Z[1:n, 1:n], PSD)
+@variable(model, Z[1:n, 1:n] in PSDCone())
 @variable(model, s)
 @variable(model, t)
 @constraint(model, [s z'; z Z] >= 0, PSDCone())
@@ -170,7 +170,7 @@ print_active_bridges(model)
 # something that Clarabel more closely supports by:
 #
 #  * Replacing the [`MOI.VectorOfVariables`](@ref) in [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
-#    constraint `@variable(model, Z[1:n, 1:n], PSD)` with the
+#    constraint `@variable(model, Z[1:n, 1:n] in PSDCone())` with the
 #    [`MOI.VectorAffineFunction`](@ref) in [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
 #    `@constraint(model, Z >= 0, PSDCone())`.
 #
@@ -192,7 +192,7 @@ set_silent(model)
 @variable(model, z[1:n])
 @variable(model, s)
 @variable(model, t)
-## The former @variable(model, Z[1:n, 1:n], PSD)
+## The former @variable(model, Z[1:n, 1:n] in PSDCone())
 @variable(model, Z[1:n, 1:n], Symmetric)
 @constraint(model, Z >= 0, PSDCone())
 ## The former [s z'; z Z] >= 0, PSDCone()

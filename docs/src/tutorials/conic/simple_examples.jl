@@ -59,7 +59,7 @@ function solve_max_cut_sdp(weights)
     L = LinearAlgebra.diagm(0 => weights * ones(N)) - weights
     model = Model(Clarabel.Optimizer)
     set_silent(model)
-    @variable(model, X[1:N, 1:N], PSD)
+    @variable(model, X[1:N, 1:N] in PSDCone())
     for i in 1:N
         set_start_value(X[i, i], 1.0)
     end
@@ -158,7 +158,7 @@ function example_k_means_clustering()
     end
     model = Model(Clarabel.Optimizer)
     set_silent(model)
-    @variable(model, Z[1:m, 1:m] >= 0, PSD)
+    @variable(model, Z[1:m, 1:m] >= 0 in PSDCone())
     @objective(model, Min, LinearAlgebra.tr(W * (LinearAlgebra.I - Z)))
     @constraint(model, [i = 1:m], sum(Z[i, :]) .== 1)
     @constraint(model, LinearAlgebra.tr(Z) == num_clusters)
@@ -208,7 +208,7 @@ example_k_means_clustering()
 function example_correlation_problem()
     model = Model(Clarabel.Optimizer)
     set_silent(model)
-    @variable(model, X[1:3, 1:3], PSD)
+    @variable(model, X[1:3, 1:3] in PSDCone())
     S = ["A", "B", "C"]
     ρ = Containers.DenseAxisArray(X, S, S)
     @constraint(model, [i in S], ρ[i, i] == 1)
@@ -290,7 +290,7 @@ function example_minimum_distortion()
         1.0 2.0 2.0 0.0
     ]
     @variable(model, c² >= 1.0)
-    @variable(model, Q[1:4, 1:4], PSD)
+    @variable(model, Q[1:4, 1:4] in PSDCone())
     for i in 1:4, j in (i+1):4
         @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])
         @constraint(model, Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2)
@@ -367,7 +367,7 @@ function example_theta_problem()
     model = Model(Clarabel.Optimizer)
     set_silent(model)
     E = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
-    @variable(model, X[1:5, 1:5], PSD)
+    @variable(model, X[1:5, 1:5] in PSDCone())
     for i in 1:5
         for j in (i+1):5
             if !((i, j) in E || (j, i) in E)
@@ -405,7 +405,7 @@ function example_robust_uncertainty_sets()
     Γ2(𝛿, N) = 2 * R^2 / sqrt(N) * (2 + sqrt(2 * log(2 / 𝛿)))
     model = Model(Clarabel.Optimizer)
     set_silent(model)
-    @variable(model, Σ[1:d, 1:d], PSD)
+    @variable(model, Σ[1:d, 1:d] in PSDCone())
     @variable(model, u[1:d])
     @variable(model, μ[1:d])
     @constraint(model, [Γ1(𝛿 / 2, N); μ - μhat] in SecondOrderCone())

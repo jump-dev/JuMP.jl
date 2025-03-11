@@ -162,7 +162,7 @@ macro variable(input_args...)
         error_fn(
             "Size of anonymous square matrix of positive semidefinite " *
             "anonymous variables is not specified. To specify size of square " *
-            "matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+            "matrix use `@variable(model, [1:n, 1:n] in PSDCone())` instead.",
         )
     end
     info_kwargs =

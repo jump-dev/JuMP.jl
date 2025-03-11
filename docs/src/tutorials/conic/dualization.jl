@@ -102,7 +102,7 @@ import SCS
 # The primal formulation (in standard conic form) is:
 
 model_primal = Model()
-@variable(model_primal, X[1:2, 1:2], PSD)
+@variable(model_primal, X[1:2, 1:2] in PSDCone())
 @objective(model_primal, Max, sum([1 -1; -1 1] .* X))
 @constraint(model_primal, primal_c[i = 1:2], 1 - X[i, i] == 0)
 print(model_primal)
@@ -223,7 +223,7 @@ value.(y)
 D = [0 1 1 1; 1 0 2 2; 1 2 0 2; 1 2 2 0]
 model = Model()
 @variable(model, c²)
-@variable(model, Q[1:4, 1:4], PSD)
+@variable(model, Q[1:4, 1:4] in PSDCone())
 @objective(model, Min, c²)
 for i in 1:4, j in (i+1):4
     @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])

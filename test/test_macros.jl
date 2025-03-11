@@ -592,7 +592,7 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     @test_throws_parsetime(
         ErrorException(
             "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
-            " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+            " To specify size of square matrix use `@variable(model, [1:n, 1:n] in PSDCone())` instead.",
         ),
         @variable(m, PSD)
     )

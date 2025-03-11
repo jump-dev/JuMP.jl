@@ -80,7 +80,6 @@ model = Model()
 # | JuMP                                                  | CVX                                    |
 # | :---------------------------------------------------- | :------------------------------------- |
 # | `@variable(model, v[1:d] >= 0)`                       | `variable v(d) nonnegative`            |
-# | `@variable(model, m[1:d, 1:d], PSD)`                  | `variable m(d,d) semidefinite`         |
 # | `@variable(model, m[1:d, 1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
 # | `@variable(model, m[1:d, 1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
 

@@ -1082,13 +1082,13 @@ julia> model[:x]
 
 ## Semidefinite variables
 
-Declare a square matrix of JuMP variables to be positive semidefinite by passing
-`PSD` as a positional argument:
+Declare a square matrix of JuMP variables to be positive semidefinite using
+[`PSDCone`](@ref):
 
 ```jldoctest
 julia> model = Model();
 
-julia> @variable(model, x[1:2, 1:2], PSD)
+julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
@@ -1101,39 +1101,7 @@ nonnegative.
     `x` must be a square 2-dimensional `Array` of JuMP variables; it cannot be a
     DenseAxisArray or a SparseAxisArray.
 
-The `PSD` argument must be provided explicitly to the macro. Passing it via a
-variable throws an error:
-```jldoctest
-julia> model = Model();
-
-julia> type = :PSD
-:PSD
-
-julia> @variable(model, x[1:2, 1:2], type)
-ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:PSD,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
-
-If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
-Stacktrace:
-[...]
-```
-
-Instead, pass [`PSDCone`](@ref) via the `x in Set` syntax:
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x[1:2, 1:2] in PSDCone())
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- x[1,1]  x[1,2]
- x[1,2]  x[2,2]
-
-julia> set = PSDCone();
-
-julia> @variable(model, y[1:2, 1:2] in set)
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- y[1,1]  y[1,2]
- y[1,2]  y[2,2]
-```
-or via the `set` keyword:
+You can also pass [`PSDCone`](@ref) to the `set` keyword:
 ```jldoctest
 julia> model = Model();
 
@@ -1310,8 +1278,8 @@ julia> x = @variable(model, [1:3], set = SecondOrderCone())
 
 ### Example: positive semidefinite variables
 
-An alternative to the syntax in [Semidefinite variables](@ref), declare a matrix
-of JuMP variables to be positive semidefinite using [`PSDCone`](@ref):
+Declare a matrix of JuMP variables to be positive semidefinite using
+[`PSDCone`](@ref):
 ```jldoctest
 julia> model = Model();
 
@@ -1328,8 +1296,8 @@ julia> @variable(model, y[1:2, 1:2], set = PSDCone())
 
 ### Example: symmetric variables
 
-As an alternative to the syntax in [Symmetric variables](@ref), declare a matrix
-of JuMP variables to be symmetric using [`SymmetricMatrixSpace`](@ref):
+Declare a matrix of JuMP variables to be symmetric using
+[`SymmetricMatrixSpace`](@ref):
 ```jldoctest
 julia> model = Model();
 

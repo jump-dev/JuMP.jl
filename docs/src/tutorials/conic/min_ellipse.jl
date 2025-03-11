@@ -97,7 +97,7 @@ model = Model(Clarabel.Optimizer)
 set_silent(model)
 m, n = length(ellipses), size(first(ellipses).A, 1)
 @variable(model, τ[1:m] >= 0)
-@variable(model, P²[1:n, 1:n], PSD)
+@variable(model, P²[1:n, 1:n] in PSDCone())
 @variable(model, P_q[1:n])
 
 for (i, ellipse) in enumerate(ellipses)
