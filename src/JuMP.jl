@@ -124,6 +124,8 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     # A model-level option that is used as the default for the set_string_name
     # keyword to @variable and @constraint.
     set_string_names_on_creation::Bool
+    #
+    variable_in_set_ref::Dict{Any,MOI.ConstraintIndex}
 end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
@@ -239,6 +241,7 @@ function direct_generic_model(
         false,
         Dict{Symbol,Any}(),
         true,
+        Dict{Any,MOI.ConstraintIndex}(),
     )
 end
 

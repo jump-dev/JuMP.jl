@@ -1700,4 +1700,82 @@ function test_add_variable_in_set()
     return
 end
 
+function test_variable_in_set_scalar()
+    model = Model()
+    @variable(model, x, set = MOI.Integer())
+    c = VariableInSetRef(x)
+    @test is_variable_in_set(x)
+    @variable(model, y, Int)
+    @test !is_variable_in_set(y)
+    @test_throws(
+        ErrorException("`VariableInSetRef` does not exist for `$y`"),
+        VariableInSetRef(y),
+    )
+    for set in (
+        MOI.GreaterThan(1.0),
+        MOI.LessThan(1.0),
+        MOI.EqualTo(1.0),
+        MOI.Interval(1.0, 2.0),
+        MOI.Integer(),
+        MOI.ZeroOne(),
+        MOI.Semicontinuous(1.0, 2.0),
+        MOI.Semiinteger(1.0, 2.0),
+    )
+        model = Model()
+        @variable(model, x in set)
+        @test is_variable_in_set(x)
+        c = VariableInSetRef(x)
+        o = constraint_object(c)
+        @test isequal_canonical(o.func, x)
+        @test o.set == set
+    end
+    return
+end
+
+function test_variable_in_set_vector()
+    model = Model()
+    @variable(model, y[1:2], Int)
+    @test !is_variable_in_set(y)
+    @test_throws(
+        ErrorException("`VariableInSetRef` does not exist for `$y`"),
+        VariableInSetRef(y),
+    )
+    for set in (
+        MOI.SecondOrderCone(3),
+        MOI.RotatedSecondOrderCone(3),
+        MOI.ExponentialCone(),
+    )
+        model = Model()
+        @variable(model, x[1:3] in set)
+        @test is_variable_in_set(x)
+        c = VariableInSetRef(x)
+        o = constraint_object(c)
+        @test isequal_canonical(reshape_vector(o.func, o.shape), x)
+        @test o.set == set
+    end
+    return
+end
+
+function test_variable_in_set_PSD()
+    model = Model()
+    @variable(model, x[1:2, 1:2], PSD)
+    @test is_variable_in_set(x)
+    c = VariableInSetRef(x)
+    o = constraint_object(c)
+    @test isequal_canonical(reshape_vector(o.func, o.shape), x)
+    @test o.set == MOI.PositiveSemidefiniteConeTriangle(2)
+    return
+end
+
+function test_variable_in_set_HermitianPSDCone()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test is_variable_in_set(x)
+    c = VariableInSetRef(x)
+    o = constraint_object(c)
+    @test isequal_canonical(reshape_vector(o.func, o.shape), x)
+    @test o.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
+    return
+end
+
 end  # module TestVariable
