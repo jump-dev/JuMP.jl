@@ -2078,7 +2078,7 @@ end
 Return the value of variable `v` associated with result index `result` of the
 most-recent returned by the solver.
 
-Use [`has_values`](@ref) to check if a result exists before asking for values.
+Use [`primal_status`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref).
 """
@@ -2620,8 +2620,8 @@ julia> @objective(model, Max, 2 * x + 1);
 
 julia> optimize!(model)
 
-julia> has_duals(model)
-true
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> reduced_cost(x)
 2.0

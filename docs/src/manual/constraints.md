@@ -648,8 +648,8 @@ equality constraint, it depends on which direction is binding.
     and [`reduced_cost`](@ref) instead.
 
 The dual value associated with a constraint in the most recent solution can be
-accessed using the [`dual`](@ref) function. Use [`has_duals`](@ref) to check if
-the model has a dual solution available to query. For example:
+accessed using the [`dual`](@ref) function. For example:
+
 ```jldoctest con_duality
 julia> model = Model(HiGHS.Optimizer);
 
@@ -664,13 +664,13 @@ con : x ≤ 1
 julia> @objective(model, Min, -2x)
 -2 x
 
-julia> has_duals(model)
-false
+julia> dual_status(model)
+NO_SOLUTION::ResultStatusCode = 0
 
 julia> optimize!(model)
 
-julia> has_duals(model)
-true
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> dual(con)
 -2.0
@@ -679,6 +679,9 @@ julia> @objective(model, Max, 2x)
 2 x
 
 julia> optimize!(model)
+
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> dual(con)
 -2.0

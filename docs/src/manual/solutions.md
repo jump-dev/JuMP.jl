@@ -167,13 +167,6 @@ The first means that the solver doesn't have a solution to return, and the
 second means that the primal solution is a certificate of dual infeasibility (a
 primal unbounded ray).
 
-You can also use [`has_values`](@ref), which returns `true` if there is a
-solution that can be queried, and `false` otherwise.
-```jldoctest solutions
-julia> has_values(model)
-true
-```
-
 ### Objective values
 
 The objective value of a solved problem can be obtained via
@@ -281,13 +274,6 @@ Other common returns are [`NO_SOLUTION`](@ref), and [`INFEASIBILITY_CERTIFICATE`
 The first means that the solver doesn't have a solution to return, and the
 second means that the dual solution is a certificate of primal infeasibility (a
 dual unbounded ray).
-
-You can also use [`has_duals`](@ref), which returns `true` if there is a
-solution that can be queried, and `false` otherwise.
-```jldoctest solutions
-julia> has_duals(model)
-true
-```
 
 ### Dual solution values
 

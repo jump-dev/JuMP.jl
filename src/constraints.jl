@@ -1281,7 +1281,7 @@ That is, if `con_ref` is the reference of a constraint `func`-in-`set`, it
 returns the value of `func` evaluated at the value of the variables (given by
 [`value(::GenericVariableRef)`](@ref)).
 
-Use [`has_values`](@ref) to check if a result exists before asking for values.
+Use [`primal_status`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref).
 
@@ -1365,7 +1365,7 @@ end
 Return the dual value of constraint `con_ref` associated with result index
 `result` of the most-recent solution returned by the solver.
 
-Use [`has_duals`](@ref) to check if a result exists before asking for values.
+Use [`dual_status`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
 
@@ -1387,8 +1387,8 @@ julia> @objective(model, Max, 2 * x + 1);
 
 julia> optimize!(model)
 
-julia> has_duals(model)
-true
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> dual(c)
 -2.0
@@ -1419,8 +1419,7 @@ Return the change in the objective from an infinitesimal relaxation of the
 constraint.
 
 The shadow price is computed from [`dual`](@ref) and can be queried only when
-`has_duals` is `true` and the objective sense is `MIN_SENSE` or `MAX_SENSE`
-(not `FEASIBILITY_SENSE`).
+the objective sense is `MIN_SENSE` or `MAX_SENSE` (not `FEASIBILITY_SENSE`).
 
 See also [`reduced_cost`](@ref JuMP.reduced_cost).
 
@@ -1463,8 +1462,8 @@ julia> @objective(model, Max, 2 * x + 1);
 
 julia> optimize!(model)
 
-julia> has_duals(model)
-true
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> shadow_price(c)
 2.0
