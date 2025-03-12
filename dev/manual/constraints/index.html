@@ -352,7 +352,7 @@ julia&gt; print(model)
 Feasibility
 Subject to
  c : x ≥ -1
- 2 x ≤ 1</code></pre><p>The <a href="../../api/JuMP/#@constraints"><code>@constraints</code></a> macro returns a tuple of the constraints that were defined.</p><h2 id="constraint_duality"><a class="docs-heading-anchor" href="#constraint_duality">Duality</a><a id="constraint_duality-1"></a><a class="docs-heading-anchor-permalink" href="#constraint_duality" title="Permalink"></a></h2><p>JuMP adopts the notion of <a href="../../moi/background/duality/#Duality">conic duality from MathOptInterface</a>. For linear programs, a feasible dual on a <code>&gt;=</code> constraint is nonnegative and a feasible dual on a <code>&lt;=</code> constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>JuMP&#39;s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. <strong>This is a different convention from linear programming duality in some common textbooks.</strong> If you have a linear program, and you want the textbook definition, you probably want to use <a href="../../api/JuMP/#shadow_price"><code>shadow_price</code></a> and <a href="../../api/JuMP/#reduced_cost"><code>reduced_cost</code></a> instead.</p></div></div><p>The dual value associated with a constraint in the most recent solution can be accessed using the <a href="../../api/JuMP/#dual"><code>dual</code></a> function. Use <a href="../../api/JuMP/#has_duals"><code>has_duals</code></a> to check if the model has a dual solution available to query. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+ 2 x ≤ 1</code></pre><p>The <a href="../../api/JuMP/#@constraints"><code>@constraints</code></a> macro returns a tuple of the constraints that were defined.</p><h2 id="constraint_duality"><a class="docs-heading-anchor" href="#constraint_duality">Duality</a><a id="constraint_duality-1"></a><a class="docs-heading-anchor-permalink" href="#constraint_duality" title="Permalink"></a></h2><p>JuMP adopts the notion of <a href="../../moi/background/duality/#Duality">conic duality from MathOptInterface</a>. For linear programs, a feasible dual on a <code>&gt;=</code> constraint is nonnegative and a feasible dual on a <code>&lt;=</code> constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>JuMP&#39;s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. <strong>This is a different convention from linear programming duality in some common textbooks.</strong> If you have a linear program, and you want the textbook definition, you probably want to use <a href="../../api/JuMP/#shadow_price"><code>shadow_price</code></a> and <a href="../../api/JuMP/#reduced_cost"><code>reduced_cost</code></a> instead.</p></div></div><p>The dual value associated with a constraint in the most recent solution can be accessed using the <a href="../../api/JuMP/#dual"><code>dual</code></a> function. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
 
 julia&gt; set_silent(model)
 
@@ -365,13 +365,13 @@ con : x ≤ 1
 julia&gt; @objective(model, Min, -2x)
 -2 x
 
-julia&gt; has_duals(model)
-false
+julia&gt; dual_status(model)
+NO_SOLUTION::ResultStatusCode = 0
 
 julia&gt; optimize!(model)
 
-julia&gt; has_duals(model)
-true
+julia&gt; dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia&gt; dual(con)
 -2.0
@@ -380,6 +380,9 @@ julia&gt; @objective(model, Max, 2x)
 2 x
 
 julia&gt; optimize!(model)
+
+julia&gt; dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
 
 julia&gt; dual(con)
 -2.0</code></pre><p>To help users who may be less familiar with conic duality, JuMP provides <a href="../../api/JuMP/#shadow_price"><code>shadow_price</code></a>, which returns a value that can be interpreted as the improvement in the objective in response to an infinitesimal relaxation (on the scale of one unit) in the right-hand side of the constraint. <a href="../../api/JuMP/#shadow_price"><code>shadow_price</code></a> can be used only on linear constraints with a <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code> comparison operator.</p><p>In the example above, <code>dual(con)</code> returned <code>-2.0</code> regardless of the optimization sense. However, in the second case when the optimization sense is <code>Max</code>, <a href="../../api/JuMP/#shadow_price"><code>shadow_price</code></a> returns:</p><pre><code class="language-julia-repl hljs">julia&gt; shadow_price(con)
@@ -801,4 +804,4 @@ julia&gt; @constraint(model, (x[1] == x[2]) == rhs)
 (x[1] == x[2]) - 0.0 = 0
 
 julia&gt; @constraint(model, x[1] == x[2] := rhs)
-x[1] == x[2] = false</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../variables/">« Variables</a><a class="docs-footer-nextpage" href="../expressions/">Expressions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Wednesday 12 March 2025 19:55">Wednesday 12 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+x[1] == x[2] = false</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../variables/">« Variables</a><a class="docs-footer-nextpage" href="../expressions/">Expressions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Wednesday 12 March 2025 22:47">Wednesday 12 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
