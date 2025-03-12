@@ -25,6 +25,7 @@
 
 using JuMP
 import Dualization
+import LinearAlgebra
 import SCS
 
 # ## Background
@@ -116,7 +117,11 @@ print(model_primal)
 model_dual = Model()
 @variable(model_dual, y[1:2])
 @objective(model_dual, Min, sum(y))
-@constraint(model_dual, dual_c, [y[1]-1 1; 1 y[2]-1] in PSDCone())
+@constraint(
+    model_dual,
+    dual_c,
+    LinearAlgebra.Symmetric([y[1]-1 1; 1 y[2]-1]) in PSDCone(),
+)
 print(model_dual)
 
 # This problem has two scalar decision variables, and a 2x2 positive
@@ -141,7 +146,11 @@ assert_is_solved_and_feasible(model_primal; dual = true)
 
 # The solution we obtain is:
 
-value.(X)
+value(X)
+
+#-
+
+dual(VariableInSetRef(X))
 
 #-
 
@@ -161,7 +170,11 @@ assert_is_solved_and_feasible(model_dual; dual = true)
 
 # and the solution we obtain is:
 
-dual.(dual_c)
+dual(dual_c)
+
+#-
+
+value(dual_c)
 
 #-
 
@@ -192,7 +205,11 @@ assert_is_solved_and_feasible(model_primal; dual = true)
 # The performance is the same as if we solved `model_dual`, and the correct
 # solution is returned to `X`:
 
-value.(X)
+value(X)
+
+#-
+
+dual(VariableInSetRef(X))
 
 #-
 
@@ -207,7 +224,11 @@ assert_is_solved_and_feasible(model_dual; dual = true)
 
 #-
 
-dual.(dual_c)
+dual(dual_c)
+
+#-
+
+value(dual_c)
 
 #-
 

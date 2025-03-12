@@ -1101,6 +1101,21 @@ nonnegative.
     `x` must be a square 2-dimensional `Array` of JuMP variables; it cannot be a
     DenseAxisArray or a SparseAxisArray.
 
+Use [`VariableInSetRef`](@ref) to obtain the associated constraint reference:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+
+julia> c = VariableInSetRef(x)
+[x[1,1]  x[1,2]
+ ⋯       x[2,2]] ∈ PSDCone()
+```
+
 The `PSD` argument must be provided explicitly to the macro. Passing it via a
 variable throws an error:
 ```jldoctest
