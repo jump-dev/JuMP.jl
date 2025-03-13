@@ -7,6 +7,23 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.25.0 (March 14, 2025)
+
+### Added
+
+ - Added [`VariableInSetRef`](@ref) and [`is_variable_in_set`](@ref) (#3955),
+   (#3960)
+
+### Other
+
+ - Add a section on [Function barriers](@ref) to the documentation (#3938)
+ - Documentation improvements (#3940), (#3942), (#3943), (#3945), (#3950),
+   (#3956), (#3957), (#3958), (#3961), (#3964)
+ - Change to use Clarabel in more tutorials (#3944)
+ - Update versions in `docs/packages.toml` (#3949)
+ - Improve test coverage (#3952), (#3953), (#3954)
+ - Refactored the print output of [`solution_summary`](@ref) (#3963)
+
 ## Version 1.24.0 (February 4, 2025)
 
 ### Added
