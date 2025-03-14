@@ -67,56 +67,50 @@ optimization solutions.
 
 ```jldoctest solutions; filter=r"[0-9]+\.[0-9]+e[\+\-][0-9]+"
 julia> solution_summary(model)
-* Solver : HiGHS
-
-* Status
-  Result count       : 1
-  Termination status : OPTIMAL
-  Message from the solver:
-  "kHighsModelStatusOptimal"
-
-* Candidate solution (result #1)
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
-  Objective value    : -2.05143e+02
-  Objective bound    : -2.05143e+02
-  Relative gap       : 1.38546e-16
-  Dual objective value : -2.05143e+02
-
-* Work counters
-  Solve time (sec)   : 6.01048e-04
-  Simplex iterations : 2
-  Barrier iterations : 0
-  Node count         : -1
+solution_summary(; result = 1, verbose = false)
+├ solver_name          : HiGHS
+├ Solution quality
+│ ├ termination_status : OPTIMAL
+│ ├ result_count       : 1
+│ ├ raw_status         : kHighsModelStatusOptimal
+│ ├ objective_bound    : -2.05143e+02
+│ └ relative_gap       : 1.38546e-16
+├ Solution (result = 1)
+│ ├ primal_status        : FEASIBLE_POINT
+│ ├ dual_status          : FEASIBLE_POINT
+│ ├ objective_value      : -2.05143e+02
+│ └ dual_objective_value : -2.05143e+02
+└ Work counters
+  ├ solve_time (sec)   : 5.93345e-04
+  ├ simplex_iterations : 2
+  ├ barrier_iterations : 0
+  └ node_count         : -1
 
 julia> solution_summary(model; verbose = true)
-* Solver : HiGHS
-
-* Status
-  Result count       : 1
-  Termination status : OPTIMAL
-  Message from the solver:
-  "kHighsModelStatusOptimal"
-
-* Candidate solution (result #1)
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
-  Objective value    : -2.05143e+02
-  Objective bound    : -2.05143e+02
-  Relative gap       : 1.38546e-16
-  Dual objective value : -2.05143e+02
-  Primal solution :
-    x : 1.54286e+01
-    y[a] : 1.00000e+00
-    y[b] : 1.00000e+00
-  Dual solution :
-    c1 : 1.71429e+00
-
-* Work counters
-  Solve time (sec)   : 6.01048e-04
-  Simplex iterations : 2
-  Barrier iterations : 0
-  Node count         : -1
+solution_summary(; result = 1, verbose = true)
+├ solver_name          : HiGHS
+├ Solution quality
+│ ├ termination_status : OPTIMAL
+│ ├ result_count       : 1
+│ ├ raw_status         : kHighsModelStatusOptimal
+│ ├ objective_bound    : -2.05143e+02
+│ └ relative_gap       : 1.38546e-16
+├ Solution (result = 1)
+│ ├ primal_status        : FEASIBLE_POINT
+│ ├ dual_status          : FEASIBLE_POINT
+│ ├ objective_value      : -2.05143e+02
+│ ├ dual_objective_value : -2.05143e+02
+│ ├ value
+│ │ ├ x : 1.54286e+01
+│ │ ├ y[a] : 1.00000e+00
+│ │ └ y[b] : 1.00000e+00
+│ └ dual
+│   └ c1 : 1.71429e+00
+└ Work counters
+  ├ solve_time (sec)   : 5.93345e-04
+  ├ simplex_iterations : 2
+  ├ barrier_iterations : 0
+  └ node_count         : -1
 ```
 
 ## Why did the solver stop?
@@ -749,7 +743,7 @@ which result to return.
     solution. Use [`objective_value`](@ref) to assess the quality of the
     remaining solutions.
 
-```jldoctest; filter=[r"Solve time.+"]
+```jldoctest; filter=[r"solve_time \(sec\).+"]
 julia> using JuMP
 
 julia> import MultiObjectiveAlgorithms as MOA
@@ -779,22 +773,19 @@ julia> @constraint(model, 3x1 - x2 <= 6)
 julia> optimize!(model)
 
 julia> solution_summary(model; result = 1)
-* Solver : MOA[algorithm=MultiObjectiveAlgorithms.Dichotomy, optimizer=HiGHS]
-
-* Status
-  Result count       : 3
-  Termination status : OPTIMAL
-  Message from the solver:
-  "Solve complete. Found 3 solution(s)"
-
-* Candidate solution (result #1)
-  Primal status      : FEASIBLE_POINT
-  Dual status        : NO_SOLUTION
-  Objective value    : [0.00000e+00,0.00000e+00]
-  Objective bound    : [0.00000e+00,-9.00000e+00]
-
-* Work counters
-  Solve time (sec)   : 5.34880e-01
+solution_summary(; result = 1, verbose = false)
+├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.Dichotomy, optimizer=HiGHS]
+├ Solution quality
+│ ├ termination_status : OPTIMAL
+│ ├ result_count       : 3
+│ ├ raw_status         : Solve complete. Found 3 solution(s)
+│ └ objective_bound    : [0.00000e+00,-9.00000e+00]
+├ Solution (result = 1)
+│ ├ primal_status        : FEASIBLE_POINT
+│ ├ dual_status          : NO_SOLUTION
+│ └ objective_value      : [0.00000e+00,0.00000e+00]
+└ Work counters
+  └ solve_time (sec)   : 1.88589e-03
 
 julia> for i in 1:result_count(model)
            println("Solution $i")
