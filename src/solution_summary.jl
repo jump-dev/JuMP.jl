@@ -198,17 +198,14 @@ function _format(x::Vector{<:Real})
 end
 
 function _print_tree(io::IO, args::Pair{String,<:Any}, prefix = "")
-    if !(last(args) isa Vector{Pair{String,Any}})  # Leaf node
-        print(io, "\n", prefix, first(args), _format(last(args)))
-        return
-    end
-    branches = filter(_should_keep, last(args))
-    if isempty(branches)
-        return
-    end
     if !isempty(prefix)
         println(io)
     end
+    if !(last(args) isa Vector{Pair{String,Any}})  # Leaf node
+        print(io, prefix, first(args), _format(last(args)))
+        return
+    end
+    branches = filter(_should_keep, last(args))
     print(io, prefix, first(args))
     for (i, branch) in enumerate(branches)
         suffix = i == length(branches) ? "└ " : "├ "
