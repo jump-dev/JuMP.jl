@@ -1333,7 +1333,7 @@ function test_assert_is_solved_and_feasible()
             │ ├ termination_status : OPTIMAL
             │ ├ result_count       : 1
             │ └ raw_status         : failed
-            └ Solution (; result = 1)
+            └ Solution (result = 1)
               ├ primal_status        : FEASIBLE_POINT
               ├ dual_status          : NO_SOLUTION
               ├ objective_value      : 0.00000e+00
@@ -1348,7 +1348,7 @@ function test_assert_is_solved_and_feasible()
             The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
             solution_summary(; result = 2, verbose = false)
-            └ Solution (; result = 2)
+            └ Solution (result = 2)
               ├ primal_status        : NO_SOLUTION
               └ dual_status          : NO_SOLUTION
             """,

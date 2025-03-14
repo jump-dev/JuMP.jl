@@ -17,7 +17,7 @@ function test_empty_model()
     │ ├ termination_status : OPTIMIZE_NOT_CALLED
     │ ├ result_count       : 0
     │ └ raw_status         : optimize not called
-    └ Solution (; result = 1)
+    └ Solution (result = 1)
       ├ primal_status        : NO_SOLUTION
       └ dual_status          : NO_SOLUTION"""
     return
@@ -69,7 +69,7 @@ function test_solution_summary()
     │ ├ raw_status         : solver specific string
     │ ├ objective_bound    : -3.00000e+00
     │ └ relative_gap       : 6.66667e-01
-    ├ Solution (; result = 1)
+    ├ Solution (result = 1)
     │ ├ primal_status        : FEASIBLE_POINT
     │ ├ dual_status          : FEASIBLE_POINT
     │ ├ objective_value      : -1.00000e+00
@@ -88,7 +88,7 @@ function test_solution_summary()
     │ ├ raw_status         : solver specific string
     │ ├ objective_bound    : -3.00000e+00
     │ └ relative_gap       : 6.66667e-01
-    ├ Solution (; result = 1)
+    ├ Solution (result = 1)
     │ ├ primal_status        : FEASIBLE_POINT
     │ ├ dual_status          : FEASIBLE_POINT
     │ ├ objective_value      : -1.00000e+00
@@ -103,14 +103,14 @@ function test_solution_summary()
       └ node_count         : 1"""
     @test sprint(show, solution_summary(model; result = 2)) == """
     solution_summary(; result = 2, verbose = false)
-    └ Solution (; result = 2)
+    └ Solution (result = 2)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       └ objective_value      : -0.00000e+00"""
     summary = solution_summary(model; result = 2, verbose = true)
     @test sprint(show, summary) == """
     solution_summary(; result = 2, verbose = true)
-    └ Solution (; result = 2)
+    └ Solution (result = 2)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       ├ objective_value      : -0.00000e+00
@@ -119,7 +119,7 @@ function test_solution_summary()
         └ y : 0.00000e+00"""
     @test sprint(show, solution_summary(model; result = 3)) == """
     solution_summary(; result = 3, verbose = false)
-    └ Solution (; result = 3)
+    └ Solution (result = 3)
       ├ primal_status        : NO_SOLUTION
       └ dual_status          : NO_SOLUTION"""
     return
@@ -147,7 +147,7 @@ function test_solution_summary_vector_dual()
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 1
     │ └ raw_status         : solver specific string
-    └ Solution (; result = 1)
+    └ Solution (result = 1)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : 0.00000e+00
@@ -191,7 +191,7 @@ function test_solution_summary_same_names()
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 1
     │ └ raw_status         : solver specific string
-    └ Solution (; result = 1)
+    └ Solution (result = 1)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : 0.00000e+00

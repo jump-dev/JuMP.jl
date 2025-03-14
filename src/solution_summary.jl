@@ -57,7 +57,7 @@ solution_summary(; result = 1, verbose = false)
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
-└ Solution (; result = 1)
+└ Solution (result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION
 ```
@@ -79,7 +79,7 @@ solution_summary(; result = 1, verbose = false)
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
-└ Solution (; result = 1)
+└ Solution (result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION
 ```
@@ -132,7 +132,7 @@ function Base.show(io::IO, summary::_SolutionSummary)
             "objective_bound    : "=>summary.objective_bound,
             "relative_gap       : "=>summary.relative_gap,
         ],
-        "Solution (; result = $(summary.result))"=>Pair{String,Any}[
+        "Solution (result = $(summary.result))"=>Pair{String,Any}[
             "primal_status        : "=>summary.primal_status,
             "dual_status          : "=>summary.dual_status,
             "objective_value      : "=>summary.objective_value,

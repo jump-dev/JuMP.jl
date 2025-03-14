@@ -551,7 +551,7 @@ function test_generate_solve_vector_objective()
     │ ├ result_count       : 1
     │ ├ raw_status         : Optimal
     │ └ objective_bound    : [0.00000e+00,1.00000e+00]
-    └ Solution (; result = 1)
+    └ Solution (result = 1)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       └ objective_value      : [0.00000e+00,1.00000e+00]"""

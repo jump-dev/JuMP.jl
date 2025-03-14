@@ -75,7 +75,7 @@ solution_summary(; result = 1, verbose = false)
 │ ├ raw_status         : kHighsModelStatusOptimal
 │ ├ objective_bound    : -2.05143e+02
 │ └ relative_gap       : 1.38546e-16
-├ Solution (; result = 1)
+├ Solution (result = 1)
 │ ├ primal_status        : FEASIBLE_POINT
 │ ├ dual_status          : FEASIBLE_POINT
 │ ├ objective_value      : -2.05143e+02
@@ -95,7 +95,7 @@ solution_summary(; result = 1, verbose = true)
 │ ├ raw_status         : kHighsModelStatusOptimal
 │ ├ objective_bound    : -2.05143e+02
 │ └ relative_gap       : 1.38546e-16
-├ Solution (; result = 1)
+├ Solution (result = 1)
 │ ├ primal_status        : FEASIBLE_POINT
 │ ├ dual_status          : FEASIBLE_POINT
 │ ├ objective_value      : -2.05143e+02
@@ -780,7 +780,7 @@ solution_summary(; result = 1, verbose = false)
 │ ├ result_count       : 3
 │ ├ raw_status         : Solve complete. Found 3 solution(s)
 │ └ objective_bound    : [0.00000e+00,-9.00000e+00]
-├ Solution (; result = 1)
+├ Solution (result = 1)
 │ ├ primal_status        : FEASIBLE_POINT
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [0.00000e+00,0.00000e+00]

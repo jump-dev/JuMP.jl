@@ -929,7 +929,7 @@ solution_summary(; result = 1, verbose = false)
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
-└ Solution (; result = 1)
+└ Solution (result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION
 
