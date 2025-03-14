@@ -944,9 +944,12 @@ function assert_is_solved_and_feasible(
 )
     if !is_solved_and_feasible(model; result, kwargs...)
         error(
-            "The model was not solved correctly. Here is the output of " *
-            "`solution_summary` to help debug why this happened:\n\n" *
-            string(solution_summary(model; result)) * "\n",
+            string(
+                "The model was not solved correctly. Here is the output of ",
+                "`solution_summary` to help debug why this happened:\n\n",
+                solution_summary(model; result),
+                "\n",
+            ),
         )
     end
     return
