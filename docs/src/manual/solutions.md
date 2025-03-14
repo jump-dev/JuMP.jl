@@ -743,7 +743,7 @@ which result to return.
     solution. Use [`objective_value`](@ref) to assess the quality of the
     remaining solutions.
 
-```jldoctest; filter=[r"solve_time (sec).+"]
+```jldoctest; filter=[r"solve_time \(sec\).+"]
 julia> using JuMP
 
 julia> import MultiObjectiveAlgorithms as MOA

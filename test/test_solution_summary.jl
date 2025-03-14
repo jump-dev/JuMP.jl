@@ -107,7 +107,7 @@ function test_solution_summary()
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       └ objective_value      : -0.00000e+00"""
-    suummary = solution_summary(model; result = 2, verbose = true)
+    summary = solution_summary(model; result = 2, verbose = true)
     @test sprint(show, summary) == """
     solution_summary(; result = 2, verbose = true)
     └ Solution (; result = 2)
