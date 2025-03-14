@@ -544,7 +544,7 @@ function test_generate_solve_vector_objective()
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 0.0)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 1.0)
     @test sprint(print, solution_summary(model)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = false)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL

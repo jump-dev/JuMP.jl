@@ -51,7 +51,7 @@ When called at the REPL, the summary is automatically printed:
 julia> model = Model();
 
 julia> solution_summary(model)
-Solution summary
+solution_summary(; result = 1, verbose = false)
 ├ solver_name          : No optimizer attached.
 ├ Solution quality
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
@@ -73,7 +73,7 @@ julia> function foo(model)
 foo (generic function with 1 method)
 
 julia> foo(model)
-Solution summary
+solution_summary(; result = 1, verbose = false)
 ├ solver_name          : No optimizer attached.
 ├ Solution quality
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
@@ -123,6 +123,38 @@ Write a summary of the solution results to `io` (or to `stdout` if `io` is not
 given).
 """
 function Base.show(io::IO, summary::_SolutionSummary)
+    solution_branch = Pair{String,Any}[
+        "primal_status        : "=>summary.primal_status,
+        "dual_status          : "=>summary.dual_status,
+        "objective_value      : "=>summary.objective_value,
+        "dual_objective_value : "=>summary.dual_objective_value,
+    ]
+    if summary.verbose && summary.has_values
+        primal_solution = Pair{String,Any}[
+            "$name : " => coalesce(
+                summary.primal_solution[name],
+                "multiple variables with the same name",
+            ) for name in sort(collect(keys(summary.primal_solution)))
+        ]
+        push!(solution_branch, "value" => primal_solution)
+    end
+    if summary.verbose && summary.has_duals
+        dual_solution = Pair{String,Any}[
+            "$name : " => coalesce(
+                summary.dual_solution[name],
+                "multiple constraints with the same name",
+            ) for name in sort(collect(keys(summary.dual_solution)))
+        ]
+        push!(solution_branch, "dual" => dual_solution)
+    end
+    header = "solution_summary(; result = $(summary.result), verbose = $(summary.verbose))"
+    if summary.result != 1
+        branches = Pair{String,Any}[
+            "Solution (; result = $(summary.result))"=>solution_branch,
+        ]
+        _print_tree(io, header => branches)
+        return
+    end
     branches = Pair{String,Any}[
         "solver_name          : "=>summary.solver,
         "Solution quality"=>Pair{String,Any}[
@@ -132,38 +164,15 @@ function Base.show(io::IO, summary::_SolutionSummary)
             "objective_bound    : "=>summary.objective_bound,
             "relative_gap       : "=>summary.relative_gap,
         ],
+        "Solution (; result = $(summary.result))"=>solution_branch,
         "Work counters"=>Pair{String,Any}[
             "solve_time (sec)   : "=>summary.solve_time,
             "simplex_iterations : "=>summary.simplex_iterations,
             "barrier_iterations : "=>summary.barrier_iterations,
             "node_count         : "=>summary.node_count,
         ],
-        "Solution (; result = $(summary.result))"=>Pair{String,Any}[
-            "primal_status        : "=>summary.primal_status,
-            "dual_status          : "=>summary.dual_status,
-            "objective_value      : "=>summary.objective_value,
-            "dual_objective_value : "=>summary.dual_objective_value,
-        ],
     ]
-    if summary.verbose && summary.has_values
-        primal_solution = Pair{String,Any}[
-            "$name : " => coalesce(
-                summary.primal_solution[name],
-                "multiple variables with the same name",
-            ) for name in sort(collect(keys(summary.primal_solution)))
-        ]
-        push!(last(branches[end]), "value" => primal_solution)
-    end
-    if summary.verbose && summary.has_duals
-        dual_solution = Pair{String,Any}[
-            "$name : " => coalesce(
-                summary.dual_solution[name],
-                "multiple constraints with the same name",
-            ) for name in sort(collect(keys(summary.dual_solution)))
-        ]
-        push!(last(branches[end]), "dual" => dual_solution)
-    end
-    _print_tree(io, "Solution summary" => branches)
+    _print_tree(io, header => branches)
     return
 end
 

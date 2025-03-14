@@ -11,7 +11,7 @@ using Test
 function test_empty_model()
     model = Model()
     @test sprint(show, solution_summary(model)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = false)
     ├ solver_name          : No optimizer attached.
     ├ Solution quality
     │ ├ termination_status : OPTIMIZE_NOT_CALLED
@@ -61,7 +61,7 @@ function test_solution_summary()
     MOI.set(mock, MOI.NodeCount(), Int64(1))
     MOI.set(mock, MOI.SolveTimeSec(), 5.0)
     @test sprint(show, solution_summary(model)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = false)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL
@@ -80,7 +80,7 @@ function test_solution_summary()
       ├ objective_value      : -1.00000e+00
       └ dual_objective_value : -1.00000e+00"""
     @test sprint(show, solution_summary(model; verbose = true)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL
@@ -102,38 +102,14 @@ function test_solution_summary()
         ├ x : 1.00000e+00
         └ y : 0.00000e+00"""
     @test sprint(show, solution_summary(model; result = 2)) == """
-    Solution summary
-    ├ solver_name          : Mock
-    ├ Solution quality
-    │ ├ termination_status : OPTIMAL
-    │ ├ result_count       : 2
-    │ ├ raw_status         : solver specific string
-    │ ├ objective_bound    : -3.00000e+00
-    │ └ relative_gap       : 6.66667e-01
-    ├ Work counters
-    │ ├ solve_time (sec)   : 5.00000e+00
-    │ ├ simplex_iterations : 3
-    │ ├ barrier_iterations : 2
-    │ └ node_count         : 1
+    solution_summary(; result = 2, verbose = false)
     └ Solution (; result = 2)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       └ objective_value      : -0.00000e+00"""
     suummary = solution_summary(model; result = 2, verbose = true)
     @test sprint(show, summary) == """
-    Solution summary
-    ├ solver_name          : Mock
-    ├ Solution quality
-    │ ├ termination_status : OPTIMAL
-    │ ├ result_count       : 2
-    │ ├ raw_status         : solver specific string
-    │ ├ objective_bound    : -3.00000e+00
-    │ └ relative_gap       : 6.66667e-01
-    ├ Work counters
-    │ ├ solve_time (sec)   : 5.00000e+00
-    │ ├ simplex_iterations : 3
-    │ ├ barrier_iterations : 2
-    │ └ node_count         : 1
+    solution_summary(; result = 2, verbose = true)
     └ Solution (; result = 2)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
@@ -142,7 +118,7 @@ function test_solution_summary()
         ├ x : 0.00000e+00
         └ y : 0.00000e+00"""
     @test sprint(show, solution_summary(model; result = 3)) == """
-    Solution summary
+    solution_summary(; result = 3, verbose = false)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL
@@ -177,7 +153,7 @@ function test_solution_summary_vector_dual()
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index.(x), [1.0, 2.0])
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
     @test sprint(show, solution_summary(model; verbose = true)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL
@@ -221,7 +197,7 @@ function test_solution_summary_same_names()
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(d), 5.0)
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(e), 6.0)
     @test sprint(show, solution_summary(model; verbose = true)) == """
-    Solution summary
+    solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
     ├ Solution quality
     │ ├ termination_status : OPTIMAL

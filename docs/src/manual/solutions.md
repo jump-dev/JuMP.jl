@@ -67,7 +67,7 @@ optimization solutions.
 
 ```jldoctest solutions; filter=r"[0-9]+\.[0-9]+e[\+\-][0-9]+"
 julia> solution_summary(model)
-Solution summary
+solution_summary(; result = 1, verbose = false)
 ├ solver_name          : HiGHS
 ├ Solution quality
 │ ├ termination_status : OPTIMAL
@@ -87,7 +87,7 @@ Solution summary
   └ dual_objective_value : -2.05143e+02
 
 julia> solution_summary(model; verbose = true)
-Solution summary
+solution_summary(; result = 1, verbose = true)
 ├ solver_name          : HiGHS
 ├ Solution quality
 │ ├ termination_status : OPTIMAL
@@ -773,7 +773,7 @@ julia> @constraint(model, 3x1 - x2 <= 6)
 julia> optimize!(model)
 
 julia> solution_summary(model; result = 1)
-Solution summary
+solution_summary(; result = 1, verbose = false)
 ├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.Dichotomy, optimizer=HiGHS]
 ├ Solution quality
 │ ├ termination_status : OPTIMAL

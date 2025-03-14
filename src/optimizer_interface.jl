@@ -921,9 +921,9 @@ julia> is_solved_and_feasible(model)
 false
 
 julia> assert_is_solved_and_feasible(model)
-ERROR: The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+ERROR: The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
-Solution summary
+solution_summary(; result = 1, verbose = false)
 ├ solver_name          : Ipopt
 ├ Solution quality
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
@@ -932,6 +932,7 @@ Solution summary
 └ Solution (; result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION
+
 Stacktrace:
 [...]
 ```
@@ -943,9 +944,9 @@ function assert_is_solved_and_feasible(
 )
     if !is_solved_and_feasible(model; result, kwargs...)
         error(
-            "The model was not solved correctly. Here is a summary of the " *
-            "solution to help debug why this happened:\n\n" *
-            string(solution_summary(model; result)),
+            "The model was not solved correctly. Here is the output of " *
+            "`solution_summary` to help debug why this happened:\n\n" *
+            string(solution_summary(model; result)) * "\n",
         )
     end
     return
