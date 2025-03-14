@@ -105,11 +105,11 @@ Solution summary
   ├ dual_status          : FEASIBLE_POINT
   ├ objective_value      : -2.05143e+02
   ├ dual_objective_value : -2.05143e+02
-  ├ Primal solution
+  ├ value
   │ ├ x : 1.54286e+01
   │ ├ y[a] : 1.00000e+00
   │ └ y[b] : 1.00000e+00
-  └ Dual solution
+  └ dual
     └ c1 : 1.71429e+00
 ```
 

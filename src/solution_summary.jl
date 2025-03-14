@@ -154,7 +154,7 @@ function Base.show(io::IO, summary::_SolutionSummary)
                 "multiple variables with the same name",
             ) for name in sort(collect(keys(summary.primal_solution)))
         ]
-        push!(last(branches[end]), "Primal solution" => primal_solution)
+        push!(last(branches[end]), "value" => primal_solution)
     end
     if summary.verbose && summary.has_duals
         dual_solution = Pair{String,Any}[
@@ -163,7 +163,7 @@ function Base.show(io::IO, summary::_SolutionSummary)
                 "multiple constraints with the same name",
             ) for name in sort(collect(keys(summary.dual_solution)))
         ]
-        push!(last(branches[end]), "Dual solution" => dual_solution)
+        push!(last(branches[end]), "dual" => dual_solution)
     end
     _print_tree(io, "Solution summary" => branches)
     return

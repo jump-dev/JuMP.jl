@@ -100,7 +100,7 @@ function test_solution_summary()
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : -1.00000e+00
       ├ dual_objective_value : -1.00000e+00
-      └ Primal solution
+      └ value
         ├ x : 1.00000e+00
         └ y : 0.00000e+00
     """
@@ -142,7 +142,7 @@ function test_solution_summary()
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
       ├ objective_value      : -0.00000e+00
-      └ Primal solution
+      └ value
         ├ x : 0.00000e+00
         └ y : 0.00000e+00
     """
@@ -194,10 +194,10 @@ function test_solution_summary_vector_dual()
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : 0.00000e+00
       ├ dual_objective_value : 0.00000e+00
-      ├ Primal solution
+      ├ value
       │ ├ x[1] : 1.00000e+00
       │ └ x[2] : 2.00000e+00
-      └ Dual solution
+      └ dual
         └ c : [3.00000e+00,4.00000e+00]
     """
     return
@@ -239,10 +239,10 @@ function test_solution_summary_same_names()
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : 0.00000e+00
       ├ dual_objective_value : 1.10000e+01
-      ├ Primal solution
+      ├ value
       │ ├ x : multiple variables with the same name
       │ └ y : 3.00000e+00
-      └ Dual solution
+      └ dual
         ├ c : multiple constraints with the same name
         └ d : 5.00000e+00
     """
