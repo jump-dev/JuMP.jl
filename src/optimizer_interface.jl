@@ -923,20 +923,15 @@ false
 julia> assert_is_solved_and_feasible(model)
 ERROR: The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
 
-* Solver : Ipopt
-
-* Status
-  Result count       : 0
-  Termination status : OPTIMIZE_NOT_CALLED
-  Message from the solver:
-  "optimize not called"
-
-* Candidate solution (result #1)
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
-
-* Work counters
-
+Solution summary
+├ solver_name          : Ipopt
+├ Solution quality
+│ ├ termination_status : OPTIMIZE_NOT_CALLED
+│ ├ result_count       : 0
+│ └ raw_status         : optimize not called
+└ Solution (; result = 1)
+  ├ primal_status        : NO_SOLUTION
+  └ dual_status          : NO_SOLUTION
 Stacktrace:
 [...]
 ```
