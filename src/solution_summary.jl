@@ -57,7 +57,6 @@ Solution summary
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
-├ Work counters
 └ Solution (; result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION
@@ -80,7 +79,6 @@ Solution summary
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
-├ Work counters
 └ Solution (; result = 1)
   ├ primal_status        : NO_SOLUTION
   └ dual_status          : NO_SOLUTION

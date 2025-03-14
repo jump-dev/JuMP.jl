@@ -1337,8 +1337,7 @@ function test_assert_is_solved_and_feasible()
               ├ primal_status        : FEASIBLE_POINT
               ├ dual_status          : NO_SOLUTION
               ├ objective_value      : 0.00000e+00
-              └ dual_objective_value : 0.00000e+00
-            """,
+              └ dual_objective_value : 0.00000e+00""",
         ),
         assert_is_solved_and_feasible(model; dual = true),
     )
@@ -1355,8 +1354,7 @@ function test_assert_is_solved_and_feasible()
             │ └ raw_status         : failed
             └ Solution (; result = 2)
               ├ primal_status        : NO_SOLUTION
-              └ dual_status          : NO_SOLUTION
-            """,
+              └ dual_status          : NO_SOLUTION""",
         ),
         assert_is_solved_and_feasible(model; dual = true, result = 2),
     )

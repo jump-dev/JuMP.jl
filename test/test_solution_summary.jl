@@ -19,8 +19,7 @@ function test_empty_model()
     │ └ raw_status         : optimize not called
     └ Solution (; result = 1)
       ├ primal_status        : NO_SOLUTION
-      └ dual_status          : NO_SOLUTION
-    """
+      └ dual_status          : NO_SOLUTION"""
     return
 end
 
@@ -79,8 +78,7 @@ function test_solution_summary()
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : FEASIBLE_POINT
       ├ objective_value      : -1.00000e+00
-      └ dual_objective_value : -1.00000e+00
-    """
+      └ dual_objective_value : -1.00000e+00"""
     @test sprint(show, solution_summary(model; verbose = true)) == """
     Solution summary
     ├ solver_name          : Mock
@@ -102,8 +100,7 @@ function test_solution_summary()
       ├ dual_objective_value : -1.00000e+00
       └ value
         ├ x : 1.00000e+00
-        └ y : 0.00000e+00
-    """
+        └ y : 0.00000e+00"""
     @test sprint(show, solution_summary(model; result = 2)) == """
     Solution summary
     ├ solver_name          : Mock
@@ -121,8 +118,7 @@ function test_solution_summary()
     └ Solution (; result = 2)
       ├ primal_status        : FEASIBLE_POINT
       ├ dual_status          : NO_SOLUTION
-      └ objective_value      : -0.00000e+00
-    """
+      └ objective_value      : -0.00000e+00"""
     suummary = solution_summary(model; result = 2, verbose = true)
     @test sprint(show, summary) == """
     Solution summary
@@ -144,8 +140,7 @@ function test_solution_summary()
       ├ objective_value      : -0.00000e+00
       └ value
         ├ x : 0.00000e+00
-        └ y : 0.00000e+00
-    """
+        └ y : 0.00000e+00"""
     @test sprint(show, solution_summary(model; result = 3)) == """
     Solution summary
     ├ solver_name          : Mock
@@ -162,8 +157,7 @@ function test_solution_summary()
     │ └ node_count         : 1
     └ Solution (; result = 3)
       ├ primal_status        : NO_SOLUTION
-      └ dual_status          : NO_SOLUTION
-    """
+      └ dual_status          : NO_SOLUTION"""
     return
 end
 
@@ -198,8 +192,7 @@ function test_solution_summary_vector_dual()
       │ ├ x[1] : 1.00000e+00
       │ └ x[2] : 2.00000e+00
       └ dual
-        └ c : [3.00000e+00,4.00000e+00]
-    """
+        └ c : [3.00000e+00,4.00000e+00]"""
     return
 end
 
@@ -244,8 +237,7 @@ function test_solution_summary_same_names()
       │ └ y : 3.00000e+00
       └ dual
         ├ c : multiple constraints with the same name
-        └ d : 5.00000e+00
-    """
+        └ d : 5.00000e+00"""
     return
 end
 
