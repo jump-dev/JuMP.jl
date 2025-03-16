@@ -219,7 +219,7 @@ M = 100
 # !!! warning
 #     If `M` is too small, the solution may be suboptimal. If `M` is too big,
 #     the solver may encounter numerical issues. Try to use domain knowledge to
-#     choose an `M` that is just right. Gurobi has a [good documentation section](https://www.gurobi.com/documentation/9.1/refman/dealing_with_big_m_constra.html)
+#     choose an `M` that is just right. Gurobi has a [good documentation section](https://docs.gurobi.com/projects/optimizer/en/current/concepts/numericguide/tolerances_scaling.html#dealing-with-big-m-constraints)
 #     on this topic.
 
 # ## [Indicator constraints](@id tips_indicator_constraint)
