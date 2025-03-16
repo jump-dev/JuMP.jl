@@ -13,7 +13,7 @@ function test_empty_model()
     @test sprint(show, solution_summary(model)) == """
     solution_summary(; result = 1, verbose = false)
     ├ solver_name          : No optimizer attached.
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMIZE_NOT_CALLED
     │ ├ result_count       : 0
     │ └ raw_status         : optimize not called
@@ -63,7 +63,7 @@ function test_solution_summary()
     @test sprint(show, solution_summary(model)) == """
     solution_summary(; result = 1, verbose = false)
     ├ solver_name          : Mock
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 2
     │ ├ raw_status         : solver specific string
@@ -82,7 +82,7 @@ function test_solution_summary()
     @test sprint(show, solution_summary(model; verbose = true)) == """
     solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 2
     │ ├ raw_status         : solver specific string
@@ -143,7 +143,7 @@ function test_solution_summary_vector_dual()
     @test sprint(show, solution_summary(model; verbose = true)) == """
     solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 1
     │ └ raw_status         : solver specific string
@@ -187,7 +187,7 @@ function test_solution_summary_same_names()
     @test sprint(show, solution_summary(model; verbose = true)) == """
     solution_summary(; result = 1, verbose = true)
     ├ solver_name          : Mock
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 1
     │ └ raw_status         : solver specific string

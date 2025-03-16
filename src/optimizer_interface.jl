@@ -925,7 +925,7 @@ ERROR: The model was not solved correctly. Here is the output of `solution_summa
 
 solution_summary(; result = 1, verbose = false)
 ├ solver_name          : Ipopt
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called

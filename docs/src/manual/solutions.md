@@ -69,7 +69,7 @@ optimization solutions.
 julia> solution_summary(model)
 solution_summary(; result = 1, verbose = false)
 ├ solver_name          : HiGHS
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMAL
 │ ├ result_count       : 1
 │ ├ raw_status         : kHighsModelStatusOptimal
@@ -89,7 +89,7 @@ solution_summary(; result = 1, verbose = false)
 julia> solution_summary(model; verbose = true)
 solution_summary(; result = 1, verbose = true)
 ├ solver_name          : HiGHS
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMAL
 │ ├ result_count       : 1
 │ ├ raw_status         : kHighsModelStatusOptimal
@@ -775,7 +775,7 @@ julia> optimize!(model)
 julia> solution_summary(model; result = 1)
 solution_summary(; result = 1, verbose = false)
 ├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.Dichotomy, optimizer=HiGHS]
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMAL
 │ ├ result_count       : 3
 │ ├ raw_status         : Solve complete. Found 3 solution(s)

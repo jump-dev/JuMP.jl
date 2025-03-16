@@ -53,7 +53,7 @@ julia> model = Model();
 julia> solution_summary(model)
 solution_summary(; result = 1, verbose = false)
 ├ solver_name          : No optimizer attached.
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
@@ -75,7 +75,7 @@ foo (generic function with 1 method)
 julia> foo(model)
 solution_summary(; result = 1, verbose = false)
 ├ solver_name          : No optimizer attached.
-├ Solution quality
+├ Termination
 │ ├ termination_status : OPTIMIZE_NOT_CALLED
 │ ├ result_count       : 0
 │ └ raw_status         : optimize not called
@@ -125,7 +125,7 @@ given).
 function Base.show(io::IO, summary::_SolutionSummary)
     branches = Pair{String,Any}[
         "solver_name          : "=>summary.solver,
-        "Solution quality"=>Pair{String,Any}[
+        "Termination"=>Pair{String,Any}[
             "termination_status : "=>summary.termination_status,
             "result_count       : "=>summary.result_count,
             "raw_status         : "=>summary.raw_status,

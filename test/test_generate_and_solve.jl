@@ -546,7 +546,7 @@ function test_generate_solve_vector_objective()
     @test sprint(print, solution_summary(model)) == """
     solution_summary(; result = 1, verbose = false)
     ├ solver_name          : Mock
-    ├ Solution quality
+    ├ Termination
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 1
     │ ├ raw_status         : Optimal

@@ -1329,7 +1329,7 @@ function test_assert_is_solved_and_feasible()
 
             solution_summary(; result = 1, verbose = false)
             ├ solver_name          : Mock
-            ├ Solution quality
+            ├ Termination
             │ ├ termination_status : OPTIMAL
             │ ├ result_count       : 1
             │ └ raw_status         : failed
