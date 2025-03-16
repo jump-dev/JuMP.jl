@@ -130,7 +130,6 @@ function Base.show(io::IO, summary::_SolutionSummary)
             "result_count       : "=>summary.result_count,
             "raw_status         : "=>summary.raw_status,
             "objective_bound    : "=>summary.objective_bound,
-            "relative_gap       : "=>summary.relative_gap,
         ],
         "Solution (result = $(summary.result))"=>Pair{String,Any}[
             "primal_status        : "=>summary.primal_status,
@@ -145,6 +144,12 @@ function Base.show(io::IO, summary::_SolutionSummary)
             "node_count         : "=>summary.node_count,
         ],
     ]
+    if summary.result == 1
+        push!(
+            last(branches[3]),
+            "relative_gap         : " => summary.relative_gap,
+        )
+    end
     if summary.verbose && summary.has_values
         primal_solution = Pair{String,Any}[
             "$name : " => coalesce(

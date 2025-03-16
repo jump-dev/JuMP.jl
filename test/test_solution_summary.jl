@@ -67,13 +67,13 @@ function test_solution_summary()
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 2
     │ ├ raw_status         : solver specific string
-    │ ├ objective_bound    : -3.00000e+00
-    │ └ relative_gap       : 6.66667e-01
+    │ └ objective_bound    : -3.00000e+00
     ├ Solution (result = 1)
     │ ├ primal_status        : FEASIBLE_POINT
     │ ├ dual_status          : FEASIBLE_POINT
     │ ├ objective_value      : -1.00000e+00
-    │ └ dual_objective_value : -1.00000e+00
+    │ ├ dual_objective_value : -1.00000e+00
+    │ └ relative_gap         : 6.66667e-01
     └ Work counters
       ├ solve_time (sec)   : 5.00000e+00
       ├ simplex_iterations : 3
@@ -86,13 +86,13 @@ function test_solution_summary()
     │ ├ termination_status : OPTIMAL
     │ ├ result_count       : 2
     │ ├ raw_status         : solver specific string
-    │ ├ objective_bound    : -3.00000e+00
-    │ └ relative_gap       : 6.66667e-01
+    │ └ objective_bound    : -3.00000e+00
     ├ Solution (result = 1)
     │ ├ primal_status        : FEASIBLE_POINT
     │ ├ dual_status          : FEASIBLE_POINT
     │ ├ objective_value      : -1.00000e+00
     │ ├ dual_objective_value : -1.00000e+00
+    │ ├ relative_gap         : 6.66667e-01
     │ └ value
     │   ├ x : 1.00000e+00
     │   └ y : 0.00000e+00
