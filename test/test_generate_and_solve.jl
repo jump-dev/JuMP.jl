@@ -544,22 +544,17 @@ function test_generate_solve_vector_objective()
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 0.0)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 1.0)
     @test sprint(print, solution_summary(model)) == """
-* Solver : Mock
-
-* Status
-  Result count       : 1
-  Termination status : OPTIMAL
-  Message from the solver:
-  "Optimal"
-
-* Candidate solution (result #1)
-  Primal status      : FEASIBLE_POINT
-  Dual status        : NO_SOLUTION
-  Objective value    : [0.00000e+00,1.00000e+00]
-  Objective bound    : [0.00000e+00,1.00000e+00]
-
-* Work counters
-"""
+    solution_summary(; result = 1, verbose = false)
+    ├ solver_name          : Mock
+    ├ Termination
+    │ ├ termination_status : OPTIMAL
+    │ ├ result_count       : 1
+    │ ├ raw_status         : Optimal
+    │ └ objective_bound    : [0.00000e+00,1.00000e+00]
+    └ Solution (result = 1)
+      ├ primal_status        : FEASIBLE_POINT
+      ├ dual_status          : NO_SOLUTION
+      └ objective_value      : [0.00000e+00,1.00000e+00]"""
     return
 end
 

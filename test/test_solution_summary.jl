@@ -10,22 +10,16 @@ using Test
 
 function test_empty_model()
     model = Model()
-    ret = """
-    * Solver : No optimizer attached.
-
-    * Status
-      Result count       : 0
-      Termination status : OPTIMIZE_NOT_CALLED
-      Message from the solver:
-      "optimize not called"
-
-    * Candidate solution (result #1)
-      Primal status      : NO_SOLUTION
-      Dual status        : NO_SOLUTION
-
-    * Work counters
-    """
-    @test sprint(show, solution_summary(model)) == ret
+    @test sprint(show, solution_summary(model)) == """
+    solution_summary(; result = 1, verbose = false)
+    ├ solver_name          : No optimizer attached.
+    ├ Termination
+    │ ├ termination_status : OPTIMIZE_NOT_CALLED
+    │ ├ result_count       : 0
+    │ └ raw_status         : optimize not called
+    └ Solution (result = 1)
+      ├ primal_status        : NO_SOLUTION
+      └ dual_status          : NO_SOLUTION"""
     return
 end
 
@@ -66,107 +60,68 @@ function test_solution_summary()
     MOI.set(mock, MOI.BarrierIterations(), Int64(2))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
     MOI.set(mock, MOI.SolveTimeSec(), 5.0)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 2
-      Termination status : OPTIMAL
-      Message from the solver:
-      "solver specific string"
-
-    * Candidate solution (result #1)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : FEASIBLE_POINT
-      Objective value    : -1.00000e+00
-      Objective bound    : -3.00000e+00
-      Relative gap       : 6.66667e-01
-      Dual objective value : -1.00000e+00
-
-    * Work counters
-      Solve time (sec)   : 5.00000e+00
-      Simplex iterations : 3
-      Barrier iterations : 2
-      Node count         : 1
-    """
-    @test sprint(show, solution_summary(model)) == ret
-
-    summary = solution_summary(model; verbose = true)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 2
-      Termination status : OPTIMAL
-      Message from the solver:
-      "solver specific string"
-
-    * Candidate solution (result #1)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : FEASIBLE_POINT
-      Objective value    : -1.00000e+00
-      Objective bound    : -3.00000e+00
-      Relative gap       : 6.66667e-01
-      Dual objective value : -1.00000e+00
-      Primal solution :
-        x : 1.00000e+00
-        y : 0.00000e+00
-      Dual solution :
-
-    * Work counters
-      Solve time (sec)   : 5.00000e+00
-      Simplex iterations : 3
-      Barrier iterations : 2
-      Node count         : 1
-    """
-    @test sprint(show, summary) == ret
-
-    summary = solution_summary(model; result = 2)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 2
-      Termination status : OPTIMAL
-
-    * Candidate solution (result #2)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : NO_SOLUTION
-      Objective value    : -0.00000e+00
-    """
-    @test sprint(show, summary) == ret
-
+    @test sprint(show, solution_summary(model)) == """
+    solution_summary(; result = 1, verbose = false)
+    ├ solver_name          : Mock
+    ├ Termination
+    │ ├ termination_status : OPTIMAL
+    │ ├ result_count       : 2
+    │ ├ raw_status         : solver specific string
+    │ └ objective_bound    : -3.00000e+00
+    ├ Solution (result = 1)
+    │ ├ primal_status        : FEASIBLE_POINT
+    │ ├ dual_status          : FEASIBLE_POINT
+    │ ├ objective_value      : -1.00000e+00
+    │ ├ dual_objective_value : -1.00000e+00
+    │ └ relative_gap         : 6.66667e-01
+    └ Work counters
+      ├ solve_time (sec)   : 5.00000e+00
+      ├ simplex_iterations : 3
+      ├ barrier_iterations : 2
+      └ node_count         : 1"""
+    @test sprint(show, solution_summary(model; verbose = true)) == """
+    solution_summary(; result = 1, verbose = true)
+    ├ solver_name          : Mock
+    ├ Termination
+    │ ├ termination_status : OPTIMAL
+    │ ├ result_count       : 2
+    │ ├ raw_status         : solver specific string
+    │ └ objective_bound    : -3.00000e+00
+    ├ Solution (result = 1)
+    │ ├ primal_status        : FEASIBLE_POINT
+    │ ├ dual_status          : FEASIBLE_POINT
+    │ ├ objective_value      : -1.00000e+00
+    │ ├ dual_objective_value : -1.00000e+00
+    │ ├ relative_gap         : 6.66667e-01
+    │ └ value
+    │   ├ x : 1.00000e+00
+    │   └ y : 0.00000e+00
+    └ Work counters
+      ├ solve_time (sec)   : 5.00000e+00
+      ├ simplex_iterations : 3
+      ├ barrier_iterations : 2
+      └ node_count         : 1"""
+    @test sprint(show, solution_summary(model; result = 2)) == """
+    solution_summary(; result = 2, verbose = false)
+    └ Solution (result = 2)
+      ├ primal_status        : FEASIBLE_POINT
+      ├ dual_status          : NO_SOLUTION
+      └ objective_value      : -0.00000e+00"""
     summary = solution_summary(model; result = 2, verbose = true)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 2
-      Termination status : OPTIMAL
-
-    * Candidate solution (result #2)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : NO_SOLUTION
-      Objective value    : -0.00000e+00
-      Primal solution :
-        x : 0.00000e+00
-        y : 0.00000e+00
-    """
-    @test sprint(show, summary) == ret
-
-    summary = solution_summary(model; result = 3)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 2
-      Termination status : OPTIMAL
-
-    * Candidate solution (result #3)
-      Primal status      : NO_SOLUTION
-      Dual status        : NO_SOLUTION
-    """
-    @test sprint(show, summary) == ret
+    @test sprint(show, summary) == """
+    solution_summary(; result = 2, verbose = true)
+    └ Solution (result = 2)
+      ├ primal_status        : FEASIBLE_POINT
+      ├ dual_status          : NO_SOLUTION
+      ├ objective_value      : -0.00000e+00
+      └ value
+        ├ x : 0.00000e+00
+        └ y : 0.00000e+00"""
+    @test sprint(show, solution_summary(model; result = 3)) == """
+    solution_summary(; result = 3, verbose = false)
+    └ Solution (result = 3)
+      ├ primal_status        : NO_SOLUTION
+      └ dual_status          : NO_SOLUTION"""
     return
 end
 
@@ -185,29 +140,23 @@ function test_solution_summary_vector_dual()
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index.(x), [1.0, 2.0])
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 1
-      Termination status : OPTIMAL
-      Message from the solver:
-      "solver specific string"
-
-    * Candidate solution (result #1)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : FEASIBLE_POINT
-      Objective value    : 0.00000e+00
-      Dual objective value : 0.00000e+00
-      Primal solution :
-        x[1] : 1.00000e+00
-        x[2] : 2.00000e+00
-      Dual solution :
-        c : [3.00000e+00,4.00000e+00]
-
-    * Work counters
-    """
-    @test sprint(show, solution_summary(model; verbose = true)) == ret
+    @test sprint(show, solution_summary(model; verbose = true)) == """
+    solution_summary(; result = 1, verbose = true)
+    ├ solver_name          : Mock
+    ├ Termination
+    │ ├ termination_status : OPTIMAL
+    │ ├ result_count       : 1
+    │ └ raw_status         : solver specific string
+    └ Solution (result = 1)
+      ├ primal_status        : FEASIBLE_POINT
+      ├ dual_status          : FEASIBLE_POINT
+      ├ objective_value      : 0.00000e+00
+      ├ dual_objective_value : 0.00000e+00
+      ├ value
+      │ ├ x[1] : 1.00000e+00
+      │ └ x[2] : 2.00000e+00
+      └ dual
+        └ c : [3.00000e+00,4.00000e+00]"""
     return
 end
 
@@ -235,30 +184,24 @@ function test_solution_summary_same_names()
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index.(c), [3.0, 4.0])
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(d), 5.0)
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(e), 6.0)
-    ret = """
-    * Solver : Mock
-
-    * Status
-      Result count       : 1
-      Termination status : OPTIMAL
-      Message from the solver:
-      "solver specific string"
-
-    * Candidate solution (result #1)
-      Primal status      : FEASIBLE_POINT
-      Dual status        : FEASIBLE_POINT
-      Objective value    : 0.00000e+00
-      Dual objective value : 1.10000e+01
-      Primal solution :
-        x : multiple variables with the same name
-        y : 3.00000e+00
-      Dual solution :
-        c : multiple constraints with the same name
-        d : 5.00000e+00
-
-    * Work counters
-    """
-    @test sprint(show, solution_summary(model; verbose = true)) == ret
+    @test sprint(show, solution_summary(model; verbose = true)) == """
+    solution_summary(; result = 1, verbose = true)
+    ├ solver_name          : Mock
+    ├ Termination
+    │ ├ termination_status : OPTIMAL
+    │ ├ result_count       : 1
+    │ └ raw_status         : solver specific string
+    └ Solution (result = 1)
+      ├ primal_status        : FEASIBLE_POINT
+      ├ dual_status          : FEASIBLE_POINT
+      ├ objective_value      : 0.00000e+00
+      ├ dual_objective_value : 1.10000e+01
+      ├ value
+      │ ├ x : multiple variables with the same name
+      │ └ y : 3.00000e+00
+      └ dual
+        ├ c : multiple constraints with the same name
+        └ d : 5.00000e+00"""
     return
 end
 

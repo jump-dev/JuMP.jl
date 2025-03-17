@@ -1325,23 +1325,19 @@ function test_assert_is_solved_and_feasible()
     @test_throws(
         ErrorException(
             """
-            The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+            The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
-            * Solver : Mock
-
-            * Status
-              Result count       : 1
-              Termination status : OPTIMAL
-              Message from the solver:
-              "failed"
-
-            * Candidate solution (result #1)
-              Primal status      : FEASIBLE_POINT
-              Dual status        : NO_SOLUTION
-              Objective value    : 0.00000e+00
-              Dual objective value : 0.00000e+00
-
-            * Work counters
+            solution_summary(; result = 1, verbose = false)
+            ├ solver_name          : Mock
+            ├ Termination
+            │ ├ termination_status : OPTIMAL
+            │ ├ result_count       : 1
+            │ └ raw_status         : failed
+            └ Solution (result = 1)
+              ├ primal_status        : FEASIBLE_POINT
+              ├ dual_status          : NO_SOLUTION
+              ├ objective_value      : 0.00000e+00
+              └ dual_objective_value : 0.00000e+00
             """,
         ),
         assert_is_solved_and_feasible(model; dual = true),
@@ -1349,17 +1345,12 @@ function test_assert_is_solved_and_feasible()
     @test_throws(
         ErrorException(
             """
-            The model was not solved correctly. Here is a summary of the solution to help debug why this happened:
+            The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
-            * Solver : Mock
-
-            * Status
-              Result count       : 1
-              Termination status : OPTIMAL
-
-            * Candidate solution (result #2)
-              Primal status      : NO_SOLUTION
-              Dual status        : NO_SOLUTION
+            solution_summary(; result = 2, verbose = false)
+            └ Solution (result = 2)
+              ├ primal_status        : NO_SOLUTION
+              └ dual_status          : NO_SOLUTION
             """,
         ),
         assert_is_solved_and_feasible(model; dual = true, result = 2),

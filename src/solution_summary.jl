@@ -51,19 +51,15 @@ When called at the REPL, the summary is automatically printed:
 julia> model = Model();
 
 julia> solution_summary(model)
-* Solver : No optimizer attached.
-
-* Status
-  Result count       : 0
-  Termination status : OPTIMIZE_NOT_CALLED
-  Message from the solver:
-  "optimize not called"
-
-* Candidate solution (result #1)
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
-
-* Work counters
+solution_summary(; result = 1, verbose = false)
+├ solver_name          : No optimizer attached.
+├ Termination
+│ ├ termination_status : OPTIMIZE_NOT_CALLED
+│ ├ result_count       : 0
+│ └ raw_status         : optimize not called
+└ Solution (result = 1)
+  ├ primal_status        : NO_SOLUTION
+  └ dual_status          : NO_SOLUTION
 ```
 
 Use `print` to force the printing of the summary from inside a function:
@@ -77,19 +73,15 @@ julia> function foo(model)
 foo (generic function with 1 method)
 
 julia> foo(model)
-* Solver : No optimizer attached.
-
-* Status
-  Result count       : 0
-  Termination status : OPTIMIZE_NOT_CALLED
-  Message from the solver:
-  "optimize not called"
-
-* Candidate solution (result #1)
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
-
-* Work counters
+solution_summary(; result = 1, verbose = false)
+├ solver_name          : No optimizer attached.
+├ Termination
+│ ├ termination_status : OPTIMIZE_NOT_CALLED
+│ ├ result_count       : 0
+│ └ raw_status         : optimize not called
+└ Solution (result = 1)
+  ├ primal_status        : NO_SOLUTION
+  └ dual_status          : NO_SOLUTION
 ```
 """
 function solution_summary(
@@ -131,106 +123,99 @@ Write a summary of the solution results to `io` (or to `stdout` if `io` is not
 given).
 """
 function Base.show(io::IO, summary::_SolutionSummary)
-    println(io, "* Solver : ", summary.solver)
-    println(io)
-    _show_status_summary(io, summary)
-    _show_candidate_solution_summary(io, summary)
+    branches = Pair{String,Any}[
+        "solver_name          : "=>summary.solver,
+        "Termination"=>Pair{String,Any}[
+            "termination_status : "=>summary.termination_status,
+            "result_count       : "=>summary.result_count,
+            "raw_status         : "=>summary.raw_status,
+            "objective_bound    : "=>summary.objective_bound,
+        ],
+        "Solution (result = $(summary.result))"=>Pair{String,Any}[
+            "primal_status        : "=>summary.primal_status,
+            "dual_status          : "=>summary.dual_status,
+            "objective_value      : "=>summary.objective_value,
+            "dual_objective_value : "=>summary.dual_objective_value,
+        ],
+        "Work counters"=>Pair{String,Any}[
+            "solve_time (sec)   : "=>summary.solve_time,
+            "simplex_iterations : "=>summary.simplex_iterations,
+            "barrier_iterations : "=>summary.barrier_iterations,
+            "node_count         : "=>summary.node_count,
+        ],
+    ]
     if summary.result == 1
-        _show_work_counters_summary(io, summary)
-    end
-    return
-end
-
-function _show_status_summary(io::IO, summary::_SolutionSummary)
-    println(io, "* Status")
-    println(io, "  Result count       : ", summary.result_count)
-    println(io, "  Termination status : ", summary.termination_status)
-    if summary.result == 1
-        println(io, "  Message from the solver:")
-        println(io, "  \"", summary.raw_status, "\"")
-    end
-    println(io)
-    return
-end
-
-function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
-    println(io, "* Candidate solution (result #$(summary.result))")
-    println(io, "  Primal status      : ", summary.primal_status)
-    println(io, "  Dual status        : ", summary.dual_status)
-    _print_if_not_missing(
-        io,
-        "  Objective value    : ",
-        summary.objective_value,
-    )
-    if summary.result == 1
-        _print_if_not_missing(
-            io,
-            "  Objective bound    : ",
-            summary.objective_bound,
-        )
-        _print_if_not_missing(
-            io,
-            "  Relative gap       : ",
-            summary.relative_gap,
+        push!(
+            last(branches[3]),
+            "relative_gap         : " => summary.relative_gap,
         )
     end
-    _print_if_not_missing(
-        io,
-        "  Dual objective value : ",
-        summary.dual_objective_value,
-    )
     if summary.verbose && summary.has_values
-        println(io, "  Primal solution :")
-        for variable_name in sort(collect(keys(summary.primal_solution)))
-            if summary.primal_solution[variable_name] === missing
-                println(
-                    io,
-                    "    $variable_name : multiple variables with the same name",
-                )
-            else
-                _print_if_not_missing(
-                    io,
-                    "    $(variable_name) : ",
-                    summary.primal_solution[variable_name],
-                )
-            end
-        end
+        primal_solution = Pair{String,Any}[
+            "$name : " => coalesce(
+                summary.primal_solution[name],
+                "multiple variables with the same name",
+            ) for name in sort(collect(keys(summary.primal_solution)))
+        ]
+        push!(last(branches[3]), "value" => primal_solution)
     end
     if summary.verbose && summary.has_duals
-        println(io, "  Dual solution :")
-        for constraint_name in sort(collect(keys(summary.dual_solution)))
-            if summary.dual_solution[constraint_name] === missing
-                println(
-                    io,
-                    "    $constraint_name : multiple constraints with the same name",
-                )
-            else
-                _print_if_not_missing(
-                    io,
-                    "    $(constraint_name) : ",
-                    summary.dual_solution[constraint_name],
-                )
-            end
-        end
+        dual_solution = Pair{String,Any}[
+            "$name : " => coalesce(
+                summary.dual_solution[name],
+                "multiple constraints with the same name",
+            ) for name in sort(collect(keys(summary.dual_solution)))
+        ]
+        push!(last(branches[3]), "dual" => dual_solution)
     end
+    if summary.result != 1
+        branches = branches[3:3]
+    end
+    _print_tree(
+        io,
+        "solution_summary(; result = $(summary.result), verbose = $(summary.verbose))" =>
+            branches,
+    )
     return
 end
 
-function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
-    println(io)
-    println(io, "* Work counters")
-    _print_if_not_missing(io, "  Solve time (sec)   : ", summary.solve_time)
-    _print_if_not_missing(
-        io,
-        "  Simplex iterations : ",
-        summary.simplex_iterations,
-    )
-    _print_if_not_missing(
-        io,
-        "  Barrier iterations : ",
-        summary.barrier_iterations,
-    )
-    _print_if_not_missing(io, "  Node count         : ", summary.node_count)
+function _replace_prefix(prefix)
+    if isempty(prefix)
+        return prefix
+    elseif endswith(prefix, "├ ")
+        return string(chop(prefix; tail = 2), "│ ")
+    else
+        return string(chop(prefix; tail = 2), "  ")
+    end
+end
+
+_should_keep(::Missing) = false
+_should_keep(::Any) = true
+_should_keep(x::Pair{String,<:Any}) = _should_keep(last(x))
+_should_keep(x::Vector) = any(_should_keep, x)
+
+_format(x::Any) = x
+
+_format(x::AbstractFloat) = Printf.@sprintf("%.5e", x)
+
+function _format(x::Vector{<:Real})
+    return string("[", join((Printf.@sprintf("%.5e", v) for v in x), ","), "]")
+end
+
+function _print_tree(io::IO, args::Pair{String,<:Any}, prefix = "")
+    if !isempty(prefix)
+        println(io)
+    end
+    if !(last(args) isa Vector{Pair{String,Any}})  # Leaf node
+        print(io, prefix, first(args), _format(last(args)))
+        return
+    end
+    branches = filter(_should_keep, last(args))
+    print(io, prefix, first(args))
+    for (i, branch) in enumerate(branches)
+        suffix = i == length(branches) ? "└ " : "├ "
+        _print_tree(io, branch, _replace_prefix(prefix) * suffix)
+    end
     return
 end
 
@@ -272,17 +257,4 @@ function _try_get(f, model)
     catch
         return missing
     end
-end
-
-_print_if_not_missing(io, header, ::Missing) = nothing
-_print_if_not_missing(io, header, value::Real) = println(io, header, value)
-function _print_if_not_missing(io, header, value::AbstractFloat)
-    println(io, header, Printf.@sprintf("%.5e", value))
-    return
-end
-
-function _print_if_not_missing(io, header, value::Vector{<:Real})
-    array = join([Printf.@sprintf("%.5e", v) for v in value], ",")
-    println(io, header, "[", array, "]")
-    return
 end
