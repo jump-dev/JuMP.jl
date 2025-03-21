@@ -458,6 +458,7 @@ silent_hook (generic function with 1 method)
 julia> optimize!(model; silent = true)
 
 julia> optimize!(model; silent = false)
+MIP  has 0 rows; 1 cols; 0 nonzeros; 1 integer variables (0 binary)
 Coefficient ranges:
   Cost   [1e+00, 1e+00]
   Bound  [2e+00, 2e+00]
@@ -472,8 +473,12 @@ Presolving model
 0 rows, 0 cols, 0 nonzeros  0s
 Presolve: Optimal
 
+Src: B => Branching; C => Central rounding; F => Feasibility pump; H => Heuristic; L => Sub-MIP;
+     P => Empty MIP; R => Randomized rounding; S => Solve LP; T => Evaluate node; U => Unbounded;
+     z => Trivial zero; l => Trivial lower; u => Trivial upper; p => Trivial point; X => User solution
+
         Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work
-     Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
 
          0       0         0   0.00%   2               2                  0.00%        0      0      0         0     0.0s
 
@@ -482,6 +487,7 @@ Solving report
   Primal bound      2
   Dual bound        2
   Gap               0% (tolerance: 0.01%)
+  P-D integral      0
   Solution status   feasible
                     2 (objective)
                     0 (bound viol.)
@@ -489,8 +495,11 @@ Solving report
                     0 (row viol.)
   Timing            0.00 (total)
                     0.00 (presolve)
+                    0.00 (solve)
                     0.00 (postsolve)
+  Max sub-MIP depth 0
   Nodes             0
+  Repair LPs        0 (0 feasible; 0 iterations)
   LP iterations     0 (total)
                     0 (strong br.)
                     0 (separation)
