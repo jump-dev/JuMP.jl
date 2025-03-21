@@ -40,7 +40,7 @@
 [Clp]
     rev = "v1.2.2"
 [CPLEX]
-    rev = "v1.0.3"
+    rev = "v1.1.0"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 [DiffOpt]
@@ -57,7 +57,7 @@
 [Gurobi]
     rev = "v1.7.2"
 [HiGHS]
-    rev = "v1.14.0"
+    rev = "v1.15.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
@@ -68,9 +68,9 @@
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
-    rev = "e6adee5146d503e7b1e5230d18b2b35c21bd3a26"
+    rev = "v0.15.7"
 [MultiObjectiveAlgorithms]
-    rev = "v1.3.5"
+    rev = "v1.4.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
