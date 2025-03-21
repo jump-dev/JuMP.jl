@@ -229,6 +229,7 @@ value(x[1])
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
+set_attribute(model, "presolve", "off")
 @variable(model, x == 1 + 1e-6, Int)
 optimize!(model)
 assert_is_solved_and_feasible(model)  #src
