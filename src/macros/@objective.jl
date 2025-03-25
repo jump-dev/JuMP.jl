@@ -8,11 +8,11 @@
 
 Set the objective sense to `sense` and objective function to `func`.
 
-## sense
+## `sense`
 
 The objective sense must be either be the literals `Min` or `Max`, or one of the
 three [`MOI.OptimizationSense`](@ref) enum values ([`MIN_SENSE`](@ref),
-[`MAX_SENSE`](@ref), or [`FEASIBILITY_SENSE`](@ref))
+[`MAX_SENSE`](@ref), or [`FEASIBILITY_SENSE`](@ref)).
 
 In order to set the sense programmatically, that is, when `sense` is a Julia
 variable whose value is the sense, you must use a [`MOI.OptimizationSense`](@ref).
@@ -65,7 +65,7 @@ julia> @objective(model, sense, x^2 - 2x + 1)
 x² - 2 x + 1
 ```
 
-Set the objective sense programmatically:
+Remove an objective function:
 ```jldoctest
 julia> model = Model();
 
