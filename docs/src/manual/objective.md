@@ -231,6 +231,30 @@ julia> @objective(model, Max, objective_function(model))
 2 x
 ```
 
+## Remove an objective
+
+To remove an objective function use [`set_objective_sense`](@ref) to set the
+sense to [`FEASIBILITY_SENSE`](@ref):
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @objective(model, Min, 2x);
+
+julia> objective_function(model)
+2 x
+
+julia> set_objective_sense(model, FEASIBILITY_SENSE)
+
+julia> objective_sense(model)
+FEASIBILITY_SENSE::OptimizationSense = 2
+
+julia> objective_function(model)
+0
+```
+
 ## Set a vector-valued objective
 
 Define a multi-objective optimization problem by passing a vector of objectives:
