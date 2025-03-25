@@ -322,7 +322,7 @@ You should not set `sense` to [`FEASIBILITY_SENSE`](@ref) because
 [`FEASIBILITY_SENSE`](@ref) implies that there is no objective function.
 
 Instead of `set_objective(model, FEASIBILITY_SENSE, f)`, do
-`set_sense(model, FEASIBILITY_SENSE)`.
+`set_objective_sense(model, FEASIBILITY_SENSE)`.
 
 ## Example
 

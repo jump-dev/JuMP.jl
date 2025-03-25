@@ -24,8 +24,8 @@ Therefore, you should not set `sense` to [`FEASIBILITY_SENSE`](@ref) with a
 non-zero `func`.
 
 To reset the model to [`FEASIBILITY_SENSE`](@ref), do
-`@objective(model, FEASIBILITY_SENSE, 0)`, or use [`set_sense`](@ref):
-`set_sense(model, FEASIBILITY_SENSE)`.
+`@objective(model, FEASIBILITY_SENSE, 0)`, or use [`set_objective_sense`](@ref):
+`set_objective_sense(model, FEASIBILITY_SENSE)`.
 
 ## Example
 

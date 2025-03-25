@@ -233,8 +233,8 @@ julia> @objective(model, Max, objective_function(model))
 
 ## Remove an objective
 
-To remove an objective function use [`set_sense`](@ref) to set the sense to
-[`FEASIBILITY_SENSE`](@ref):
+To remove an objective function use [`set_objective_sense`](@ref) to set the
+sense to [`FEASIBILITY_SENSE`](@ref):
 
 ```jldoctest
 julia> model = Model();
