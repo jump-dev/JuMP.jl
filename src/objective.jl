@@ -200,10 +200,12 @@ end
 
 Sets the objective sense of the model to the given sense.
 
-See [`set_objective_function`](@ref) to set the objective function.
+See also: [`@objective`](@ref), [`set_objective_function`](@ref), [`set_objective`](@ref)
 
-These are low-level functions; the recommended way to set the objective is with
-the [`@objective`](@ref) macro.
+## FEASIBILITY_SENSE
+
+Setting the objective sense to [`FEASIBILITY_SENSE`](@ref) will remove any
+existing objective.
 
 ## Example
 
@@ -220,7 +222,8 @@ MAX_SENSE::OptimizationSense = 1
 ```
 """
 function set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
-    return MOI.set(model, MOI.ObjectiveSense(), sense)
+    MOI.set(model, MOI.ObjectiveSense(), sense)
+    return
 end
 
 """
@@ -229,12 +232,9 @@ end
     set_objective_function(model::GenericModel, func::Real)
     set_objective_function(model::GenericModel, func::Vector{<:AbstractJuMPScalar})
 
-Sets the objective function of the model to the given function.
+Set the objective function of `model` to the given function `func`.
 
-See [`set_objective_sense`](@ref) to set the objective sense.
-
-These are low-level functions; the recommended way to set the objective is with
-the [`@objective`](@ref) macro.
+See also: [`@objective`](@ref), [`set_objective_function`](@ref), [`set_objective`](@ref)
 
 ## Example
 
@@ -277,14 +277,16 @@ end
 
 function set_objective_function(model::GenericModel, func::AbstractJuMPScalar)
     check_belongs_to_model(func, model)
-    return set_objective_function(model, moi_function(func))
+    set_objective_function(model, moi_function(func))
+    return
 end
 
 function set_objective_function(model::GenericModel{T}, func::Real) where {T}
-    return set_objective_function(
+    set_objective_function(
         model,
         MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], convert(T, func)),
     )
+    return
 end
 
 function set_objective_function(
@@ -294,7 +296,8 @@ function set_objective_function(
     for f in func
         check_belongs_to_model(f, model)
     end
-    return set_objective_function(model, moi_function(func))
+    set_objective_function(model, moi_function(func))
+    return
 end
 
 function set_objective_function(model::AbstractModel, func)
@@ -306,24 +309,41 @@ end
 
 The functional equivalent of the [`@objective`](@ref) macro.
 
-Sets the objective sense and objective function simultaneously, and is
-equivalent to calling [`set_objective_sense`](@ref) and
-[`set_objective_function`](@ref) separately.
+This function sets the objective sense and objective function simultaneously,
+and it is equivalent to calling [`set_objective_sense`](@ref) followed by
+[`set_objective_function`](@ref).
+
+This is a low-level function; the recommended way to set the objective function
+and sense is with the [`@objective`](@ref) macro.
+
+## FEASIBILITY_SENSE
+
+You should not set `sense` to [`FEASIBILITY_SENSE`](@ref) because
+[`FEASIBILITY_SENSE`](@ref) implies that there is no objective function.
+
+Instead of `set_objective(model, FEASIBILITY_SENSE, f)`, do
+`set_sense(model, FEASIBILITY_SENSE)`.
 
 ## Example
 
 ```jldoctest
 julia> model = Model();
 
-julia> @variable(model, x)
-x
+julia> @variable(model, x);
 
 julia> set_objective(model, MIN_SENSE, x)
+
+julia> objective_sense(model)
+MIN_SENSE::OptimizationSense = 0
+
+julia> objective_function(model)
+x
 ```
 """
 function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
     set_objective_sense(model, sense)
-    return set_objective_function(model, func)
+    set_objective_function(model, func)
+    return
 end
 
 """

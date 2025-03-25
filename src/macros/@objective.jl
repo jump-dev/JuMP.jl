@@ -8,10 +8,24 @@
 
 Set the objective sense to `sense` and objective function to `func`.
 
-The objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE`
-or `MOI.FEASIBILITY_SENSE`. In order to set the sense programmatically, that is,
-when `sense` is a variable whose value is the sense, one of the three
-[`MOI.OptimizationSense`](@ref) values must be used.
+## sense
+
+The objective sense must be either be the literals `Min` or `Max`, or one of the
+three [`MOI.OptimizationSense`](@ref) enum values ([`MIN_SENSE`](@ref),
+[`MAX_SENSE`](@ref), or [`FEASIBILITY_SENSE`](@ref))
+
+In order to set the sense programmatically, that is, when `sense` is a Julia
+variable whose value is the sense, you must use a [`MOI.OptimizationSense`](@ref).
+
+## FEASIBILITY_SENSE
+
+[`FEASIBILITY_SENSE`](@ref) implies that there is no objective function.
+Therefore, you should not set `sense` to [`FEASIBILITY_SENSE`](@ref) with a
+non-zero `func`.
+
+To reset the model to [`FEASIBILITY_SENSE`](@ref), do
+`@objective(model, FEASIBILITY_SENSE, 0)`, or use [`set_sense`](@ref):
+`set_sense(model, FEASIBILITY_SENSE)`.
 
 ## Example
 
@@ -49,6 +63,29 @@ MIN_SENSE::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
 x² - 2 x + 1
+```
+
+Set the objective sense programmatically:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0);
+
+julia> @objective(model, Min, 2x + 1)
+2 x + 1
+
+julia> print(model)
+Min 2 x + 1
+Subject to
+ x ≥ 0
+
+julia> @objective(model, FEASIBILITY_SENSE, 0)
+0
+
+julia> print(model)
+Feasibility
+Subject to
+ x ≥ 0
 ```
 """
 macro objective(input_args...)
