@@ -153,7 +153,7 @@
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
-    rev = "e00a845d42653adf5d26c7cef1ef84fb990c91c7"
+    rev = "dc2bcebb58b1bbeae69453084ff437905eb2463d"
 [InfiniteOpt]
     user = "infiniteopt"
     rev = "v0.5.9"
@@ -174,7 +174,7 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.7"
+    rev = "v0.5.8"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
