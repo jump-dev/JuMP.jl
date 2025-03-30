@@ -2172,58 +2172,58 @@ function test_constraint_by_name()
 end
 
 function test_shadow_price_errors()
-    model = Model()
-    @variable(model, x[1:2])
-    c = @constraint(model, x in SOS1())
-    @test_throws(
-        ErrorException(
-            "The shadow price is not defined or not implemented for this type " *
-            "of constraint.",
-        ),
-        shadow_price(c),
-    )
-    err = ErrorException(
-        "The shadow price is not available because no dual result is " *
-        "available.",
-    )
-    model = Model()
-    @variable(model, x)
-    c = @constraint(model, x <= 1)
-    @test_throws err shadow_price(c)
-    c = @constraint(model, x >= 1)
-    @test_throws err shadow_price(c)
-    c = @constraint(model, x == 1)
-    @test_throws err shadow_price(c)
-    model = Model()
-    @variable(model, 0 <= x <= 1)
-    set_optimizer(
-        model,
-        () -> MOI.Utilities.MockOptimizer(
+    model = direct_model(
+        MOI.Utilities.MockOptimizer(
             MOI.Utilities.Model{Float64}();
             eval_variable_constraint_dual = false,
         ),
     )
-    optimize!(model)
-    mock = unsafe_backend(model)
+    @variable(model, x)
+    @constraint(model, c1, x >= 1)
+    @constraint(model, c2, x <= 1)
+    @constraint(model, c3, x == 1)
+    @constraint(model, c4, x in MOI.Interval(0.0, 1.0))
+    @test_throws(
+        ErrorException(
+            "The shadow price is not available because no dual result is " *
+            "available.",
+        ),
+        shadow_price(c1),
+    )
+    mock = backend(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    F = MOI.VariableIndex
-    S1, S2 = MOI.GreaterThan{Float64}, MOI.LessThan{Float64}
-    i = only(MOI.get(mock, MOI.ListOfVariableIndices())).value
-    MOI.set(mock, MOI.ConstraintDual(), MOI.ConstraintIndex{F,S1}(i), 1.0)
-    MOI.set(mock, MOI.ConstraintDual(), MOI.ConstraintIndex{F,S2}(i), -1.0)
+    MOI.set(mock, MOI.ConstraintDual(), index(c1), 1.0)
+    MOI.set(mock, MOI.ConstraintDual(), index(c2), 1.0)
+    MOI.set(mock, MOI.ConstraintDual(), index(c3), 1.0)
+    MOI.set(mock, MOI.ConstraintDual(), index(c4), 1.0)
+    optimize!(model)
     @test_throws(
         ErrorException(
             "The shadow price is not available because the objective sense $FEASIBILITY_SENSE is not minimization or maximization.",
         ),
-        shadow_price(LowerBoundRef(x)),
+        shadow_price(c1),
     )
+    @objective(model, Min, x)
+    @test shadow_price(c1) == -1.0
+    @test shadow_price(c2) == 1.0
+    @test shadow_price(c3) == -1.0
     @test_throws(
         ErrorException(
-            "The shadow price is not available because the objective sense $FEASIBILITY_SENSE is not minimization or maximization.",
+            "The shadow price is not defined or not implemented for this type of constraint.",
         ),
-        shadow_price(UpperBoundRef(x)),
+        shadow_price(c4),
+    )
+    @objective(model, Max, x)
+    @test shadow_price(c1) == 1.0
+    @test shadow_price(c2) == -1.0
+    @test shadow_price(c3) == 1.0
+    @test_throws(
+        ErrorException(
+            "The shadow price is not defined or not implemented for this type of constraint.",
+        ),
+        shadow_price(c4),
     )
     return
 end
