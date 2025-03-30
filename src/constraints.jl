@@ -1419,30 +1419,30 @@ Return the change in the objective from an infinitesimal relaxation of the
 constraint.
 
 The shadow price is computed from [`dual`](@ref) and can be queried only when
-the objective sense is `MIN_SENSE` or `MAX_SENSE` (not `FEASIBILITY_SENSE`).
+the [`objective_sense`](@ref) is [`MIN_SENSE`](@ref) or [`MAX_SENSE`](@ref) (not
+[`FEASIBILITY_SENSE`](@ref)).
 
-See also [`reduced_cost`](@ref JuMP.reduced_cost).
+See also [`reduced_cost`](@ref).
 
 ## Comparison to `dual`
 
-The shadow prices differ at most in sign from the `dual` value depending on the
-objective sense. The differences are summarized in the table:
+The shadow prices differ at most in sign from the [`dual`](@ref) value depending
+on the [`objective_sense`](@ref). The differences are summarized in the table:
 
-|             | `Min` | `Max` |
-| ----------- | ----- | ----- |
-| `f(x) <= b` | `+1`  | `-1`  |
-| `f(x) >= b` | `-1`  | `+1`  |
+|             | `MIN_SENSE`      | `MAX_SENSE`      |
+| ----------- | ---------------- | ---------------- |
+| `f(x) <= b` |  `dual(con_ref)` | `-dual(con_ref)` |
+| `f(x) >= b` | `-dual(con_ref)` |  `dual(con_ref)` |
 
 ## Notes
 
-- The function simply translates signs from `dual` and does not validate
-  the conditions needed to guarantee the sensitivity interpretation of the
-  shadow price. The caller is responsible, for example, for checking whether the
-  solver converged to an optimal primal-dual pair or a proof of infeasibility.
-- The computation is based on the current objective sense of the model. If this
-  has changed since the last solve, the results will be incorrect.
-- Relaxation of equality constraints (and hence the shadow price) is defined
-  based on which sense of the equality constraint is active.
+This function simply translates signs from [`dual`](@ref) and does not validate
+the conditions needed to guarantee the sensitivity interpretation of the
+shadow price. The caller is responsible, for example, for checking whether the
+solver converged to an optimal primal-dual pair or a proof of infeasibility.
+
+The relaxation of equality constraints (and hence the shadow price) is defined
+based on which sense of the equality constraint is active.
 
 ## Example
 
@@ -1467,79 +1467,15 @@ FEASIBLE_POINT::ResultStatusCode = 1
 
 julia> shadow_price(c)
 2.0
+
+julia> dual(c)
+-2.0
 ```
 """
 function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
-)
-    return error(
-        "The shadow price is not defined or not implemented for this type " *
-        "of constraint.",
-    )
-end
-
-function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
-    # When minimizing, the shadow price is nonpositive and when maximizing the
-    # shadow price is nonnegative (because relaxing a constraint can only
-    # improve the objective). By MOI convention, a feasible dual on a LessThan
-    # set is nonpositive, so we flip the sign when maximizing.
-    if sense == MAX_SENSE
-        return -dual_value
-    elseif sense == MIN_SENSE
-        return dual_value
-    else
-        error(
-            "The shadow price is not available because the objective sense " *
-            "$sense is not minimization or maximization.",
-        )
-    end
-end
-
-function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
-    # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
-    # so we flip the sign when minimizing. (See comment in the method above).
-    if sense == MAX_SENSE
-        return dual_value
-    elseif sense == MIN_SENSE
-        return -dual_value
-    else
-        error(
-            "The shadow price is not available because the objective sense " *
-            "$sense is not minimization or maximization.",
-        )
-    end
-end
-
-function shadow_price(
     con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
-) where {S<:MOI.LessThan,F}
-    model = con_ref.model
-    if !has_duals(model)
-        error(
-            "The shadow price is not available because no dual result is " *
-            "available.",
-        )
-    end
-    return _shadow_price_less_than(dual(con_ref), objective_sense(model))
-end
-
-function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
-) where {S<:MOI.GreaterThan,F}
-    model = con_ref.model
-    if !has_duals(model)
-        error(
-            "The shadow price is not available because no dual result is " *
-            "available.",
-        )
-    end
-    return _shadow_price_greater_than(dual(con_ref), objective_sense(model))
-end
-
-function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
-) where {S<:MOI.EqualTo,F}
-    model = con_ref.model
+) where {F,S}
+    model = owner_model(con_ref)
     if !has_duals(model)
         error(
             "The shadow price is not available because no dual result is " *
@@ -1547,13 +1483,43 @@ function shadow_price(
         )
     end
     sense = objective_sense(model)
-    dual_val = dual(con_ref)
-    if dual_val > 0
-        # Treat the equality constraint as if it were a GreaterThan constraint.
-        return _shadow_price_greater_than(dual_val, sense)
-    else
-        # Treat the equality constraint as if it were a LessThan constraint.
-        return _shadow_price_less_than(dual_val, sense)
+    if sense == FEASIBILITY_SENSE
+        error(
+            "The shadow price is not available because the objective sense " *
+            "$sense is not minimization or maximization.",
+        )
+    end
+    return _shadow_price(S, dual(con_ref), sense)
+end
+
+function _shadow_price(::Type{S}, ::Any, ::Any) where {S}
+    return error(
+        "The shadow price is not defined or not implemented for this type " *
+        "of constraint.",
+    )
+end
+
+function _shadow_price(::Type{MOI.LessThan{T}}, dual, sense) where {T}
+    if sense == MAX_SENSE
+        return -dual
+    end
+    @assert sense == MIN_SENSE
+    return dual
+end
+
+function _shadow_price(::Type{MOI.GreaterThan{T}}, dual, sense) where {T}
+    if sense == MAX_SENSE
+        return dual
+    end
+    @assert sense == MIN_SENSE
+    return -dual
+end
+
+function _shadow_price(::Type{MOI.EqualTo{T}}, dual, sense) where {T}
+    if dual >= 0  # Constraint is binding on the GreaterThan part
+        return _shadow_price(MOI.GreaterThan{T}, dual, sense)
+    else  # Constraint is binding on the LessThan part
+        return _shadow_price(MOI.LessThan{T}, dual, sense)
     end
 end
 
