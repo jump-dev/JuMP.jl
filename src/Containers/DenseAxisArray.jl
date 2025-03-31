@@ -488,18 +488,23 @@ struct DenseAxisArrayKeys{T<:Tuple,S<:DenseAxisArrayKey,N} <: AbstractArray{S,N}
         return new{Ax,DenseAxisArrayKey{eltype(product_iter)},N}(product_iter)
     end
 end
+
 Base.size(iter::DenseAxisArrayKeys) = size(iter.product_iter)
+
 function Base.eltype(iter::DenseAxisArrayKeys)
     return DenseAxisArrayKey{eltype(iter.product_iter)}
 end
+
 function Base.iterate(iter::DenseAxisArrayKeys)
     next = iterate(iter.product_iter)
     return next === nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
 end
+
 function Base.iterate(iter::DenseAxisArrayKeys, state)
     next = iterate(iter.product_iter, state)
     return next === nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
 end
+
 function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
 end
@@ -605,6 +610,7 @@ function Base.summary(io::IO, A::DenseAxisArray)
     end
     return print(io, "And data, a ", summary(A.data))
 end
+
 function _summary(io, ::DenseAxisArray{T,N}) where {T,N}
     return println(
         io,
@@ -615,6 +621,7 @@ end
 function Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T}
     return Base.print_matrix(io, X.data)
 end
+
 function Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T}
     return Base.print_matrix(io, X.data)
 end

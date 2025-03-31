@@ -190,8 +190,11 @@ function _replace_prefix(prefix)
 end
 
 _should_keep(::Missing) = false
+
 _should_keep(::Any) = true
+
 _should_keep(x::Pair{String,<:Any}) = _should_keep(last(x))
+
 _should_keep(x::Vector) = any(_should_keep, x)
 
 _format(x::Any) = x

@@ -220,6 +220,7 @@ function set_dual_start_value(
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
     return
 end
+
 function set_dual_start_value(
     con_ref::ConstraintRef{
         <:AbstractModel,
@@ -419,7 +420,8 @@ function set_name(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex},
     s::String,
 )
-    return MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+    MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+    return
 end
 
 """
@@ -890,6 +892,7 @@ function constraint_object(
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
+
 function check_belongs_to_model(con::ScalarConstraint, model)
     return check_belongs_to_model(con.func, model)
 end
@@ -948,6 +951,7 @@ struct VectorConstraint{
     set::S
     shape::Shape
 end
+
 function VectorConstraint(
     func::Vector{<:Union{Number,AbstractJuMPScalar}},
     set::MOI.AbstractVectorSet,
@@ -1198,8 +1202,10 @@ function _moi_add_to_function_constant(
         )
     end
     new_set = MOIU.shift_constant(set, -value)
-    return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
+    MOI.set(model, MOI.ConstraintSet(), ci, new_set)
+    return
 end
+
 function _moi_add_to_function_constant(
     model::MOI.ModelLike,
     ci::MOI.ConstraintIndex{

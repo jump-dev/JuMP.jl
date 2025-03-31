@@ -178,7 +178,8 @@ false
 ```
 """
 function set_silent(model::GenericModel)
-    return MOI.set(model, MOI.Silent(), true)
+    MOI.set(model, MOI.Silent(), true)
+    return
 end
 
 """
@@ -208,7 +209,8 @@ false
 ```
 """
 function unset_silent(model::GenericModel)
-    return MOI.set(model, MOI.Silent(), false)
+    MOI.set(model, MOI.Silent(), false)
+    return
 end
 
 """
@@ -241,7 +243,8 @@ julia> time_limit_sec(model)
 ```
 """
 function set_time_limit_sec(model::GenericModel, limit::Real)
-    return MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
+    MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
+    return
 end
 
 function set_time_limit_sec(model::GenericModel, ::Nothing)
@@ -275,7 +278,8 @@ julia> time_limit_sec(model)
 ```
 """
 function unset_time_limit_sec(model::GenericModel)
-    return MOI.set(model, MOI.TimeLimitSec(), nothing)
+    MOI.set(model, MOI.TimeLimitSec(), nothing)
+    return
 end
 
 """
@@ -1217,7 +1221,8 @@ function MOI.set(
 )
     check_belongs_to_model(v, model)
     model.is_model_dirty = true
-    return MOI.set(backend(model), attr, index(v), value)
+    MOI.set(backend(model), attr, index(v), value)
+    return
 end
 
 function MOI.set(
@@ -1228,7 +1233,8 @@ function MOI.set(
 )
     check_belongs_to_model(cr, model)
     model.is_model_dirty = true
-    return MOI.set(backend(model), attr, index(cr), value)
+    MOI.set(backend(model), attr, index(cr), value)
+    return
 end
 
 """

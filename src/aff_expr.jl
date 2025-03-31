@@ -236,9 +236,13 @@ Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 Base.conj(a::GenericAffExpr{<:Real}) = a
+
 Base.real(a::GenericAffExpr{<:Real}) = a
+
 Base.imag(a::GenericAffExpr{<:Real}) = zero(a)
+
 Base.abs2(a::GenericAffExpr{<:Real}) = a^2
+
 Base.isreal(x::GenericAffExpr{<:Real}) = true
 
 Base.conj(a::GenericAffExpr{<:Complex}) = map_coefficients(conj, a)
@@ -255,7 +259,9 @@ function _map_coefs(f::Function, a::GenericAffExpr{Complex{T},V}) where {T,V}
 end
 
 Base.real(a::GenericAffExpr{<:Complex}) = _map_coefs(real, a)
+
 Base.imag(a::GenericAffExpr{<:Complex}) = _map_coefs(imag, a)
+
 function Base.abs2(a::GenericAffExpr{<:Complex})
     imag_a = imag(a)
     return add_to_expression!(real(a)^2, imag_a, imag_a)
@@ -386,6 +392,7 @@ function map_coefficients(f::Function, a::GenericAffExpr)
     # and then used to build the `OrderedDict`.
     return _map_aff(f, f(a.constant), a)
 end
+
 function _map_aff(f, constant::C, a::GenericAffExpr{T,V}) where {C,T,V}
     terms = OrderedDict{V,C}()
     for (coef, var) in linear_terms(a)

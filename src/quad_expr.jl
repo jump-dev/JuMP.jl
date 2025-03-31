@@ -156,18 +156,21 @@ end
 function Base.iszero(expr::GenericQuadExpr)
     return iszero(expr.aff) && all(iszero, values(expr.terms))
 end
+
 function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
     return GenericQuadExpr(
         zero(GenericAffExpr{C,V}),
         OrderedDict{UnorderedPair{V},C}(),
     )
 end
+
 function Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}
     return GenericQuadExpr(
         one(GenericAffExpr{C,V}),
         OrderedDict{UnorderedPair{V},C}(),
     )
 end
+
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr) = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
@@ -336,6 +339,7 @@ function map_coefficients(f::Function, q::GenericQuadExpr)
     # and then used to build the `OrderedDict`.
     return _map_quad(f, map_coefficients(f, q.aff), q)
 end
+
 function _map_quad(
     f::Function,
     aff::GenericAffExpr{C,V},
@@ -398,6 +402,7 @@ quad_terms(quad::GenericQuadExpr) = QuadTermIterator(quad)
 function _reorder_and_flatten(p::Pair{<:UnorderedPair})
     return (p.second, p.first.a, p.first.b)
 end
+
 function Base.iterate(qti::QuadTermIterator)
     ret = iterate(qti.quad.terms)
     if ret === nothing
@@ -406,6 +411,7 @@ function Base.iterate(qti::QuadTermIterator)
         return _reorder_and_flatten(ret[1]), ret[2]
     end
 end
+
 function Base.iterate(qti::QuadTermIterator, state)
     ret = iterate(qti.quad.terms, state)
     if ret === nothing
@@ -701,6 +707,7 @@ function _moi_quadratic_term(t::Tuple)
         index(t[3]),
     )
 end
+
 function MOI.ScalarQuadraticFunction(
     q::GenericQuadExpr{C,GenericVariableRef{T}},
 ) where {C,T}
@@ -711,9 +718,11 @@ function MOI.ScalarQuadraticFunction(
     moi_aff = MOI.ScalarAffineFunction(q.aff)
     return MOI.ScalarQuadraticFunction(qterms, moi_aff.terms, moi_aff.constant)
 end
+
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
 end
+
 function moi_function_type(::Type{<:GenericQuadExpr{T}}) where {T}
     return MOI.ScalarQuadraticFunction{T}
 end
@@ -744,24 +753,28 @@ function GenericQuadExpr{C,GenericVariableRef{T}}(
     end
     return quad
 end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.ScalarQuadraticFunction{C}},
 ) where {C,T}
     return GenericQuadExpr{C,GenericVariableRef{T}}
 end
+
 function jump_function(
     model::GenericModel{T},
     f::MOI.ScalarQuadraticFunction{C},
 ) where {C,T}
     return GenericQuadExpr{C,GenericVariableRef{T}}(model, f)
 end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VectorQuadraticFunction{C}},
 ) where {C,T}
     return Vector{GenericQuadExpr{C,GenericVariableRef{T}}}
 end
+
 function jump_function(
     model::GenericModel{T},
     f::MOI.VectorQuadraticFunction{C},

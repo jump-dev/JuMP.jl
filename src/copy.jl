@@ -91,6 +91,7 @@ function _should_copy_complete_object(
 )
     return filter_constraints(value)
 end
+
 function _should_copy_complete_object(
     filter_constraints::Function,
     value::AbstractArray{T},

@@ -32,6 +32,7 @@ struct Optimizer
     a::Int
     b::Int
 end
+
 function opt_build(a::Int; b::Int = 1)
     return Optimizer(a, b)
 end
@@ -569,6 +570,7 @@ end
 struct DummyExtensionData
     model::GenericModel
 end
+
 function JuMP.copy_extension_data(
     data::DummyExtensionData,
     new_model::AbstractModel,
@@ -577,6 +579,7 @@ function JuMP.copy_extension_data(
     @test data.model === model
     return DummyExtensionData(new_model)
 end
+
 function dummy_optimizer_hook(::AbstractModel) end
 
 function copy_model_style_mode(use_copy_model, filter_mode)
