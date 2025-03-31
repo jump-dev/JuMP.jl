@@ -61,6 +61,7 @@ end
 struct PowerCone{T}
     exponent::T
 end
+
 function JuMP.build_constraint(
     error_fn::Function,
     f,

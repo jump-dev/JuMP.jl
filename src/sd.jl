@@ -281,6 +281,7 @@ The diagonal is zero.
 struct SkewSymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
+
 function reshape_vector(
     vectorized_form::Vector{T},
     shape::SkewSymmetricMatrixShape,
@@ -319,12 +320,14 @@ row).
 struct SquareMatrixShape <: AbstractShape
     side_dimension::Int
 end
+
 function reshape_vector(
     vectorized_form::Vector{T},
     shape::SquareMatrixShape,
 ) where {T}
     return reshape(vectorized_form, shape.side_dimension, shape.side_dimension)
 end
+
 function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
     return PSDCone()
 end

@@ -127,6 +127,7 @@ end
 # matrices. As a fallback, we define `_isfinite`, because overloading `isfinite`
 # would be type piracy.
 _isfinite(x::Number) = isfinite(x)
+
 _isfinite(x) = true
 
 """
@@ -242,9 +243,13 @@ variable_ref_type(::Type{V}) where {V<:AbstractVariableRef} = V
 value_type(::Type{<:AbstractVariableRef}) = Float64
 
 Base.conj(v::AbstractVariableRef) = v
+
 Base.real(v::AbstractVariableRef) = v
+
 Base.imag(v::AbstractVariableRef) = zero(v)
+
 Base.abs2(v::AbstractVariableRef) = v^2
+
 Base.isreal(::AbstractVariableRef) = true
 
 """
@@ -2013,6 +2018,7 @@ julia> start_value(y)
 has_start_value(v::AbstractVariableRef)::Bool = start_value(v) !== nothing
 
 _convert_if_something(::Type{T}, x) where {T} = convert(T, x)
+
 _convert_if_something(::Type, ::Nothing) = nothing
 
 """
@@ -2541,9 +2547,11 @@ function _imag(s::String)
 end
 
 _real(v::ScalarVariable) = _mapinfo(real, v)
+
 _real(scalar) = real(scalar)
 
 _imag(v::ScalarVariable) = _mapinfo(imag, v)
+
 _imag(scalar) = imag(scalar)
 
 _conj(v::ScalarVariable) = _mapinfo(conj, v)
