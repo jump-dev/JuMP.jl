@@ -205,9 +205,32 @@ name(model::AbstractModel) = "An Abstract JuMP Model"
 function name(model::GenericModel)
     if MOI.supports(backend(model), MOI.Name())
         ret = MOI.get(model, MOI.Name())
-        return isempty(ret) ? "A JuMP Model" : ret
+        if !isempty(ret)
+            return ret
+        end
     end
     return "A JuMP Model"
+end
+
+"""
+    set_name(model::GenericModel, name::AbstractString)
+
+Set the [`MOI.Name`](@ref) attribute of `model`'s [`backend`](@ref) to `name`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> set_name(model, "My Model")
+
+julia> name(model)
+"My Model"
+```
+"""
+function set_name(model::GenericModel, name::AbstractString)
+    MOI.set(model, MOI.Name(), name)
+    return
 end
 
 """

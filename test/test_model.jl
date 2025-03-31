@@ -1487,4 +1487,14 @@ function test_optimizer_index_bridged()
     return
 end
 
+function test_name()
+    model = Model()
+    @test name(model) == "A JuMP Model"
+    @test set_name(model, "My Model") === nothing
+    @test name(model) == "My Model"
+    @test set_name(model, "") === nothing
+    @test name(model) == "A JuMP Model"
+    return
+end
+
 end  # module TestModels
