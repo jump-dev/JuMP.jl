@@ -41,16 +41,28 @@ end
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
 function Base.:+(lhs::_Constant, rhs::AbstractVariableRef)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, one(constant), rhs)
 end
 
 function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, -one(constant), rhs)
 end
 
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     coef = _complex_convert(value_type(typeof(rhs)), lhs)
     if iszero(coef)
         return zero(GenericAffExpr{typeof(coef),typeof(rhs)})
@@ -60,6 +72,10 @@ function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
 end
 # _Constant--_GenericAffOrQuadExpr
 function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
     T = _MA.promote_operation(
         +,
@@ -72,6 +88,10 @@ function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
 end
 
 function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
     T = _MA.promote_operation(
         +,
@@ -84,6 +104,10 @@ function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
 end
 
 function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(variable_ref_type(rhs))
     if iszero(lhs)
         # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
@@ -104,6 +128,10 @@ end
 Base.:+(lhs::AbstractJuMPScalar) = lhs
 
 function Base.:-(lhs::AbstractVariableRef)
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(typeof(lhs))
     return _build_aff_expr(zero(T), -one(T), lhs)
 end
@@ -119,6 +147,10 @@ Base.:-(lhs::AbstractVariableRef, rhs::_Constant) = (+)(-rhs, lhs)
 Base.:*(lhs::AbstractVariableRef, rhs::_Constant) = (*)(rhs, lhs)
 
 function Base.:/(lhs::AbstractVariableRef, rhs::_Constant)
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(typeof(lhs))
     return (*)(inv(convert(T, rhs)), lhs)
 end
@@ -126,11 +158,19 @@ end
 # AbstractVariableRef--AbstractVariableRef
 
 function Base.:+(lhs::V, rhs::V) where {V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(V)
     return _build_aff_expr(zero(T), one(T), lhs, one(T), rhs)
 end
 
 function Base.:-(lhs::V, rhs::V) where {V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(V)
     if lhs == rhs
         return zero(GenericAffExpr{T,V})
@@ -140,6 +180,10 @@ function Base.:-(lhs::V, rhs::V) where {V<:AbstractVariableRef}
 end
 
 function Base.:*(lhs::V, rhs::V) where {V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     T = value_type(V)
     return GenericQuadExpr(
         GenericAffExpr{T,V}(),
@@ -153,6 +197,10 @@ function Base.:+(
     lhs::V,
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = rhs.constant
@@ -168,6 +216,10 @@ function Base.:-(
     lhs::V,
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     # For the variables to have the proper order in the result, we need to add the lhs first.
     result = zero(rhs)
     result.constant = -rhs.constant
@@ -183,6 +235,10 @@ function Base.:*(
     lhs::V,
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     if !iszero(rhs.constant)
         result = GenericQuadExpr{C,V}(lhs * rhs.constant)
     else
@@ -197,10 +253,18 @@ end
 # AbstractVariableRef--GenericQuadExpr
 
 function Base.:+(v::AbstractVariableRef, q::GenericQuadExpr)
+    model = owner_model(v)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(v + q.aff, copy(q.terms))
 end
 
 function Base.:-(v::AbstractVariableRef, q::GenericQuadExpr)
+    model = owner_model(v)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = -q
     # This makes an unnecessary copy of aff, but it's important for v to appear
     # first.
@@ -212,7 +276,13 @@ end
 
 Base.:+(lhs::GenericAffExpr) = lhs
 
-Base.:-(lhs::GenericAffExpr) = map_coefficients(-, lhs)
+function Base.:-(lhs::GenericAffExpr)
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
+    return map_coefficients(-, lhs)
+end
 
 # GenericAffExpr--_Constant
 
@@ -223,10 +293,18 @@ Base.:-(lhs::GenericAffExpr, rhs::_Constant) = (+)(-rhs, lhs)
 Base.:*(lhs::GenericAffExpr, rhs::_Constant) = (*)(rhs, lhs)
 
 function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return map_coefficients(c -> c / rhs, lhs)
 end
 
 function Base.:^(lhs::V, rhs::Integer) where {V<:AbstractVariableRef}
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     if rhs == 0
         return one(value_type(V))
     elseif rhs == 1
@@ -239,6 +317,10 @@ function Base.:^(lhs::V, rhs::Integer) where {V<:AbstractVariableRef}
 end
 
 function Base.:^(lhs::GenericAffExpr{T,V}, rhs::Integer) where {T,V}
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     if rhs == 0
         return one(T)
     elseif rhs == 1
@@ -256,6 +338,10 @@ function Base.:+(
     lhs::GenericAffExpr{C,V},
     rhs::V,
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return add_to_expression!(copy(lhs), one(C), rhs)
 end
 
@@ -263,6 +349,10 @@ function Base.:-(
     lhs::GenericAffExpr{C,V},
     rhs::V,
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return add_to_expression!(copy(lhs), -one(C), rhs)
 end
 
@@ -272,6 +362,10 @@ function Base.:*(
     lhs::GenericAffExpr{C,V},
     rhs::V,
 ) where {C,V<:AbstractVariableRef}
+    model = owner_model(rhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     if !iszero(lhs.constant)
         result = GenericQuadExpr{C,V}(lhs.constant * rhs)
     else
@@ -322,6 +416,11 @@ function Base.:+(
     lhs::GenericAffExpr{S,V},
     rhs::GenericAffExpr{T,V},
 ) where {S,T,V<:_JuMPTypes}
+    model = owner_model(rhs)
+    model = isnothing(model) ? owner_model(lhs) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     if length(linear_terms(lhs)) > 50 || length(linear_terms(rhs)) > 50
         if length(linear_terms(lhs)) > 1
             operator_warn(owner_model(first(linear_terms(lhs))[2]))
@@ -337,6 +436,11 @@ function Base.:-(
     lhs::GenericAffExpr{S,V},
     rhs::GenericAffExpr{T,V},
 ) where {S,T,V<:_JuMPTypes}
+    model = owner_model(rhs)
+    model = isnothing(model) ? owner_model(lhs) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = _copy_convert_coef(_MA.promote_operation(-, S, T), lhs)
     result.constant -= rhs.constant
     sizehint!(result, length(linear_terms(lhs)) + length(linear_terms(rhs)))
@@ -350,6 +454,11 @@ function Base.:*(
     lhs::GenericAffExpr{S,V},
     rhs::GenericAffExpr{T,V},
 ) where {S,T,V<:_JuMPTypes}
+    model = owner_model(rhs)
+    model = isnothing(model) ? owner_model(lhs) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = zero(GenericQuadExpr{_MA.promote_sum_mul(S, T),V})
     add_to_expression!(result, lhs, rhs)
     return result
@@ -358,10 +467,20 @@ end
 # GenericAffExpr--GenericQuadExpr
 
 function Base.:+(a::GenericAffExpr, q::GenericQuadExpr)
+    model = owner_model(a)
+    model = isnothing(model) ? owner_model(q) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(a + q.aff, copy(q.terms))
 end
 
 function Base.:-(a::GenericAffExpr{S}, q::GenericQuadExpr{T}) where {S,T}
+    model = owner_model(a)
+    model = isnothing(model) ? owner_model(q) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = -_copy_convert_coef(_MA.promote_operation(-, S, T), q)
     add_to_expression!(result.aff, a)
     return result
@@ -371,7 +490,13 @@ end
 
 Base.:+(lhs::GenericQuadExpr) = lhs
 
-Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
+function Base.:-(lhs::GenericQuadExpr)
+    model = owner_model(lhs)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
+    map_coefficients(-, lhs)
+end
 
 # GenericQuadExpr--_Constant
 
@@ -388,26 +513,49 @@ Base.:/(lhs::GenericQuadExpr, rhs::_Constant) = (*)(inv(rhs), lhs)
 # GenericQuadExpr--AbstractVariableRef
 
 function Base.:+(q::GenericQuadExpr, v::AbstractVariableRef)
+    model = owner_model(v)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(q.aff + v, copy(q.terms))
 end
 
 function Base.:-(q::GenericQuadExpr, v::AbstractVariableRef)
+    model = owner_model(v)
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(q.aff - v, copy(q.terms))
 end
 
 # GenericQuadExpr--GenericAffExpr
 
 function Base.:+(q::GenericQuadExpr, a::GenericAffExpr)
+    model = owner_model(q)
+    model = isnothing(model) ? owner_model(a) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(q.aff + a, copy(q.terms))
 end
 
 function Base.:-(q::GenericQuadExpr, a::GenericAffExpr)
+    model = owner_model(q)
+    model = isnothing(model) ? owner_model(a) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     return GenericQuadExpr(q.aff - a, copy(q.terms))
 end
 
 # GenericQuadExpr--GenericQuadExpr
 
 function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    model = owner_model(q1)
+    model = isnothing(model) ? owner_model(q2) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = _copy_convert_coef(_MA.promote_operation(+, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, coef, var1, var2)
@@ -420,6 +568,11 @@ function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
 end
 
 function Base.:-(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    model = owner_model(q1)
+    model = isnothing(model) ? owner_model(q2) : model
+    if _trackable_model(model)
+        push!(model.operation_stack, stacktrace())
+    end
     result = _copy_convert_coef(_MA.promote_operation(-, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, -coef, var1, var2)
@@ -686,3 +839,70 @@ function Base.:-(
 }
     return A - LinearAlgebra.Hermitian(B)
 end
+
+"""
+    set_operator_tracking(model::AbstractModel)
+
+Enable operator tracking for the given model. This will store the stack trace
+of each operator call.
+
+This is useful for debugging purposes, to find usage for slow JuMP operations
+that might be replaced with more efficient code with the help of macros and
+[`add_to_expression!`](@ref).
+
+See also [`get_operator_tracking_list`](@ref), [`reset_operator_tracking`](@ref),
+and [`unset_operator_tracking`](@ref).
+"""
+function set_operator_tracking(model::AbstractModel)
+    if isnothing(model.operation_stack)
+        reset_operator_tracking(model)
+    end
+    return
+end
+
+"""
+    reset_operator_tracking(model::AbstractModel)
+
+Reset the operator tracking list for the given model. This will clear the list
+of stack traces of each operator call.
+
+See also [`set_operator_tracking`](@ref), [`get_operator_tracking_list`](@ref),
+and [`unset_operator_tracking`](@ref).
+"""
+function reset_operator_tracking(model::AbstractModel)
+    model.operation_stack = Vector{Base.StackFrame}()
+end
+
+"""
+    unset_operator_tracking(model::AbstractModel)
+
+Disable operator tracking for the given model. This will clear the list of stack
+traces of each operator call.
+
+See also [`set_operator_tracking`](@ref), [`get_operator_tracking_list`](@ref),
+and [`reset_operator_tracking`](@ref).
+"""
+function unset_operator_tracking(model::AbstractModel)
+    model.operation_stack = nothing
+end
+
+"""
+    get_operator_tracking_list(model::AbstractModel)
+
+Return the list of stack traces of each operator call for the given model.
+
+See also [`set_operator_tracking`](@ref), [`reset_operator_tracking`](@ref),
+and [`unset_operator_tracking`](@ref).
+"""
+function get_operator_tracking_list(model::AbstractModel)
+    return model.operation_stack
+end
+
+function _trackable_model(model::GenericModel)
+    if isnothing(model.operation_stack)
+        return false
+    end
+    return true
+end
+
+_trackable_model(model) = false

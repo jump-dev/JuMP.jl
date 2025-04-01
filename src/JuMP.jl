@@ -126,6 +126,8 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     set_string_names_on_creation::Bool
     #
     variable_in_set_ref::Dict{Any,MOI.ConstraintIndex}
+    # A cache for tracking ineficient use of operations.
+    operation_stack::Union{Nothing,Vector{Vector{Base.StackTraces.StackFrame}}}
 end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
@@ -242,6 +244,7 @@ function direct_generic_model(
         Dict{Symbol,Any}(),
         true,
         Dict{Any,MOI.ConstraintIndex}(),
+        nothing,
     )
 end
 
