@@ -495,7 +495,7 @@ function Base.:-(lhs::GenericQuadExpr)
     if _trackable_model(model)
         push!(model.operation_stack, stacktrace())
     end
-    map_coefficients(-, lhs)
+    return map_coefficients(-, lhs)
 end
 
 # GenericQuadExpr--_Constant
@@ -870,7 +870,7 @@ See also [`set_operator_tracking`](@ref), [`get_operator_tracking_list`](@ref),
 and [`unset_operator_tracking`](@ref).
 """
 function reset_operator_tracking(model::AbstractModel)
-    model.operation_stack = Vector{Base.StackFrame}()
+    return model.operation_stack = Vector{Base.StackFrame}()
 end
 
 """
@@ -883,7 +883,7 @@ See also [`set_operator_tracking`](@ref), [`get_operator_tracking_list`](@ref),
 and [`reset_operator_tracking`](@ref).
 """
 function unset_operator_tracking(model::AbstractModel)
-    model.operation_stack = nothing
+    return model.operation_stack = nothing
 end
 
 """
