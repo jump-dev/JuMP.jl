@@ -56,7 +56,7 @@ end
 function solve_max_cut_sdp(weights)
     N = size(weights, 1)
     ## Calculate the (weighted) Laplacian of the graph: L = D - W.
-    L = LinearAlgebra.diagm(0 => weights * ones(N)) - weights
+    L = LinearAlgebra.Dagonal(weights * ones(N)) - weights
     model = Model(Clarabel.Optimizer)
     set_silent(model)
     @variable(model, X[1:N, 1:N], PSD)

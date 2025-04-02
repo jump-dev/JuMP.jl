@@ -518,7 +518,7 @@ function _dense_hessian(hessian_sparsity, V, n)
     raw = SparseArrays.sparse(I, J, V, n, n)
     return Matrix(
         raw + raw' -
-        SparseArrays.sparse(LinearAlgebra.diagm(0 => LinearAlgebra.diag(raw))),
+        SparseArrays.sparse(LinearAlgebra.Dagonal(LinearAlgebra.diag(raw))),
     )
 end
 
@@ -869,12 +869,12 @@ function test_dense_Hessian()
     values = ones(18)
     MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
     @test _dense_hessian(hessian_sparsity, V, 18) ≈
-          ones(18, 18) - LinearAlgebra.diagm(0 => ones(18))
+          ones(18, 18) - LinearAlgebra.Dagonal(ones(18))
     values[1] = 0.5
     MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
     @test _dense_hessian(hessian_sparsity, V, 18) ≈ [
         0 ones(17)'
-        ones(17) (ones(17, 17)-LinearAlgebra.diagm(0 => ones(17)))/2
+        ones(17) (ones(17, 17)-LinearAlgebra.Dagonal(ones(17)))/2
     ]
     return
 end
