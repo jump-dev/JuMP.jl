@@ -129,7 +129,7 @@ set_silent(aOpt)
 @constraint(aOpt, sum(np) <= n)
 for i in 1:q
     matrix = [
-        V*LinearAlgebra.Dagonal(np ./ n)*V' eye[:, i]
+        V*LinearAlgebra.Diagonal(np ./ n)*V' eye[:, i]
         eye[i, :]' u[i]
     ]
     @constraint(aOpt, matrix >= 0, PSDCone())
@@ -172,7 +172,7 @@ set_silent(eOpt)
 @variable(eOpt, t)
 @constraint(
     eOpt,
-    V * LinearAlgebra.Dagonal(np ./ n) * V' - (t .* eye) >= 0,
+    V * LinearAlgebra.Diagonal(np ./ n) * V' - (t .* eye) >= 0,
     PSDCone(),
 )
 @constraint(eOpt, sum(np) <= n)
@@ -206,7 +206,7 @@ set_silent(dOpt)
 @variable(dOpt, t)
 @objective(dOpt, Max, t)
 @constraint(dOpt, sum(np) <= n)
-E = V * LinearAlgebra.Dagonal(np ./ n) * V'
+E = V * LinearAlgebra.Diagonal(np ./ n) * V'
 @constraint(dOpt, [t; 1; triangle_vec(E)] in MOI.LogDetConeTriangle(q))
 optimize!(dOpt)
 assert_is_solved_and_feasible(dOpt)
