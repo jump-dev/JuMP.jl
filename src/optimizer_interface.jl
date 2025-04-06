@@ -598,20 +598,68 @@ function optimize!(
     try
         MOI.optimize!(backend(model))
     catch err
-        # TODO: This error also be thrown also in MOI.set() if the solver is
-        # attached. Currently we catch only the more common case. More generally
-        # JuMP is missing a translation layer from MOI errors to JuMP errors.
-        if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
-            error(
-                "The solver does not support nonlinear problems " *
-                "(that is, NLobjective and NLconstraint).",
-            )
-        else
-            rethrow(err)
-        end
+        _rethrow_moi_error(err)
     end
     model.is_model_dirty = false
     return
+end
+
+# TODO: These errors could also be thrown in MOI.add_constraint or MOI.set() if
+# the solver is attached. Currently we catch only the more common case. More
+# generally JuMP is missing a translation layer from MOI errors to JuMP errors.
+_rethrow_moi_error(err) = rethrow(err)
+
+function _rethrow_moi_error(::MOI.UnsupportedAttribute{MOI.NLPBlock})
+    return error(
+        "The solver does not support nonlinear problems " *
+        "(that is, NLobjective and NLconstraint).",
+    )
+end
+
+function _rethrow_moi_error(::MOI.LowerBoundAlreadySet)
+    return error(
+        """
+        The model contains a variable for which multiple lower bounds have been
+        set. Each variale can have at most one lower bound.
+
+        This error can occur if you have added a bounded variable in `@variable`
+        and then added a constraint on the variable using `@constraint`.
+
+        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+
+        Here is an example:
+        ```julia
+        model = Model()
+        @variable(model, x >= 0)
+        @constraint(model, [x] in Nonnegatives())
+        # Rewrite as
+        @constraint(model, [1.0 * x] in Nonnegatives())
+        ```
+        """,
+    )
+end
+
+function _rethrow_moi_error(::MOI.UpperBoundAlreadySet)
+    return error(
+        """
+        The model contains a variable for which multiple upper bounds have been
+        set. Each variale can have at most one upper bound.
+
+        This error can occur if you have added a bounded variable in `@variable`
+        and then added a constraint on the variable using `@constraint`.
+
+        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+
+        Here is an example:
+        ```julia
+        model = Model()
+        @variable(model, x <= 1)
+        @constraint(model, [x] in Nonpositives())
+        # Rewrite as
+        @constraint(model, [1.0 * x] in Nonpositives())
+        ```
+        """,
+    )
 end
 
 function _uses_new_nonlinear_interface(model)

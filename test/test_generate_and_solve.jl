@@ -431,6 +431,74 @@ function test_generate_solve_unsupported_nonlinear_problems()
     return
 end
 
+function test_generate_solve_lower_bound_already_set()
+    model = Model() do
+        return MOI.Bridges.Constraint.Scalarize{Float64}(
+            MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    @variable(model, x >= -1)
+    @constraint(model, [x] in Zeros())
+    @test_throws(
+        ErrorException(
+            """
+            The model contains a variable for which multiple lower bounds have been
+            set. Each variale can have at most one lower bound.
+
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
+
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x >= 0)
+            @constraint(model, [x] in Nonnegatives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonnegatives())
+            ```
+            """,
+        ),
+        optimize!(model),
+    )
+    return
+end
+
+function test_generate_solve_upper_bound_already_set()
+    model = Model() do
+        return MOI.Bridges.Constraint.Scalarize{Float64}(
+            MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    @variable(model, x <= 1)
+    @constraint(model, [x] in Zeros())
+    @test_throws(
+        ErrorException(
+            """
+            The model contains a variable for which multiple upper bounds have been
+            set. Each variale can have at most one upper bound.
+
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
+
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x <= 1)
+            @constraint(model, [x] in Nonpositives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonpositives())
+            ```
+            """,
+        ),
+        optimize!(model),
+    )
+    return
+end
+
 function test_generate_solve_ResultCount()
     m = Model()
     @variable(m, x >= 0.0)
