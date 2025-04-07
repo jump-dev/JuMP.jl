@@ -443,7 +443,7 @@ function test_generate_solve_lower_bound_already_set()
         ErrorException(
             """
             The model contains a variable for which multiple lower bounds have been
-            set. Each variale can have at most one lower bound.
+            set. Each variable can have at most one lower bound.
 
             This error can occur if you have added a bounded variable in `@variable`
             and then added a constraint on the variable using `@constraint`.
@@ -477,7 +477,7 @@ function test_generate_solve_upper_bound_already_set()
         ErrorException(
             """
             The model contains a variable for which multiple upper bounds have been
-            set. Each variale can have at most one upper bound.
+            set. Each variable can have at most one upper bound.
 
             This error can occur if you have added a bounded variable in `@variable`
             and then added a constraint on the variable using `@constraint`.

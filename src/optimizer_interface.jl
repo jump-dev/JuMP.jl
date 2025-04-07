@@ -620,7 +620,7 @@ function _rethrow_moi_error(::MOI.LowerBoundAlreadySet)
     return error(
         """
         The model contains a variable for which multiple lower bounds have been
-        set. Each variale can have at most one lower bound.
+        set. Each variable can have at most one lower bound.
 
         This error can occur if you have added a bounded variable in `@variable`
         and then added a constraint on the variable using `@constraint`.
@@ -643,7 +643,7 @@ function _rethrow_moi_error(::MOI.UpperBoundAlreadySet)
     return error(
         """
         The model contains a variable for which multiple upper bounds have been
-        set. Each variale can have at most one upper bound.
+        set. Each variable can have at most one upper bound.
 
         This error can occur if you have added a bounded variable in `@variable`
         and then added a constraint on the variable using `@constraint`.
