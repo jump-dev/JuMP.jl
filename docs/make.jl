@@ -31,7 +31,7 @@ const _IS_GITHUB_ACTIONS = get(ENV, "GITHUB_ACTIONS", "false") == "true"
 # Pass --pdf to build the PDF. On GitHub actions, we always build the PDF.
 const _PDF = findfirst(isequal("--pdf"), ARGS) !== nothing || _IS_GITHUB_ACTIONS
 
-# Exclude these files because they require ${{ secrets.WLSLICENSE }}, which
+# Exclude these files because they require ${{ secrets.GUROBI_LICENSE }}, which
 # is not available to forks.
 const _HAS_GUROBI = try
     Gurobi.Env()
