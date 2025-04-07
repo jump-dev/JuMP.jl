@@ -45,7 +45,7 @@
 [CPLEX]
     rev = "v1.1.1"
 [CSDP]
-    rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
+    rev = "v1.1.2"
 [DiffOpt]
     rev = "v0.5.0"
     extension = true
