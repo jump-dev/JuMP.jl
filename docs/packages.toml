@@ -29,6 +29,9 @@
 # the latest version of JuMP or MathOptInterface, we reserve the right to
 # temporarily remove it from the list until it is updated again.
 
+# See `docs/update_versions.jl` for a script to list the updated versions for
+# this file.
+
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
@@ -40,9 +43,9 @@
 [Clp]
     rev = "v1.2.2"
 [CPLEX]
-    rev = "v1.1.0"
+    rev = "v1.1.1"
 [CSDP]
-    rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
+    rev = "v1.1.2"
 [DiffOpt]
     rev = "v0.5.0"
     extension = true
@@ -55,20 +58,20 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.7.2"
+    rev = "v1.7.3"
 [HiGHS]
     rev = "v1.15.0"
 [Hypatia]
     rev = "v0.8.1"
     has_html = true
 [Ipopt]
-    rev = "v1.7.3"
+    rev = "v1.8.0"
 [KNITRO]
-    rev = "v0.14.4"
+    rev = "v0.14.5"
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
-    rev = "v0.15.7"
+    rev = "v0.15.9"
 [MultiObjectiveAlgorithms]
     rev = "v1.4.0"
     has_html = true
@@ -79,7 +82,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.9.0"
+    rev = "v0.11.0"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -97,7 +100,7 @@
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
-    rev = "v0.1.0"
+    rev = "85f63bf0389ae07f39fe48bf3fa95c78955b0695"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
@@ -134,7 +137,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.21"
+    rev = "v1.1.23"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -167,18 +170,18 @@
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.8.5"
+    rev = "v0.8.6"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.8"
+    rev = "v0.5.10"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.7"
+    rev = "v0.1.9"
     extension = true
 [MathOptSymbolicAD]
     user = "lanl-ansi"
@@ -186,7 +189,7 @@
     extension = true
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v1.11.0"
+    rev = "v1.12.0"
 [OSQP]
     user = "osqp"
     rev = "v0.8.1"
@@ -210,7 +213,7 @@
     rev = "v0.12.3"
 [SDDP]
     user = "odow"
-    rev = "v1.10.4"
+    rev = "v1.10.5"
     has_html = true
     extension = true
 [Tulip]
