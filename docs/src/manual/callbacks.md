@@ -132,27 +132,27 @@ julia> set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
    Adding the lazy constraint irrespective of feasibility may result in the
    solver returning an incorrect solution, or lead to many constraints being
    added, slowing down the solution process. For example, instead of:
-    ```julia
-    model = Model()
-    @variable(model, x <= 10, Int)
-    @objective(model, Max, x)
-    function bad_callback_function(cb_data)
-        con = @build_constraint(x <= 2)
-        MOI.submit(model, MOI.LazyConstraint(cb_data), con)
-        return
-    end
-    ```
-    do
-    ```julia
-    function good_callback_function(cb_data)
-        if callback_value(cb_data, x) > 2
-            con = @build_constraint(x <= 2)
-            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
-        end
-        return
-    end
-    set_attribute(model, MOI.LazyConstraintCallback(), good_callback_function)
-    ```
+   ```julia
+   model = Model()
+   @variable(model, x <= 10, Int)
+   @objective(model, Max, x)
+   function bad_callback_function(cb_data)
+       con = @build_constraint(x <= 2)
+       MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+       return
+   end
+   ```
+   do
+   ```julia
+   function good_callback_function(cb_data)
+       if callback_value(cb_data, x) > 2
+           con = @build_constraint(x <= 2)
+           MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+       end
+       return
+   end
+   set_attribute(model, MOI.LazyConstraintCallback(), good_callback_function)
+   ```
 
 ## User cuts
 
