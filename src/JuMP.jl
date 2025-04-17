@@ -148,21 +148,16 @@ function Base.getproperty(model::GenericModel, name::Symbol)
 end
 
 """
-    GenericModel{T}(
-        [optimizer_factory;]
-        add_bridges::Bool = true,
-    ) where {T<:Real}
+    GenericModel{T}([optimizer_factory]; kwargs...) where {T<:Real}
 
 Create a new instance of a JuMP model.
 
 If `optimizer_factory` is provided, the model is initialized with the optimizer
-returned by `MOI.instantiate(optimizer_factory)`.
+using `set_optimizer(model, optimizer_factory; kwargs...)`. See
+[`set_optimizer`](@ref) for details on `kwargs`.
 
 If `optimizer_factory` is not provided, use [`set_optimizer`](@ref) to set the
 optimizer before calling [`optimize!`](@ref).
-
-If `add_bridges`, JuMP adds a [`MOI.Bridges.LazyBridgeOptimizer`](@ref) to
-automatically reformulate the problem into a form supported by the optimizer.
 
 ## Value type `T`
 
@@ -188,13 +183,13 @@ GenericModel{BigFloat}
 """
 function GenericModel{T}(
     @nospecialize(optimizer_factory = nothing);
-    add_bridges::Bool = true,
+    kwargs...,
 ) where {T<:Real}
     inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{T}())
     cache = MOI.Utilities.CachingOptimizer(inner, MOI.Utilities.AUTOMATIC)
     model = direct_generic_model(T, cache)
     if optimizer_factory !== nothing
-        set_optimizer(model, optimizer_factory; add_bridges = add_bridges)
+        set_optimizer(model, optimizer_factory; kwargs...)
     end
     return model
 end
