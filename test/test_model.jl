@@ -1500,4 +1500,38 @@ function test_name()
     return
 end
 
+function test_with_cache_type_Model()
+    T = Int
+    Mock = MOI.Utilities.MockOptimizer{MOI.Utilities.Model{T},T}
+    Inner = MOI.Utilities.UniversalFallback{MOI.Utilities.Model{T}}
+    Cache = MOI.Utilities.CachingOptimizer{Mock,Inner}
+    optimizer() = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{T}(), T)
+    model = GenericModel{T}(optimizer)
+    @test backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer{Mock}
+    model = GenericModel{T}(optimizer; add_bridges = false)
+    @test backend(model).optimizer isa Mock
+    model = GenericModel{T}(optimizer; add_bridges = false, with_cache_type = T)
+    @test backend(model).optimizer isa Cache
+    model = GenericModel{T}(optimizer; with_cache_type = T)
+    @test backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer{Cache}
+    return
+end
+
+function test_with_cache_type_set_optimizer()
+    T = Int
+    Mock = MOI.Utilities.MockOptimizer{MOI.Utilities.Model{T},T}
+    Inner = MOI.Utilities.UniversalFallback{MOI.Utilities.Model{T}}
+    Cache = MOI.Utilities.CachingOptimizer{Mock,Inner}
+    optimizer() = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{T}(), T)
+    model = GenericModel{T}()
+    @test backend(model).optimizer === nothing
+    set_optimizer(model, optimizer; add_bridges = false)
+    @test backend(model).optimizer isa Mock
+    set_optimizer(model, optimizer; add_bridges = false, with_cache_type = T)
+    @test backend(model).optimizer isa Cache
+    set_optimizer(model, optimizer; with_cache_type = T)
+    @test backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer{Cache}
+    return
+end
+
 end  # module TestModels
