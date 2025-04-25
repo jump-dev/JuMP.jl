@@ -320,6 +320,10 @@ macro variable(input_args...)
         __source__;
         register_name = name,
         wrap_let = true,
+        time_it = Containers.build_macro_expression_string(
+            :variable,
+            input_args,
+        ),
     )
 end
 

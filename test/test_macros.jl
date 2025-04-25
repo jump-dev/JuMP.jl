@@ -2527,4 +2527,40 @@ function test_malformed_kwarg()
     return
 end
 
+function test_print_macro_timing_summary()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, sum(x))
+    @expression(model, x)
+    @constraint(model, [i in 1:2], x[i] <= i)
+    for i in 1:100
+        @constraint(model, sin(x[1]) <= i)
+    end
+    @variables(model, begin
+        a[1:2]
+        b, Bin, (start = 0)
+    end)
+    @expression(
+        model,
+        a_really_really_really_really_really_really_really_long_name,
+        x,
+    )
+    print_macro_timing_summary(model)
+    contents = sprint(print_macro_timing_summary, model)
+    needles = [
+        "@variable(model, x[1:2])",
+        "@variable(model, a[1:2])",
+        "@variable(model, b, Bin, start = 0)",
+        "@objective(model, Min, sum(x))",
+        "@expression(model, x)",
+        "@constraint(model, [i in 1:2], x[i] <= i)",
+        "@constraint(model, sin(x[1]) <= i)",
+        "@expression(model, a_really_rea [...] lly_really_really_long_name, x)",
+    ]
+    @test all(n -> occursin(n, contents), needles)
+    @test length(model.macro_times) == length(needles)
+    @test all(>=(0), values(model.macro_times))
+    return
+end
+
 end  # module
