@@ -571,4 +571,28 @@ function test_LinearTermIterator_eltype()
     return
 end
 
+function test_issue_3982()
+    a = [(1.0+2.0*im) (3.0+4.0*im); (5.0+6.0*im) (7.0+8.0*im)]
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    @expression(model, y, (1 * x) * a)
+    z = [
+        (1 + 2im) * x[1, 1] + (5 + 6im) * x[1, 2],
+        (1 + 2im) * x[2, 1] + (5 + 6im) * x[2, 2],
+        (3 + 4im) * x[1, 1] + (7 + 8im) * x[1, 2],
+        (3 + 4im) * x[2, 1] + (7 + 8im) * x[2, 2],
+    ]
+    @test isequal_canonical(y, reshape(z, 2, 2))
+    return
+end
+
+function test_issue_3982_core()
+    model = Model()
+    @variable(model, x)
+    aff = (1.0 + 2.0im) * x + 3.0 * im
+    add_to_expression!(aff, 4.0 * x + 5.0, 6.0 + 7.0im)
+    @test isequal_canonical(aff, (25.0 + 30.0 * im) * x + 30 + 38.0 * im)
+    return
+end
+
 end  # TestExpr

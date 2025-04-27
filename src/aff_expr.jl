@@ -620,10 +620,10 @@ function add_to_expression!(
 end
 
 function add_to_expression!(
-    aff::GenericAffExpr{C,V},
-    other::GenericAffExpr{C,V},
+    aff::GenericAffExpr{S,V},
+    other::GenericAffExpr{T,V},
     coef::_Constant,
-) where {C,V}
+) where {S,T,V}
     return add_to_expression!(aff, coef, other)
 end
 
