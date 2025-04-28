@@ -2980,13 +2980,25 @@ end
 
 """
     set_normalized_coefficient(
-        constraints::AbstractVector{<:ConstraintRef},
-        variables::AbstractVector{<:GenericVariableRef},
-        values::AbstractVector{<:Number},
-    )
+        constraints::AbstractVector{
+            <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+        },
+        variables::AbstractVector{<:AbstractVariableRef},
+        coeffs::AbstractVector{<:Number},
+    ) where {
+        T,
+        F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+    }
 
 Set multiple coefficient of `variables` in the constraints `constraints` to
-`values`.
+`coeffs`.
+
+## Concrete types
+
+Note that `constraints` must be a concrete vector of a single constraint type.
+You cannot mix, for example, `<=` and `>=` constraints in the same vector.
+
+## Normalization
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
