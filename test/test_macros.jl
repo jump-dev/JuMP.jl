@@ -2529,7 +2529,8 @@ end
 
 function test_print_macro_timing_summary()
     model = Model()
-    @variable(model, x[1:2])
+    @variable(model, x[1:2])  # This one should be excluded
+    set_macro_timing(model, true)
     @objective(model, Min, sum(x))
     @expression(model, x)
     @constraint(model, [i in 1:2], x[i] <= i)
@@ -2545,10 +2546,11 @@ function test_print_macro_timing_summary()
         a_really_really_really_really_really_really_really_long_name,
         x,
     )
+    set_macro_timing(model, false)
+    @expression(model, expr, x[1] + x[2])  # So should this one
     print_macro_timing_summary(model)
     contents = sprint(print_macro_timing_summary, model)
     needles = [
-        "@variable(model, x[1:2])",
         "@variable(model, a[1:2])",
         "@variable(model, b, Bin, start = 0)",
         "@objective(model, Min, sum(x))",
@@ -2560,6 +2562,8 @@ function test_print_macro_timing_summary()
     @test all(n -> occursin(n, contents), needles)
     @test length(model.macro_times) == length(needles)
     @test all(>=(0), values(model.macro_times))
+    @test !occursin("@variable(model, x[1:2])", contents)
+    @test !occursin("@expression(model, expr, x[1] + x[2])", contents)
     return
 end
 

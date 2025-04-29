@@ -127,6 +127,7 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     #
     variable_in_set_ref::Dict{Any,MOI.ConstraintIndex}
     # A dictionary to store timing information from the JuMP macros.
+    enable_macro_timing::Bool
     macro_times::Dict{Tuple{LineNumberNode,String},Float64}
 end
 
@@ -239,6 +240,7 @@ function direct_generic_model(
         Dict{Symbol,Any}(),
         true,
         Dict{Any,MOI.ConstraintIndex}(),
+        false,
         Dict{Tuple{LineNumberNode,String},Float64}(),
     )
 end

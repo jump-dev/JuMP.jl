@@ -432,7 +432,9 @@ end
 _add_or_set_macro_time(model::AbstractModel, key, value) = nothing
 
 function _add_or_set_macro_time(model::GenericModel, key, value)
-    model.macro_times[key] = get!(model.macro_times, key, 0.0) + value
+    if model.enable_macro_timing
+        model.macro_times[key] = get!(model.macro_times, key, 0.0) + value
+    end
     return
 end
 
@@ -498,6 +500,41 @@ function _plural_macro_code(model, block, macro_sym)
     return code
 end
 
+"""
+    set_macro_timing(::GenericModel, value::Bool)
+
+Turn on (if `value`, or off, if `!value`) JuMP's built-in profiling of model
+construction macros.
+
+Use [`print_macro_timing_summary`](@ref) to display a summary.
+
+## Example
+
+```jldoctest; filter=[r"Total time: .+ seconds", r"├.+", r"└.+"]
+julia> begin
+           model = Model()
+           set_macro_timing(model, true)
+           @variable(model, x[1:2])
+           @objective(model, Min, sum(x))
+       end;
+
+julia> print_macro_timing_summary(model)
+Total time: 5.33690e-02 seconds
+│
+├ 2.96490e-02 s [55.55%]
+│ ├ REPL[8]:3
+│ └ `@variable(model, x[1:2])`
+│
+└ 2.37200e-02 s [44.45%]
+  ├ REPL[8]:4
+  └ `@objective(model, Min, sum(x))`
+```
+"""
+function set_macro_timing(::GenericModel, value::Bool)
+    model.enable_macro_timing = value
+    return
+end
+
 function _string_summary(x)
     if length(x) <= 75
         return x
@@ -510,11 +547,15 @@ end
 
 Print a summary of the runtime of each macro.
 
+Before calling this method, you must have enabled the macro timing feature using
+[`set_macro_timing`](@ref).
+
 ## Example
 
 ```jldoctest; filter=[r"Total time: .+ seconds", r"├.+", r"└.+"]
 julia> begin
            model = Model()
+           set_macro_timing(model, true)
            @variable(model, x[1:2])
            @objective(model, Min, sum(x))
        end;
