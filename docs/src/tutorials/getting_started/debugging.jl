@@ -394,11 +394,11 @@ end
 
 begin
     N = 200
-    demand = vcat(-1.0, zeros(N - 2), 1.0);
-    edges = [(i, j) for i in 1:N for j in 1:N if i < j];
+    demand = vcat(-1.0, zeros(N - 2), 1.0)
+    edges = [(i, j) for i in 1:N for j in 1:N if i < j]
     model = Model()
     set_macro_timing(model, true)
-    @variable(model, flows[e in edges] >= 0);
+    @variable(model, flows[e in edges] >= 0)
     @constraint(
         model,
         [n in 1:N],
