@@ -510,7 +510,7 @@ Use [`print_macro_timing_summary`](@ref) to display a summary.
 
 ## Example
 
-```jldoctest; filter=[r"Total time: .+ seconds", r"├.+", r"└.+"]
+```jldoctest; filter=[r"Total time inside macros: .+ seconds", r"├.+", r"└.+"]
 julia> begin
            model = Model()
            set_macro_timing(model, true)
@@ -519,7 +519,7 @@ julia> begin
        end;
 
 julia> print_macro_timing_summary(model)
-Total time: 5.33690e-02 seconds
+Total time inside macros: 5.33690e-02 seconds
 │
 ├ 2.96490e-02 s [55.55%]
 │ ├ REPL[8]:3
@@ -542,6 +542,8 @@ function _string_summary(x)
     return x[1:32] * " [...] " * x[end-31:end]
 end
 
+_format_time(x::Float64) = string(_format(x), " seconds")
+
 """
     print_macro_timing_summary([io::IO = stdout], model::GenericModel)
 
@@ -552,7 +554,7 @@ Before calling this method, you must have enabled the macro timing feature using
 
 ## Example
 
-```jldoctest; filter=[r"Total time: .+ seconds", r"├.+", r"└.+"]
+```jldoctest; filter=[r"Total time inside macros: .+ seconds", r"├.+", r"└.+"]
 julia> begin
            model = Model()
            set_macro_timing(model, true)
@@ -561,7 +563,7 @@ julia> begin
        end;
 
 julia> print_macro_timing_summary(model)
-Total time: 5.33690e-02 seconds
+Total time inside macros: 5.33690e-02 seconds
 │
 ├ 2.96490e-02 s [55.55%]
 │ ├ REPL[8]:3
@@ -575,13 +577,13 @@ Total time: 5.33690e-02 seconds
 function print_macro_timing_summary(io::IO, model::GenericModel)
     total_time = sum(values(model.macro_times))
     times = sort!(collect(model.macro_times); by = last, rev = true)
-    println(io, "Total time: ", JuMP._format(total_time), " seconds")
+    println(io, "Total time inside macros: ", _format_time(total_time))
     for i in 1:length(times)
         (source, expr), time = times[i]
         percent = round(100 * time / total_time; digits = 2)
         a, b = ifelse(i < length(times), ('├', '│'), ('└', ' '))
         println(io, "│")
-        println(io, "$a ", JuMP._format(time), " s [$percent%]")
+        println(io, "$a ", _format(time), " s [$percent%]")
         println(io, "$b ├ $(source.file):$(source.line)")
         println(io, "$b └ ", replace(_string_summary(expr), "\n" => ""))
     end
