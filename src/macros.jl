@@ -530,7 +530,7 @@ Total time: 5.33690e-02 seconds
   └ `@objective(model, Min, sum(x))`
 ```
 """
-function set_macro_timing(::GenericModel, value::Bool)
+function set_macro_timing(model::GenericModel, value::Bool)
     model.enable_macro_timing = value
     return
 end
