@@ -15,7 +15,7 @@ where the thin shims are not sufficient:
    example, when getting [`MOI.ConstraintDualStart`](@ref) of matrix-valued
    constraints.
 
-In these two cases, the convention is to keep [`get_attribte`](@ref) as a thin
+In these two cases, the convention is to keep [`get_attribute`](@ref) as a thin
 shim that does not modify the attribute value, and to develop new functions that
 modify or reshape the value as appropriate.
 
