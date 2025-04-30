@@ -98,6 +98,8 @@ julia> reshape_vector([1, 2, 3], SymmetricMatrixShape(2))
 """
 function reshape_vector end
 
+reshape_vector(::Nothing, ::AbstractShape) = nothing
+
 """
     shape(c::AbstractConstraint)::AbstractShape
 
@@ -145,6 +147,8 @@ struct ScalarShape <: AbstractShape end
 
 reshape_vector(α, ::ScalarShape) = α
 
+reshape_vector(::Nothing, ::ScalarShape) = nothing
+
 """
     VectorShape()
 
@@ -166,6 +170,8 @@ VectorShape()
 struct VectorShape <: AbstractShape end
 
 reshape_vector(vectorized_form, ::VectorShape) = vectorized_form
+
+reshape_vector(::Nothing, ::VectorShape) = nothing
 
 vectorize(x, ::VectorShape) = x
 

@@ -202,8 +202,6 @@ function reshape_vector(
     return LinearAlgebra.Symmetric(matrix)
 end
 
-reshape_vector(::Nothing, ::SymmetricMatrixShape) = nothing
-
 function reshape_set(
     ::MOI.PositiveSemidefiniteConeTriangle,
     ::SymmetricMatrixShape,
@@ -243,8 +241,6 @@ function reshape_vector(
     end
     return LinearAlgebra.Symmetric(matrix)
 end
-
-reshape_vector(::Nothing, ::SymmetricMatrixAdjointShape) = nothing
 
 """
     triangle_vec(matrix::Matrix)
@@ -308,8 +304,6 @@ function reshape_vector(
     return matrix
 end
 
-reshape_vector(::Nothing, ::SkewSymmetricMatrixShape) = nothing
-
 function vectorize(matrix, ::SkewSymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j-1]
@@ -333,8 +327,6 @@ function reshape_vector(
 ) where {T}
     return reshape(vectorized_form, shape.side_dimension, shape.side_dimension)
 end
-
-reshape_vector(::Nothing, ::SquareMatrixShape) = nothing
 
 function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
     return PSDCone()
@@ -594,8 +586,6 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
     return LinearAlgebra.Hermitian(matrix)
 end
 
-reshape_vector(::Nothing, ::HermitianMatrixShape) = nothing
-
 """
     HermitianMatrixAdjointShape(side_dimension)
 
@@ -638,8 +628,6 @@ function reshape_vector(
     end
     return LinearAlgebra.Hermitian(matrix)
 end
-
-reshape_vector(::Nothing, ::HermitianMatrixAdjointShape) = nothing
 
 function _vectorize_complex_variables(error_fn::Function, matrix::Matrix)
     if any(_is_binary, matrix) || any(_is_integer, matrix)
