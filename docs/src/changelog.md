@@ -7,6 +7,42 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.26.0 (May 14, 2025)
+
+### Added
+
+ - Added [`set_name(::GenericModel, ::AbstractString)`](@ref) (#3967)
+ - Added support for `; with_cache_type` in [`Model`](@ref) and
+   [`set_optimizer`](@ref) (#3979)
+ - Add an opt-in profiler for model macros. See [`set_macro_timing`](@ref)
+   and [`print_macro_timing_summary`](@ref) (#3981)
+
+### Fixed
+
+ - Fixed [`add_to_expression!`](@ref) with `GenericAffExpr{ComplexF64}` (#3983)
+ - Catch and re-throw a more informative error for `BoundAlreadySet` in `optimize!`
+   (#3974)
+ - Fixed [`reshape_vector`](@ref) when `Nothing` is passed, for example, from
+   an unset primal or dual start (#3988)
+ - Fixed a bug setting variables names when they are not supported by the solver
+   (#3995)
+ - Fixed show of `SparseAxisArray` for small display size (#3996)
+
+
+### Other
+
+ - Simplified implementation of [`shadow_price`](@ref) and improved docstring
+   (#3968)
+ - Improved formatting by adding blank lines between functions (#3969)
+ - Replaced `diagm` by `Diagonal` (#3971)
+ - Updated to cache v2 (#3972)
+ - Switched to using `secrets.GUROBI_LICENSE` (#3975)
+ - Updated versions in Project.toml and packages.toml (#3976)
+ - Removed admonitions from callback manual page (#3977)
+ - Fixed docstring of [`set_normalized_coefficient`](@ref) (#3985)
+ - Added [Conventions for interfacing between JuMP and MathOptInterface](@ref)
+   (#3987)
+
 ## Version 1.25.0 (March 27, 2025)
 
 ### Added
