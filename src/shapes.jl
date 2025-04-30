@@ -169,7 +169,7 @@ VectorShape()
 """
 struct VectorShape <: AbstractShape end
 
-reshape_vector(vectorized_form, ::VectorShape) = vectorized_form
+reshape_vector(vectorized_form::Vector, ::VectorShape) = vectorized_form
 
 reshape_vector(::Nothing, ::VectorShape) = nothing
 
@@ -199,7 +199,7 @@ struct ArrayShape{N} <: AbstractShape
     dims::NTuple{N,Int}
 end
 
-reshape_vector(x, shape::ArrayShape) = reshape(x, shape.dims)
+reshape_vector(x::Vector, shape::ArrayShape) = reshape(x, shape.dims)
 
 reshape_vector(::Nothing, ::ArrayShape) = nothing
 
