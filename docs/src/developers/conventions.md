@@ -1,6 +1,6 @@
 # Conventions for interfacing between JuMP and MathOptInterface
 
-The purpose of this guide is to document the conventions have developed for
+The purpose of this guide is to document the conventions that we have developed for
 interfacing between JuMP and MathOptInterface.
 
 ## Attributes
