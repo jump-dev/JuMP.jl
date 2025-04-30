@@ -194,6 +194,7 @@ struct ArrayShape{N} <: AbstractShape
 end
 
 reshape_vector(x, shape::ArrayShape) = reshape(x, shape.dims)
-reshape_vector(::Nothing, shape::ArrayShape) = nothing
+
+reshape_vector(::Nothing, ::ArrayShape) = nothing
 
 vectorize(x, ::ArrayShape) = vec(x)
