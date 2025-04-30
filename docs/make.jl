@@ -556,6 +556,12 @@ function _add_moi_pages()
             end
         end
     end
+    # Fix `# Infeasibility certificates` in moi/background/infeasibility_certificates.md
+    filename = joinpath(moi_dir, "background", "infeasibility_certificates.md")
+    contents = read(filename, String)
+    id = "# [Infeasibility certificates](@id moi_infeasibility_certificates)"
+    contents = replace(contents, r"^# Infeasibility certificates$"m => id)
+    write(filename, contents)
     return
 end
 
@@ -612,6 +618,30 @@ Documenter.DocMeta.setdocmeta!(
     :DocTestSetup,
     :(using JuMP, JuMP.Containers);
     recursive = true,
+)
+
+Documenter.DocMeta.setdocmeta!(
+    MathOptInterface,
+    :DocTestSetup,
+    :(import MathOptInterface as MOI);
+    recursive = true,
+)
+
+# Remove once MOI v1.41.0 is released
+MOI.Bridges.runtests(
+    MOI.Bridges.Constraint.GreaterToLessBridge,
+    """
+    variables: x
+    x >= 1
+    """,
+    """
+    variables: x
+    ::Int: -1 * x <= -1
+    """;
+    eltype = Int,
+    print_inner_model = true,
+    variable_start = 2,
+    constraint_start = 2,
 )
 
 # Needed to make Documenter think that there is a PDF in the right place when
