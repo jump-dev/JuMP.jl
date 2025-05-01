@@ -25,6 +25,7 @@ shape, while [`get_attribute`](@ref) and [`set_attribute`](@ref) can be used to
 get and set the value in the vectorized shape:
 
 ```@repl
+using JuMP
 model = Model();
 @variable(model, x[1:2, 1:2], PSD);
 c = VariableInSetRef(x);
