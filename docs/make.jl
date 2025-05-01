@@ -438,6 +438,7 @@ const _PAGES = [
         "Extensions" => "developers/extensions.md",
         "Custom binaries" => "developers/custom_solver_binaries.md",
         "Style Guide" => "developers/style.md",
+        "Conventions" => "developers/conventions.md",
         "Roadmap" => "developers/roadmap.md",
         "Checklists" => "developers/checklists.md",
     ],
