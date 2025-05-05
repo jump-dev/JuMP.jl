@@ -38,7 +38,7 @@ dual_start_value(c)
 
 ## `unset_` methods
 
-There are a variety of attributes in JuMP and MOI that can be "set" and "unset".
+There are a variety of attributes in JuMP and MOI that can be "set" and "unset."
 For example, there is [`MOI.Silent`](@ref), and the corresponding
 [`set_silent`](@ref) and [`unset_silent`](@ref).
 
