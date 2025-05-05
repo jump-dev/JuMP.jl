@@ -392,24 +392,50 @@ function _finalize_macro(
     source::LineNumberNode;
     register_name::Union{Nothing,Symbol} = nothing,
     wrap_let::Bool = false,
+    time_it::Union{Nothing,String} = nothing,
 )
     @assert Meta.isexpr(model, :escape)
-    if wrap_let && model.args[1] isa Symbol
-        code = quote
-            let $model = $model
+    ret = gensym()
+    code = if wrap_let && model.args[1] isa Symbol
+        quote
+            $ret = let $model = $model
                 $code
             end
         end
+    else
+        :($ret = $code)
     end
     if register_name !== nothing
         sym_name = Meta.quot(register_name)
         code = quote
             _error_if_cannot_register($model, $sym_name)
-            $(esc(register_name)) = $model[$sym_name] = $code
+            $code
+            $(esc(register_name)) = $model[$sym_name] = $ret
+        end
+    end
+    if time_it !== nothing
+        code = quote
+            start_time = time()
+            $code
+            _add_or_set_macro_time(
+                $model,
+                ($(QuoteNode(source)), $time_it),
+                time() - start_time,
+            )
+            $ret
         end
     end
     is_valid_code = :(_valid_model($model, $(Meta.quot(model.args[1]))))
     return Expr(:block, source, is_valid_code, code)
+end
+
+_add_or_set_macro_time(model::AbstractModel, key, value) = nothing
+
+function _add_or_set_macro_time(model::GenericModel, key, value)
+    if model.enable_macro_timing
+        model.macro_times[key] = get!(model.macro_times, key, 0.0) + value
+    end
+    return
 end
 
 function _error_if_cannot_register(model::AbstractModel, name::Symbol)
@@ -472,6 +498,100 @@ function _plural_macro_code(model, block, macro_sym)
         end
     end
     return code
+end
+
+"""
+    set_macro_timing(::GenericModel, value::Bool)
+
+Turn on (if `value`, or off, if `!value`) JuMP's built-in profiling of model
+construction macros.
+
+Use [`print_macro_timing_summary`](@ref) to display a summary.
+
+## Example
+
+```jldoctest; filter=[r"Total time inside macros: .+ seconds", r"├.+", r"└.+"]
+julia> begin
+           model = Model()
+           set_macro_timing(model, true)
+           @variable(model, x[1:2])
+           @objective(model, Min, sum(x))
+       end;
+
+julia> print_macro_timing_summary(model)
+Total time inside macros: 5.33690e-02 seconds
+│
+├ 2.96490e-02 s [55.55%]
+│ ├ REPL[8]:3
+│ └ `@variable(model, x[1:2])`
+│
+└ 2.37200e-02 s [44.45%]
+  ├ REPL[8]:4
+  └ `@objective(model, Min, sum(x))`
+```
+"""
+function set_macro_timing(model::GenericModel, value::Bool)
+    model.enable_macro_timing = value
+    return
+end
+
+function _string_summary(x)
+    if length(x) <= 75
+        return x
+    end
+    return x[1:32] * " [...] " * x[end-31:end]
+end
+
+_format_time(x::Float64) = string(_format(x), " seconds")
+
+"""
+    print_macro_timing_summary([io::IO = stdout], model::GenericModel)
+
+Print a summary of the runtime of each macro.
+
+Before calling this method, you must have enabled the macro timing feature using
+[`set_macro_timing`](@ref).
+
+## Example
+
+```jldoctest; filter=[r"Total time inside macros: .+ seconds", r"├.+", r"└.+"]
+julia> begin
+           model = Model()
+           set_macro_timing(model, true)
+           @variable(model, x[1:2])
+           @objective(model, Min, sum(x))
+       end;
+
+julia> print_macro_timing_summary(model)
+Total time inside macros: 5.33690e-02 seconds
+│
+├ 2.96490e-02 s [55.55%]
+│ ├ REPL[8]:3
+│ └ `@variable(model, x[1:2])`
+│
+└ 2.37200e-02 s [44.45%]
+  ├ REPL[8]:4
+  └ `@objective(model, Min, sum(x))`
+```
+"""
+function print_macro_timing_summary(io::IO, model::GenericModel)
+    total_time = sum(values(model.macro_times))
+    times = sort!(collect(model.macro_times); by = last, rev = true)
+    println(io, "Total time inside macros: ", _format_time(total_time))
+    for i in 1:length(times)
+        (source, expr), time = times[i]
+        percent = round(100 * time / total_time; digits = 2)
+        a, b = ifelse(i < length(times), ('├', '│'), ('└', ' '))
+        println(io, "│")
+        println(io, "$a ", _format(time), " s [$percent%]")
+        println(io, "$b ├ $(source.file):$(source.line)")
+        println(io, "$b └ ", replace(_string_summary(expr), "\n" => ""))
+    end
+    return
+end
+
+function print_macro_timing_summary(model::GenericModel)
+    return print_macro_timing_summary(stdout, model)
 end
 
 for file in readdir(joinpath(@__DIR__, "macros"))

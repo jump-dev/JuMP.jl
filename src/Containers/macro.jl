@@ -325,15 +325,24 @@ end
 _strip_LineNumberNode(x) = x
 
 """
+    build_macro_expression_string(macro_name, args)
+
+Reconstruct a string of the macro input expression from the name and arguments.
+"""
+function build_macro_expression_string(macro_name, args)
+    str_args = join(_strip_LineNumberNode.(args), ", ")
+    return string("`@", macro_name, "(", str_args, ")`")
+end
+
+"""
     build_error_fn(macro_name, args, source)
 
 Return a function that can be used in place of `Base.error`, but which
 additionally prints the macro from which it was called.
 """
 function build_error_fn(macro_name, args, source)
-    str_args = join(_strip_LineNumberNode.(args), ", ")
-    msg = "At $(source.file):$(source.line): `@$macro_name($str_args)`: "
-    error_fn(str...) = error(msg, str...)
+    msg = build_macro_expression_string(macro_name, args)
+    error_fn(str...) = error("At $(source.file):$(source.line): $msg: ", str...)
     return error_fn
 end
 

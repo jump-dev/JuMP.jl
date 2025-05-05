@@ -179,6 +179,10 @@ macro constraint(input_args...)
         __source__;
         register_name = name,
         wrap_let = true,
+        time_it = Containers.build_macro_expression_string(
+            :constraint,
+            input_args,
+        ),
     )
 end
 
