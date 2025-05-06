@@ -220,7 +220,7 @@ If the [`termination_status`](@ref) is [`DUAL_INFEASIBLE`](@ref) and
 solution exists, the certificate is an unbounded ray of the primal problem. The
 [`objective_value`](@ref) is the value of the objective, evaluated using the
 ray, excluding any constant term. For more details, see
-[Infeasibility certificates](@ref).
+[Infeasibility certificates](@ref moi_infeasibility_certificates).
 
 ```jldoctest
 julia> using HiGHS
@@ -323,9 +323,7 @@ If the [`termination_status`](@ref) is [`INFEASIBLE`](@ref) and
 solution exists, the certificate is an unbounded ray of the dual problem. The
 [`dual_objective_value`](@ref) is the value of the dual objective, evaluated
 using the ray, excluding any constant term. For more details, see
-[Infeasibility certificates](@ref).
-
-Fore more details, see [Infeasibility certificates](@ref).
+[Infeasibility certificates](@ref moi_infeasibility_certificates).
 
 ```jldoctest
 julia> using HiGHS
