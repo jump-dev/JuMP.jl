@@ -386,7 +386,39 @@ end
 #   you do not have enough memory to store the model. Use a computer with more
 #   RAM.
 
-# ### Strategies
+# ### Macro timing
+
+# JuMP has a built-in feature that can measure the time spent in each macro.
+# Turn it on using [`set_macro_timing`](@ref), build the model, and then use
+# [`print_macro_timing_summary`](@ref) to print a summary. Here's an example:
+
+begin
+    N = 200
+    demand = vcat(-1.0, zeros(N - 2), 1.0)
+    edges = [(i, j) for i in 1:N for j in 1:N if i < j]
+    model = Model()
+    set_macro_timing(model, true)
+    @variable(model, flows[e in edges] >= 0)
+    @constraint(
+        model,
+        [n in 1:N],
+        sum(flows[(i, j)] for (i, j) in edges if j == n) -
+        sum(flows[(i, j)] for (i, j) in edges if i == n) == demand[n]
+    )
+    print_macro_timing_summary(model)
+end
+
+# In this case, you can see that the `@constraint` call dominates the runtime.
+# If it isn't obvious why that is, read the [Performance problems with sum-if formulations](@ref)
+# tutorial.
+
+# Note that the macro timing feature measures only the time spent inside JuMP
+# macros. It does not measure regular Julia code outside the macros.
+
+# ### Other strategies
+
+# If the macro timing feature does not reveal the bottleneck, it means that your
+# issue is in regular Julia code that is not inside a JuMP macro.
 
 # The strategy to debug JuMP models that have performance problems depends on
 # how long your model takes to build.

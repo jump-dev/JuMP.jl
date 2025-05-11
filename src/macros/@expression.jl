@@ -94,6 +94,10 @@ macro expression(input_args...)
         __source__;
         register_name = name,
         wrap_let = true,
+        time_it = Containers.build_macro_expression_string(
+            :expression,
+            input_args,
+        ),
     )
 end
 

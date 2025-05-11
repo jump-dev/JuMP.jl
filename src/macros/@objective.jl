@@ -107,7 +107,15 @@ macro objective(input_args...)
         set_objective($esc_model, $sense, $expr)
         $expr
     end
-    return _finalize_macro(esc_model, code, __source__)
+    return _finalize_macro(
+        esc_model,
+        code,
+        __source__;
+        time_it = Containers.build_macro_expression_string(
+            :objective,
+            input_args,
+        ),
+    )
 end
 
 function _parse_moi_sense(error_fn::Function, sense)
