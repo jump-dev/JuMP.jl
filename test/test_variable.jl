@@ -1780,7 +1780,7 @@ end
 
 function test_direct_model_variable_in_set_Parameter()
     inner = MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
-    model = direct_model(innner)
+    model = direct_model(inner)
     @variable(model, x in Parameter(0.0))
     @test is_parameter(x)
     return
