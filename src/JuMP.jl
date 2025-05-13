@@ -126,6 +126,9 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     set_string_names_on_creation::Bool
     #
     variable_in_set_ref::Dict{Any,MOI.ConstraintIndex}
+    # A dictionary to store timing information from the JuMP macros.
+    enable_macro_timing::Bool
+    macro_times::Dict{Tuple{LineNumberNode,String},Float64}
 end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
@@ -148,21 +151,16 @@ function Base.getproperty(model::GenericModel, name::Symbol)
 end
 
 """
-    GenericModel{T}(
-        [optimizer_factory;]
-        add_bridges::Bool = true,
-    ) where {T<:Real}
+    GenericModel{T}([optimizer_factory]; kwargs...) where {T<:Real}
 
 Create a new instance of a JuMP model.
 
 If `optimizer_factory` is provided, the model is initialized with the optimizer
-returned by `MOI.instantiate(optimizer_factory)`.
+using `set_optimizer(model, optimizer_factory; kwargs...)`. See
+[`set_optimizer`](@ref) for details on `kwargs`.
 
 If `optimizer_factory` is not provided, use [`set_optimizer`](@ref) to set the
 optimizer before calling [`optimize!`](@ref).
-
-If `add_bridges`, JuMP adds a [`MOI.Bridges.LazyBridgeOptimizer`](@ref) to
-automatically reformulate the problem into a form supported by the optimizer.
 
 ## Value type `T`
 
@@ -188,13 +186,13 @@ GenericModel{BigFloat}
 """
 function GenericModel{T}(
     @nospecialize(optimizer_factory = nothing);
-    add_bridges::Bool = true,
+    kwargs...,
 ) where {T<:Real}
     inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{T}())
     cache = MOI.Utilities.CachingOptimizer(inner, MOI.Utilities.AUTOMATIC)
     model = direct_generic_model(T, cache)
     if optimizer_factory !== nothing
-        set_optimizer(model, optimizer_factory; add_bridges = add_bridges)
+        set_optimizer(model, optimizer_factory; kwargs...)
     end
     return model
 end
@@ -242,6 +240,8 @@ function direct_generic_model(
         Dict{Symbol,Any}(),
         true,
         Dict{Any,MOI.ConstraintIndex}(),
+        false,
+        Dict{Tuple{LineNumberNode,String},Float64}(),
     )
 end
 
@@ -942,6 +942,7 @@ function Base.empty!(model::GenericModel)::GenericModel
     model.nlp_model = nothing
     empty!(model.obj_dict)
     empty!(model.ext)
+    empty!(model.macro_times)
     model.is_model_dirty = false
     return model
 end

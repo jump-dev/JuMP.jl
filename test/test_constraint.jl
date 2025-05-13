@@ -2228,4 +2228,25 @@ function test_shadow_price_errors()
     return
 end
 
+function test_reshape_vector_nothing()
+    for shape in (
+        ScalarShape(),
+        VectorShape(),
+        ArrayShape((2, 2)),
+        SymmetricMatrixShape(2),
+        SymmetricMatrixAdjointShape(2),
+        SkewSymmetricMatrixShape(2),
+        SquareMatrixShape(2),
+        HermitianMatrixShape(2),
+        HermitianMatrixAdjointShape(2),
+    )
+        @test reshape_vector(nothing, shape) === nothing
+    end
+    model = Model()
+    @variable(model, x[1:2, 1:2], PSD)
+    c = VariableInSetRef(x)
+    @test dual_start_value(c) === nothing
+    return
+end
+
 end  # module
