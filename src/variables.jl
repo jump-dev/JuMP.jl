@@ -2437,7 +2437,7 @@ function _moi_add_constrained_variables(
     if names !== nothing
         for (var_index, name) in zip(var_indices, names)
             if !isempty(name) && MOI.supports(
-                backend(model),
+                moi_backend,
                 MOI.VariableName(),
                 MOI.VariableIndex,
             )
@@ -2462,7 +2462,7 @@ function _moi_add_constrained_variables(
     if names !== nothing
         for (var_index, name) in zip(var_indices, names)
             if !isempty(name) && MOI.supports(
-                backend(model),
+                moi_backend,
                 MOI.VariableName(),
                 MOI.VariableIndex,
             )
