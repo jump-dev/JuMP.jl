@@ -2223,7 +2223,7 @@ function _moi_add_variable(
     end
     if !isempty(name)
         if MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
-            set_name(x, name)
+            MOI.set(moi_backend, MOI.VariableName(), index, name)
         end
     end
     return x
