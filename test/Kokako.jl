@@ -37,6 +37,7 @@ function run_tests(
     exclude_names::Vector{String} = String[],
     kwargs...,
 )
+    test_names = Symbol[]
     for name in names(module_to_test; all = true)
         test_function, test_name = getfield(module_to_test, name), string(name)
         if !(test_function isa Function)
@@ -48,9 +49,19 @@ function run_tests(
         elseif any(needle -> occursin(needle, test_name), exclude_names)
             continue
         end
-        Test.@testset "$name" begin
-            test_function(args...; kwargs...)
+        push!(test_names, name)
+    end
+    test_sets = Vector{Any}(undef, length(test_names))
+    Threads.@threads for (i, name) in collect(enumerate((test_names)))
+        test_sets[i] = Test.DefaultTestSet("$name")
+        Test.push_testset(test_sets[i])
+        try
+            getfield(module_to_test, name)(args...; kwargs...)
+        catch
         end
+    end
+    for i in 1:length(test_names)
+        Test.finish(test_sets[i])
     end
     return
 end
