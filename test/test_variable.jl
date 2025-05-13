@@ -1788,7 +1788,7 @@ end
 
 function test_direct_model_variable_in_set_SOS1()
     inner = MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
-    model = direct_model(mockoptimizer)
+    model = direct_model(inner)
     @variable(model, x[1:2] in SOS1([1.0, 2.0]))
     @test num_variables(model) == 2
     return
