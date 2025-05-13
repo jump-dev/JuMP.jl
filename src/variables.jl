@@ -2346,8 +2346,8 @@ function _moi_add_constrained_variable(
 ) where {T}
     var_index, con_index = MOI.add_constrained_variable(moi_backend, set)
     _moi_constrain_variable(moi_backend, var_index, scalar_variable.info, T)
-    if !isempty(name) &&
-       MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
+    supports = MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
+    if !isempty(name) && supports       
         MOI.set(moi_backend, MOI.VariableName(), var_index, name)
     end
     return var_index, con_index
@@ -2434,13 +2434,10 @@ function _moi_add_constrained_variables(
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(moi_backend, index, variable.info, T)
     end
-    if names !== nothing
+    supports = MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
+    if names !== nothing && supports
         for (var_index, name) in zip(var_indices, names)
-            if !isempty(name) && MOI.supports(
-                moi_backend,
-                MOI.VariableName(),
-                MOI.VariableIndex,
-            )
+            if !isempty(name)
                 MOI.set(moi_backend, MOI.VariableName(), var_index, name)
             end
         end
@@ -2459,13 +2456,10 @@ function _moi_add_constrained_variables(
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(moi_backend, index, variable.info, T)
     end
-    if names !== nothing
+    supports = MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
+    if names !== nothing && supports
         for (var_index, name) in zip(var_indices, names)
-            if !isempty(name) && MOI.supports(
-                moi_backend,
-                MOI.VariableName(),
-                MOI.VariableIndex,
-            )
+            if !isempty(name)
                 MOI.set(moi_backend, MOI.VariableName(), var_index, name)
             end
         end
