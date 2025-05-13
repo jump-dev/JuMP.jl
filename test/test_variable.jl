@@ -1778,4 +1778,27 @@ function test_variable_in_set_HermitianPSDCone()
     return
 end
 
+function test_direct_model_variable_in_set_Parameter()
+    mockoptimizer =
+        MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
+    m = direct_model(mockoptimizer)
+    @variable(m, x in Parameter(0.0))
+    @test is_parameter(x)
+end
+
+function test_direct_model_variable_in_set_SOS1()
+    mockoptimizer =
+        MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
+    m = direct_model(mockoptimizer)
+    @variable(m, x[1:2] in SOS1([1.0, 2.0]))
+    @test num_variables(m) == 2
+end
+
+function test_direct_model_variable_in_set_Reals()
+    mockoptimizer =
+        MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
+    m = direct_model(mockoptimizer)
+    @variable(m, x[1:2] in MOI.Reals(2))
+    @test num_variables(m) == 2
+end
 end  # module TestVariable
