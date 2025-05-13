@@ -467,7 +467,7 @@ function Base.show(io::IOContext, x::SparseAxisArray)
         (i, (key, value)) in enumerate(x.data) if
         i < half_screen_rows || i > length(x) - half_screen_rows
     ]
-    pad = maximum(length(x[1]) for x in key_strings)
+    pad = maximum((length(x[1]) for x in key_strings); init = 0)
     for (i, (key, value)) in enumerate(key_strings)
         print(io, "  [", rpad(key, pad), "]  =  ", value)
         if i != length(key_strings)

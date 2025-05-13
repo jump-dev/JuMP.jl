@@ -395,4 +395,14 @@ function test_empty_vector_indices()
     return
 end
 
+function test_small_displaysize()
+    for row in 0:9
+        d = Containers.container(+, [(1, 2)], Containers.SparseAxisArray)
+        io = IOContext(IOBuffer(), :limit => true, :displaysize => (row, 80))
+        show(io, d)
+        @test String(take!(io.io)) == ""
+    end
+    return
+end
+
 end  # module
