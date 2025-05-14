@@ -2347,7 +2347,7 @@ function _moi_add_constrained_variable(
     var_index, con_index = MOI.add_constrained_variable(moi_backend, set)
     _moi_constrain_variable(moi_backend, var_index, scalar_variable.info, T)
     supports = MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
-    if !isempty(name) && supports       
+    if !isempty(name) && supports
         MOI.set(moi_backend, MOI.VariableName(), var_index, name)
     end
     return var_index, con_index
