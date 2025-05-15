@@ -1207,8 +1207,12 @@ Base.eltype(::Type{T}) where {T<:AbstractJuMPScalar} = T
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
-LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
+
 LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
+
+LinearAlgebra.issymmetric(::AbstractJuMPScalar) = true
+
+LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 
 function LinearAlgebra.hermitian(x::F, ::Symbol) where {F<:AbstractJuMPScalar}
     return convert(F, real(x))
