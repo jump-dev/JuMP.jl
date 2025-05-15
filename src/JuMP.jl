@@ -1218,6 +1218,8 @@ function LinearAlgebra.hermitian(x::F, ::Symbol) where {F<:AbstractJuMPScalar}
     return convert(F, real(x))
 end
 
+LinearAlgebra.ishermitian(x::AbstractJuMPScalar) = isreal(x)
+
 LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = conj(scalar)
 
 Base.iterate(x::AbstractJuMPScalar) = (x, true)
