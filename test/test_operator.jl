@@ -739,7 +739,23 @@ function test_is_symmetric()
     @test !LinearAlgebra.issymmetric([x[1] x[2]; x[3] x[3]])
     @test !LinearAlgebra.issymmetric([x[1] x[2]])
     @test LinearAlgebra.issymmetric([x[1] x[2]; x[2] x[3]])
+    @test LinearAlgebra.issymmetric(x[1])
+    @test LinearAlgebra.issymmetric(1.0 * x[1] + 2.0)
+    @test LinearAlgebra.issymmetric(x[1] * x[1])
+    @test LinearAlgebra.issymmetric(log(x[1]))
     return
 end
 
+function test_is_hermitian()
+    model = Model()
+    @variable(model, x)
+    @test LinearAlgebra.ishermitian(x)
+    @test LinearAlgebra.ishermitian(1.0 * x + 2.0)
+    @test LinearAlgebra.ishermitian(x^2)
+    @test LinearAlgebra.ishermitian(log(x))
+    @test !LinearAlgebra.ishermitian(2.0 * im * x)
+    @test !LinearAlgebra.ishermitian(2.0 * im * x * x)
+    return
 end
+
+end  # module
