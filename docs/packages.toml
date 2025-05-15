@@ -144,7 +144,7 @@
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.6.0"
+    rev = "v0.7.1"
 [DisjunctiveProgramming]
     user = "hdavid16"
     rev = "6a4d0ac4a7484e52b1dbff9cee310a73d2d23e81"
@@ -177,7 +177,7 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.15"
+    rev = "v0.5.16"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
@@ -210,7 +210,7 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.12.3"
+    rev = "v0.12.5"
 [SDDP]
     user = "odow"
     rev = "v1.11.0"
