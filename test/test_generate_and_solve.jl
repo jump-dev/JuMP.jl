@@ -433,9 +433,9 @@ function test_generate_solve_complex_SDP()
     JuMP._eval_as_variable(_set_val, x[2, 2], 2.0)
     optimize!(m)
 
-    @test [2.0 1.0 + 1.0im; 1.0 - 1.0im 2.0] == value.(x)
+    @test [2.0 1.0+1.0im; 1.0-1.0im 2.0] == value.(x)
     @test value(x) isa Hermitian
-    @test [2.0 1.0 + 1.0im; 1.0 - 1.0im 2.0] == @inferred value(x)
+    @test [2.0 1.0+1.0im; 1.0-1.0im 2.0] == @inferred value(x)
     return
 end
 
