@@ -415,38 +415,6 @@ function test_generate_solve_SDP()
     return
 end
 
-function test_generate_solve_complex_SDP()
-    m = Model()
-    @variable(m, x[1:2, 1:2], Hermitian)
-    @variable(m, y[1:2, 1:2], Symmetric)
-    y = 1 * y
-    mock = MOI.Utilities.MockOptimizer(
-        MOI.Utilities.Model{Float64}();
-        eval_objective_value = false,
-        eval_variable_constraint_dual = false,
-    )
-    MOI.Utilities.reset_optimizer(m, mock)
-    MOI.Utilities.attach_optimizer(m)
-    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
-    _set_val(x, v) = MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), v)
-    JuMP._eval_as_variable(_set_val, x[1, 1], 1.0)
-    JuMP._eval_as_variable(_set_val, real(x[1, 2]), 2.0)
-    JuMP._eval_as_variable(_set_val, imag(x[1, 2]), 3.0)
-    JuMP._eval_as_variable(_set_val, x[2, 2], 4.0)
-    JuMP._eval_as_variable(_set_val, y[1, 1], 5.0)
-    JuMP._eval_as_variable(_set_val, y[1, 2], 6.0)
-    JuMP._eval_as_variable(_set_val, y[2, 2], 7.0)
-    optimize!(m)
-
-    @test [1.0 2.0+3.0im; 2.0-3.0im 4.0] == value.(x)
-    @test value(x) isa Hermitian
-    @test [1.0 2.0+3.0im; 2.0-3.0im 4.0] == @inferred value(x)
-    @test [5.0 6.0; 6.0 7.0] == value.(y)
-    @test value(y) isa Symmetric
-    @test [5.0 6.0; 6.0 7.0] == @inferred value(y)
-    return
-end
-
 function test_generate_solve_unsupported_nonlinear_problems()
     model =
         Model(() -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()))
@@ -676,6 +644,45 @@ end
 
 function test__optimizer_for_precompile_tools()
     @test JuMP._optimizer_for_precompile_tools() isa MOI.Utilities.MockOptimizer
+    return
+end
+
+function test_value_symmetric()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
+    model = direct_model(inner)
+    @variable(model, x[i in 1:2, j in 1:2], Symmetric, start = i + j)
+    Y = LinearAlgebra.Symmetric(1.0 .* x)
+    @test_throws OptimizeNotCalled value(x)
+    @test_throws OptimizeNotCalled value(Y)
+    @test value(start_value, x) == LinearAlgebra.Symmetric([2 3; 3 4])
+    @test value(start_value, Y) == LinearAlgebra.Symmetric([2 3; 3 4])
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set.(inner, MOI.VariablePrimal(), index.(x), [3 4; 4 5])
+    @test value(x) == LinearAlgebra.Symmetric([3 4; 4 5])
+    @test value(Y) == LinearAlgebra.Symmetric([3 4; 4 5])
+    @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
+    @test_throws MOI.ResultIndexBoundsError value(Y; result = 2)
+    return
+end
+
+function test_value_hermitian()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
+    model = direct_model(inner)
+    H = [1 2+3im; 2-3im 4]
+    @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j])
+    @test_throws OptimizeNotCalled value(x)
+    @test value(start_value, x) == LinearAlgebra.Hermitian(H)
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    y = index.(all_variables(model))
+    MOI.set.(inner, MOI.VariablePrimal(), y, [3, 4, 5, 6])
+    @test value(x) == LinearAlgebra.Hermitian([3 4+6im; 4-6im 5])
+    @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
     return
 end
 
