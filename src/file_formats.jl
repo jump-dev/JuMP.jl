@@ -115,7 +115,7 @@ NAME
 ROWS
  N  Obj
 COLUMNS
-    c0        Obj       2
+    x         Obj       2
 RHS
     RHS_V     Obj       -1
 ENDATA

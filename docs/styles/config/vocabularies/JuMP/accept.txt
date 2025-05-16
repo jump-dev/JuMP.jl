@@ -42,6 +42,7 @@ performant
 plagiaristic
 [Pp]recompil(ation|(e(?d)))
 preprint
+profiler
 [Pp]seudorandom
 README
 recurse
