@@ -232,7 +232,7 @@ function reshape_vector(
     matrix = Matrix{T}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
-        for i in 1:j-1
+        for i in 1:(j-1)
             k += 1
             matrix[j, i] = matrix[i, j] = 0.5 * v[k]
         end
@@ -306,7 +306,7 @@ end
 
 function vectorize(matrix, ::SkewSymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
-    return [matrix[i, j] for j in 1:n for i in 1:j-1]
+    return [matrix[i, j] for j in 1:n for i in 1:(j-1)]
 end
 
 """
@@ -432,7 +432,7 @@ end
 
 function value(
     Q::LinearAlgebra.Symmetric{V,Matrix{V}},
-) where {V<:AbstractVariableRef}
+) where {V<:AbstractJuMPScalar}
     return LinearAlgebra.Symmetric(
         value.(LinearAlgebra.parent(Q)),
         LinearAlgebra.sym_uplo(Q.uplo),
@@ -667,6 +667,15 @@ function build_variable(
         _vectorize_complex_variables(error_fn, variables),
         set,
         shape,
+    )
+end
+
+function value(
+    Q::LinearAlgebra.Hermitian{V,Matrix{V}},
+) where {V<:AbstractJuMPScalar}
+    return LinearAlgebra.Hermitian(
+        value.(LinearAlgebra.parent(Q)),
+        LinearAlgebra.sym_uplo(Q.uplo),
     )
 end
 

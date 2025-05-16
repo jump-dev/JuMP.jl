@@ -415,6 +415,30 @@ function test_generate_solve_SDP()
     return
 end
 
+function test_generate_solve_complex_SDP()
+    m = Model()
+    @variable(m, x[1:2, 1:2], Hermitian)
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.Model{Float64}();
+        eval_objective_value = false,
+        eval_variable_constraint_dual = false,
+    )
+    MOI.Utilities.reset_optimizer(m, mock)
+    MOI.Utilities.attach_optimizer(m)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    _set_val(x, v) = MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), v)
+    JuMP._eval_as_variable(_set_val, x[1, 1], 2.0)
+    JuMP._eval_as_variable(_set_val, real(x[1, 2]), 1.0)
+    JuMP._eval_as_variable(_set_val, imag(x[1, 2]), 1.0)
+    JuMP._eval_as_variable(_set_val, x[2, 2], 2.0)
+    optimize!(m)
+
+    @test [2.0 1.0 + 1.0im; 1.0 - 1.0im 2.0] == value.(x)
+    @test value(x) isa Hermitian
+    @test [2.0 1.0 + 1.0im; 1.0 - 1.0im 2.0] == @inferred value(x)
+    return
+end
+
 function test_generate_solve_unsupported_nonlinear_problems()
     model =
         Model(() -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()))
