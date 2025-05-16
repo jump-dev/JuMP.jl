@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed a bug setting variables names when they are not supported by the solver
    (#3995)
  - Fixed show of `SparseAxisArray` for small display size (#3996)
-
+ - Fixed `LinearAlgebra.issymmetric(::AbstractJuMPScalar)` (#3997)
 
 ### Other
 
