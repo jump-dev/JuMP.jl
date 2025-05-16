@@ -430,15 +430,6 @@ function build_variable(
     return build_variable(error_fn, variables, set)
 end
 
-function value(
-    Q::LinearAlgebra.Symmetric{V,Matrix{V}},
-) where {V<:AbstractJuMPScalar}
-    return LinearAlgebra.Symmetric(
-        value.(LinearAlgebra.parent(Q)),
-        LinearAlgebra.sym_uplo(Q.uplo),
-    )
-end
-
 function build_constraint(
     error_fn::Function,
     Q::LinearAlgebra.Symmetric{V,M},
@@ -670,15 +661,6 @@ function build_variable(
     )
 end
 
-function value(
-    Q::LinearAlgebra.Hermitian{V,Matrix{V}},
-) where {V<:AbstractJuMPScalar}
-    return LinearAlgebra.Hermitian(
-        value.(LinearAlgebra.parent(Q)),
-        LinearAlgebra.sym_uplo(Q.uplo),
-    )
-end
-
 function build_constraint(
     ::Function,
     Q::LinearAlgebra.Hermitian{V,M},
@@ -870,4 +852,44 @@ for S in (Nonnegatives, Nonpositives, Zeros)
             end
         end
     end
+end
+
+function value(
+    var_value::Function,
+    Q::LinearAlgebra.Symmetric{V,Matrix{V}},
+) where {V<:AbstractJuMPScalar}
+    return LinearAlgebra.Symmetric(
+        value.(var_value, LinearAlgebra.parent(Q)),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
+end
+
+function value(
+    Q::LinearAlgebra.Symmetric{V,Matrix{V}};
+    result::Int = 1,
+) where {V<:AbstractJuMPScalar}
+    return LinearAlgebra.Symmetric(
+        value.(LinearAlgebra.parent(Q); result),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
+end
+
+function value(
+    var_value::Function,
+    Q::LinearAlgebra.Hermitian{V,Matrix{V}},
+) where {V<:AbstractJuMPScalar}
+    return LinearAlgebra.Hermitian(
+        value.(var_value, LinearAlgebra.parent(Q)),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
+end
+
+function value(
+    Q::LinearAlgebra.Hermitian{V,Matrix{V}};
+    result::Int = 1,
+) where {V<:AbstractJuMPScalar}
+    return LinearAlgebra.Hermitian(
+        value.(LinearAlgebra.parent(Q); result),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
 end
