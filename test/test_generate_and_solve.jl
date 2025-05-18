@@ -647,4 +647,43 @@ function test__optimizer_for_precompile_tools()
     return
 end
 
+function test_value_symmetric()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
+    model = direct_model(inner)
+    @variable(model, x[i in 1:2, j in 1:2], Symmetric, start = i + j)
+    Y = LinearAlgebra.Symmetric(1.0 .* x)
+    @test_throws OptimizeNotCalled value(x)
+    @test_throws OptimizeNotCalled value(Y)
+    @test value(start_value, x) == LinearAlgebra.Symmetric([2 3; 3 4])
+    @test value(start_value, Y) == LinearAlgebra.Symmetric([2 3; 3 4])
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set.(inner, MOI.VariablePrimal(), index.(x), [3 4; 4 5])
+    @test value(x) == LinearAlgebra.Symmetric([3 4; 4 5])
+    @test value(Y) == LinearAlgebra.Symmetric([3 4; 4 5])
+    @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
+    @test_throws MOI.ResultIndexBoundsError value(Y; result = 2)
+    return
+end
+
+function test_value_hermitian()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
+    model = direct_model(inner)
+    H = [1 2+3im; 2-3im 4]
+    @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j])
+    @test_throws OptimizeNotCalled value(x)
+    @test value(start_value, x) == LinearAlgebra.Hermitian(H)
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    y = index.(all_variables(model))
+    MOI.set.(inner, MOI.VariablePrimal(), y, [3, 4, 5, 6])
+    @test value(x) == LinearAlgebra.Hermitian([3 4+6im; 4-6im 5])
+    @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
+    return
+end
+
 end  # module
