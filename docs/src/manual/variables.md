@@ -1080,6 +1080,26 @@ julia> model[:x]
  y[2]
 ```
 
+### Sparse arrays
+
+To construct a `SparseArrays.SparseMatrixCSC` of JuMP variables, create a
+vector of JuMP variables for the non-zero elements, and then use the
+`SparseArrays.sparse` constructor:
+
+```jldoctest
+julia> import SparseArrays
+
+julia> model = Model();
+
+julia> x = @variable(model, [1:5]);
+
+julia> A = SparseArrays.sparse([1, 1, 2, 2, 3], [1, 2, 2, 3, 3], x)
+3×3 SparseArrays.SparseMatrixCSC{VariableRef, Int64} with 5 stored entries:
+ _[1]  _[2]  ⋅
+ ⋅     _[3]  _[4]
+ ⋅     ⋅     _[5]
+```
+
 ## Semidefinite variables
 
 Declare a square matrix of JuMP variables to be positive semidefinite by passing
