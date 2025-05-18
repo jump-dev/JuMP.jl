@@ -94,9 +94,9 @@ data = get_data()
 # ```math
 # \begin{align}
 #     \min & \sum\limits_{j=1}^J y_j \\
-#     \;\;\text{s.t.} & \sum\limits_{i=1}^N w_i x_{ij} \le W y_j & \forall j=1,\ldots,J \\
+#     \;\;\text{s.t.} & \sum\limits_{i=1}^I w_i x_{ij} \le W y_j & \forall j=1,\ldots,J \\
 #          & \sum\limits_{j=1}^J x_{ij} \ge d_i & \forall i=1,\ldots,I \\
-#          & x_{ij} \ge 0 & \forall i=1,\ldots,N, j=1,\ldots,J \\
+#          & x_{ij} \ge 0 & \forall i=1,\ldots,I, j=1,\ldots,J \\
 #          & x_{ij} \in \mathbb{Z} & \forall i=1,\ldots,I, j=1,\ldots,J \\
 #          & y_{j} \in \{0, 1\} & \forall j=1,\ldots,J \\
 # \end{align}
