@@ -87,6 +87,8 @@ end
 
 variable_ref_type(::Type{GenericQuadExpr{C,V}}) where {C,V} = V
 
+value_type(::Type{GenericQuadExpr{C,V}}) where {C,V} = C
+
 function owner_model(x::GenericQuadExpr)
     model = owner_model(x.aff)
     if model !== nothing

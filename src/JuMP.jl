@@ -94,6 +94,15 @@ BigFloat
 """
 value_type(::Type{<:AbstractModel}) = Float64
 
+value_type(::Type{T}) where {T<:Number} = T
+
+function value_type(::Type{T}) where {T}
+    return error(
+        "Unable to compute the `value_type($T)`. If you are developing a " *
+        "JuMP extension, define a new method for `JuMP.value_type(::Type{$T})`",
+    )
+end
+
 mutable struct GenericModel{T<:Real} <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
