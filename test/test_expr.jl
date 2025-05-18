@@ -595,4 +595,26 @@ function test_issue_3982_core()
     return
 end
 
+function test_value_type()
+    for T in (Int, Float64, BigFloat)
+        model = GenericModel{T}()
+        @variable(model, x)
+        @test value_type(T) == T
+        @test value_type(typeof(model)) == T
+        @test value_type(typeof(x)) == T
+        @test value_type(typeof(one(T) * x)) == T
+        @test value_type(typeof(one(T) * x * x)) == T
+        @test value_type(typeof(log(x))) == T
+    end
+    T = Symbol
+    @test_throws(
+        ErrorException(
+            "Unable to compute the `value_type($T)`. If you are developing a " *
+            "JuMP extension, define a new method for `JuMP.value_type(::Type{$T})`",
+        ),
+        value_type(T),
+    )
+    return
+end
+
 end  # TestExpr

@@ -112,6 +112,8 @@ function variable_ref_type(::Type{GenericNonlinearExpr}, x::AbstractJuMPScalar)
     return variable_ref_type(x)
 end
 
+value_type(::Type{GenericNonlinearExpr{V}}) where {V} = value_type(V)
+
 function _has_variable_ref_type(a)
     return variable_ref_type(GenericNonlinearExpr, a) !== nothing
 end
