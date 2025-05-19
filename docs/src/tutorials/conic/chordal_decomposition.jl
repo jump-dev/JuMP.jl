@@ -68,6 +68,9 @@ S = MOI.PositiveSemidefiniteConeTriangle
 constraints = all_constraints(model, Vector{AffExpr}, S)
 con = constraint_object(constraints[1]);
 con.set
+
+#-
+
 con.func
 
 # The constraint function is given in vectorized form. Use [`reshape_vector`](@ref)
@@ -80,7 +83,7 @@ F = reshape_vector(con.func, SymmetricMatrixShape(con.set.side_dimension))
 
 A = SparseArrays.sparse(F)
 
-# The sparse matrix has 422 nonzeros, which is a density of 2.7%:
+# The sparse matrix has 422 non-zeros, which is a density of 2.7%:
 
 SparseArrays.nnz(A) / size(A, 1)^2
 
@@ -115,3 +118,6 @@ for ci in MOI.get(decom, MOI.ListOfConstraintIndices{MOI.VectorOfVariables,S}())
     count_by_size[n] = get(count_by_size, n, 0) + 1
 end
 count_by_size
+
+# The largest PSD constraint is now of size 10, which is much smaller than the
+# original 124-by-124 matrix.
