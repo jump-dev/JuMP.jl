@@ -664,7 +664,7 @@ function test_value_symmetric()
     MOI.set.(inner, MOI.VariablePrimal(), index.(x), [3 4; 4 5])
     @test value(x) == LinearAlgebra.Symmetric([3 4; 4 5])
     @test value(Y) == LinearAlgebra.Symmetric([3 4; 4 5])
-    @test value(Z) == LinearAlgebra.Symmetric([-2 -4;-4 -4])
+    @test value(Z) == LinearAlgebra.Symmetric([-2 -4; -4 -4])
     @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
     @test_throws MOI.ResultIndexBoundsError value(Y; result = 2)
     return
