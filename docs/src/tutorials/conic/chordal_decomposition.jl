@@ -30,13 +30,15 @@ import SparseArrays
 # For more information on chordal decomposition, watch Michael Garstka's talk at
 # [JuMP-dev 2019](https://www.youtube.com/watch?v=H4Q0ZXDqB70).
 
-# Some solvers, such as [Clarabel.jl](/packages/Clarabel) and [COSMO.jl](/packages/COSMO)
-# implement chordal decomposition internally. Others, such as [SCS.jl](@ref) do not
-# implement chordal decomposition.
+# Some solvers, such as [Clarabel.jl](https://github.com/oxfordcontrol/Clarabel.jl)
+# and [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl) implement chordal
+# decomposition internally. Others, such as [SCS.jl](@ref) do not implement
+# chordal decomposition.
 
 # The Julia package [MathOptChordalDecomposition.jl](@ref) is a MathOptInterface
 # layer that implements chordal decomposition of sparse semidefinite constraints.
-# It can be used to wrap any solver which supports PSD constraints.
+# It can be used to wrap any solver which supports PSD constraints and does not
+# implement chordal decomposition internally.
 
 # ## JuMP Model
 
