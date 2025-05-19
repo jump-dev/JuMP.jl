@@ -859,7 +859,7 @@ function value(
     Q::LinearAlgebra.Symmetric{V,Matrix{V}},
 ) where {V<:AbstractJuMPScalar}
     return LinearAlgebra.Symmetric(
-        value.(var_value, LinearAlgebra.parent(Q)),
+        value.(var_value, Q),
         LinearAlgebra.sym_uplo(Q.uplo),
     )
 end
@@ -869,7 +869,7 @@ function value(
     result::Int = 1,
 ) where {V<:AbstractJuMPScalar}
     return LinearAlgebra.Symmetric(
-        value.(LinearAlgebra.parent(Q); result),
+        value.(Q; result),
         LinearAlgebra.sym_uplo(Q.uplo),
     )
 end
@@ -879,7 +879,7 @@ function value(
     Q::LinearAlgebra.Hermitian{V,Matrix{V}},
 ) where {V<:AbstractJuMPScalar}
     return LinearAlgebra.Hermitian(
-        value.(var_value, LinearAlgebra.parent(Q)),
+        value.(var_value, Q),
         LinearAlgebra.sym_uplo(Q.uplo),
     )
 end
@@ -889,7 +889,7 @@ function value(
     result::Int = 1,
 ) where {V<:AbstractJuMPScalar}
     return LinearAlgebra.Hermitian(
-        value.(LinearAlgebra.parent(Q); result),
+        value.(Q; result),
         LinearAlgebra.sym_uplo(Q.uplo),
     )
 end
