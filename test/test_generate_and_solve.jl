@@ -654,11 +654,12 @@ function test_value_symmetric()
     model = direct_model(inner)
     @variable(model, x[i in 1:2, j in 1:2], Symmetric, start = i + j)
     Y = LinearAlgebra.Symmetric(1.0 .* x)
-    Z = I - Y #element Z.data[2, 1] is #undef
+    Z = LinearAlgebra.I - Y #element Z.data[2, 1] is #undef
     @test_throws OptimizeNotCalled value(x)
     @test_throws OptimizeNotCalled value(Y)
     @test value(start_value, x) == LinearAlgebra.Symmetric([2 3; 3 4])
     @test value(start_value, Y) == LinearAlgebra.Symmetric([2 3; 3 4])
+    @test value(start_value, Z) == LinearAlgebra.Symmetric([-1 -2; -2 -3])
     optimize!(model)
     MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set.(inner, MOI.VariablePrimal(), index.(x), [3 4; 4 5])
@@ -677,9 +678,10 @@ function test_value_hermitian()
     model = direct_model(inner)
     H = [1 2+3im; 2-3im 4]
     @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j])
-    Z = I - x
+    Z = LinearAlgebra.I - x
     @test_throws OptimizeNotCalled value(x)
     @test value(start_value, x) == LinearAlgebra.Hermitian(H)
+    @test value(start_value, Z) == LinearAlgebra.Hermitian(LinearAlgebra.I - H)
     optimize!(model)
     MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
     y = index.(all_variables(model))
