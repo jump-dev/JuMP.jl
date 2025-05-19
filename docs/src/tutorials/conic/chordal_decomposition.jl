@@ -13,8 +13,6 @@
 # This tutorial uses the following packages:
 
 using JuMP
-import Downloads
-import LinearAlgebra
 import MathOptChordalDecomposition
 import SCS
 import SparseArrays
@@ -45,17 +43,7 @@ import SparseArrays
 # To demonstrate the benefits of chordal decomposition, we use the `mcp124-1`
 # model from [SDPLIB](http://euler.nmt.edu/~brian/sdplib/sdplib.html).
 
-file = "mcp124-1.dat-s"
-dir = mktempdir()
-filename = joinpath(dir, file)
-Downloads.download(
-    "https://raw.githubusercontent.com/vsdp/SDPLIB/refs/heads/master/data/$file",
-    filename,
-)
-## This line is needed to work-around a bug in MathOptInterface v1.40 and
-## earlier
-write(filename, replace(read(filename, String), r"[,{}]" => " "))
-model = read_from_file(filename)
+model = read_from_file(joinpath(@__DIR__, "mcp124-1.dat-s"))
 
 # This model has 124 decision variables and one PSD constraint. This PSD
 # constraint is sparse, which means that many elements of the matrix are zero.
