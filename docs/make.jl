@@ -165,7 +165,8 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
     out_filename = joinpath(@__DIR__, "src", "packages", "$solver.md")
     Downloads.download(
         "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
-        out_filename,
+        out_filename;
+        header = Dict("Authorization" => "token " * ENV["GITHUB_TOKEN"]),
     )
     _add_edit_url(
         out_filename,
