@@ -627,23 +627,6 @@ Documenter.DocMeta.setdocmeta!(
     recursive = true,
 )
 
-# Remove once MOI v1.41.0 is released
-MOI.Bridges.runtests(
-    MOI.Bridges.Constraint.GreaterToLessBridge,
-    """
-    variables: x
-    x >= 1
-    """,
-    """
-    variables: x
-    ::Int: -1 * x <= -1
-    """;
-    eltype = Int,
-    print_inner_model = true,
-    variable_start = 2,
-    constraint_start = 2,
-)
-
 # Needed to make Documenter think that there is a PDF in the right place when
 # link checking. Inn production we replace this by running the LaTeX build.
 write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
