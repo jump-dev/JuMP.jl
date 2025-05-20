@@ -556,6 +556,12 @@ function _add_moi_pages()
             end
         end
     end
+    # Fix `# Infeasibility certificates` in moi/background/infeasibility_certificates.md
+    filename = joinpath(moi_dir, "background", "infeasibility_certificates.md")
+    contents = read(filename, String)
+    id = "# [Infeasibility certificates](@id moi_infeasibility_certificates)"
+    contents = replace(contents, r"^# Infeasibility certificates$"m => id)
+    write(filename, contents)
     return
 end
 
@@ -611,6 +617,13 @@ Documenter.DocMeta.setdocmeta!(
     JuMP,
     :DocTestSetup,
     :(using JuMP, JuMP.Containers);
+    recursive = true,
+)
+
+Documenter.DocMeta.setdocmeta!(
+    MathOptInterface,
+    :DocTestSetup,
+    :(import MathOptInterface as MOI);
     recursive = true,
 )
 

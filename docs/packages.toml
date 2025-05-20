@@ -50,30 +50,30 @@
     rev = "v0.5.0"
     extension = true
 [DSDP]
-    rev = "v0.2.0"
+    rev = "v0.2.1"
 [Dualization]
-    rev = "v0.5.9"
+    rev = "v0.6.0"
 [ECOS]
     rev = "v1.1.3"
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.7.3"
+    rev = "v1.7.4"
 [HiGHS]
-    rev = "v1.15.0"
+    rev = "v1.17.0"
 [Hypatia]
-    rev = "v0.8.1"
+    rev = "v0.8.2"
     has_html = true
 [Ipopt]
-    rev = "v1.8.0"
+    rev = "v1.10.3"
 [KNITRO]
-    rev = "v0.14.5"
+    rev = "v0.14.8"
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
     rev = "v0.15.9"
 [MultiObjectiveAlgorithms]
-    rev = "v1.4.0"
+    rev = "v1.4.2"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -82,7 +82,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.11.0"
+    rev = "v0.11.1"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -100,13 +100,13 @@
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
-    rev = "85f63bf0389ae07f39fe48bf3fa95c78955b0695"
+    rev = "v0.2.0"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
     rev = "b565aac2a58818090d521f2340e71f597688e4fb"
 [SeDuMi]
-    rev = "v0.4.3"
+    rev = "v0.4.4"
 [SumOfSquares]
     rev = "v0.7.3"
     extension = true
@@ -117,7 +117,7 @@
 
 [Alpine]
     user = "lanl-ansi"
-    rev = "v0.5.6"
+    rev = "v0.5.7"
 [BilevelJuMP]
     user = "joaquimg"
     rev = "v0.6.2"
@@ -130,21 +130,21 @@
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "v0.10.0"
+    rev = "v0.10.1"
 [Clarabel]
     user = "oxfordcontrol"
     rev = "v0.10.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.23"
+    rev = "v1.1.24"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.6.0"
+    rev = "v0.7.1"
 [DisjunctiveProgramming]
     user = "hdavid16"
     rev = "6a4d0ac4a7484e52b1dbff9cee310a73d2d23e81"
@@ -152,7 +152,7 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "v0.8.2"
+    rev = "v0.8.3"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
@@ -164,24 +164,24 @@
     extension = true
 [Juniper]
     user = "lanl-ansi"
-    rev = "v0.9.2"
+    rev = "v0.9.3"
 [Loraine]
     user = "kocvara"
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.8.6"
+    rev = "v0.8.7"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.10"
+    rev = "v0.5.16"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.9"
+    rev = "v0.1.10"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -213,12 +213,12 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.12.3"
+    rev = "v0.12.5"
 [SDDP]
     user = "odow"
-    rev = "v1.10.5"
+    rev = "v1.11.0"
     has_html = true
     extension = true
 [Tulip]
     user = "ds4dm"
-    rev = "438a77b7e08b9233365603c1089cf4002e3f507c"
+    rev = "v0.9.7"
