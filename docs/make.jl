@@ -394,6 +394,7 @@ const _PAGES = [
             "tutorials/conic/arbitrary_precision.md",
             "tutorials/conic/start_values.md",
             "tutorials/conic/simple_examples.md",
+            "tutorials/conic/chordal_decomposition.md",
             "tutorials/conic/logistic_regression.md",
             "tutorials/conic/experiment_design.md",
             "tutorials/conic/min_ellipse.md",
