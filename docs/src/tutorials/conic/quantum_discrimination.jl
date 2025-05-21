@@ -92,7 +92,7 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N]
 @objective(
     model,
     Max,
-    sum(real(LinearAlgebra.tr(ρ[i] * E[i])) for i in 1:N) / N,
+    sum(real(LinearAlgebra.dot(ρ[i], E[i])) for i in 1:N) / N,
 )
 
 # Now we optimize:
@@ -113,7 +113,7 @@ objective_value(model)
 
 # Finally, the optimal POVM is:
 
-solution = [value.(e) for e in E]
+solution = value.(E)
 
 # !!! tip
 #     Duality plays a large role in solving conic optimization models. Depending
