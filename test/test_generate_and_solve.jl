@@ -692,4 +692,30 @@ function test_value_hermitian()
     return
 end
 
+function test_value_array()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
+    model = direct_model(inner)
+    @variable(model, x[i in 1:2], start = 3 - i)
+    @variable(
+        model,
+        y[i in 1:2, j in 1:2] in ComplexPlane(),
+        start = i + im * j
+    )
+    @test_throws OptimizeNotCalled value(x)
+    @test_throws OptimizeNotCalled value(y)
+    @test value(start_value, x) == [2, 1]
+    @test value(start_value, y) == [1+im 1+2im; 2+im 2+2im]
+    optimize!(model)
+    MOI.set(inner, MOI.TerminationStatus(), MOI.OPTIMAL)
+    idx = index.(all_variables(model))
+    MOI.set.(inner, MOI.VariablePrimal(), idx, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    @test value(x) == [1, 2]
+    @test value(y) == [3+4im 7+8im; 5+6im 9+10im]
+    @test_throws MOI.ResultIndexBoundsError value(x; result = 2)
+    @test_throws MOI.ResultIndexBoundsError value(y; result = 2)
+    return
+end
+
 end  # module

@@ -2698,11 +2698,12 @@ function dual(::GenericVariableRef)
     )
 end
 
-function value(::AbstractArray{<:AbstractJuMPScalar})
-    return error(
-        "`JuMP.value` is not defined for collections of JuMP types. Use" *
-        " Julia's broadcast syntax instead: `JuMP.value.(x)`.",
-    )
+function value(var_value::Function, Q::AbstractArray{<:AbstractJuMPScalar})
+    return value.(var_value, Q)
+end
+
+function value(Q::AbstractArray{<:AbstractJuMPScalar}; result::Int = 1)
+    return value.(Q; result)
 end
 
 # Fallback. See JuMP#3775

@@ -747,17 +747,6 @@ function test_dual_variable()
     return
 end
 
-function test_value_containers()
-    model = Model()
-    @variable(model, x[1:2])
-    exception = ErrorException(
-        "`JuMP.value` is not defined for collections of JuMP types. Use " *
-        "Julia's broadcast syntax instead: `JuMP.value.(x)`.",
-    )
-    @test_throws exception value(x)
-    return
-end
-
 function test_get_variable_coefficient()
     m = Model()
     x = @variable(m, x)
