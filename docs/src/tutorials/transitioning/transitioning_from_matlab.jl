@@ -197,13 +197,7 @@ is_solved_and_feasible(model)
 # of your variables after optimization is done, with the function call `value(x)`
 # to obtain the value of variable `x`.
 
-value.(m[1][1, 1])
-
-# A subtlety is that, unlike YALMIP, the function `value` is only defined for
-# scalars. For vectors and matrices you need to use Julia broadcasting:
-# `value.(v)`.
-
-value.(m[1])
+value(x)
 
 # There is also a specialized function for extracting the value of the objective,
 # `objective_value(model)`, which is useful if your objective doesn't have a
@@ -365,18 +359,18 @@ function random_state_pure(d)
 end
 
 function robustness_jump(d)
-    rho = random_state_pure(d^2)
+    ρ = random_state_pure(d^2)
     id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
-    rhoT = LinearAlgebra.Hermitian(partial_transpose(rho, 1, [d, d]))
+    ρᵀ = LinearAlgebra.Hermitian(partial_transpose(ρ, 1, [d, d]))
     model = Model(Clarabel.Optimizer)
     set_attribute(model, "verbose", false)
     @variable(model, λ)
-    @constraint(model, PPT, rhoT + λ * id in HermitianPSDCone())
+    @constraint(model, PPT, ρᵀ + λ * id in HermitianPSDCone())
     @objective(model, Min, λ)
     optimize!(model)
     assert_is_solved_and_feasible(model; allow_almost = true)
-    WT = dual(PPT)
-    return value(λ), real(LinearAlgebra.dot(WT, rhoT))
+    Wᵀ = dual(PPT)
+    return value(λ), LinearAlgebra.dot(Wᵀ, ρᵀ)
 end
 
 robustness_jump(3)
