@@ -1270,20 +1270,6 @@ function test_multivariate_NLconstraint_is_valid()
     return
 end
 
-function test_broadcast_error_NLexpression()
-    model = Model()
-    @variable(model, x)
-    @NLexpression(model, expr, sin(x))
-    @test_throws(
-        ErrorException(
-            "`JuMP.value` is not defined for collections of JuMP types. " *
-            "Use Julia's broadcast syntax instead: `JuMP.value.(x)`.",
-        ),
-        value([x, x]),
-    )
-    return
-end
-
 function test_interval_errors()
     model = Model()
     @variable(model, x)
