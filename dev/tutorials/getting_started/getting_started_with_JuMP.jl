@@ -336,7 +336,7 @@ end                         #hide
 
 # JuMP provides data structures for adding collections of variables to a model.
 # These data structures are referred to as _containers_ and are of three types:
-# `Arrays`, `DenseAxisArrays`, and `SparseAxisArrays`.
+# `Array`, [`Containers.DenseAxisArray`](@ref), and [`Containers.SparseAxisArray`](@ref).
 
 # #### Arrays
 
@@ -367,9 +367,9 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 # #### DenseAxisArrays
 
-# `DenseAxisArrays` are used when the indices are not one-based integer ranges.
-# The syntax is similar except with an arbitrary vector as an index as opposed
-# to a one-based range:
+# [`Containers.DenseAxisArray`](@ref) is used when the indices are not one-based
+# integer ranges. The syntax is similar, except with an arbitrary vector as an
+# index as opposed to a one-based range:
 
 @variable(model, z[i = 2:3, j = 1:2:3] >= 0)
 
@@ -377,7 +377,7 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 @variable(model, w[1:5, ["red", "blue"]] <= 1)
 
-# Index elements in a `DenseAxisArray` as follows:
+# Index elements in a [`Containers.DenseAxisArray`](@ref) as follows:
 
 z[2, 1]
 
@@ -389,9 +389,9 @@ w[2:3, ["red", "blue"]]
 
 # #### SparseAxisArrays
 
-# `SparseAxisArrays` are created when the indices do not form a Cartesian product.
-# For example, this applies when indices have a dependence upon previous indices
-# (called triangular indexing):
+# A [`Containers.SparseAxisArray`](@ref) is created when the indices do not form
+# a Cartesian product. For example, this applies when indices have a dependence
+# upon previous indices (called triangular indexing):
 
 @variable(model, u[i = 1:2, j = i:3])
 
@@ -401,7 +401,7 @@ w[2:3, ["red", "blue"]]
 
 @variable(model, v[i = 1:9; mod(i, 3) == 0])
 
-# Index elements in a `DenseAxisArray` as follows:
+# Index elements in a [`Containers.SparseAxisArray`](@ref) as follows:
 
 u[1, 2]
 
@@ -446,9 +446,10 @@ model = Model()
 
 # ### [Containers](@id tutorial_constraint_container)
 
-# Just as we had containers for variables, JuMP also provides `Arrays`,
-# `DenseAxisArrays`, and `SparseAxisArrays` for storing collections of
-# constraints. Examples for each container type are given below.
+# Just as we had containers for variables, JuMP also provides `Array`,
+# [`Containers.DenseAxisArray`](@ref), and [`Containers.SparseAxisArray`](@ref)
+# for storing collections of constraints. Examples for each container type are
+# given below.
 
 # #### Arrays
 
@@ -458,13 +459,13 @@ model = Model()
 
 # #### DenseAxisArrays
 
-# Create an `DenseAxisArray` of constraints:
+# Create a [`Containers.DenseAxisArray`](@ref) of constraints:
 
 @constraint(model, [i = 1:2, j = 2:3], i * x <= j + 1)
 
 # #### SparseAxisArrays
 
-# Create an `SparseAxisArray` of constraints:
+# Create a [`Containers.SparseAxisArray`](@ref) of constraints:
 
 @constraint(model, [i = 1:2, j = 1:2; i != j], i * x <= j + 1)
 

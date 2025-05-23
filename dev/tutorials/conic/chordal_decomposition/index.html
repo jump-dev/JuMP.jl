@@ -93,24 +93,24 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 9.71e-01  3.87e+00  3.12e+02  2.65e+02  1.00e-01  4.42e-03
-   250| 1.20e-03  3.27e-04  2.64e-01  1.42e+02  2.92e-02  8.14e-01
-   500| 2.97e-04  7.52e-05  4.58e-02  1.42e+02  2.92e-02  1.62e+00
-   750| 2.40e-04  6.14e-05  3.89e-02  1.42e+02  2.92e-02  2.43e+00
-  1000| 1.91e-04  5.10e-05  3.30e-02  1.42e+02  2.92e-02  3.24e+00
-  1250| 1.55e-04  4.34e-05  2.78e-02  1.42e+02  2.92e-02  4.04e+00
-  1500| 1.34e-04  3.65e-05  2.34e-02  1.42e+02  2.92e-02  4.84e+00
-  1750| 2.19e-01  2.84e-01  3.74e+00  1.44e+02  2.92e-02  5.64e+00
-  2000| 1.01e-04  2.57e-05  1.67e-02  1.42e+02  2.92e-02  6.46e+00
-  2250| 9.41e-05  2.15e-05  1.42e-02  1.42e+02  2.92e-02  7.25e+00
+     0| 9.71e-01  3.87e+00  3.12e+02  2.65e+02  1.00e-01  4.47e-03
+   250| 1.20e-03  3.27e-04  2.64e-01  1.42e+02  2.92e-02  8.13e-01
+   500| 2.97e-04  7.52e-05  4.58e-02  1.42e+02  2.92e-02  1.67e+00
+   750| 2.40e-04  6.14e-05  3.89e-02  1.42e+02  2.92e-02  2.49e+00
+  1000| 1.91e-04  5.10e-05  3.30e-02  1.42e+02  2.92e-02  3.30e+00
+  1250| 1.55e-04  4.34e-05  2.78e-02  1.42e+02  2.92e-02  4.11e+00
+  1500| 1.34e-04  3.65e-05  2.34e-02  1.42e+02  2.92e-02  4.91e+00
+  1750| 2.19e-01  2.84e-01  3.74e+00  1.44e+02  2.92e-02  5.72e+00
+  2000| 1.01e-04  2.57e-05  1.67e-02  1.42e+02  2.92e-02  6.51e+00
+  2250| 9.41e-05  2.15e-05  1.42e-02  1.42e+02  2.92e-02  7.31e+00
 ------------------------------------------------------------------
 status:  solved
-timings: total: 7.25e+00s = setup: 1.98e-03s + solve: 7.25e+00s
-	 lin-sys: 1.65e-01s, cones: 7.02e+00s, accel: 1.27e-02s
+timings: total: 7.31e+00s = setup: 2.00e-03s + solve: 7.31e+00s
+	 lin-sys: 1.67e-01s, cones: 7.07e+00s, accel: 1.33e-02s
 ------------------------------------------------------------------
 objective = 141.972713
 ------------------------------------------------------------------
-  7.461563 seconds (152.84 k allocations: 8.639 MiB, 2.74% compilation time: 56% of which was recompilation)</code></pre><p>In comparison, if we wrap <code>SCS.Optimizer</code> in <code>MathOptChordalDecomposition.Optimizer</code>, then the problem takes less than 1 second to solve:</p><pre><code class="language-julia hljs">set_optimizer(model, () -&gt; MathOptChordalDecomposition.Optimizer(SCS.Optimizer))
+  7.546888 seconds (233.83 k allocations: 12.603 MiB, 3.06% compilation time: 58% of which was recompilation)</code></pre><p>In comparison, if we wrap <code>SCS.Optimizer</code> in <code>MathOptChordalDecomposition.Optimizer</code>, then the problem takes less than 1 second to solve:</p><pre><code class="language-julia hljs">set_optimizer(model, () -&gt; MathOptChordalDecomposition.Optimizer(SCS.Optimizer))
 @time optimize!(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
 	       SCS v3.2.7 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
@@ -128,17 +128,17 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.75e+01  1.00e+00  9.93e+03 -4.81e+03  1.00e-01  2.96e-03
+     0| 2.75e+01  1.00e+00  9.93e+03 -4.81e+03  1.00e-01  3.03e-03
    250| 3.65e-03  9.48e-04  1.32e-03  1.42e+02  8.07e-01  1.06e-01
    500| 2.63e-04  7.03e-05  1.77e-04  1.42e+02  2.57e+00  2.10e-01
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.10e-01s = setup: 2.52e-03s + solve: 2.07e-01s
-	 lin-sys: 5.91e-02s, cones: 1.29e-01s, accel: 2.44e-03s
+timings: total: 2.10e-01s = setup: 2.60e-03s + solve: 2.07e-01s
+	 lin-sys: 5.90e-02s, cones: 1.29e-01s, accel: 2.89e-03s
 ------------------------------------------------------------------
 objective = 141.988826
 ------------------------------------------------------------------
-  0.326915 seconds (84.60 k allocations: 6.947 MiB, 34.08% compilation time: 90% of which was recompilation)</code></pre><p>The difference in performance is because of the chordal decomposition. The decomposed problem introduced new variables (there are now 1,155 variables instead of 124) and constraints (there are now 115 PSD constraints instead of one), but each PSD constraint is smaller than the original.</p><pre><code class="language-julia hljs">decom = unsafe_backend(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MathOptChordalDecomposition.Optimizer{CliqueTrees.MF}
+  0.327983 seconds (84.44 k allocations: 6.940 MiB, 34.26% compilation time: 95% of which was recompilation)</code></pre><p>The difference in performance is because of the chordal decomposition. The decomposed problem introduced new variables (there are now 1,155 variables instead of 124) and constraints (there are now 115 PSD constraints instead of one), but each PSD constraint is smaller than the original.</p><pre><code class="language-julia hljs">decom = unsafe_backend(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MathOptChordalDecomposition.Optimizer{CliqueTrees.MF}
 ├ ObjectiveSense: MIN_SENSE
 ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
 ├ NumberOfVariables: 1155
@@ -160,4 +160,4 @@ count_by_size</code></pre><pre class="documenter-example-output"><code class="no
   9  =&gt; 2
   8  =&gt; 3
   3  =&gt; 35
-  1  =&gt; 12</code></pre><p>The largest PSD constraint is now of size 10, which is much smaller than the original 124-by-124 matrix.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_examples/">« Simple semidefinite programming examples</a><a class="docs-footer-nextpage" href="../logistic_regression/">Example: logistic regression »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 22 May 2025 22:59">Thursday 22 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  1  =&gt; 12</code></pre><p>The largest PSD constraint is now of size 10, which is much smaller than the original 124-by-124 matrix.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_examples/">« Simple semidefinite programming examples</a><a class="docs-footer-nextpage" href="../logistic_regression/">Example: logistic regression »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Friday 23 May 2025 22:57">Friday 23 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
