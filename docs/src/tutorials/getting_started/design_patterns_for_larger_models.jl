@@ -612,8 +612,9 @@ Solve the knapsack problem and return the optimal primal solution
 
 ## Returns
 
- * If an optimal solution exists: a `JuMP.DenseAxisArray` that maps the `String`
-   name of each object to the number of objects to pack into the knapsack.
+ * If an optimal solution exists: a `JuMP.Containers.DenseAxisArray` that maps
+   the `String` name of each object to the number of objects to pack into the
+   knapsack.
  * Otherwise, `nothing`, indicating that the problem does not have an optimal
    solution.
 

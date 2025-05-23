@@ -1027,9 +1027,9 @@ julia> dual_start_value(con)
 
 Like [Variable containers](@ref), JuMP provides a mechanism for building groups
 of constraints compactly. References to these groups of constraints are returned
-in *containers*. Three types of constraint containers are supported: `Array`s,
-`DenseAxisArray`s, and `SparseAxisArray`s. We explain each of these in the
-following.
+in *containers*. Three types of constraint containers are supported: `Array`,
+[`Containers.DenseAxisArray`](@ref), and [`Containers.SparseAxisArray`](@ref).
+We explain each of these in the following.
 
 !!! tip
     You can read more about containers in the [Containers](@ref) section.
@@ -1075,14 +1075,14 @@ can determine at parse time that the indices are one-based integer ranges.
 Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. A special
 case is `con[Base.OneTo(n)]` which will produce an `Array`. If JuMP cannot
 determine that the indices are one-based integer ranges (for example, in the case of
-`con[a:b]`), JuMP will create a `DenseAxisArray` instead.
+`con[a:b]`), JuMP will create a [`Containers.DenseAxisArray`](@ref) instead.
 
 ### DenseAxisArrays
 
-The syntax for constructing a [`DenseAxisArray`](@ref Containers.DenseAxisArray)
+The syntax for constructing a [`Containers.DenseAxisArray`](@ref)
 of constraints is very similar to the
-[syntax for constructing](@ref variable_jump_arrays) a `DenseAxisArray` of
-variables.
+[syntax for constructing](@ref variable_jump_arrays) a [`Containers.DenseAxisArray`](@ref)
+of variables.
 
 ```jldoctest constraint_jumparrays
 julia> model = Model();
@@ -1100,10 +1100,9 @@ And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{Ma
 
 ### SparseAxisArrays
 
-The syntax for constructing a
-[`SparseAxisArray`](@ref Containers.SparseAxisArray) of constraints is very
-similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
-`SparseAxisArray` of variables.
+The syntax for constructing a [`Containers.SparseAxisArray`](@ref) of
+constraints is very similar to the [syntax for constructing](@ref variable_sparseaxisarrays)
+a [`Containers.SparseAxisArray`](@ref) of variables.
 
 ```jldoctest constraint_jumparrays
 julia> model = Model();

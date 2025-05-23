@@ -800,8 +800,8 @@ x
 JuMP provides a mechanism for creating collections of variables in three types
 of data structures, which we refer to as *containers*.
 
-The three types are `Array`s, `DenseAxisArray`s, and `SparseAxisArray`s. We
-explain each of these in the following.
+The three types are `Array`, [`Containers.DenseAxisArray`](@ref), and
+[`Containers.SparseAxisArray`](@ref). We explain each of these in the following.
 
 !!! tip
     You can read more about containers in the [Containers](@ref) section.
@@ -850,7 +850,7 @@ JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
 create an `Array` of JuMP variables, but `x[a:b]` will not. If JuMP cannot
 determine that the indices are one-based integer ranges (for example, in the case of
-`x[a:b]`), JuMP will create a `DenseAxisArray` instead.
+`x[a:b]`), JuMP will create a [`Containers.DenseAxisArray`](@ref) instead.
 
 ### [DenseAxisArrays](@id variable_jump_arrays)
 
@@ -859,7 +859,7 @@ ranges. For example, we may want to create a variable indexed by the name of a
 product or a location. The syntax is the same as that above, except with an
 arbitrary vector as an index as opposed to a one-based range. The biggest
 difference is that instead of returning an `Array` of JuMP variables, JuMP will
-return a `DenseAxisArray`. For example:
+return a [`Containers.DenseAxisArray`](@ref). For example:
 ```jldoctest variables_jump_arrays
 julia> model = Model();
 
@@ -872,7 +872,7 @@ And data, a 2×2 Matrix{VariableRef}:
  x[2,A]  x[2,B]
 ```
 
-DenseAxisArrays can be indexed and sliced as follows:
+A [`Containers.DenseAxisArray`](@ref) can be indexed and sliced as follows:
 ```jldoctest variables_jump_arrays
 julia> x[1, :A]
 x[1,A]
@@ -908,7 +908,7 @@ And data, a 2×2 Matrix{Float64}:
 
 ### [SparseAxisArrays](@id variable_sparseaxisarrays)
 
-The third container type that JuMP natively supports is `SparseAxisArray`.
+The third container type that JuMP natively supports is [`Containers.SparseAxisArray`](@ref).
 These arrays are created when the indices do not form a rectangular set.
 For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
@@ -996,9 +996,10 @@ using the filtering syntax.
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
-to create an Array before a DenseAxisArray and a DenseAxisArray before a
-SparseAxisArray. However, because this happens at compile time, JuMP does not
-always make the best choice. To illustrate this, consider the following example:
+to create an `Array` before a [`Containers.DenseAxisArray`](@ref) and a
+[`Containers.DenseAxisArray`](@ref) before a [`Containers.SparseAxisArray`](@ref).
+However, because this happens at compile time, JuMP does not always make the
+best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container
 julia> model = Model();
 
@@ -1014,8 +1015,8 @@ And data, a 2-element Vector{VariableRef}:
 ```
 Since the value (and type) of `A` is unknown at parsing time, JuMP is unable to
 infer that `A` is a one-based integer range. Therefore, JuMP creates a
-`DenseAxisArray`, even though it could store these two variables in a standard
-one-dimensional `Array`.
+[`Containers.DenseAxisArray`](@ref), even though it could store these two
+variables in a standard one-dimensional `Array`.
 
 We can share our knowledge that it is possible to store these JuMP variables as
 an array by setting the `container` keyword:
@@ -1025,7 +1026,7 @@ julia> @variable(model, y[A], container=Array)
  y[1]
  y[2]
 ```
-JuMP now creates a vector of JuMP variables instead of a DenseAxisArray.
+JuMP now creates a `Vector` of JuMP variables instead of a [`Containers.DenseAxisArray](@ref).
 Choosing an invalid container type will throw an error.
 
 ### User-defined containers
@@ -1119,7 +1120,7 @@ nonnegative.
 
 !!! note
     `x` must be a square 2-dimensional `Array` of JuMP variables; it cannot be a
-    DenseAxisArray or a SparseAxisArray.
+    [`Containers.DenseAxisArray`](@ref) or a [`Containers.SparseAxisArray`](@ref).
 
 Use [`VariableInSetRef`](@ref) to obtain the associated constraint reference:
 

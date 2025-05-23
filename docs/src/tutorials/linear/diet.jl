@@ -118,8 +118,8 @@ set_silent(model)
 @variable(model, x[foods.name] >= 0)
 
 # To simplify things later on, we store the vector as a new column `x` in the
-# DataFrame `foods`. Since `x` is a `DenseAxisArray`, we first need to convert
-# it to an `Array`:
+# DataFrame `foods`. Since `x` is a [`Containers.DenseAxisArray`](@ref), we
+# first need to convert it to an `Array`:
 
 foods.x = Array(x)
 

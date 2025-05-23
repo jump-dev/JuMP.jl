@@ -155,7 +155,7 @@ And data, a 2×2 Matrix{Tuple{Int64, Symbol}}:
 
 ### Slicing
 
-DenseAxisArrays can be sliced
+A [`Containers.DenseAxisArray`](@ref) can be sliced:
 ```jldoctest containers_dense
 julia> x[:, :A]
 1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
@@ -195,7 +195,7 @@ julia> axes(x)
 
 ### Broadcasting
 
-Broadcasting over a DenseAxisArray returns a DenseAxisArray
+Broadcasting over a [`Containers.DenseAxisArray`](@ref) returns [`Containers.DenseAxisArray`](@ref):
 ```jldoctest containers_dense
 julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
@@ -229,8 +229,8 @@ julia> x.data
 
 ### Tables
 
-Use [`Containers.rowtable`](@ref) to convert the `DenseAxisArray` into a
-[Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
+Use [`Containers.rowtable`](@ref) to convert a [`Containers.DenseAxisArray`](@ref)
+into a [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
 ```jldoctest containers_dense
@@ -331,15 +331,17 @@ julia> for key in eachindex(y)
 ```
 
 !!! warning
-    If you use a macro to construct a `SparseAxisArray`, then the iteration
-    order is row-major, that is, indices are varied from right to left. As an
-    example, when iterating over `x` above, the `j` index is iterated, keeping
-    `i` constant. This order is in contrast to `Base.Array`s, which iterate in
-    column-major order, that is, by varying indices from left to right.
+    If you use a macro to construct a [`Containers.SparseAxisArray`](@ref), then
+    the iteration order is row-major, that is, indices are varied from right to
+    left. As an example, when iterating over `x` above, the `j` index is
+    iterated, keeping `i` constant. This order is in contrast to `Base.Array`,
+    which iterates in column-major order, that is, by varying indices from left
+    to right.
 
 ### Broadcasting
 
-Broadcasting over a SparseAxisArray returns a SparseAxisArray
+Broadcasting over a [`Containers.SparseAxisArray`](@ref) returns a
+[`Containers.SparseAxisArray`](@ref):
 
 ```jldoctest containers_sparse
 julia> swap(x::Tuple) = (last(x), first(x))
@@ -353,8 +355,8 @@ JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 en
 
 ### Tables
 
-Use [`Containers.rowtable`](@ref) to convert the `SparseAxisArray` into a
-[Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
+Use [`Containers.rowtable`](@ref) to convert the [`Containers.SparseAxisArray`](@ref)
+into a [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
 ```jldoctest containers_sparse
