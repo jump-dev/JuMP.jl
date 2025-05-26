@@ -164,3 +164,33 @@ variable_by_name(model, "x") === nothing
 #     For more information on the difference between string names, symbolic
 #     names, and bindings, see
 #     [String names, symbolic names, and bindings](@ref variable_names_and_bindings).
+
+# ## Sparsity
+
+# JuMP executes the code that you write without trying to be clever about
+# multiplication by `0.0`. For example, consider this model:
+
+d = 100_000
+a = zeros(d);
+a[3] = 1.0
+model = Model();
+@variable(model, x[1:d]);
+complicated_expression(x, i) = x[i]^2
+@expression(model, sum(a[i] * complicated_expression(x, i) for i in 1:d))
+
+# Although the final expression consists of  a single element, the sum is over
+# 100,000 elements, all but one of which are then multiplied by `0.0`. The
+# `@expression` line is equivalent to:
+
+expr = zero(QuadExpr)
+for i in 1:d
+    tmp = complicated_expression(x, i)
+    global expr = add_to_expression!(expr, a[i], tmp)
+end
+
+# Notice how we compute `complicated_expression` in every iteration, even though
+# most results will be discarded. You can improve the performance of model
+# construction by pre-computing the set of non-zero indices:
+
+indices = [i for i in 1:d if !iszero(a[i])]
+@expression(model, sum(a[i] * complicated_expression(x, i) for i in indices))
