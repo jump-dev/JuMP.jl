@@ -758,4 +758,53 @@ function test_is_hermitian()
     return
 end
 
+function test_literal_pow_AbstractVariableRef()
+    model = Model()
+    @variable(model, x)
+    # We need a function barrier to allow Julia to optimize the constant power
+    pn1(x) = x^-1
+    p0(x) = x^0
+    p1(x) = x^1
+    p2(x) = x^2
+    p3(x) = x^3
+    @test (@inferred p0(x)) === 1.0
+    @test isequal_canonical(@inferred(p1(x)), x)
+    @test isequal_canonical(@inferred(p2(x)), 1.0 * x * x)
+    @test isequal_canonical(@inferred(p3(x)), NonlinearExpr(:^, Any[x, 3]))
+    @test isequal_canonical(@inferred(pn1(x)), NonlinearExpr(:^, Any[x, -1]))
+    # Test the Base.:^ fallback
+    pa(x, a) = x^a
+    @test pa(x, 0) === 1.0
+    @test isequal_canonical(pa(x, 1), x)
+    @test isequal_canonical(pa(x, 2), 1.0 * x * x)
+    @test isequal_canonical(pa(x, 3), NonlinearExpr(:^, Any[x, 3]))
+    @test isequal_canonical(pa(x, -1), NonlinearExpr(:^, Any[x, -1]))
+    return
+end
+
+function test_literal_pow_GenericAffExpr()
+    model = Model()
+    @variable(model, y)
+    x = 2.0 * y + 1.0
+    # We need a function barrier to allow Julia to optimize the constant power
+    pn1(x) = x^-1
+    p0(x) = x^0
+    p1(x) = x^1
+    p2(x) = x^2
+    p3(x) = x^3
+    @test (@inferred p0(x)) === 1.0
+    @test isequal_canonical(@inferred(p1(x)), x)
+    @test isequal_canonical(@inferred(p2(x)), 1.0 * x * x)
+    @test isequal_canonical(@inferred(p3(x)), NonlinearExpr(:^, Any[x, 3]))
+    @test isequal_canonical(@inferred(pn1(x)), NonlinearExpr(:^, Any[x, -1]))
+    # Test the Base.:^ fallback
+    pa(x, a) = x^a
+    @test pa(x, 0) === 1.0
+    @test isequal_canonical(pa(x, 1), x)
+    @test isequal_canonical(pa(x, 2), 1.0 * x * x)
+    @test isequal_canonical(pa(x, 3), NonlinearExpr(:^, Any[x, 3]))
+    @test isequal_canonical(pa(x, -1), NonlinearExpr(:^, Any[x, -1]))
+    return
+end
+
 end  # module

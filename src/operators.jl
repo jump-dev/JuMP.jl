@@ -226,6 +226,25 @@ function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
     return map_coefficients(c -> c / rhs, lhs)
 end
 
+# We need an implementation for both Base.literal_pow and Base.:^ because of the
+# difference between `x^2` and `a = 2; x^a`.
+
+function Base.literal_pow(::typeof(^), x::AbstractVariableRef, ::Val{0})
+    return one(value_type(typeof(x)))
+end
+
+Base.literal_pow(::typeof(^), x::AbstractVariableRef, ::Val{1}) = x
+
+Base.literal_pow(::typeof(^), x::AbstractVariableRef, ::Val{2}) = x * x
+
+function Base.literal_pow(
+    ::typeof(^),
+    x::AbstractVariableRef,
+    ::Val{N},
+) where {N}
+    return GenericNonlinearExpr{typeof(x)}(:^, Any[x, N])
+end
+
 function Base.:^(lhs::V, rhs::Integer) where {V<:AbstractVariableRef}
     if rhs == 0
         return one(value_type(V))
@@ -236,6 +255,20 @@ function Base.:^(lhs::V, rhs::Integer) where {V<:AbstractVariableRef}
     else
         return GenericNonlinearExpr{V}(:^, Any[lhs, rhs])
     end
+end
+
+Base.literal_pow(::typeof(^), x::GenericAffExpr{T}, ::Val{0}) where {T} = one(T)
+
+Base.literal_pow(::typeof(^), x::GenericAffExpr, ::Val{1}) = x
+
+Base.literal_pow(::typeof(^), x::GenericAffExpr, ::Val{2}) = x * x
+
+function Base.literal_pow(
+    ::typeof(^),
+    x::GenericAffExpr{T,V},
+    ::Val{N},
+) where {T,V,N}
+    return GenericNonlinearExpr{V}(:^, Any[x, N])
 end
 
 function Base.:^(lhs::GenericAffExpr{T,V}, rhs::Integer) where {T,V}
