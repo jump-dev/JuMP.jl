@@ -758,4 +758,41 @@ function test_is_hermitian()
     return
 end
 
+function test_literal_pow_AbstractVariableRef()
+    model = Model()
+    @variable(model, x)
+    # We need a function barrier to allow Julia to optimize the constant power
+    p0(x) = x^0
+    p1(x) = x^1
+    p2(x) = x^2
+    @test (@inferred p0(x)) === 1.0
+    @test isequal_canonical(@inferred(p1(x)), x)
+    @test isequal_canonical(@inferred(p2(x)), 1.0 * x * x)
+    # Test the Base.:^ fallback
+    pa(x, a) = x^a
+    @test pa(x, 0) === 1.0
+    @test isequal_canonical(pa(x, 1), x)
+    @test isequal_canonical(pa(x, 2), 1.0 * x * x)
+    return
+end
+
+function test_literal_pow_GenericAffExpr()
+    model = Model()
+    @variable(model, y)
+    x = 2.0 * y + 1.0
+    # We need a function barrier to allow Julia to optimize the constant power
+    p0(x) = x^0
+    p1(x) = x^1
+    p2(x) = x^2
+    @test (@inferred p0(x)) === 1.0
+    @test isequal_canonical(@inferred(p1(x)), x)
+    @test isequal_canonical(@inferred(p2(x)), 1.0 * x * x)
+    # Test the Base.:^ fallback
+    pa(x, a) = x^a
+    @test pa(x, 0) === 1.0
+    @test isequal_canonical(pa(x, 1), x)
+    @test isequal_canonical(pa(x, 2), 1.0 * x * x)
+    return
+end
+
 end  # module
