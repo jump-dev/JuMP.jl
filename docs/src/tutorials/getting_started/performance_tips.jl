@@ -185,7 +185,7 @@ complicated_expression(x, i) = x[i]^2
 expr = zero(QuadExpr)
 for i in 1:d
     tmp = complicated_expression(x, i)
-    expr = add_to_expression!(expr, a[i], tmp)
+    global expr = add_to_expression!(expr, a[i], tmp)
 end
 
 # Notice how we compute `complicated_expression` in every iteration, even though
