@@ -18,7 +18,7 @@ visiting [jump.dev](https://jump.dev).
 | Install | `import Pkg; Pkg.add("JuMP")` | `import Pkg; Pkg.pkg"add JuMP#master"` |
 | Documentation | [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/) | [![dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/) |
 | Get help | Ask a question on the [Community forum](https://jump.dev/forum) | Join the [Developer chatroom](https://jump.dev/chatroom) |
-| Source code  | [release-1.0](https://github.com/jump-dev/JuMP.jl/tree/release-1.0) | [master](https://github.com/jump-dev/JuMP.jl/tree/master) |
+| Source code  | [v1.26.0](https://github.com/jump-dev/JuMP.jl/tree/v1.26.0) | [master](https://github.com/jump-dev/JuMP.jl/tree/master) |
 | Testing status | [![Build Status](https://github.com/jump-dev/JuMP.jl/actions/workflows/ci.yml/badge.svg?branch=release-1.0)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI) | [![Build Status](https://github.com/jump-dev/JuMP.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI) |
 | Coverage | [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/release-1.0/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl) | [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl) |
 
