@@ -761,7 +761,7 @@ function test_expression_graphs()
     @test MOI.objective_expr(d) == :(x[$xidx]^2.0 + x[$yidx]^2.0)
     @test MOI.constraint_expr(d, 1) ==
           :((exp(x[$xidx]) - x[$yidx]) - 0.0 == 0.0)
-    @test MOI.constraint_expr(d, 2) == :((exp(x[$xidx]) + 1) - 0.0 == 0.0)
+    @test MOI.constraint_expr(d, 2) == :((exp(x[$xidx]) + 1.0) - 0.0 == 0.0)
     return
 end
 
@@ -784,9 +784,9 @@ function test_more_expression_graphs()
     yidx = y.index
     @test MOI.objective_expr(d) == :(x[$xidx]^x[$yidx])
     @test MOI.constraint_expr(d, 1) ==
-          :(sin(x[$xidx]) * cos(x[$yidx]) - 5 == 0.0)
-    @test MOI.constraint_expr(d, 2) == :(1.0 * x[$xidx]^2 - 1.0 == 0.0)
-    @test MOI.constraint_expr(d, 3) == :(2.0 * x[$xidx]^2 - 2.0 == 0.0)
+          :(sin(x[$xidx]) * cos(x[$yidx]) - 5.0 == 0.0)
+    @test MOI.constraint_expr(d, 2) == :(1.0 * x[$xidx]^2.0 - 1.0 == 0.0)
+    @test MOI.constraint_expr(d, 3) == :(2.0 * x[$xidx]^2.0 - 2.0 == 0.0)
     @test MOI.constraint_expr(d, 4) == :(-0.5 <= sin(x[$xidx]) <= 0.5)
     @test MOI.constraint_expr(d, 5) ==
           :(ψ(x[$xidx]) + t(x[$xidx], x[$yidx]) - 3.0 <= 0.0)
@@ -801,7 +801,7 @@ function test_expression_graph_for_ifelse()
     MOI.initialize(d, [:ExprGraph])
     xidx = x.index
     @test MOI.objective_expr(d) ==
-          :(ifelse(x[$xidx] <= 1, x[$xidx]^2, x[$xidx]))
+          :(ifelse(x[$xidx] <= 1.0, x[$xidx]^2.0, x[$xidx]))
     return
 end
 
