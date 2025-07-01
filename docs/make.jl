@@ -352,6 +352,7 @@ const _PAGES = [
             "tutorials/linear/knapsack.md",
             "tutorials/linear/diet.md",
             "tutorials/linear/cannery.md",
+            "tutorials/linear/typed_indices.md",
             "tutorials/linear/factory_schedule.md",
             "tutorials/linear/multi.md",
             "tutorials/linear/multi_commodity_network.md",
