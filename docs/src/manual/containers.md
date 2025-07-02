@@ -259,7 +259,7 @@ julia> DataFrames.DataFrame(table)
    4 │     2  B       (2, :B)
 ```
 
-### Keyword indexing
+### [Keyword indexing](@id dense_keyword_indexing)
 
 If all axes are named, you can use keyword indexing:
 

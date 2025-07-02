@@ -134,6 +134,7 @@ if !_FAST
         joinpath("getting_started", "debugging.md"),
         joinpath("getting_started", "performance_tips.md"),
         joinpath("linear", "tips_and_tricks.md"),
+        joinpath("linear", "typed_indices.md"),
     ]
         filename = joinpath(@__DIR__, "src", "tutorials", file)
         content = read(filename, String)
@@ -352,6 +353,7 @@ const _PAGES = [
             "tutorials/linear/knapsack.md",
             "tutorials/linear/diet.md",
             "tutorials/linear/cannery.md",
+            "tutorials/linear/typed_indices.md",
             "tutorials/linear/factory_schedule.md",
             "tutorials/linear/multi.md",
             "tutorials/linear/multi_commodity_network.md",
