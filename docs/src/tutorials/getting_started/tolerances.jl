@@ -69,7 +69,7 @@ import SCS
 #    measured
 # 2. dual feasibility: controls how feasibility of the dual solution is measured
 # 3. integrality: controls how feasibility of the binary and integer variables
-#    are measured
+#    is measured
 # 4. optimality: controls how close the primal and dual solutions must be.
 #
 # Solvers may use absolute tolerances, relative tolerances, or some mixture of
@@ -456,7 +456,10 @@ model = Model()
 @constraint(model, 1.78 * x_capacity_W <= 200e6)
 
 # This constraint violates the recommendations because there are values greater
-# than $10^6$, and the ratio of the coefficients in the constraint is $10^8$.
+# than $10^6$, and the ratio of the coefficients in the constraint is $10^8$. In
+# real terms, an absolute feasibility tolerance of `1e-8` means that the
+# capacity cost must be not exceed 1 millionth of a cent more than 200 million
+# dollars. No financial system measures costs to that level of accuracy.
 
 # One fix is the convert our capacity variable from Watts to Megawatts. This
 # yields:
@@ -473,7 +476,8 @@ model = Model()
 @constraint(model, 1.78 * x_capacity_MW <= 200)
 
 # This problem is equivalent to the original problem, but it has much better
-# problem scaling.
+# problem scaling. In real terms, our new constraint means that the capacity
+# cost must not exceed 200 million dollars by more than 1 cent. 
 
 # As a general rule, to fix problem scaling you must simultaneously scale both
 # variables and constraints. It is usually not sufficient to scale variables or
