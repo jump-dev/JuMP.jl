@@ -154,7 +154,7 @@ julia> @variable(model, x);
 julia> @objective(model, Min, 2x)
 2 x
 
-julia> set_objective_sense(model, MOI_MAX_SENSE)
+julia> set_objective_sense(model, MOI.MAX_SENSE)
 
 julia> new_objective = @expression(model, -2 * x)
 -2 x
