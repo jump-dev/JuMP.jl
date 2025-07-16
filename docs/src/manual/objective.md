@@ -144,7 +144,7 @@ julia> @objective(model, Max, -2x)
 -2 x
 ```
 
-Alternatively, use [`set_objective_function`](@ref).
+Alternatively, use [`set_objective_sense`](@ref) and [`set_objective_function`](@ref).
 
 ```jldoctest
 julia> model = Model();
@@ -153,6 +153,8 @@ julia> @variable(model, x);
 
 julia> @objective(model, Min, 2x)
 2 x
+
+julia> set_objective_sense(model, MOI_MAX_SENSE)
 
 julia> new_objective = @expression(model, -2 * x)
 -2 x
