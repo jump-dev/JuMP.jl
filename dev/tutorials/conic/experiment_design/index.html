@@ -43,15 +43,15 @@ end
 @objective(aOpt, Min, sum(u))
 optimize!(aOpt)
 assert_is_solved_and_feasible(aOpt)
-objective_value(aOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5.103199058617686</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
- 2.949598980152687
- 1.7791514505035955
- 7.276305887925417e-10
- 1.4509996590179904e-9
- 2.108204914610362
- 1.6982760520528668
- 1.263425849963127
- 2.201342749918528</code></pre><h2 id="E-optimal-design"><a class="docs-heading-anchor" href="#E-optimal-design">E-optimal design</a><a id="E-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#E-optimal-design" title="Permalink"></a></h2><p>In <span>$E$</span> -optimal design, we minimize the norm of the error covariance matrix, that is, the maximum eigenvalue of <span>$E$</span>.</p><p>Since the diameter (twice the longest semi-axis) of the confidence ellipsoid <span>$\mathcal{E}$</span> is proportional to <span>$\|E\|_{2}^{1 / 2}$</span>, minimizing <span>$\|E\|_{2}$</span> can be interpreted geometrically as minimizing the diameter of the confidence ellipsoid.</p><p>E-optimal design can also be interpreted as minimizing the maximum variance of <span>$q^{T} e$</span>, over all <span>$q$</span> with <span>$\|q\|_{2}=1$</span>. The E-optimal experiment design problem in SDP form is:</p><p class="math-container">\[\begin{aligned}
+objective_value(aOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5.1031990583785385</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
+ 2.949598979940778
+ 1.7791514603167349
+ 7.327483955181059e-10
+ 1.4564472946788867e-9
+ 2.1082049452953235
+ 1.698276075090938
+ 1.263425828327201
+ 2.20134270821456</code></pre><h2 id="E-optimal-design"><a class="docs-heading-anchor" href="#E-optimal-design">E-optimal design</a><a id="E-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#E-optimal-design" title="Permalink"></a></h2><p>In <span>$E$</span> -optimal design, we minimize the norm of the error covariance matrix, that is, the maximum eigenvalue of <span>$E$</span>.</p><p>Since the diameter (twice the longest semi-axis) of the confidence ellipsoid <span>$\mathcal{E}$</span> is proportional to <span>$\|E\|_{2}^{1 / 2}$</span>, minimizing <span>$\|E\|_{2}$</span> can be interpreted geometrically as minimizing the diameter of the confidence ellipsoid.</p><p>E-optimal design can also be interpreted as minimizing the maximum variance of <span>$q^{T} e$</span>, over all <span>$q$</span> with <span>$\|q\|_{2}=1$</span>. The E-optimal experiment design problem in SDP form is:</p><p class="math-container">\[\begin{aligned}
 \min &amp; t \\
 \text{subject to} &amp; \sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T} \succeq t I \\
 &amp; \lambda \succeq 0 \\
@@ -69,15 +69,15 @@ set_silent(eOpt)
 @objective(eOpt, Max, t)
 optimize!(eOpt)
 assert_is_solved_and_feasible(eOpt)
-objective_value(eOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.4353846161234582</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
- 2.999999998431658
- 2.752797006101644
- 4.10051457567522e-9
- 4.8207598279432515e-9
- 2.181840806067763
- 2.3253295524575566
- 0.21895619171783068
- 1.5210764321965744</code></pre><h2 id="D-optimal-design"><a class="docs-heading-anchor" href="#D-optimal-design">D-optimal design</a><a id="D-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#D-optimal-design" title="Permalink"></a></h2><p>The most widely used scalarization is called <span>$D$</span> -optimal design, in which we minimize the determinant of the error covariance matrix <span>$E$</span>. This corresponds to designing the experiment to minimize the volume of the resulting confidence ellipsoid (for a fixed confidence level). Ignoring the constant factor <span>$1 / m$</span> in <span>$E$</span>, and taking the logarithm of the objective, we can pose this problem as convex optimization problem:</p><p class="math-container">\[\begin{aligned}
+objective_value(eOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.43538461612341406</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
+ 2.9999999984316665
+ 2.7527970079863855
+ 4.100501314701811e-9
+ 4.820747860801581e-9
+ 2.1818408052408933
+ 2.325329550731852
+ 0.2189561915084649
+ 1.5210764330738051</code></pre><h2 id="D-optimal-design"><a class="docs-heading-anchor" href="#D-optimal-design">D-optimal design</a><a id="D-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#D-optimal-design" title="Permalink"></a></h2><p>The most widely used scalarization is called <span>$D$</span> -optimal design, in which we minimize the determinant of the error covariance matrix <span>$E$</span>. This corresponds to designing the experiment to minimize the volume of the resulting confidence ellipsoid (for a fixed confidence level). Ignoring the constant factor <span>$1 / m$</span> in <span>$E$</span>, and taking the logarithm of the objective, we can pose this problem as convex optimization problem:</p><p class="math-container">\[\begin{aligned}
 \min &amp; \log \operatorname{det}\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1} \\
 \text{subject to} &amp; \lambda \succeq 0 \\
 &amp; \mathbf{1}^{T} \lambda=1
@@ -91,12 +91,12 @@ E = V * LinearAlgebra.Diagonal(np ./ n) * V&#39;
 @constraint(dOpt, [t; 1; triangle_vec(E)] in MOI.LogDetConeTriangle(q))
 optimize!(dOpt)
 assert_is_solved_and_feasible(dOpt)
-objective_value(dOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.3084755071033654</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
- 0.42764306607681873
- 2.9100111142529657
- 6.411004669047624e-10
- 8.680825215182773e-10
- 2.9158597562579103
- 2.6732765281643593
- 2.7353858758724106
- 0.33782365595975183</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../logistic_regression/">« Example: logistic regression</a><a class="docs-footer-nextpage" href="../min_ellipse/">Example: minimal ellipses »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.11.4 on <span class="colophon-date" title="Thursday 17 July 2025 00:53">Thursday 17 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+objective_value(dOpt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.3084755073334877</code></pre><pre><code class="language-julia hljs">value.(np)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{Float64}:
+ 0.42764236669885486
+ 2.9100086255329134
+ 3.451758310905033e-10
+ 4.417020447211304e-10
+ 2.915856620824755
+ 2.673268490229563
+ 2.735394668877305
+ 0.3378292260085168</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../logistic_regression/">« Example: logistic regression</a><a class="docs-footer-nextpage" href="../min_ellipse/">Example: minimal ellipses »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 18 July 2025 22:41">Friday 18 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
