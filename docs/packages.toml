@@ -52,20 +52,20 @@
 [DSDP]
     rev = "v0.2.1"
 [Dualization]
-    rev = "v0.6.0"
+    rev = "v0.7.0"
 [ECOS]
     rev = "v1.1.3"
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.7.4"
+    rev = "v1.7.5"
 [HiGHS]
-    rev = "v1.17.0"
+    rev = "v1.18.1"
 [Hypatia]
-    rev = "v0.8.2"
+    rev = "v0.9.0"
     has_html = true
 [Ipopt]
-    rev = "v1.10.3"
+    rev = "v1.10.6"
 [KNITRO]
     rev = "v0.14.8"
 [MiniZinc]
@@ -73,12 +73,12 @@
 [MosekTools]
     rev = "v0.15.9"
 [MultiObjectiveAlgorithms]
-    rev = "v1.4.2"
+    rev = "v1.5.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
 [NLopt]
-    rev = "v1.1.3"
+    rev = "v1.2.0"
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
@@ -100,7 +100,7 @@
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
-    rev = "v0.2.0"
+    rev = "v0.2.1"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
@@ -108,7 +108,7 @@
 [SeDuMi]
     rev = "v0.4.4"
 [SumOfSquares]
-    rev = "v0.7.3"
+    rev = "v0.7.4"
     extension = true
 [Xpress]
     rev = "v0.17.1"
@@ -133,11 +133,11 @@
     rev = "v0.10.1"
 [Clarabel]
     user = "oxfordcontrol"
-    rev = "v0.10.0"
+    rev = "v0.11.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.24"
+    rev = "v1.1.26"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -170,18 +170,18 @@
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.8.7"
+    rev = "v0.8.8"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.16"
+    rev = "v0.5.20"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.10"
+    rev = "v0.1.13"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -192,7 +192,7 @@
     extension = true
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v1.12.0"
+    rev = "v1.13.2"
 [OSQP]
     user = "osqp"
     rev = "v0.8.1"
@@ -204,7 +204,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.4"
+    rev = "v0.6.5"
     has_html = true
     extension = true
 [ProxSDP]
@@ -213,10 +213,10 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.12.5"
+    rev = "v0.12.7"
 [SDDP]
     user = "odow"
-    rev = "v1.11.0"
+    rev = "v1.12.0"
     has_html = true
     extension = true
 [Tulip]

@@ -42,10 +42,10 @@ julia> @variable(
            container = DimensionalData.DimArray,
        )
 ┌ 3×2 DimArray{VariableRef, 2} ┐
-├──────────────────────────────┴────────────────── dims ┐
+├──────────────────────────────┴─────────────────── dims ┐
   ↓ i Sampled{Int64} 2:4 ForwardOrdered Regular Points,
   → j Categorical{String} ["a", "b"] ForwardOrdered
-└───────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
  ↓ →  "a"     "b"
  2    x[2,a]  x[2,b]
  3    x[3,a]  x[3,b]
@@ -72,9 +72,9 @@ julia> @expression(
            container = DimensionalData.DimArray,
        )
 ┌ 2-element DimArray{AffExpr, 1} ┐
-├────────────────────────────────┴──────────── dims ┐
+├────────────────────────────────┴────────────── dims ┐
   ↓ j Categorical{String} ["a", "b"] ForwardOrdered
-└───────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────┘
  "a"  x[2,a] + x[3,a] + x[4,a]
  "b"  x[2,b] + x[3,b] + x[4,b]
 ```

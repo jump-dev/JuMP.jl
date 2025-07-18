@@ -7,6 +7,22 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.27.0 (July 18, 2025)
+
+### Added
+
+ - Added support for `value(::AbstractArray)` without broadcasting (#4010)
+
+### Fixed
+
+ - Improved the type stability of constant powers (#4016)
+ - Fixed expression comparisons for Julia nightly (#4023)
+
+### Other
+
+ - Various documentation improvements (#4009), (#4012), (#4013), (#4015),
+   (#4022), (#4025), (#4028)
+
 ## Version 1.26.0 (May 21, 2025)
 
 ### Added
