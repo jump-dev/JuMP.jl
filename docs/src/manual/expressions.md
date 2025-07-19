@@ -391,7 +391,7 @@ Notice how we modified `x[1]`, but we also changed `x[2]`!
 
 This happened because `zeros(AffExpr, 2)` calls `zero(AffExpr)` once to obtain a
 zero element, and then creates an appropriately sized array filled with the same
-element. 
+element.
 
 Note that this behaviour is not JuMP-specific. For example, `zeros(BigInt, 2)`
 will create two copies of the same instance of `BigInt`:
