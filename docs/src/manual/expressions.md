@@ -391,7 +391,22 @@ Notice how we modified `x[1]`, but we also changed `x[2]`!
 
 This happened because `zeros(AffExpr, 2)` calls `zero(AffExpr)` once to obtain a
 zero element, and then creates an appropriately sized array filled with the same
-element. Note that this behaviour is not JuMP-specific. For example, `zeros(randn(), 2)` will create two copies of the same random number.
+element. 
+
+Note that this behaviour is not JuMP-specific. For example, `zeros(BigInt, 2)`
+will create two copies of the same instance of `BigInt`:
+```jldoctest
+julia> x = zeros(BigInt, 2)
+2-element Vector{BigInt}:
+ 0
+ 0
+
+julia> x[1] === x[2]
+true
+
+julia> objectid(x[1]) == objectid(x[2])
+true
+```
 
 This also happens with broadcasting:
 ```jldoctest
@@ -416,7 +431,7 @@ julia> x
 
 The recommended way to create an array of empty expressions is as follows:
 ```jldoctest
-julia> x = [AffExpr(0) for _ in 1:2]
+julia> x = [zero(AffExpr) for _ in 1:2]
 2-element Vector{AffExpr}:
  0
  0
