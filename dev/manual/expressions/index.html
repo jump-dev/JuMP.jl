@@ -205,7 +205,16 @@ julia&gt; add_to_expression!(x[1], 1.1)
 julia&gt; x
 2-element Vector{AffExpr}:
  1.1
- 1.1</code></pre><p>Notice how we modified <code>x[1]</code>, but we also changed <code>x[2]</code>!</p><p>This happened because <code>zeros(AffExpr, 2)</code> calls <code>zero(AffExpr)</code> once to obtain a zero element, and then creates an appropriately sized array filled with the same element.</p><p>This also happens with broadcasting calls containing a conversion of <code>0</code> or <code>1</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; x = Vector{AffExpr}(undef, 2)
+ 1.1</code></pre><p>Notice how we modified <code>x[1]</code>, but we also changed <code>x[2]</code>!</p><p>This happened because <code>zeros(AffExpr, 2)</code> calls <code>zero(AffExpr)</code> once to obtain a zero element, and then creates an appropriately sized array filled with the same element.</p><p>Note that this behaviour is not JuMP-specific. For example, <code>zeros(BigInt, 2)</code> will create two copies of the same instance of <code>BigInt</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; x = zeros(BigInt, 2)
+2-element Vector{BigInt}:
+ 0
+ 0
+
+julia&gt; x[1] === x[2]
+true
+
+julia&gt; objectid(x[1]) == objectid(x[2])
+true</code></pre><p>This also happens with broadcasting:</p><pre><code class="language-julia-repl hljs">julia&gt; x = Vector{AffExpr}(undef, 2)
 2-element Vector{AffExpr}:
  #undef
  #undef
@@ -221,14 +230,10 @@ julia&gt; add_to_expression!(x[1], 1.1)
 julia&gt; x
 2-element Vector{AffExpr}:
  1.1
- 1.1</code></pre><p>The recommended way to create an array of empty expressions is as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; x = Vector{AffExpr}(undef, 2)
+ 1.1</code></pre><p>The recommended way to create an array of empty expressions is as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; x = [zero(AffExpr) for _ in 1:2]
 2-element Vector{AffExpr}:
- #undef
- #undef
-
-julia&gt; for i in eachindex(x)
-           x[i] = AffExpr(0.0)
-       end
+ 0
+ 0
 
 julia&gt; add_to_expression!(x[1], 1.1)
 1.1
@@ -247,4 +252,4 @@ julia&gt; x[1] += 1.1
 julia&gt; x
 2-element Vector{AffExpr}:
  1.1
- 0</code></pre><p>Note that for large expressions this will be slower due to the allocation of additional temporary objects.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constraints/">« Constraints</a><a class="docs-footer-nextpage" href="../objective/">Objectives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 18 July 2025 22:41">Friday 18 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0</code></pre><p>Note that for large expressions this will be slower due to the allocation of additional temporary objects.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constraints/">« Constraints</a><a class="docs-footer-nextpage" href="../objective/">Objectives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Sunday 20 July 2025 21:36">Sunday 20 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

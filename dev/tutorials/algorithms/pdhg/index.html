@@ -311,7 +311,7 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │ └ dual
 │   └ c3 : [-1.93193e-06,2.50002e-01,1.50000e+00]
 └ Work counters
-  ├ solve_time (sec)   : 2.24346e-01
+  ├ solve_time (sec)   : 2.20505e-01
   └ barrier_iterations : 8365</code></pre><p>But we could also have written:</p><pre><code class="language-julia hljs">model = Model(Optimizer)
 @variable(model, x &gt;= 0)
 @variable(model, 0 &lt;= y &lt;= 3)
@@ -345,7 +345,7 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │   ├ c1 : 2.50002e-01
 │   └ c2 : 1.50000e+00
 └ Work counters
-  ├ solve_time (sec)   : 1.88804e-03
+  ├ solve_time (sec)   : 1.76311e-03
   └ barrier_iterations : 8365</code></pre><p>Other variations are also possible:</p><pre><code class="language-julia hljs">model = Model(Optimizer)
 @variable(model, x[1:5] &gt;= 0)
 @objective(model, Max, -c&#39; * x)
@@ -379,5 +379,5 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │ └ dual
 │   └ c4 : multiple constraints with the same name
 └ Work counters
-  ├ solve_time (sec)   : 1.87016e-03
-  └ barrier_iterations : 8365</code></pre><p>Behind the scenes, JuMP and MathOptInterface reformulate the problem from the modeller&#39;s form into the standard form defined by our <code>Optimizer</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parallelism/">« Parallelism</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 18 July 2025 22:41">Friday 18 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  ├ solve_time (sec)   : 1.74117e-03
+  └ barrier_iterations : 8365</code></pre><p>Behind the scenes, JuMP and MathOptInterface reformulate the problem from the modeller&#39;s form into the standard form defined by our <code>Optimizer</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parallelism/">« Parallelism</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Sunday 20 July 2025 21:36">Sunday 20 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
