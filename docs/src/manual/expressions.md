@@ -393,7 +393,22 @@ This happened because `zeros(AffExpr, 2)` calls `zero(AffExpr)` once to obtain a
 zero element, and then creates an appropriately sized array filled with the same
 element.
 
-This also happens with broadcasting calls containing a conversion of `0` or `1`:
+Note that this behaviour is not JuMP-specific. For example, `zeros(BigInt, 2)`
+will create two copies of the same instance of `BigInt`:
+```jldoctest
+julia> x = zeros(BigInt, 2)
+2-element Vector{BigInt}:
+ 0
+ 0
+
+julia> x[1] === x[2]
+true
+
+julia> objectid(x[1]) == objectid(x[2])
+true
+```
+
+This also happens with broadcasting:
 ```jldoctest
 julia> x = Vector{AffExpr}(undef, 2)
 2-element Vector{AffExpr}:
@@ -416,14 +431,10 @@ julia> x
 
 The recommended way to create an array of empty expressions is as follows:
 ```jldoctest
-julia> x = Vector{AffExpr}(undef, 2)
+julia> x = [zero(AffExpr) for _ in 1:2]
 2-element Vector{AffExpr}:
- #undef
- #undef
-
-julia> for i in eachindex(x)
-           x[i] = AffExpr(0.0)
-       end
+ 0
+ 0
 
 julia> add_to_expression!(x[1], 1.1)
 1.1
