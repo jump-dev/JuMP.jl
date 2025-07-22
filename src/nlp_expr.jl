@@ -554,8 +554,9 @@ moi_function(x::Number) = x
 
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     model = owner_model(f)
-    if haskey(model.subexpressions, f)
-        return model.subexpressions[f]
+    cache = isnothing(model) ? nothing : model.subexpressions
+    if !isnothing(cache) && haskey(cache, f)
+        return cache[f]
     end
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
@@ -568,8 +569,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     end
     while !isempty(stack)
         parent, i, arg = pop!(stack)
-        if haskey(model.subexpressions, arg)
-            parent.args[i] = model.subexpressions[arg]
+        if !isnothing(cache) && haskey(cache, arg)
+            parent.args[i] = cache[arg]
             continue
         end
         child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
@@ -581,9 +582,13 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
                 child.args[j] = moi_function(arg.args[j])
             end
         end
-        model.subexpressions[arg] = child
+        if !isnothing(cache)
+            cache[arg] = child
+        end
     end
-    model.subexpressions[f] = ret
+    if !isnothing(cache)
+        cache[f] = ret
+    end
     return ret
 end
 
