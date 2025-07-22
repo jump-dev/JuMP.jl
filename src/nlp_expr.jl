@@ -552,7 +552,10 @@ end
 
 moi_function(x::Number) = x
 
-function moi_function(f::GenericNonlinearExpr{V}, model::JuMP.GenericModel) where {V}
+function moi_function(
+    f::GenericNonlinearExpr{V},
+    model::JuMP.GenericModel,
+) where {V}
     cache = model.subexpressions
     if haskey(cache, f)
         return cache[f]
