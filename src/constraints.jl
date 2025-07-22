@@ -1020,6 +1020,12 @@ function _moi_add_constraint(
     return MOI.add_constraint(model, f, s)
 end
 
+function check_belongs_to_model(f::Vector, model)
+    for func in f
+        check_belongs_to_model(func, model)
+    end
+end
+
 function moi_function(f, model)
     check_belongs_to_model(f, model)
     return moi_function(f)
