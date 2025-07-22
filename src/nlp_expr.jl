@@ -552,10 +552,9 @@ end
 
 moi_function(x::Number) = x
 
-function moi_function(f::GenericNonlinearExpr{V}) where {V}
-    model = owner_model(f)
-    cache = isnothing(model) ? nothing : model.subexpressions
-    if !isnothing(cache) && haskey(cache, f)
+function moi_function(f::GenericNonlinearExpr{V}, model::JuMP.GenericModel) where {V}
+    cache = model.subexpressions
+    if haskey(cache, f)
         return cache[f]
     end
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
@@ -563,13 +562,15 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
+        elseif f.args[i] isa AbstractJuMPScalar
+            ret.args[i] = moi_function(model, f.args[i])
         else
             ret.args[i] = moi_function(f.args[i])
         end
     end
     while !isempty(stack)
         parent, i, arg = pop!(stack)
-        if !isnothing(cache) && haskey(cache, arg)
+        if haskey(cache, arg)
             parent.args[i] = cache[arg]
             continue
         end
@@ -582,13 +583,9 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
                 child.args[j] = moi_function(arg.args[j])
             end
         end
-        if !isnothing(cache)
-            cache[arg] = child
-        end
+        cache[arg] = child
     end
-    if !isnothing(cache)
-        cache[f] = ret
-    end
+    cache[f] = ret
     return ret
 end
 
