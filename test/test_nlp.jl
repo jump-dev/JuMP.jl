@@ -1711,4 +1711,12 @@ function test_NL_too_many_arguments_errors()
     return
 end
 
+function test_NL_reversed_comparison()
+    model = Model()
+    @variable(model, x)
+    c = @NLconstraint(model, 2 >= x >= 1)
+    @test model.nlp_model[index(c)].set == MOI.Interval(1.0, 2.0)
+    return
 end
+
+end  # module TestNLP
