@@ -858,3 +858,30 @@ function build_variable(
 )
     return VariablesConstrainedOnCreation(variables, set)
 end
+
+function build_variable(
+    ::Function,
+    variables::Vector{<:AbstractVariable},
+    ::Nonnegatives,
+)
+    set = MOI.Nonnegatives(length(variables))
+    return VariablesConstrainedOnCreation(variables, set)
+end
+
+function build_variable(
+    ::Function,
+    variables::Vector{<:AbstractVariable},
+    ::Nonpositives,
+)
+    set = MOI.Nonpositives(length(variables))
+    return VariablesConstrainedOnCreation(variables, set)
+end
+
+function build_variable(
+    ::Function,
+    variables::Vector{<:AbstractVariable},
+    ::Zeros,
+)
+    set = MOI.Zeros(length(variables))
+    return VariablesConstrainedOnCreation(variables, set)
+end
