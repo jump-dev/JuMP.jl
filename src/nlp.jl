@@ -496,6 +496,9 @@ function _expr_to_constraint(expr::Expr)
         @assert expr.args[2] in (:<=, :>=)
         lhs, body, rhs =
             _normalize_constraint_expr(expr.args[1], expr.args[3], expr.args[5])
+        if expr.args[2] == :(>=)
+            lhs, rhs = rhs, lhs
+        end
         return body, MOI.Interval(lhs, rhs)
     end
     lhs, rhs = _normalize_constraint_expr(expr.args[2], expr.args[3])
