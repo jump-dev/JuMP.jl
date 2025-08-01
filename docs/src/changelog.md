@@ -7,6 +7,24 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.28.0 (August 1, 2025)
+
+### Added
+
+- Added support for variables in [`Nonnegatives`](@ref), [`Nonpositives`](@ref),
+  and [`Zeros`](@ref) (#4038)
+
+### Fixed
+
+- Fixed a major correctess bug with comparison legacy nonlinear constraints.
+  This bug rewrote `@NLconstraint(model, a >= f(x) >= b)` to
+  `@NLconstraint(model, a <= f(x) <= b)`, which likely meant a model was falsely
+  declared to be infeasible (#4037)
+
+### Other
+
+ - Minor documentation improvements (#4031)
+
 ## Version 1.27.0 (July 18, 2025)
 
 ### Added

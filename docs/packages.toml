@@ -52,7 +52,7 @@
 [DSDP]
     rev = "v0.2.1"
 [Dualization]
-    rev = "v0.7.0"
+    rev = "v0.7.1"
 [ECOS]
     rev = "v1.1.3"
 [GLPK]
@@ -60,7 +60,7 @@
 [Gurobi]
     rev = "v1.7.5"
 [HiGHS]
-    rev = "v1.18.1"
+    rev = "v1.19.0"
 [Hypatia]
     rev = "v0.9.0"
     has_html = true
@@ -71,14 +71,14 @@
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
-    rev = "v0.15.9"
+    rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
     rev = "v1.5.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
 [NLopt]
-    rev = "v1.2.0"
+    rev = "v1.2.1"
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
