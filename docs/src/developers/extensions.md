@@ -473,9 +473,10 @@ Presolving model
 0 rows, 0 cols, 0 nonzeros  0s
 Presolve: Optimal
 
-Src: B => Branching; C => Central rounding; F => Feasibility pump; H => Heuristic; L => Sub-MIP;
-     P => Empty MIP; R => Randomized rounding; S => Solve LP; T => Evaluate node; U => Unbounded;
-     z => Trivial zero; l => Trivial lower; u => Trivial upper; p => Trivial point; X => User solution
+Src: B => Branching; C => Central rounding; F => Feasibility pump; J => Feasibility jump;
+     H => Heuristic; L => Sub-MIP; P => Empty MIP; R => Randomized rounding; Z => ZI Round;
+     I => Shifting; S => Solve LP; T => Evaluate node; U => Unbounded; X => User solution;
+     z => Trivial zero; l => Trivial lower; u => Trivial upper; p => Trivial point
 
         Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work
 Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
