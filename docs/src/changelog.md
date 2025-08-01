@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed a major correctess bug with comparison legacy nonlinear constraints.
+- Fixed a major correctness bug with comparison legacy nonlinear constraints.
   This bug rewrote `@NLconstraint(model, a >= f(x) >= b)` to
   `@NLconstraint(model, a <= f(x) <= b)`, which likely meant a model was falsely
   declared to be infeasible (#4037)
