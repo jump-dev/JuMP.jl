@@ -11,10 +11,10 @@ set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 value.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">4-element Vector{Float64}:
- 1.0
  4.0
- 3.0000000000000004
- 1.9999999999999996</code></pre><h2 id="BinPacking"><a class="docs-heading-anchor" href="#BinPacking">BinPacking</a><a id="BinPacking-1"></a><a class="docs-heading-anchor-permalink" href="#BinPacking" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.BinPacking"><code>MOI.BinPacking</code></a> set can be used to divide up a set of items into different groups, such that the sum of their weights does not exceed the capacity of a bin.</p><pre><code class="language-julia hljs">weights, capacity = Float64[1, 1, 2, 2, 3], 3.0;
+ 2.0
+ 3.0
+ 1.0</code></pre><h2 id="BinPacking"><a class="docs-heading-anchor" href="#BinPacking">BinPacking</a><a id="BinPacking-1"></a><a class="docs-heading-anchor-permalink" href="#BinPacking" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.BinPacking"><code>MOI.BinPacking</code></a> set can be used to divide up a set of items into different groups, such that the sum of their weights does not exceed the capacity of a bin.</p><pre><code class="language-julia hljs">weights, capacity = Float64[1, 1, 2, 2, 3], 3.0;
 number_of_bins = 3
 model = Model(HiGHS.Optimizer)
 set_silent(model)
@@ -23,8 +23,8 @@ set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 value.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Float64}:
- 2.0
  1.0
+ 2.0
  2.0
  1.0
  3.0</code></pre><p>Here, the value of <code>x[i]</code> is the bin that item <code>i</code> was placed into.</p><h2 id="Circuit"><a class="docs-heading-anchor" href="#Circuit">Circuit</a><a id="Circuit-1"></a><a class="docs-heading-anchor-permalink" href="#Circuit" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.Circuit"><code>MOI.Circuit</code></a> set is used to construct a tour of a list of <code>N</code> variables. They will each be assigned an integer from <code>1</code> to <code>N</code>, that describes the successor to each variable in the list:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
@@ -39,9 +39,9 @@ while length(tour) &lt; length(y)
 end
 tour</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">4-element Vector{Int64}:
  1
+ 2
  4
- 3
- 2</code></pre><h2 id="CountAtLeast"><a class="docs-heading-anchor" href="#CountAtLeast">CountAtLeast</a><a id="CountAtLeast-1"></a><a class="docs-heading-anchor-permalink" href="#CountAtLeast" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.CountAtLeast"><code>MOI.CountAtLeast</code></a> set is used to ensure that at least <code>n</code> elements in a set of variables belong to a set of values.</p><p>For example, here is a model with three variables, constrained between 0 and 5:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+ 3</code></pre><h2 id="CountAtLeast"><a class="docs-heading-anchor" href="#CountAtLeast">CountAtLeast</a><a id="CountAtLeast-1"></a><a class="docs-heading-anchor-permalink" href="#CountAtLeast" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.CountAtLeast"><code>MOI.CountAtLeast</code></a> set is used to ensure that at least <code>n</code> elements in a set of variables belong to a set of values.</p><p>For example, here is a model with three variables, constrained between 0 and 5:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, 0 &lt;= x[1:3] &lt;= 5, Int)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{VariableRef}:
  x[1]
@@ -56,9 +56,9 @@ set_silent(model)
   3</code></pre><p>And the number of elements that must be part of the set <code>values</code>:</p><pre><code class="language-julia hljs">n = 1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1</code></pre><p>The constraint is:</p><pre><code class="language-julia hljs">@constraint(model, variables in MOI.CountAtLeast(n, partitions, values))</code></pre><p class="math-container">\[ [x_{1}, x_{2}, x_{2}, x_{3}] \in \text{MathOptInterface.CountAtLeast(1, [2, 2], Set([3]))} \]</p><p>To ensure the uniqueness of the solution, we&#39;ll add a constraint that <code>x[2]</code> must be <code>&lt;= 2</code>. This ensures that the only feasible solution is for <code>x[1]</code> and <code>x[3]</code> to be <code>3</code>:</p><pre><code class="language-julia hljs">@constraint(model, x[2] &lt;= 2)</code></pre><p class="math-container">\[ x_{2} \leq 2 \]</p><p>Let&#39;s check that we found a valid solution:</p><pre><code class="language-julia hljs">optimize!(model)
 assert_is_solved_and_feasible(model)
 value.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
- 3.0
- 0.0
- 3.0</code></pre><h2 id="CountBelongs"><a class="docs-heading-anchor" href="#CountBelongs">CountBelongs</a><a id="CountBelongs-1"></a><a class="docs-heading-anchor-permalink" href="#CountBelongs" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.CountBelongs"><code>MOI.CountBelongs</code></a> set is used to count how many elements in a set of variables belong to a set of values.</p><p>For example, to count how many elements in a set of 4 variables belong to the set <code>{2, 3}</code>, do:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+  3.0
+ -0.0
+  3.0</code></pre><h2 id="CountBelongs"><a class="docs-heading-anchor" href="#CountBelongs">CountBelongs</a><a id="CountBelongs-1"></a><a class="docs-heading-anchor-permalink" href="#CountBelongs" title="Permalink"></a></h2><p>The <a href="../../../moi/reference/standard_form/#MathOptInterface.CountBelongs"><code>MOI.CountBelongs</code></a> set is used to count how many elements in a set of variables belong to a set of values.</p><p>For example, to count how many elements in a set of 4 variables belong to the set <code>{2, 3}</code>, do:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, 0 &lt;= x[i = 1:4] &lt;= i, Int)
 @variable(model, n, Int)
@@ -97,4 +97,4 @@ assert_is_solved_and_feasible(model)
 value.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
  1.0
  1.0
- 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../n-queens/">« N-Queens</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 02:27">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../n-queens/">« N-Queens</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 04:04">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

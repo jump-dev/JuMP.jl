@@ -37,34 +37,34 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.51e-02
-   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  9.37e-02
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.38e-02
+   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  9.21e-02
 ------------------------------------------------------------------
 status:  solved
-timings: total: 9.38e-02s = setup: 3.40e-02s + solve: 5.98e-02s
-	 lin-sys: 5.06e-02s, cones: 2.14e-03s, accel: 8.01e-04s
+timings: total: 9.22e-02s = setup: 3.27e-02s + solve: 5.95e-02s
+	 lin-sys: 5.03e-02s, cones: 2.14e-03s, accel: 7.52e-04s
 ------------------------------------------------------------------
 objective = 0.000024
 ------------------------------------------------------------------</code></pre><p>SCS reports that it solved the problem to optimality:</p><pre><code class="language-julia hljs">is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>and that the solution for <code>x[1]</code> is nearly zero:</p><pre><code class="language-julia hljs">value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.04406873858532e-5</code></pre><p>However, the analytic solution for <code>x[1]</code> is:</p><pre><code class="language-julia hljs">1 - n * ε / 2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479</code></pre><p>The answer is very wrong, and there is no indication from the solver that anything untoward happened. What&#39;s going on?</p><p>One useful debugging tool is <a href="../../../api/JuMP/#primal_feasibility_report"><code>primal_feasibility_report</code></a>:</p><pre><code class="language-julia hljs">report = primal_feasibility_report(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 8192 entries:
-  x[6023] ≥ 0 =&gt; 1.8669e-5
-  x[8122] ≥ 0 =&gt; 2.32572e-5
-  x[1733] ≥ 0 =&gt; 1.56101e-5
-  x[4888] ≥ 0 =&gt; 1.8669e-5
-  x[842] ≥ 0  =&gt; 1.56101e-5
-  x[4603] ≥ 0 =&gt; 2.01984e-5
-  x[697] ≥ 0  =&gt; 1.56101e-5
-  x[2811] ≥ 0 =&gt; 2.01984e-5
-  x[7862] ≥ 0 =&gt; 2.17278e-5
-  x[575] ≥ 0  =&gt; 1.71395e-5
-  x[4040] ≥ 0 =&gt; 2.17278e-5
-  x[7833] ≥ 0 =&gt; 1.8669e-5
-  x[5460] ≥ 0 =&gt; 1.8669e-5
-  x[5857] ≥ 0 =&gt; 1.71395e-5
-  x[6303] ≥ 0 =&gt; 1.8669e-5
-  x[2449] ≥ 0 =&gt; 1.40807e-5
-  x[622] ≥ 0  =&gt; 1.71395e-5
-  x[5603] ≥ 0 =&gt; 1.8669e-5
-  x[1190] ≥ 0 =&gt; 1.56101e-5
+  x[4415] ≥ 0 =&gt; 1.8669e-5
+  x[3817] ≥ 0 =&gt; 1.8669e-5
+  x[2091] ≥ 0 =&gt; 1.40807e-5
+  x[4747] ≥ 0 =&gt; 1.56101e-5
+  x[3279] ≥ 0 =&gt; 1.8669e-5
+  x[5807] ≥ 0 =&gt; 2.01984e-5
+  x[4542] ≥ 0 =&gt; 2.01984e-5
+  x[7246] ≥ 0 =&gt; 1.8669e-5
+  x[3527] ≥ 0 =&gt; 1.8669e-5
+  x[7614] ≥ 0 =&gt; 2.32572e-5
+  x[511] ≥ 0  =&gt; 2.01984e-5
+  x[6621] ≥ 0 =&gt; 2.01984e-5
+  x[7939] ≥ 0 =&gt; 1.71395e-5
+  x[6172] ≥ 0 =&gt; 1.71395e-5
+  x[7925] ≥ 0 =&gt; 2.17278e-5
+  x[182] ≥ 0  =&gt; 1.56101e-5
+  x[2256] ≥ 0 =&gt; 1.8669e-5
+  x[7667] ≥ 0 =&gt; 2.17278e-5
+  x[2578] ≥ 0 =&gt; 1.40807e-5
   ⋮           =&gt; ⋮</code></pre><p><code>report</code> is a dictionary which maps constraints to the violation.  The largest violation is approximately <code>1e-5</code>:</p><pre><code class="language-julia hljs">maximum(values(report))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6.92133754155444e-5</code></pre><p>This makes sense, because the default primal feasibility tolerance for SCS is <code>1e-4</code>.</p><p>Most of the entries are lower bound constraints on the variables. Here are all the variables which violate their lower bound:</p><pre><code class="language-julia hljs">violated_variables = filter(xi -&gt; value(xi) &lt; 0, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8178-element Vector{VariableRef}:
  x[4]
  x[6]
@@ -104,20 +104,22 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.53e-02
-   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.87e-01
-   500| 3.69e-04  5.93e-04  8.84e-05  8.48e-01  6.13e-01  3.41e-01
-   550| 2.66e-06  6.58e-10  1.27e-05  8.48e-01  6.13e-01  3.71e-01
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  3.47e-02
+   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.86e-01
+   500| 3.69e-04  5.93e-04  8.84e-05  8.48e-01  6.13e-01  3.39e-01
+   550| 2.66e-06  6.58e-10  1.27e-05  8.48e-01  6.13e-01  3.70e-01
 ------------------------------------------------------------------
 status:  solved
-timings: total: 3.71e-01s = setup: 3.41e-02s + solve: 3.37e-01s
-	 lin-sys: 2.76e-01s, cones: 1.15e-02s, accel: 6.44e-03s
+timings: total: 3.70e-01s = setup: 3.35e-02s + solve: 3.36e-01s
+	 lin-sys: 2.74e-01s, cones: 1.15e-02s, accel: 6.41e-03s
 ------------------------------------------------------------------
 objective = 0.847906
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">assert_is_solved_and_feasible(model)
 value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479127435814551</code></pre><h3 id="Why-you-shouldn&#39;t-use-a-small-tolerance"><a class="docs-heading-anchor" href="#Why-you-shouldn&#39;t-use-a-small-tolerance">Why you shouldn&#39;t use a small tolerance</a><a id="Why-you-shouldn&#39;t-use-a-small-tolerance-1"></a><a class="docs-heading-anchor-permalink" href="#Why-you-shouldn&#39;t-use-a-small-tolerance" title="Permalink"></a></h3><p>There is no direct relationship between the size of feasibility tolerance and the quality of the solution.</p><p>You might surmise from this section that you should set the tightest feasibility tolerance possible. However, tighter tolerances come at the cost of increased solve time.</p><p>For example, SCS is a first-order solver. This means it uses only local gradient information at update each iteration. SCS took 100 iterations to solve the problem with the default tolerance of <code>1e-4</code>, and 550 iterations to solve the problem with <code>1e-5</code>. SCS may not be able to find a solution to our problem with a tighter tolerance in a reasonable amount of time.</p><h2 id="Integrality"><a class="docs-heading-anchor" href="#Integrality">Integrality</a><a id="Integrality-1"></a><a class="docs-heading-anchor-permalink" href="#Integrality" title="Permalink"></a></h2><p>Integrality tolerances control how the solver decides if a variable satisfies an integrality or binary constraint. The tolerance is typically defined as: <span>$|x - \lfloor x + 0.5 \rfloor | \le \varepsilon$</span>, which you can read as the absolute distance to the nearest integer.</p><p>Here&#39;s a simple example:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
+# Set some options so that HiGHS does not trivially solve the problem
 set_attribute(model, &quot;presolve&quot;, &quot;off&quot;)
+set_attribute(model, &quot;mip_heuristic_run_feasibility_jump&quot;, false)
 @variable(model, x == 1 + 1e-6, Int)
 optimize!(model)
 is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>HiGHS found an optimal solution, and the value of <code>x</code> is:</p><pre><code class="language-julia hljs">value(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.000001</code></pre><p>In other words, HiGHS thinks that the solution <code>x = 1.000001</code> satisfies the constraint that <code>x</code> must be an integer. <a href="../../../api/JuMP/#primal_feasibility_report"><code>primal_feasibility_report</code></a> shows that indeed, the integrality constraint is violated:</p><pre><code class="language-julia hljs">primal_feasibility_report(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 1 entry:
@@ -160,11 +162,11 @@ is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"
 @variable(model, x &gt;= 0)
 @variable(model, y, Bin)
 @constraint(model, 1e-6x &lt;= 1e6 * y)</code></pre><p class="math-container">\[ 1.0 \times 10^{-6} x - 1000000 y \leq 0 \]</p><p>This problem has a feasible (to tolerance) solution of:</p><pre><code class="language-julia hljs">primal_feasibility_report(model, Dict(x =&gt; 1_000_000.01, y =&gt; 1e-6))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 2 entries:
-  y binary                 =&gt; 1.0e-6
-  1.0e-6 x - 1000000 y ≤ 0 =&gt; 1.0e-8</code></pre><p>If you intended the constraint to read that if <code>x</code> is non-zero then <code>y = 1</code>, this solution might be unexpected.</p><h3 id="Recommended-values"><a class="docs-heading-anchor" href="#Recommended-values">Recommended values</a><a id="Recommended-values-1"></a><a class="docs-heading-anchor-permalink" href="#Recommended-values" title="Permalink"></a></h3><p>There are no hard rules that you must follow, and the interaction between tolerances, problem scaling, and the solution is problem dependent. You should always check the solution returned by the solver to check it makes sense for your application.</p><p>With that caveat in mind, a general rule of thumb to follow is:</p><p>Try to keep the ratio of the smallest to largest coefficient less than <span>$10^6$</span> in any row and column, and try to keep most values between <span>$10^{-3}$</span> and <span>$10^6$</span>.</p><h3 id="Choosing-the-correct-units"><a class="docs-heading-anchor" href="#Choosing-the-correct-units">Choosing the correct units</a><a id="Choosing-the-correct-units-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-the-correct-units" title="Permalink"></a></h3><p>The best way to fix problem scaling is by changing the units of your variables and constraints. Here&#39;s an example. Suppose we are choosing the level of capacity investment in a new power plant. We can install up to 1 GW of capacity at a cost of <span>$</span>1.78/W, and we have a budget of <span>$</span>200 million.</p><pre><code class="language-julia hljs">model = Model()
+  1.0e-6 x - 1000000 y ≤ 0 =&gt; 1.0e-8
+  y binary                 =&gt; 1.0e-6</code></pre><p>If you intended the constraint to read that if <code>x</code> is non-zero then <code>y = 1</code>, this solution might be unexpected.</p><h3 id="Recommended-values"><a class="docs-heading-anchor" href="#Recommended-values">Recommended values</a><a id="Recommended-values-1"></a><a class="docs-heading-anchor-permalink" href="#Recommended-values" title="Permalink"></a></h3><p>There are no hard rules that you must follow, and the interaction between tolerances, problem scaling, and the solution is problem dependent. You should always check the solution returned by the solver to check it makes sense for your application.</p><p>With that caveat in mind, a general rule of thumb to follow is:</p><p>Try to keep the ratio of the smallest to largest coefficient less than <span>$10^6$</span> in any row and column, and try to keep most values between <span>$10^{-3}$</span> and <span>$10^6$</span>.</p><h3 id="Choosing-the-correct-units"><a class="docs-heading-anchor" href="#Choosing-the-correct-units">Choosing the correct units</a><a id="Choosing-the-correct-units-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-the-correct-units" title="Permalink"></a></h3><p>The best way to fix problem scaling is by changing the units of your variables and constraints. Here&#39;s an example. Suppose we are choosing the level of capacity investment in a new power plant. We can install up to 1 GW of capacity at a cost of <span>$</span>1.78/W, and we have a budget of <span>$</span>200 million.</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, 0 &lt;= x_capacity_W &lt;= 10^9)
 @constraint(model, 1.78 * x_capacity_W &lt;= 200e6)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_W \leq 200000000 \]</p><p>This constraint violates the recommendations because there are values greater than <span>$10^6$</span>, and the ratio of the coefficients in the constraint is <span>$10^8$</span>. In real terms, an absolute feasibility tolerance of <code>1e-8</code> means that the capacity cost must be not exceed 1 millionth of a cent more than 200 million dollars. No financial system measures costs to that level of accuracy.</p><p>One fix is the convert our capacity variable from Watts to Megawatts. This yields:</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
 @constraint(model, 1.78e6 * x_capacity_MW &lt;= 200e6)</code></pre><p class="math-container">\[ 1780000 x\_capacity\_MW \leq 200000000 \]</p><p>We can improve our model further by dividing the constraint by <span>$10^6$</span> to change the units from dollars to million dollars.</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
-@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling. In real terms, our new constraint means that the capacity cost must not exceed 200 million dollars by more than 1 cent.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 02:27">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling. In real terms, our new constraint means that the capacity cost must not exceed 200 million dollars by more than 1 cent.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 1 August 2025 04:04">Friday 1 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

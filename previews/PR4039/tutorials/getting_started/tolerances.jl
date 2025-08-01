@@ -229,7 +229,9 @@ value(x[1])
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
+## Set some options so that HiGHS does not trivially solve the problem
 set_attribute(model, "presolve", "off")
+set_attribute(model, "mip_heuristic_run_feasibility_jump", false)
 @variable(model, x == 1 + 1e-6, Int)
 optimize!(model)
 assert_is_solved_and_feasible(model)  #src
@@ -477,7 +479,7 @@ model = Model()
 
 # This problem is equivalent to the original problem, but it has much better
 # problem scaling. In real terms, our new constraint means that the capacity
-# cost must not exceed 200 million dollars by more than 1 cent. 
+# cost must not exceed 200 million dollars by more than 1 cent.
 
 # As a general rule, to fix problem scaling you must simultaneously scale both
 # variables and constraints. It is usually not sufficient to scale variables or
