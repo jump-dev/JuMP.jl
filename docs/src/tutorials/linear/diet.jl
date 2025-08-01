@@ -180,7 +180,7 @@ dairy_constraint = @constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
 Test.@test !is_solved_and_feasible(model)
 Test.@test termination_status(model) == INFEASIBLE
-Test.@test primal_status(model) == NO_SOLUTION
+Test.@test primal_status(model) == INFEASIBLE_POINT
 solution_summary(model)
 
 # There exists no feasible solution to our problem. Looks like we're stuck
