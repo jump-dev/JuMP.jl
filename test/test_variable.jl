@@ -1791,4 +1791,31 @@ function test_direct_model_variable_in_set_Reals()
     return
 end
 
+function test_variable_in_nonnegatives()
+    model = Model()
+    @variable(model, x[1:2] in Nonnegatives())
+    c = constraint_object(VariableInSetRef(x))
+    @test c.func == x
+    @test c.set == MOI.Nonnegatives(2)
+    return
+end
+
+function test_variable_in_nonpositives()
+    model = Model()
+    @variable(model, x[1:2] in Nonpositives())
+    c = constraint_object(VariableInSetRef(x))
+    @test c.func == x
+    @test c.set == MOI.Nonpositives(2)
+    return
+end
+
+function test_variable_in_zeros()
+    model = Model()
+    @variable(model, x[1:2] in Zeros())
+    c = constraint_object(VariableInSetRef(x))
+    @test c.func == x
+    @test c.set == MOI.Zeros(2)
+    return
+end
+
 end  # module TestVariable
