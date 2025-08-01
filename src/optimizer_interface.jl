@@ -1295,6 +1295,20 @@ function MOI.set(
     return
 end
 
+function MOI.set(
+    model::GenericModel,
+    attr::MOI.AbstractConstraintAttribute,
+    crs::Vector{<:ConstraintRef},
+    value::Vector,
+)
+    for con_ref in crs
+        check_belongs_to_model(con_ref, model)
+    end
+    model.is_model_dirty = true
+    MOI.set(backend(model), attr, index.(crs), value)
+    return
+end
+
 """
     get_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute)
     get_attribute(x::GenericVariableRef, attr::MOI.AbstractVariableAttribute)
