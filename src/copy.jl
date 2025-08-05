@@ -313,12 +313,12 @@ Subject to
 ```
 """
 function copy_conflict(model::GenericModel)
-    filter_constraints =
-        (cref) ->
-            MOI.get(model, MOI.ConstraintConflictStatus(), cref) !=
-            MOI.NOT_IN_CONFLICT
-    new_model, reference_map =
-        copy_model(model; filter_constraints = filter_constraints)
+    function filter_constraints(cref::ConstraintRef)
+        status = MOI.get(model, MOI.ConstraintConflictStatus(), cref)
+        return status != MOI.NOT_IN_CONFLICT
+    end
+    new_model, reference_map = copy_model(model; filter_constraints)
+    set_objective_sense(new_model, MOI.FEASIBILITY_SENSE)
     return new_model, reference_map
 end
 
