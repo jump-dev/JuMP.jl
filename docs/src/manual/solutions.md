@@ -674,13 +674,13 @@ can then print or write to a file for easier debugging:
 ```julia
 julia> using JuMP
 
-julia> import Gurobi
+julia> import HiGHS
 
-julia> model = Model(Gurobi.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> set_silent(model)
 
-julia> @variable(model, x >= 0)
+julia> @variable(model, x)
 x
 
 julia> @constraint(model, c1, x >= 2)

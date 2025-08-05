@@ -219,17 +219,35 @@ termination_status(model)
 #    find an optimal solution, please report it by opening an issue on the
 #    GitHub repository of the solver that reports infeasibility.
 
-# !!! tip
-#     Some solvers also have specialized support for debugging sources of
-#     infeasibility via an [irreducible infeasible subsystem](@ref Conflicts).
-#     To see if your solver has support, try calling [`compute_conflict!`](@ref):
-#     ```julia
-#     julia> compute_conflict!(model)
-#     ERROR: ArgumentError: The optimizer HiGHS.Optimizer does not support `compute_conflict!`
-#     ```
-#     In this case, HiGHS does not support computing conflicts, but other
-#     solvers such as Gurobi and CPLEX do. If the solver does support computing
-#     conflicts, read [Conflicts](@ref) for more details.
+# ### IIS
+
+# Some solvers also have specialized support for debugging sources of
+# infeasibility via an [irreducible infeasible subsystem](@ref Conflicts). To
+# see if your solver has support, try calling [`compute_conflict!`](@ref):
+
+compute_conflict!(model)
+
+# Check to see if [`compute_conflict!`](@ref) succeeded by querying
+# [`MOI.ConflictStatus`](@ref):
+
+get_attribute(model, MOI.ConflictStatus())
+
+# To copy the conflict to a new model, use [`copy_conflict`](@ref):
+
+iis_model, _ = copy_conflict(model)
+print(iis_model)
+
+# Hopefully, the `iis_model` is small enough that you can tell by inspection why
+# the model is infeasible.
+
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
+            println("Found a conflicting constraint:")
+            println(con)
+        end
+    end
+end
 
 # ### Penalty relaxation
 
