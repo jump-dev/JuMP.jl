@@ -853,6 +853,7 @@ function test_copy_conflict()
     model = Model()
     @variable(model, x[i = 1:2], container = SparseAxisArray)
     @constraint(model, cref[i = 1:2], x[i] == 1, container = SparseAxisArray)
+    @objective(model, Max, x[1] + x[2])
     @test num_constraints(
         model,
         GenericAffExpr{Float64,VariableRef},
@@ -898,6 +899,8 @@ function test_copy_conflict()
     cref_1_new = reference_map[cref[1]]
     @test cref_1_new.model === new_model
     @test "cref[1]" == @inferred name(cref_1_new)
+    @test objective_sense(new_model) == FEASIBILITY_SENSE
+    return
 end
 
 function test_nlp_data_error()
