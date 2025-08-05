@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.28.0 (August 1, 2025)
+## Staged
 
 ### Added
 
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Minor documentation improvements (#4031)
+ - Minor documentation improvements (#4031), (#4039)
 
 ## Version 1.27.0 (July 18, 2025)
 
