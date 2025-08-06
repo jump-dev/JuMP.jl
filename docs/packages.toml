@@ -68,6 +68,10 @@
     rev = "v1.10.6"
 [KNITRO]
     rev = "v0.14.8"
+[MathOptAnalyzer]
+    rev = "v0.1.0"
+[MathOptIIS]
+    rev = "v0.1.0"    
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
@@ -137,7 +141,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.26"
+    rev = "v1.1.27"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
