@@ -186,7 +186,7 @@ following methods:
 !!! warning
     Extending the constraint macro at parse time is an advanced operation and
     has the potential to interfere with existing JuMP syntax. Please discuss
-    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    with the [developer chatroom](https://jump.dev/chatroom) before
     publishing any code that implements these methods.
 
 [`parse_constraint_head`](@ref) should be implemented to intercept an expression
@@ -389,7 +389,7 @@ to create different types of JuMP variables.
     Extending JuMP in this manner is an advanced operation. We strongly
     encourage you to consider how you can use the methods mentioned in the
     previous sections to achieve your aims instead of defining new model and
-    variable types. Consult the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev)
+    variable types. Consult the [developer chatroom](https://jump.dev/chatroom)
     _before_ starting work on this.
 
 If you define new types, you will need to implement a considerable number of
