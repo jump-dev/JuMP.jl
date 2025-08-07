@@ -381,7 +381,7 @@ Implement this method to intercept the parsing of an expression with head
 !!! warning
     Extending the constraint macro at parse time is an advanced operation and
     has the potential to interfere with existing JuMP syntax. Please discuss
-    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    with the [developer chatroom](https://jump.dev/chatroom) before
     publishing any code that implements these methods.
 
 ## Arguments
@@ -723,7 +723,7 @@ operator `op`.
 !!! warning
     Extending the constraint macro at parse time is an advanced operation and
     has the potential to interfere with existing JuMP syntax. Please discuss
-    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    with the [developer chatroom](https://jump.dev/chatroom) before
     publishing any code that implements these methods.
 
 ## Arguments
