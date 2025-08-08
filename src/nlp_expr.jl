@@ -1270,10 +1270,13 @@ julia> @variable(model, x);
 
 julia> @variable(model, y);
 
-julia> gradient(model, sin(x)^y)
-Dict{VariableRef, Any} with 2 entries:
-  y => (sin(x) ^ y) * log(sin(x))
-  x => y * (sin(x) ^ (y - 1)) * cos(x)
+julia> ∇f = gradient(model, sin(x)^y);
+
+julia> ∇f[x]
+y * (sin(x) ^ (y - 1)) * cos(x)
+
+julia> ∇f[y]
+(sin(x) ^ y) * log(sin(x))
 ```
 """
 function gradient(model::GenericModel{T}, f::AbstractJuMPScalar) where {T}
