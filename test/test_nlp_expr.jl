@@ -1171,4 +1171,33 @@ function test_broadcastable()
     return
 end
 
+function test_simplify()
+    model = Model()
+    @variable(model, x)
+    @test isequal_canonical(simplify(model, sin(x)^1), sin(x))
+    @test isequal_canonical(simplify(sin(x)^1), sin(x))
+    return
+end
+
+function test_derivative()
+    model = Model()
+    @variable(model, x)
+    @test isequal_canonical(derivative(model, sin(x), x), cos(x))
+    @test isequal_canonical(derivative(sin(x), x), cos(x))
+    return
+end
+
+function test_gradient()
+    model = Model()
+    @variable(model, x[1:2])
+    f = sin(x[1]) + cos(x[2])
+    ∇f = gradient(model, f)
+    @test isequal_canonical(∇f[x[1]], cos(x[1]))
+    @test isequal_canonical(∇f[x[2]], -sin(x[2]))
+    ∇f = gradient(f)
+    @test isequal_canonical(∇f[x[1]], cos(x[1]))
+    @test isequal_canonical(∇f[x[2]], -sin(x[2]))
+    return
+end
+
 end  # module

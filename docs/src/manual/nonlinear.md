@@ -875,3 +875,51 @@ julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
  2.0
  4.0
 ```
+
+## Symbolic algebra
+
+JuMP exposes a basic framework for symbolic simplification and differentiation.
+By an explicit design choice, these tools are not intended to be a Computer
+Algebraic System (CAS). The simplifications that they identify and exploit are
+purposefully limited, and runtime performance is not a design consideration.
+
+### Derivative
+
+Compute the symbolic derivative of an expression using [`derivative`](@ref):
+
+```@repl
+using JuMP
+model = Model();
+@variable(model, x)
+derivative(model, sin(x), x)
+derivative(model, log(x), x)
+derivative(model, exp(2 * x), x)
+```
+
+### Gradient
+
+Compute the symbolic gradient of an expression using [`gradient`](@ref):
+
+```@repl
+using JuMP
+model = Model();
+@variable(model, x);
+@variable(model, y);
+gradient(model, y * sin(x))
+gradient(model, log(x + y))
+gradient(model, exp(x * y))
+```
+
+### Simplification
+
+Simplify an expression using [`simplify`](@ref):
+
+```@repl
+using JuMP
+model = Model();
+@variable(model, x);
+simplify(model, sin(x)^0)
+simplify(model, -(-cos(x)))
+f = log(x) + (sin(x) + cos(x))
+simplify(model, f)
+```
