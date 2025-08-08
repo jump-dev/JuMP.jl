@@ -1169,6 +1169,127 @@ function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
     return MOI.VectorNonlinearFunction(map(moi_function, f))
 end
 
+"""
+    simplify([model::GenericModel,] f::AbstractJuMPScalar)
+
+Return a simplified copy of the function `f`.
+
+!!! warning
+    This function is not type stable by design.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> f = sin(x)^1
+sin(x) ^ 1.0
+
+julia> simplify(model, f)
+sin(x)
+
+julia> f = sin(x) - -cos(x)
+sin(x) - -(cos(x))
+
+julia> simplify(model, f)
+sin(x) + cos(x)
+
+julia> simplify(model, x / sin(x)^0)
+x
+```
+"""
+function simplify(model::GenericModel, f::AbstractJuMPScalar)
+    g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(f))
+    return jump_function(model, g)
+end
+
+simplify(f::AbstractJuMPScalar) = simplify(owner_model(f), f)
+
+"""
+    derivative(
+        [model::GenericModel{T},]
+        f::AbstractJuMPScalar,
+        x::GenericVariableRef{T},
+    ) where {T}
+
+Compute the partial derivative of `f` with respect to `x`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> derivative(model, log(x), x)
+1.0 / x
+
+julia> derivative(model, log(x), y)
+0.0
+
+julia> derivative(model, sin(x), x)
+cos(x)
+
+julia> derivative(model, sin(x)^y, y)
+(sin(x) ^ y) * log(sin(x))
+```
+"""
+function derivative(
+    model::GenericModel{T},
+    f::AbstractJuMPScalar,
+    x::GenericVariableRef{T},
+) where {T}
+    df_dx = MOI.Nonlinear.SymbolicAD.derivative(moi_function(f), index(x))
+    return jump_function(model, MOI.Nonlinear.SymbolicAD.simplify!(df_dx))
+end
+
+function derivative(f::AbstractJuMPScalar, x::GenericVariableRef)
+    return derivative(owner_model(x), f, x)
+end
+
+"""
+    gradient(
+        [model::GenericModel{T},]
+        f::AbstractJuMPScalar,
+    )::Dict{GenericVariableRef{T},Any} where {T}
+
+Return a dictionary that maps variables in `f` to their partial derivative.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> gradient(model, sin(x)^y)
+Dict{VariableRef, Any} with 2 entries:
+  y => (sin(x) ^ y) * log(sin(x))
+  x => y * (sin(x) ^ (y - 1)) * cos(x)
+```
+"""
+function gradient(model::GenericModel{T}, f::AbstractJuMPScalar) where {T}
+    g = moi_function(f)
+    ∇f = Dict{GenericVariableRef{T},Any}()
+    for xi in MOI.Nonlinear.SymbolicAD.variables(g)
+        df_dx = MOI.Nonlinear.SymbolicAD.simplify!(
+            MOI.Nonlinear.SymbolicAD.derivative(g, xi),
+        )
+        ∇f[GenericVariableRef{T}(model, xi)] = jump_function(model, df_dx)
+    end
+    return ∇f
+end
+
+gradient(f::AbstractJuMPScalar) = gradient(owner_model(f), f)
+
 # LinearAlgebra overloads to throw nicer error messages. These may be changed to
 # return expressions in the future.
 
