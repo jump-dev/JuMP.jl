@@ -918,8 +918,8 @@ Simplify an expression using [`simplify`](@ref):
 using JuMP
 model = Model();
 @variable(model, x);
-@variable(model, y);
-gradient(model, y * sin(x))
-gradient(model, log(x + y))
-gradient(model, exp(x * y))
+simplify(model, sin(x)^0)
+simplify(model, -(-cos(x)))
+f = log(x) + (sin(x) + cos(x))
+simplify(model, f)
 ```
