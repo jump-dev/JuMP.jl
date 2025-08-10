@@ -617,4 +617,67 @@ function test_value_type()
     return
 end
 
+function test_issue_4048()
+    for (T, C, S) in Any[
+        (Float64, Float64, Float64),
+        (Float64, Int, Float64),
+        (Int, Float64, Float64),
+        (Int, Float32, Float32),
+        (Float32, Int32, Float32),
+        (Float64, ComplexF64, ComplexF64),
+        (Float64, ComplexF32, ComplexF64),
+    ]
+        model = GenericModel{T}()
+        @variable(model, x)
+        # ScalarAffineFunction
+        f = one(C) * index(x) + one(C)
+        @test f isa MOI.ScalarAffineFunction{C}
+        g = jump_function(model, f)
+        @test g isa GenericAffExpr{S}
+        h = GenericAffExpr{S,typeof(x)}(one(S), x => one(S))
+        @test isequal_canonical(g, h)
+        @test jump_function_type(model, typeof(f)) == typeof(g)
+        # ScalarQuadraticFunction
+        # We can't do `one(T) * index(x) * index(x)` because of a bug in MOI:
+        # https://github.com/jump-dev/MathOptInterface.jl/pull/2807
+        f = MOI.ScalarQuadraticFunction{C}(
+            [MOI.ScalarQuadraticTerm{C}(C(2), index(x), index(x))],
+            MOI.ScalarAffineTerm{C}[],
+            one(C),
+        )
+        @test f isa MOI.ScalarQuadraticFunction{C}
+        g = jump_function(model, f)
+        @test g isa GenericQuadExpr{S}
+        a = GenericAffExpr{S,typeof(x)}(one(S))
+        h = GenericQuadExpr{S,typeof(x)}(a, UnorderedPair(x, x) => one(S))
+        @test isequal_canonical(g, h)
+        @test jump_function_type(model, typeof(f)) == typeof(g)
+        # VectorAffineFunction
+        f = MOI.Utilities.vectorize([one(C) * index(x) + one(C)])
+        @test f isa MOI.VectorAffineFunction{C}
+        g = jump_function(model, f)
+        @test g isa Vector{<:GenericAffExpr{S}}
+        h = [GenericAffExpr{S,typeof(x)}(one(S), x => one(S))]
+        @test isequal_canonical(g, h)
+        @test jump_function_type(model, typeof(f)) == typeof(g)
+        # VectorQuadraticFunction
+        # We can't do `one(T) * index(x) * index(x)` because of a bug in MOI:
+        # https://github.com/jump-dev/MathOptInterface.jl/pull/2807
+        f = MOI.ScalarQuadraticFunction{C}(
+            [MOI.ScalarQuadraticTerm{C}(C(2), index(x), index(x))],
+            MOI.ScalarAffineTerm{C}[],
+            one(C),
+        )
+        f = MOI.Utilities.vectorize([f])
+        @test f isa MOI.VectorQuadraticFunction{C}
+        g = jump_function(model, f)
+        @test g isa Vector{<:GenericQuadExpr{S}}
+        a = GenericAffExpr{S,typeof(x)}(one(S))
+        h = GenericQuadExpr{S,typeof(x)}(a, UnorderedPair(x, x) => one(S))
+        @test isequal_canonical(g, [h])
+        @test jump_function_type(model, typeof(f)) == typeof(g)
+    end
+    return
+end
+
 end  # TestExpr
