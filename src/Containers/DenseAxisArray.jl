@@ -865,3 +865,11 @@ end
 function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; dims = Colon())
     return sum(identity, x; dims = dims)
 end
+
+function Base.promote_shape(a::DenseAxisArray, b::DenseAxisArray)
+    if axes(a) != axes(b)
+        msg = "Dimension and axes of a DenseAxisArray must match"
+        throw(DimensionMismatch(msg))
+    end
+    return axes(a)
+end
