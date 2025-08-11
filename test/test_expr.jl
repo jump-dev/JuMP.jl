@@ -680,4 +680,13 @@ function test_issue_4048()
     return
 end
 
+function test_issue_4049()
+    model = Model()
+    A = [1, 2, 3]
+    @variable(model, x[A])
+    y = @expression(model, sum(x[A] for a in A))
+    @test isequal_canonical(y, 3x)
+    return
+end
+
 end  # TestExpr

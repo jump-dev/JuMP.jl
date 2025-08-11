@@ -921,4 +921,16 @@ function test_view_DenseAxisArray()
     return
 end
 
+function test_promote_shape()
+    Containers.@container(x[a in 2:3], a)
+    Containers.@container(y[a in 2:3], 2 * a)
+    Containers.@container(z[a in 2:3, b in ["a", "b"]], (a, b))
+    @test x + x == y
+    @test promote_shape(x, x) == (2:3,)
+    @test promote_shape(x, y) == (2:3,)
+    @test promote_shape(y, x) == (2:3,)
+    @test_throws DimensionMismatch promote_shape(x, z)
+    return
+end
+
 end  # module
