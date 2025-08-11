@@ -760,29 +760,32 @@ function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.ScalarQuadraticFunction{C}},
 ) where {C,T}
-    return GenericQuadExpr{C,GenericVariableRef{T}}
+    return GenericQuadExpr{promote_type(T, C),GenericVariableRef{T}}
 end
 
 function jump_function(
     model::GenericModel{T},
     f::MOI.ScalarQuadraticFunction{C},
 ) where {C,T}
-    return GenericQuadExpr{C,GenericVariableRef{T}}(model, f)
+    S = promote_type(T, C)
+    return GenericQuadExpr{S,GenericVariableRef{T}}(model, f)
 end
 
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VectorQuadraticFunction{C}},
 ) where {C,T}
-    return Vector{GenericQuadExpr{C,GenericVariableRef{T}}}
+    S = promote_type(T, C)
+    return Vector{GenericQuadExpr{S,GenericVariableRef{T}}}
 end
 
 function jump_function(
     model::GenericModel{T},
     f::MOI.VectorQuadraticFunction{C},
 ) where {C,T}
-    return GenericQuadExpr{C,GenericVariableRef{T}}[
-        GenericQuadExpr{C,GenericVariableRef{T}}(model, f) for
+    S = promote_type(T, C)
+    return GenericQuadExpr{S,GenericVariableRef{T}}[
+        GenericQuadExpr{S,GenericVariableRef{T}}(model, f) for
         f in MOIU.eachscalar(f)
     ]
 end

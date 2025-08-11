@@ -883,30 +883,34 @@ function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.ScalarAffineFunction{C}},
 ) where {C,T}
-    return GenericAffExpr{C,GenericVariableRef{T}}
+    S = promote_type(C, T)
+    return GenericAffExpr{S,GenericVariableRef{T}}
 end
 
 function jump_function(
     model::GenericModel{T},
     f::MOI.ScalarAffineFunction{C},
 ) where {C,T}
-    return GenericAffExpr{C,GenericVariableRef{T}}(model, f)
+    S = promote_type(C, T)
+    return GenericAffExpr{S,GenericVariableRef{T}}(model, f)
 end
 
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VectorAffineFunction{C}},
 ) where {C,T}
-    return Vector{GenericAffExpr{C,GenericVariableRef{T}}}
+    S = promote_type(C, T)
+    return Vector{GenericAffExpr{S,GenericVariableRef{T}}}
 end
 
 function jump_function(
     model::GenericModel{T},
     f::MOI.VectorAffineFunction{C},
 ) where {T,C}
-    ret = GenericAffExpr{C,GenericVariableRef{T}}[]
+    S = promote_type(C, T)
+    ret = GenericAffExpr{S,GenericVariableRef{T}}[]
     for scalar_f in MOIU.eachscalar(f)
-        g = GenericAffExpr{C,GenericVariableRef{T}}(scalar_f.constant)
+        g = GenericAffExpr{S,GenericVariableRef{T}}(scalar_f.constant)
         for t in scalar_f.terms
             add_to_expression!(
                 g,
