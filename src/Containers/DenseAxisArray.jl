@@ -385,7 +385,8 @@ function Base.to_index(A::DenseAxisArray{T,N}, idx) where {T,N}
 end
 
 _is_range(::Any) = false
-_is_range(::Union{Vector{Int},Colon}) = true
+_is_range(::Colon) = true
+_is_range(::AbstractVector{<:Integer}) = true
 
 function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
     return ntuple(N) do i
