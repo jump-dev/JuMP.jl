@@ -933,4 +933,10 @@ function test_promote_shape()
     return
 end
 
+function test_container_Base_OneTo_Integer()
+    Containers.@container(x[i = 0x01:0x08], 2 * i)
+    @test x[0x01:0x02] == Containers.@container([i = 0x01:0x02], 2 * i)
+    return
+end
+
 end  # module
