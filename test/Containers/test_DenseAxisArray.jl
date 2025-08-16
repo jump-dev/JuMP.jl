@@ -960,6 +960,8 @@ Int4053(f::Int4053) = f
 
 Base.:<(a::Int4053, b::Int4053) = a.x < b.x
 
+Base.:<=(a::Int4053, b::Int4053) = a.x <= b.x
+
 Base.:+(a::Int4053, b::Int4053) = Int4053(a.x + b.x)
 
 Base.:-(a::Int4053, b::Int4053) = Int4053(a.x - b.x)
