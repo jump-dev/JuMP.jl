@@ -952,4 +952,40 @@ function test_conntainer_AbstractUnitRange_Integer()
     return
 end
 
+struct Int4053 <: Integer
+    x::Int
+end
+
+Int4053(f::Int4053) = f
+
+Base.:<(a::Int4053, b::Int4053) = a.x < b.x
+
+Base.:+(a::Int4053, b::Int4053) = Int4053(a.x + b.x)
+
+Base.:-(a::Int4053, b::Int4053) = Int4053(a.x - b.x)
+
+Base.:(==)(a::Int4053, b::Int4053) = a.x == b.x
+
+Base.hash(a::Int4053, h::UInt) = hash((Int4053, a.x), h)
+
+Base.:(==)(a::Int4053, b::Integer) = false
+
+Base.:(==)(a::Integer, b::Int4053) = false
+
+Base.promote_rule(T::Type{<:Integer}, ::Type{Int4053}) = T
+
+Base.Int(x::Int4053) = x.x
+
+function test_issue_4053()
+    Containers.@container(A[i in Int4053(1):Int4053(3)], i.x)
+    @test_throws KeyError A[1]
+    @test_throws KeyError A[0x01]
+    @test A[Int4053(1)] === 1
+    Containers.@container(B[i in 2:4], i)
+    @test B[2] === 2
+    @test B[0x02] === 2
+    @test KeyError B[Int4053(2)]
+    return
+end
+
 end  # module
