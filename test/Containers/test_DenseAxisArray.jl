@@ -983,7 +983,7 @@ function test_issue_4053()
     @test_throws KeyError A[0x01]
     @test !isassigned(A, 0x01)
     @test A[Int4053(1)] === 1
-    @test !isassigned(A, Int4053(1))
+    @test isassigned(A, Int4053(1))
     Containers.@container(B[i in 2:4], i)
     @test B[2] === 2
     @test B[0x02] === 2
