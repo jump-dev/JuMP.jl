@@ -106,8 +106,8 @@ end
 # AbstractUnitRange{<:Integer} -> _AxisLookup{Tuple{T,T}}: A related
 # optimization to Base.OneTo.
 
-function build_lookup(ax::AbstractUnitRange{<:Integer})
-    return _AxisLookup((first(ax), length(ax)))
+function build_lookup(ax::AbstractUnitRange{T}) where {T<:Integer}
+    return _AxisLookup{Tuple{T,T}}((first(ax), length(ax)))
 end
 
 function Base.getindex(

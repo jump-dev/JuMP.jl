@@ -939,4 +939,17 @@ function test_container_Base_OneTo_Integer()
     return
 end
 
+function test_conntainer_AbstractUnitRange_Integer()
+    Containers.@container(A[i in 0x01:0x03], i)
+    for i in 0x01:0x03
+        @test A[i] == i
+    end
+    Containers.@container(B[i in 0x02:0x03], i)
+    @test_throws KeyError B[0x01]
+    for i in 0x02:0x03
+        @test B[i] == i
+    end
+    return
+end
+
 end  # module
