@@ -979,12 +979,16 @@ Base.Int(x::Int4053) = x.x
 function test_issue_4053()
     Containers.@container(A[i in Int4053(1):Int4053(3)], i.x)
     @test_throws KeyError A[1]
+    @test !isassigned(A, 1)
     @test_throws KeyError A[0x01]
+    @test !isassigned(A, 0x01)
     @test A[Int4053(1)] === 1
+    @test !isassigned(A, Int4053(1))
     Containers.@container(B[i in 2:4], i)
     @test B[2] === 2
     @test B[0x02] === 2
-    @test KeyError B[Int4053(2)]
+    @test_throws KeyError B[Int4053(2)]
+    @test !isassigned(B, Int4053(2))
     return
 end
 
