@@ -114,6 +114,9 @@ function Base.getindex(
     x::_AxisLookup{Tuple{T,T}},
     key::Integer,
 ) where {T<:Integer}
+    if !isequal(key, convert(T, key))
+        throw(KeyError(key))
+    end
     i = key - x.data[1] + 1
     if !(1 <= i <= x.data[2])
         throw(KeyError(key))
@@ -133,6 +136,9 @@ function Base.get(
     key::Integer,
     default,
 ) where {T<:Integer}
+    if !isequal(key, convert(T, key))
+        return default
+    end
     i = key - x.data[1] + 1
     if !(1 <= i <= x.data[2])
         return default
