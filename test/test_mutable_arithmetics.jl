@@ -54,6 +54,12 @@ function promote_operation_test(op::Function, x::Type, y::Type)
     return
 end
 
+function sym_promote_operation_test(op::Function, x::Type, y::Type)
+    promote_operation_test(op, x, y)
+    promote_operation_test(op, y, x)
+    return
+end
+
 function test_extension_promote_operation(
     ModelType = Model,
     VariableRefType = VariableRef,
@@ -63,22 +69,30 @@ function test_extension_promote_operation(
         QuadExprType = GenericQuadExpr{S,VariableRefType}
         for op in [+, -, *]
             for T in [Int, S]
-                promote_operation_test(op, T, VariableRefType)
-                promote_operation_test(op, VariableRefType, T)
-                promote_operation_test(op, T, AffExprType)
-                promote_operation_test(op, AffExprType, T)
-                promote_operation_test(op, T, QuadExprType)
-                promote_operation_test(op, QuadExprType, T)
+                sym_promote_operation_test(op, T, VariableRefType)
+                sym_promote_operation_test(op, T, AffExprType)
+                sym_promote_operation_test(op, T, QuadExprType)
             end
             promote_operation_test(op, VariableRefType, VariableRefType)
-            promote_operation_test(op, VariableRefType, AffExprType)
-            promote_operation_test(op, AffExprType, VariableRefType)
+            sym_promote_operation_test(op, VariableRefType, AffExprType)
             if op != *
-                promote_operation_test(op, VariableRefType, QuadExprType)
-                promote_operation_test(op, QuadExprType, VariableRefType)
-                promote_operation_test(op, AffExprType, QuadExprType)
-                promote_operation_test(op, QuadExprType, AffExprType)
+                sym_promote_operation_test(op, VariableRefType, QuadExprType)
+                sym_promote_operation_test(op, AffExprType, QuadExprType)
             end
+        end
+    end
+    S = Float64
+    T = ComplexF64
+    for op in [+, -, *]
+        AffS = GenericAffExpr{S,VariableRefType}
+        AffT = GenericAffExpr{T,VariableRefType}
+        QuadS = GenericQuadExpr{S,VariableRefType}
+        QuadT = GenericQuadExpr{T,VariableRefType}
+        sym_promote_operation_test(op, AffS, AffT)
+        if op != *
+            sym_promote_operation_test(op, AffS, QuadT)
+            sym_promote_operation_test(op, AffT, QuadS)
+            sym_promote_operation_test(op, QuadS, QuadT)
         end
     end
     return
