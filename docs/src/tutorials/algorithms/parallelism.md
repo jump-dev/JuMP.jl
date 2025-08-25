@@ -130,7 +130,7 @@ to a shared vector.
     This section is very important to understand. It is not specific to JuMP and
     it applies to all multithreaded Julia programs.
 
-There is an upstream design issue in Julia ([julia#15276](https://github.com/julialang/julia/issues/15276))
+There is an upstream design issue in Julia ([julia#14948](https://github.com/JuliaLang/julia/issues/14948))
 that can silently introduce race conditions to your code and violate thread
 safety.
 
