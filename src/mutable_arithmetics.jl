@@ -86,14 +86,6 @@ function _MA.promote_operation(
 end
 
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-)},
-    ::Type{A},
-    ::Type{A},
-) where {A<:_GenericAffOrQuadExpr}
-    return A
-end
-
-function _MA.promote_operation(
     op::Union{typeof(+),typeof(-)},
     ::Type{<:GenericAffExpr{S,V}},
     ::Type{<:GenericQuadExpr{T,V}},
