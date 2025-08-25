@@ -124,6 +124,92 @@ each iteration of the for-loop. In addition, you must avoid race conditions in
 the rest of your Julia code, for example, by using a lock when pushing elements
 to a shared vector.
 
+### Thread safety and the closure capture bug
+
+!!! danger
+    This section is very important to understand. It is not specific to JuMP and
+    it applies to all multithreaded Julia programs.
+
+There is an upstream design issue in Julia ([julia#14948](https://github.com/JuliaLang/julia/issues/14948))
+that can silently introduce race conditions to your code and violate thread
+safety.
+
+You can trigger this bug if you have a local variable inside the
+`Threads.@threads` loop with the same name as a variable outside the loop.
+Here's an example:
+
+```julia
+julia> using JuMP, HiGHS
+
+julia> function _create_model(j)
+           model = Model(HiGHS.Optimizer)
+           @variable(model, x[1:j])
+           return model
+       end
+_create_model (generic function with 1 method)
+
+julia> function dont_run_segfault_likely()
+           models = _create_model.(1:2)
+           Threads.@threads for j in 1:2
+               model = models[j]  # `model` is used inside the loop
+               set_lower_bound.(model[:x], j)
+               optimize!(model)
+           end
+           model = models[1]      # `model` is used outside the loop
+       end
+dont_run_segfault_likely (generic function with 1 method)
+```
+
+This code is problematic for the following reason. Because `model` appears
+both inside `Threads.@threads` and outside, Julia's scoping rules treat it as
+a single variable. Therefore, instead of creating a different `model` for each
+thread, Julia creates a single mutable container called a `Core.Box` that is
+used to store the value of `model` throughout the life of the function. Now
+there is a race condition for reads and writes of `model`, and so a thread may
+read the value of `model` only to find that its `model` was overwritten with the
+value of `model` from another thread.
+
+To diagnose this issue, use `@code_warntype`. If your code is problematic, you
+will see a local variable with the type `::Core.Box`:
+```julia
+julia> @code_warntype dont_run_segfault_likely()
+MethodInstance for dont_run_segfault_likely()
+  from dont_run_segfault_likely() @ Main REPL[3]:1
+Arguments
+  ...
+Locals
+  ...
+  model::Core.Box
+  ...
+```
+If you see `Core.Box`, you must refactor your code to avoid re-using the same
+variable name inside and outside the threading loop.
+
+Alternatively, you can annotate the local variables inside the loop with `local`
+to disambiguate them from the variables outside the loop.
+
+```julia
+julia> using JuMP, HiGHS
+
+julia> function _create_model(j)
+           model = Model(HiGHS.Optimizer)
+           @variable(model, x[1:j])
+           return model
+       end
+_create_model (generic function with 1 method)
+
+julia> function safe_to_run()
+           models = _create_model.(1:2)
+           Threads.@threads for j in 1:2
+               local model = models[j]  # annotated as `local`
+               set_lower_bound.(model[:x], j)
+               optimize!(model)
+           end
+           model = models[1]  # This `model` is not the inner `model`
+       end
+safe_to_run (generic function with 1 method)
+```
+
 ### Example: parameter search with multi-threading
 
 Here is an example of how to use multi-threading to solve a collection of JuMP
