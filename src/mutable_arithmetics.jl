@@ -86,27 +86,37 @@ function _MA.promote_operation(
 end
 
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-)},
-    ::Type{A},
-    ::Type{A},
-) where {A<:_GenericAffOrQuadExpr}
-    return A
+    op::Union{typeof(+),typeof(-)},
+    ::Type{<:GenericAffExpr{S,V}},
+    ::Type{<:GenericQuadExpr{T,V}},
+) where {S,T,V}
+    U = _MA.promote_operation(op, S, T)
+    return GenericQuadExpr{U,V}
 end
 
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-)},
+    op::Union{typeof(+),typeof(-)},
+    ::Type{<:GenericQuadExpr{S,V}},
     ::Type{<:GenericAffExpr{T,V}},
-    ::Type{<:GenericQuadExpr{T,V}},
-) where {T,V}
-    return GenericQuadExpr{T,V}
+) where {S,T,V}
+    U = _MA.promote_operation(op, S, T)
+    return GenericQuadExpr{U,V}
 end
 
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-)},
-    ::Type{<:GenericQuadExpr{T,V}},
-    ::Type{<:GenericAffExpr{T,V}},
-) where {T,V}
-    return GenericQuadExpr{T,V}
+    op::Union{typeof(+),typeof(-)},
+    ::Type{GenericAffExpr{T,V}},
+    ::Type{GenericAffExpr{S,V}},
+) where {T,S,V<:AbstractVariableRef}
+    return GenericAffExpr{_MA.promote_operation(op, T, S),V}
+end
+
+function _MA.promote_operation(
+    op::Union{typeof(+),typeof(-)},
+    ::Type{GenericQuadExpr{T,V}},
+    ::Type{GenericQuadExpr{S,V}},
+) where {T,S,V<:AbstractVariableRef}
+    return GenericQuadExpr{_MA.promote_operation(op, T, S),V}
 end
 
 function _MA.promote_operation(
