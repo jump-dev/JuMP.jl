@@ -217,25 +217,19 @@ models in parallel.
 ````julia
 julia> using JuMP, HiGHS
 
-julia> function _thread_body(i)
-           model = Model(HiGHS.Optimizer)
-           set_silent(model)
-           set_attribute(model, MOI.NumberOfThreads(), 1)
-           @variable(model, x >= i)
-           @objective(model, Min, x)
-           optimize!(model)
-           assert_is_solved_and_feasible(model)
-           return objective_value(model)
-       end
-_thread_body (generic function with 1 method)
-
 julia> function a_good_way_to_use_threading()
            solutions = Pair{Int,Float64}[]
            my_lock = Threads.ReentrantLock();
            Threads.@threads for i in 1:10
-               result = _thread_body(i)
+               model = Model(HiGHS.Optimizer)
+               set_silent(model)
+               set_attribute(model, MOI.NumberOfThreads(), 1)
+               @variable(model, x >= i)
+               @objective(model, Min, x)
+               optimize!(model)
+               assert_is_solved_and_feasible(model)
                Threads.lock(my_lock) do
-                   push!(solutions, i => result)
+                   push!(solutions, i => objective_value(model))
                end
            end
            return solutions
