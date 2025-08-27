@@ -44,18 +44,8 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-        #with:
-        #  depwarn: error # Had to disable it because DataStructures does
-        #    1 dependency had output during precompilation:
-        # ┌ DataStructures
-        # │  WARNING: DataStructures.DisjointSets is deprecated, use DisjointSet instead.
-        # │    likely near /home/blegat/.julia/dev/DataStructures/src/deprecations.jl:9
-        # │  WARNING: DataStructures.DisjointSets is deprecated, use DisjointSet instead.
-        # │    likely near /home/blegat/.julia/dev/DataStructures/src/deprecations.jl:9
-        # │  WARNING: DataStructures.DisjointSets is deprecated, use DisjointSet instead.
-        # │    likely near /home/blegat/.julia/dev/DataStructures/src/deprecations.jl:9
-        # └
-        # No idea why, try enabling it back later
+        with:
+          depwarn: error
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
