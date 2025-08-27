@@ -135,6 +135,7 @@ CPLEXLink
 (cosmo|COSMO)
 COSMOAccelerators
 Couenne
+cuOpt
 Divio
 Dualization
 EAGO
