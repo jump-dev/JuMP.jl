@@ -47,7 +47,7 @@
 [CSDP]
     rev = "v1.1.2"
 [cuOpt]
-    rev = "v0.1.0"
+    rev = "51d58b848a1743ba943fd4f887a2cf8db93e21b0"
 [DiffOpt]
     rev = "v0.5.0"
     extension = true
