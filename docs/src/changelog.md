@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
  - Added [`simplify`](@ref), [`derivative`](@ref), and [`gradient`](@ref) from
-   `MOI.Nonlinear.SymbolicAD` (#4047)
+   `MOI.Nonlinear.SymbolicAD` (#4047), (#4064)
 
 ### Fixed
 
@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Temporarily disabled `--depwarn=error` in CI (#4058)
  - Documented closure capture bug in threading (#4059)
  - Added cuOpt to list of solvers (#4062)
+ - Added a link to supported solvers (#4063)
 
 ## Version 1.28.0 (August 6, 2025)
 
