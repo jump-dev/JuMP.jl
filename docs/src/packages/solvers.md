@@ -4,6 +4,9 @@ This section of the documentation contains brief documentation for some of the
 solvers that JuMP supports. The list of solvers is not exhaustive, but instead
 is intended to help you discover commonly used solvers.
 
+!!! tip
+    [Supported solvers](@ref) lists all solvers supported by JuMP.
+
 ## Affiliation
 
 Packages beginning with `jump-dev/` are developed and maintained by the
@@ -21,6 +24,3 @@ README contents in the JuMP documentation for the benefit of users.
 Written a solver? Add it to this section of the JuMP documentation by making
 a pull request to the [`docs/packages.toml`](https://github.com/jump-dev/JuMP.jl/blob/master/docs/packages.toml)
 file.
-
-!!! tip
-    [Supported solvers](@ref) lists all solvers supported by JuMP.
