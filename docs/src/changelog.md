@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.29.0 (August 27, 2025)
+## Version 1.29.0 (August 28, 2025)
 
 ### Added
 
@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Removed mentions of Gitter in documentation (#4045)
  - Temporarily disabled `--depwarn=error` in CI (#4058)
  - Documented closure capture bug in threading (#4059)
+ - Added cuOpt to list of solvers (#4062)
 
 ## Version 1.28.0 (August 6, 2025)
 
