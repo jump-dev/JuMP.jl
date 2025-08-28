@@ -122,6 +122,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Couenne](http://github.com/coin-or/Couenne)                                   | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   |        | EPL      | LP, SDP                   |
+| [NVIDIA cuOpt](https://github.com/NVIDIA/cuOpt)                                | [cuOpt.jl](https://github.com/jump-dev/cuOpt.jl)                                 |        | Apache   | (MI)LP                    |
 | [DAQP](https://github.com/darnstrom/daqp)                                      | [DAQP.jl](https://github.com/darnstrom/DAQP.jl)                                  |        | MIT      | (Mixed-binary) QP         |
 | [DSDP](http://www.mcs.anl.gov/hs/software/DSDP/)                               | [DSDP.jl](https://github.com/jump-dev/DSDP.jl)                                   |        | DSDP     | LP, SDP                   |
 | [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | MIT      | (MI)NLP                   |

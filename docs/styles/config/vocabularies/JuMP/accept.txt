@@ -132,9 +132,11 @@ Artelys
 Clarabel
 Clp
 CPLEXLink
+Colab
 (cosmo|COSMO)
 COSMOAccelerators
 Couenne
+cuOpt
 Divio
 Dualization
 EAGO
