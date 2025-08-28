@@ -878,10 +878,16 @@ julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
 
 ## Symbolic algebra
 
-JuMP exposes a basic framework for symbolic simplification and differentiation.
-By an explicit design choice, these tools are not intended to be a Computer
-Algebraic System (CAS). The simplifications that they identify and exploit are
-purposefully limited, and runtime performance is not a design consideration.
+JuMP exposes a basic framework for symbolic simplification and differentiation
+of expressions.
+
+By an explicit design choice, these tools are not intended to be a replacement
+for a Computer Algebraic System (CAS). The simplifications that they identify
+and exploit are purposefully limited, and runtime performance is not a design
+consideration.
+
+If you run into any limitations, consider using a purpose-built CAS such as
+[Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
 
 ### Derivative
 
