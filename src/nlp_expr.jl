@@ -1177,6 +1177,15 @@ Return a simplified copy of the function `f`.
 !!! warning
     This function is not type stable by design.
 
+## Limitations
+
+By an explicit design choice, `simplify` is not intended to be a replacement
+for a Computer Algebraic System (CAS). The simplifications are purposefully
+limited, and runtime performance is not a design consideration.
+
+If you run into any limitations, consider using a purpose-built CAS such as
+[Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
+
 ## Example
 
 ```jldoctest
@@ -1217,6 +1226,15 @@ simplify(f::AbstractJuMPScalar) = simplify(owner_model(f), f)
     ) where {T}
 
 Compute the partial derivative of `f` with respect to `x`.
+
+## Limitations
+
+By an explicit design choice, `derivative` is not intended to be a replacement
+for a Computer Algebraic System (CAS). The resulting expressions may be large,
+and runtime performance is not a design consideration.
+
+If you run into any limitations, consider using a purpose-built CAS such as
+[Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
 
 ## Example
 
@@ -1259,7 +1277,17 @@ end
         f::AbstractJuMPScalar,
     )::Dict{GenericVariableRef{T},Any} where {T}
 
-Return a dictionary that maps variables in `f` to their partial derivative.
+Return a dictionary that maps variables in `f` to their partial derivative,
+which is computed using [`derivative`](@ref) for each variable in `f`.
+
+## Limitations
+
+By an explicit design choice, `gradient` is not intended to be a replacement
+for a Computer Algebraic System (CAS). The resulting expressions may be large,
+and runtime performance is not a design consideration.
+
+If you run into any limitations, consider using a purpose-built CAS such as
+[Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
 
 ## Example
 
