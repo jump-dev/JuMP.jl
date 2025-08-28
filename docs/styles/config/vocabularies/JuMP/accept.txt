@@ -132,6 +132,7 @@ Artelys
 Clarabel
 Clp
 CPLEXLink
+Colab
 (cosmo|COSMO)
 COSMOAccelerators
 Couenne
