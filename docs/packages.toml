@@ -37,7 +37,7 @@
 [AmplNLWriter]
     rev = "v1.2.3"
 [BARON]
-    rev = "v0.8.5"
+    rev = "v0.8.6"
 [Cbc]
     rev = "v1.2.0"
 [Clp]
@@ -73,13 +73,13 @@
 [MathOptAnalyzer]
     rev = "v0.1.0"
 [MathOptIIS]
-    rev = "v0.1.0"    
+    rev = "v0.1.1"
 [MiniZinc]
     rev = "v0.3.12"
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.5.0"
+    rev = "v1.6.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -88,7 +88,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.11.1"
+    rev = "v0.12.1"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -176,7 +176,7 @@
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.8.8"
+    rev = "v0.8.10"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
@@ -222,7 +222,7 @@
     rev = "v0.12.7"
 [SDDP]
     user = "odow"
-    rev = "v1.12.0"
+    rev = "v1.13.0"
     has_html = true
     extension = true
 [Tulip]
