@@ -27,6 +27,7 @@ elementwise
 errored
 flamegraph
 getters
+Gitter
 grayscale
 homebrew
 iterable

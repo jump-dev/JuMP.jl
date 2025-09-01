@@ -7,6 +7,30 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.29.0 (September 1, 2025)
+
+### Added
+
+ - Added [`simplify`](@ref), [`derivative`](@ref), and [`gradient`](@ref) from
+   `MOI.Nonlinear.SymbolicAD` (#4047), (#4064)
+
+### Fixed
+
+ - Fixed `promote_shape` for [`Containers.DenseAxisArray`](@ref) (#4050)
+ - Fixed [`jump_function`](@ref) to promote mixed model and coefficient types
+   (#4051)
+ - Fixed [`Containers.DenseAxisArray`](@ref) when a non-`Int` subtype of
+   `<:Integer` is used (#4054), (#4055), (#4056)
+ - Fixed missing `MA.promote_operation` methods when mixing number types (#4057)
+
+### Other
+
+ - Removed mentions of Gitter in documentation (#4045)
+ - Temporarily disabled `--depwarn=error` in CI (#4058)
+ - Documented closure capture bug in threading (#4059)
+ - Added cuOpt to list of solvers (#4062)
+ - Added a link to supported solvers (#4063)
+
 ## Version 1.28.0 (August 6, 2025)
 
 ### Added
