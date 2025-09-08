@@ -3403,7 +3403,7 @@ There are three common mistakes that lead to this.
     )
 end
 
-for sym in (:(<=), :(>=), :(<), :(>))
+for sym in (:(<=), :(<))
     err = _logic_error_exception(sym)
     @eval begin
         Base.$(sym)(::GenericVariableRef, ::Number) = throw($err)

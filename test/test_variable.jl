@@ -1107,12 +1107,12 @@ end
 function test_error_messages()
     model = Model()
     @variable(model, x)
-    @test_throws JuMP._logic_error_exception(:>=) x >= 1
-    @test_throws JuMP._logic_error_exception(:>=) 1 >= x
+    @test_throws JuMP._logic_error_exception(:<=) x >= 1
+    @test_throws JuMP._logic_error_exception(:<=) 1 >= x
     @test_throws JuMP._logic_error_exception(:<=) x <= 1
     @test_throws JuMP._logic_error_exception(:<=) 1 <= x
-    @test_throws JuMP._logic_error_exception(:>) x > 1
-    @test_throws JuMP._logic_error_exception(:>) 1 > x
+    @test_throws JuMP._logic_error_exception(:<) x > 1
+    @test_throws JuMP._logic_error_exception(:<) 1 > x
     @test_throws JuMP._logic_error_exception(:<) x < 1
     @test_throws JuMP._logic_error_exception(:<) 1 < x
     return
