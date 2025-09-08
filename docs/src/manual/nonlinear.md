@@ -330,7 +330,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> x < 1
-ERROR: Cannot evaluate `<` between a variable and a number.
+ERROR: Cannot evaluate `>` between a variable and a number.
 [...]
 ```
 
