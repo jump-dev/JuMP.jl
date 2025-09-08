@@ -330,7 +330,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> x < 1
-ERROR: Cannot evaluate `>` between a variable and a number.
+ERROR: Cannot evaluate `<` between a variable and a number.
 [...]
 ```
 
@@ -476,7 +476,7 @@ julia> f(x::Vector{VariableRef}) = x[1] > 1 ? 0 : x[2]
 f (generic function with 1 method)
 
 julia> f(x)
-ERROR: Cannot evaluate `>` between a variable and a number.
+ERROR: Cannot evaluate `<` between a variable and a number.
 [...]
 ```
 
