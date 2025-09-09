@@ -79,7 +79,7 @@
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.7.0"
+    rev = "3bf253221cfa943532b5030ab7d5bed6157b9786"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
