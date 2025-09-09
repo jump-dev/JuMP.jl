@@ -7,6 +7,13 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.29.1 (September 10, 2025)
+
+### Fixed
+
+ - Fixed method invalidation by removing methods for the functions `>` and `>=`
+   (#4065)
+
 ## Version 1.29.0 (September 1, 2025)
 
 ### Added

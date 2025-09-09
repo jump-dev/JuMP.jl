@@ -18,7 +18,7 @@ function list_changes()
     )
     println("docs/packages.toml")
     for (name, pkg_data) in TOML.parsefile("docs/packages.toml")
-        versions_file = data["$(first(name))/$(name)/Versions.toml"]
+        versions_file = data["$(uppercase(first(name)))/$(name)/Versions.toml"]
         versions = TOML.parse(versions_file)
         latest_version = maximum(VersionNumber.(keys(versions)))
         latest_version_s = "v$latest_version"
@@ -31,7 +31,7 @@ function list_changes()
     end
     println("docs/Project.toml")
     for (name, version) in TOML.parsefile("docs/Project.toml")["compat"]
-        versions_file = data["$(first(name))/$(name)/Versions.toml"]
+        versions_file = data["$(uppercase(first(name)))/$(name)/Versions.toml"]
         versions = TOML.parse(versions_file)
         latest_version = maximum(VersionNumber.(keys(versions)))
         latest_version_s = "$latest_version"
