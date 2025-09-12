@@ -47,6 +47,35 @@ function Base.:(-)(
     return DummyExpr()
 end
 
+function JuMP._MA.promote_operation(
+    ::Union{typeof(+),typeof(-)},
+    ::Type{DummyVariableRef},
+    ::Type{<:AbstractVariableRef},
+)
+    return DummyExpr
+end
+function JuMP._MA.promote_operation(
+    ::Union{typeof(+),typeof(-)},
+    ::Type{<:AbstractVariableRef},
+    ::Type{DummyVariableRef},
+)
+    return DummyExpr
+end
+function JuMP._MA.promote_operation(
+    ::Union{typeof(+),typeof(-)},
+    ::Type{DummyVariableRef},
+    ::Type{<:AbstractJuMPScalar},
+)
+    return DummyExpr
+end
+function JuMP._MA.promote_operation(
+    ::Union{typeof(+),typeof(-)},
+    ::Type{<:AbstractJuMPScalar},
+    ::Type{DummyVariableRef},
+)
+    return DummyExpr
+end
+
 function promote_operation_test(op::Function, x::Type, y::Type)
     f() = JuMP._MA.promote_operation(op, x, y)
     @test typeof(op(zero(x), zero(y))) == f()
