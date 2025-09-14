@@ -54,6 +54,7 @@ function JuMP._MA.promote_operation(
 )
     return DummyExpr
 end
+
 function JuMP._MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{<:AbstractVariableRef},
@@ -61,6 +62,7 @@ function JuMP._MA.promote_operation(
 )
     return DummyExpr
 end
+
 function JuMP._MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{DummyVariableRef},
@@ -68,6 +70,7 @@ function JuMP._MA.promote_operation(
 )
     return DummyExpr
 end
+
 function JuMP._MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{<:AbstractJuMPScalar},
