@@ -89,11 +89,11 @@ julia> ids
 
 ### Thread safety
 
-When working with threads, you must avoid race conditions, in which two
-threads attempt to write to the same variable at the same time. Also be
-very careful about reading any data if another thread might write to it,
-as it could result in segmentation faults or worse. In the above example
-we avoided a race condition by using `ReentrantLock`. See the
+When working with threads, you must avoid data races. A data race is when
+multiple threads access the same variable at the same time, at least one
+modifies it, and the accesses are not coordinated by synchronization.  In the
+`ids` example above, all threads attempt to modify the `ids` vector, but we
+avoided a race condition by using `ReentrantLock`. See the
 [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
 section of the Julia documentation for more details.
 
