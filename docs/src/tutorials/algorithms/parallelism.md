@@ -108,7 +108,7 @@ julia> begin
 1106
 ````
 The expected answer is `4_000` (because there are four threads each incrementing
-1,000 times), the actual result is much smaller. Moreover, the result is
+1,000 times), but the actual result is much smaller. Moreover, the result is
 non-deterministic; if we re-ran this code, we would get a different value each
 time.
 
@@ -144,6 +144,20 @@ julia> begin
        end
 4000
 ````
+
+With the lock, the sequence of events goes something like:
+
+ * Assume `x[]` currently has a value of `3`
+ * Thread A acquires the lock
+ * Thread A reads `x[]` to get `3`
+ * Thread B asks for the lock, but is denied because A is currently using it
+ * Thread A writes `x[] = 3 + 1 = 4`
+ * Thread A releases the lock
+ * Thread B acquires the lock
+ * Thread B reads `x[]` to get `4`
+ * Thread B writes `x[] = 4 + 1 = 5`
+ * Thread B releases the lock
+ * The final value of `x[]` is `5`
 
 See the [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
 section of the Julia documentation for more details.
