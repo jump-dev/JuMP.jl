@@ -112,7 +112,7 @@ The expected answer is `4_000` (because there are four threads each incrementing
 non-deterministic; if we re-ran this code, we would get a different value each
 time.
 
-We got the wrong answer because multiple threads are reading and writing `x[]`
+We got the wrong answer because multiple threads are reading and writing `x`
 at the same time without coordination. For example, the following sequence
 could occur:
 
