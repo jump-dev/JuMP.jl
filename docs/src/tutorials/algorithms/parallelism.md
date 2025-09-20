@@ -87,17 +87,87 @@ julia> ids
     For more information, read
     [PSA: Thread-local state is no longer recommended](https://julialang.org/blog/2023/07/PSA-dont-use-threadid/).
 
-### Thread safety
+### Data races
 
-When working with threads, you must avoid race conditions, in which two
-threads attempt to write to the same variable at the same time. In the above
-example we avoided a race condition by using `ReentrantLock`. See the
-[Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
+When working with threads, you must avoid data races. A data race occurs when
+multiple threads access the same variable at the same time, at least one thread
+modifies the variable, and the order of the reads and writes are not properly
+coordinated.
+
+Here's an example of a data race:
+````julia
+julia> begin
+           x = Ref(0)
+           Threads.@threads for i in 1:Threads.nthreads()
+                for i in 1:1_000
+                    x[] += 1
+                end
+           end
+           x[]
+       end
+1106
+````
+The expected answer is `4_000` (because there are four threads each incrementing
+1,000 times), but the actual result is much smaller. Moreover, the result is
+non-deterministic; if we re-ran this code, we would get a different value each
+time.
+
+We got the wrong answer because multiple threads are reading and writing `x`
+at the same time without coordination. For example, the following sequence
+could occur:
+
+ * Assume `x[]` currently has a value of `3`
+ * Thread A reads `x[]` to get `3`
+ * Thread B reads `x[]` to get `3`
+ * Thread A writes `x[] = 3 + 1 = 4`
+ * Thread B writes `x[] = 3 + 1 = 4`
+ * The final value of `x[]` is `4`
+
+The write from Thread A is overwritten, and so the value of `x[]` has increased
+by `1` instead of `2`.
+
+Similar to the earlier `ids` example, we can fix this data race using a
+`ReentrantLock`. The lock ensures that only one thread can update (read and then
+write) `x` at a time. Now we get the correct answer:
+````julia
+julia> begin
+           x = Ref(0)
+           l = ReentrantLock()
+           Threads.@threads for i in 1:Threads.nthreads()
+                for i in 1:1_000
+                    lock(l) do
+                        x[] += 1
+                    end
+                end
+           end
+           x[]
+       end
+4000
+````
+
+With the lock, the sequence of events goes something like:
+
+ * Assume `x[]` currently has a value of `3`
+ * Thread A acquires the lock
+ * Thread A reads `x[]` to get `3`
+ * Thread B asks for the lock, but is denied because A is currently using it
+ * Thread A writes `x[] = 3 + 1 = 4`
+ * Thread A releases the lock
+ * Thread B acquires the lock
+ * Thread B reads `x[]` to get `4`
+ * Thread B writes `x[] = 4 + 1 = 5`
+ * Thread B releases the lock
+ * The final value of `x[]` is `5`
+
+See the [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
 section of the Julia documentation for more details.
 
-JuMP models are not thread-safe. Code that uses multi-threading to
-simultaneously modify or optimize a single JuMP model across threads may error,
-crash Julia, or silently produce incorrect results.
+### JuMP models are not thread-safe
+
+An object is thread-safe if it can be modified by separate threads without
+causing a data race. JuMP models are not thread-safe. Code that uses
+multi-threading to simultaneously modify or optimize a single JuMP model
+across threads may error, crash Julia, or silently produce incorrect results.
 
 For example, the following incorrect use of multi-threading crashes Julia:
 ```julia
