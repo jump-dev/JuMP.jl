@@ -336,6 +336,8 @@ while true
         set_normalized_coefficient(demand[i], x[end], count)
     end
     println("Found new pattern. Total patterns = $(length(patterns))")
+    ## Uncomment the next line to see the model formulation at each interation
+    # println(model)
 end
 
 # We found lots of new patterns. Here's pattern 21:
