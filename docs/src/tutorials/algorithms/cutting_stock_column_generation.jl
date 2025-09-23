@@ -55,10 +55,10 @@ end
 function get_data()
     data = [
         75.0 38
-        75.0 44
-        75.0 30
-        75.0 41
-        75.0 36
+        70.0 41
+        68.4 34
+        65.5 23
+        59.6 18
         53.8 33
         53.0 36
         51.0 41
@@ -237,8 +237,9 @@ set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 solution_summary(model)
+Test.@test isapprox(objective_value(model), 386; atol = 1e-6)  #src
 
-# This solution requires 421 rolls. This solution is sub-optimal because the
+# This solution requires 386 rolls. This solution is sub-optimal because the
 # model does not contain the full set of possible patterns.
 
 # How do we find a new column that leads to an improved solution?
@@ -356,9 +357,9 @@ filter!(row -> row.rolls > 0, solution)
 
 # Since we solved a linear program, some of our columns have fractional
 # solutions. We can create a integer feasible solution by rounding up the
-# orders. This requires 341 rolls:
+# orders. This requires 306 rolls:
 
-Test.@test sum(ceil.(Int, solution.rolls)) == 341  #src
+Test.@test sum(ceil.(Int, solution.rolls)) == 306  #src
 sum(ceil.(Int, solution.rolls))
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
@@ -372,9 +373,9 @@ solution = DataFrames.DataFrame([
 ])
 filter!(row -> row.rolls > 0, solution)
 
-# This now requires 334 rolls:
+# This now requires 299 rolls:
 
-Test.@test isapprox(sum(solution.rolls), 334; atol = 1e-6)  #src
+Test.@test isapprox(sum(solution.rolls), 299; atol = 1e-6)  #src
 sum(solution.rolls)
 
 # Note that this may not be the global minimum because we are not adding new
