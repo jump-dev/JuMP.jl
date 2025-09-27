@@ -34,7 +34,7 @@ iterable
 invalidations
 jll|JLL
 [Jj]ulia
-juxtaposed
+juxtaposted
 [Mm]ultiline
 [Mm]ulticriteria
 multithread(ed|ing)
