@@ -34,6 +34,7 @@ iterable
 invalidations
 jll|JLL
 [Jj]ulia
+juxtaposted
 [Mm]ultiline
 [Mm]ulticriteria
 multithread(ed|ing)
@@ -147,6 +148,7 @@ Enzyme
 Geomstats
 Geoopt
 GLPK
+grbgetkey
 (Gurobi|GUROBI)
 gurobipy
 GZip
@@ -162,6 +164,7 @@ MOI
 (Mosek|MOSEK)
 Octeract
 Optim
+ORTools
 Pajarito
 Pardiso
 PATHSolver
@@ -172,6 +175,7 @@ Penopt
 Plasmo
 Pyomo
 puzzlor
+QSopt
 RAPOSa
 Riemopt
 SDPAFamily
