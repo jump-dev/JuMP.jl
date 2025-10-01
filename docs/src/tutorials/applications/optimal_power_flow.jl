@@ -199,7 +199,7 @@ A =
 
 z = (branch_data.BR_R .+ im * branch_data.BR_X) / base_MVA;
 
-# and calculate it's corresponding *bus admittance* matrix as
+# and calculate its corresponding *bus admittance* matrix as
 
 Y_0 = A * SparseArrays.spdiagm(1 ./ z) * A';
 
