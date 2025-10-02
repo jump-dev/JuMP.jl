@@ -98,7 +98,7 @@ S_Demand = P_Demand + im * Q_Demand
 # minimize is:
 # ```math
 # \begin{align}
-#     \min      &    0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
+#     \min      & \; 0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
 #               & +  0.085 \; (P^G_2)^2 + 1.2 P^G_2 + 600  \\
 #               & + 0.1225 \;  (P^G_3)^2 +     P^G_3 + 335 \\
 # \end{align}
@@ -199,7 +199,7 @@ A =
 
 z = (branch_data.BR_R .+ im * branch_data.BR_X) / base_MVA;
 
-# and calculate it's corresponding *bus admittance* matrix as
+# and calculate its corresponding *bus admittance* matrix as
 
 Y_0 = A * SparseArrays.spdiagm(1 ./ z) * A';
 
