@@ -121,6 +121,10 @@ _string_round(mode, ::typeof(abs), x::Any) = _string_round(mode, x)
 
 _sign_string(::Any) = " + "
 
+_imaginary_number(::MIME) = "im"
+
+_imaginary_number(::MIME"text/latex") = "i"
+
 function _string_round(mode, x::Complex)
     r, i = reim(x)
     r_str = _string_round(mode, r)
@@ -129,18 +133,18 @@ function _string_round(mode, x::Complex)
     elseif _is_zero_for_printing(r)
         if _is_one_for_printing(i)
             if i < 0
-                return "-im"
+                return "-" * _imaginary_number(mode)
             else
-                return "im"
+                return _imaginary_number(mode)
             end
         else
-            return string(_string_round(mode, i), "im")
+            return string(_string_round(mode, i), _imaginary_number(mode))
         end
     elseif _is_one_for_printing(i)
-        return string("(", r_str, _sign_string(i), "im)")
+        return string("(", r_str, _sign_string(i), _imaginary_number(mode), ")")
     else
         abs_i = _string_round(mode, abs, i)
-        return string("(", r_str, _sign_string(i), abs_i, "im)")
+        return string("(", r_str, _sign_string(i), abs_i, _imaginary_number(mode), ")")
     end
 end
 
