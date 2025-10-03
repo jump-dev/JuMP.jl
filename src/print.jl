@@ -868,10 +868,12 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
         return string(m[1]::AbstractString, "_{", m[2]::AbstractString, "}")
     end
     if startswith(var_name, "real(") && endswith(var_name, ")")
-        var_name = string("\\mathfrak{R}(", chop(var_name, head = 5, tail = 1), ")")
+        var_name =
+            string("\\mathfrak{R}(", chop(var_name; head = 5, tail = 1), ")")
     end
     if startswith(var_name, "imag(") && endswith(var_name, ")")
-        var_name = string("\\mathfrak{I}(", chop(var_name, head = 5, tail = 1), ")")
+        var_name =
+            string("\\mathfrak{I}(", chop(var_name; head = 5, tail = 1), ")")
     end
     return var_name
 end
