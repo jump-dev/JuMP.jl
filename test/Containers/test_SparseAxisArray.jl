@@ -206,7 +206,7 @@ function test_empty_broadcasting()
 end
 
 function test_slicing()
-    Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
+    Containers.@container(x[i=1:4, j=1:2; isodd(i + j)], i + j)
     @test x[:, :] == x
     @test x[1, :] == Containers.@container(y[j = 1:2; isodd(1 + j)], 1 + j)
     @test x[:, 1] == Containers.@container(z[i = 1:4; isodd(i + 1)], i + 1)
@@ -230,7 +230,7 @@ function test_slicing()
 end
 
 function test_slicing_on_set()
-    Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
+    Containers.@container(x[i=1:4, j=1:2; isodd(i + j)], i + j)
     err = ArgumentError(
         "Slicing is not supported when calling `setindex!` on a" *
         " SparseAxisArray",
@@ -242,27 +242,23 @@ function test_slicing_on_set()
 end
 
 function test_ambiguity_broadcast_preserving_zero_d()
-    Containers.@container(x[i = 1:2, j = i:3], i + j)
+    Containers.@container(x[i=1:2, j=i:3], i + j)
     @test Broadcast.broadcast_preserving_zero_d(*, x, x) == x .* x
     return
 end
 
 function test_ambuguity_BroadcastStyleUnknown()
-    Containers.@container(x[i = 1:2, j = i:3], i + j)
+    Containers.@container(x[i=1:2, j=i:3], i + j)
     style = Base.BroadcastStyle(typeof(x))
     @test_throws ArgumentError Base.BroadcastStyle(style, Broadcast.Unknown())
     return
 end
 
 function test_containers_sparseaxisarray_kwarg_indexing()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        container = SparseAxisArray,
-    )
+    Containers.@container(x[i=2:3, j=1:2], i + j, container = SparseAxisArray,)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
-        @test x[i = i, j = j] == x[i, j]
-        @test_throws ErrorException x[j = j, i = i]
+        @test x[i=i, j=j] == x[i, j]
+        @test_throws ErrorException x[j=j, i=i]
     end
     @test_throws(
         ErrorException(
@@ -270,7 +266,7 @@ function test_containers_sparseaxisarray_kwarg_indexing()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[j = 1, i = 2],
+        x[j=1, i=2],
     )
     @test_throws(
         ErrorException(
@@ -278,51 +274,43 @@ function test_containers_sparseaxisarray_kwarg_indexing()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[i = 2, k = 2],
+        x[i=2, k=2],
     )
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
         ),
-        x[i = 2, 2],
+        x[i=2, 2],
     )
-    Containers.@container(y[i = 2:3, 1:2], i, container = SparseAxisArray,)
+    Containers.@container(y[i=2:3, 1:2], i, container = SparseAxisArray,)
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
         ),
-        y[i = 2, 2],
+        y[i=2, 2],
     )
-    @test_throws(BoundsError, y[i = 2] = 1)
+    @test_throws(BoundsError, y[i=2] = 1)
     @test_throws(BoundsError, y[2] = 1)
     return
 end
 
 function test_containers_sparseaxisarray_kwarg_indexing_slicing()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        container = SparseAxisArray,
-    )
-    y = x[i = 2, j = :]
-    @test y[j = 2] == 4
-    y = x[i = :, j = 1]
-    @test y[i = 3] == 4
+    Containers.@container(x[i=2:3, j=1:2], i + j, container = SparseAxisArray,)
+    y = x[i=2, j = :]
+    @test y[j=2] == 4
+    y = x[i = :, j=1]
+    @test y[i=3] == 4
     y = x[i = :, j = :]
-    @test y[i = 3, j = 1] == 4
+    @test y[i=3, j=1] == 4
     return
 end
 
 function test_containers_sparseaxisarray_kwarg_setindex()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        container = SparseAxisArray,
-    )
+    Containers.@container(x[i=2:3, j=1:2], i + j, container = SparseAxisArray,)
     for i in 2:3, j in 1:2
-        @test x[i = i, j = j] == i + j
-        x[i = i, j = j] = i + j + 2
-        @test x[i = i, j = j] == i + j + 2
+        @test x[i=i, j=j] == i + j
+        x[i=i, j=j] = i + j + 2
+        @test x[i=i, j=j] == i + j + 2
     end
     @test_throws(
         ErrorException(
@@ -330,7 +318,7 @@ function test_containers_sparseaxisarray_kwarg_setindex()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[j = 1, i = 2] = 2,
+        x[j=1, i=2] = 2,
     )
     @test_throws(
         ErrorException(
@@ -338,26 +326,22 @@ function test_containers_sparseaxisarray_kwarg_setindex()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[i = 2, k = 2] = 2,
+        x[i=2, k=2] = 2,
     )
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
         ),
-        x[i = 2, 2] = 3,
+        x[i=2, 2] = 3,
     )
-    @test_throws(BoundsError, x[i = 2] = 3)
+    @test_throws(BoundsError, x[i=2] = 3)
     return
 end
 
 function test_multi_arg_eachindex()
-    Containers.@container(x[i = 2:3], i, container = SparseAxisArray)
-    Containers.@container(y[i = 2:3], i, container = SparseAxisArray)
-    Containers.@container(
-        z[i = 2:4, j = 1:2],
-        i + j,
-        container = SparseAxisArray,
-    )
+    Containers.@container(x[i=2:3], i, container = SparseAxisArray)
+    Containers.@container(y[i=2:3], i, container = SparseAxisArray)
+    Containers.@container(z[i=2:4, j=1:2], i + j, container = SparseAxisArray,)
     @test eachindex(x) == keys(x.data)
     @test eachindex(y) == keys(y.data)
     @test eachindex(z) == keys(z.data)

@@ -230,7 +230,7 @@ sol_windows = Pair{Int,Dict{Symbol,Vector{Float64}}}[]
 # 2. solve the model for that window
 # 3. store the results for later analysis
 
-offsets = 0:move_forward:total_time_length-optimization_window
+offsets = 0:move_forward:(total_time_length-optimization_window)
 for offset in offsets
     ## Step 1: update the parameter values over the optimization_window
     for t in 1:optimization_window
@@ -244,7 +244,7 @@ for offset in offsets
     optimize!(model)
     ## Step 3: store the results of the move_forward values, except in the last
     ##         horizon where we store the full `optimization_window`.
-    for t in 1:(offset == last(offsets) ? optimization_window : move_forward)
+    for t in 1:(offset==last(offsets) ? optimization_window : move_forward)
         for key in (:r, :p, :c, :d)
             sol_complete[key][offset+t] = value(model[key][t])
         end

@@ -57,7 +57,7 @@ for i in 1:N
 end
 
 # There can only be one queen on any given diagonal
-for i in -(N - 1):(N-1)
+for i in (-(N-1)):(N-1)
     @constraint(model, sum(LinearAlgebra.diag(x, i)) <= 1)
     @constraint(model, sum(LinearAlgebra.diag(reverse(x; dims = 1), i)) <= 1)
 end

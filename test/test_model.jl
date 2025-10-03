@@ -587,12 +587,12 @@ function copy_model_style_mode(use_copy_model, filter_mode)
     model.optimize_hook = dummy_optimizer_hook
     data = DummyExtensionData(model)
     model.ext[:dummy] = data
-    @variable(model, w[i = 1:2] ≥ 0)
+    @variable(model, w[i=1:2] ≥ 0)
     @variable(model, x ≥ 0, Bin)
     @variable(model, y ≤ 1, Int)
     @variable(model, z == 0)
     @constraint(model, cref, x + y == 1)
-    @constraint(model, cref2[i = 1:2], w[i] + z == 1)
+    @constraint(model, cref2[i=1:2], w[i] + z == 1)
 
     if use_copy_model
         if filter_mode
@@ -737,7 +737,7 @@ end
 
 function test_haskey()
     model = Model()
-    @variable(model, p[i = 1:10] >= 0)
+    @variable(model, p[i=1:10] >= 0)
     @test haskey(model, :p)
     @test !haskey(model, :i)
 end
@@ -745,7 +745,7 @@ end
 function test_copy_refmap_expr()
     model = Model()
     @variable(model, x)
-    @expression(model, expr[i = 1:2, j = 1:2], [i, j] * x)
+    @expression(model, expr[i=1:2, j=1:2], [i, j] * x)
     new_model, ref_map = copy_model(model)
     @test ref_map[expr] == new_model[:expr]
     for i in 1:2, j in 1:2
@@ -756,7 +756,7 @@ end
 function test_copy_dict_expr()
     model = Model()
     @variable(model, x)
-    @expression(model, dictExpr[i = 1:2, j = 1:2], Dict(i => x, j => 2x))
+    @expression(model, dictExpr[i=1:2, j=1:2], Dict(i => x, j => 2x))
     new_model, ref_map = copy_model(model)
     @test !haskey(new_model, :dictExpr)
 end
@@ -767,8 +767,8 @@ end
 
 function test_copy_filter_array()
     model = Model()
-    @variable(model, x[i = 1:2], container = Array)
-    @constraint(model, cref[i = 1:2], x[i] == 1, container = Array)
+    @variable(model, x[i=1:2], container = Array)
+    @constraint(model, cref[i=1:2], x[i] == 1, container = Array)
     @test num_constraints(
         model,
         GenericAffExpr{Float64,VariableRef},
@@ -795,8 +795,8 @@ end
 
 function test_copy_filter_denseaxisarray()
     model = Model()
-    @variable(model, x[i = 1:2], container = DenseAxisArray)
-    @constraint(model, cref[i = 1:2], x[i] == 1, container = DenseAxisArray)
+    @variable(model, x[i=1:2], container = DenseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container = DenseAxisArray)
     @test num_constraints(
         model,
         GenericAffExpr{Float64,VariableRef},
@@ -823,8 +823,8 @@ end
 
 function test_copy_filter_sparseaxisarray()
     model = Model()
-    @variable(model, x[i = 1:2], container = SparseAxisArray)
-    @constraint(model, cref[i = 1:2], x[i] == 1, container = SparseAxisArray)
+    @variable(model, x[i=1:2], container = SparseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container = SparseAxisArray)
     @test num_constraints(
         model,
         GenericAffExpr{Float64,VariableRef},
@@ -851,8 +851,8 @@ end
 
 function test_copy_conflict()
     model = Model()
-    @variable(model, x[i = 1:2], container = SparseAxisArray)
-    @constraint(model, cref[i = 1:2], x[i] == 1, container = SparseAxisArray)
+    @variable(model, x[i=1:2], container = SparseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container = SparseAxisArray)
     @objective(model, Max, x[1] + x[2])
     @test num_constraints(
         model,
@@ -1147,27 +1147,27 @@ end
 function test_keyword_getindex()
     err = JuMP._get_index_keyword_indexing_error()
     model = Model()
-    @variable(model, x[i = 1:2])
+    @variable(model, x[i=1:2])
     # Vector{VariableRef}
-    @test_throws err x[i = 1]
-    @test_throws err x[i = 2]
+    @test_throws err x[i=1]
+    @test_throws err x[i=2]
     @test_throws err x[i = :]
-    @test_throws err x[i = 1:2]
+    @test_throws err x[i=1:2]
     @test_throws BoundsError x[]
     # Matrix{VariableRef}
-    @variable(model, y[i = 1:2, j = 1:2])
-    @test_throws err y[i = 1]
-    @test_throws err y[i = 2, j = 2]
+    @variable(model, y[i=1:2, j=1:2])
+    @test_throws err y[i=1]
+    @test_throws err y[i=2, j=2]
     @test_throws BoundsError y[]
     # Vector{AffExpr}
-    @expression(model, ex[i = 1:2], x[i] + i)
-    @test_throws err ex[i = 1]
-    @test_throws err ex[i = 2, j = 2]
+    @expression(model, ex[i=1:2], x[i] + i)
+    @test_throws err ex[i=1]
+    @test_throws err ex[i=2, j=2]
     @test_throws BoundsError ex[]
     # Vector{ConstraintRef}
-    @constraint(model, c[i = 1:2], x[i] + i <= 1)
-    @test_throws err c[i = 1]
-    @test_throws err c[i = 1:2]
+    @constraint(model, c[i=1:2], x[i] + i <= 1)
+    @test_throws err c[i=1]
+    @test_throws err c[i=1:2]
     @test_throws err c[i = :]
     @test_throws BoundsError c[]
     return

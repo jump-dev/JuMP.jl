@@ -104,7 +104,7 @@ total_profit = [-2 * value(x) + value(z[ω]) for ω in Ω]
 
 A helper function that discretizes `x` into bins of width `N`.
 """
-bin_distribution(x, N) = N * (floor(minimum(x) / N):ceil(maximum(x) / N))
+bin_distribution(x, N) = N * (floor(minimum(x)/N):ceil(maximum(x)/N))
 
 plot = StatsPlots.histogram(
     total_profit;

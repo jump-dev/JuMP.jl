@@ -141,7 +141,7 @@ function test_printing_expressions()
     # This is really just to check IJulia printing for expressions
     mod = Model()
     @variable(mod, x[1:5])
-    @variable(mod, y[i = 2:4, j = i:5])
+    @variable(mod, y[i=2:4, j=i:5])
     @variable(mod, z)
 
     ex = @expression(mod, x[1] + 2 * y[2, 3])
