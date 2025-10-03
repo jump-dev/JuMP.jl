@@ -144,7 +144,14 @@ function _string_round(mode, x::Complex)
         return string("(", r_str, _sign_string(i), _imaginary_number(mode), ")")
     else
         abs_i = _string_round(mode, abs, i)
-        return string("(", r_str, _sign_string(i), abs_i, _imaginary_number(mode), ")")
+        return string(
+            "(",
+            r_str,
+            _sign_string(i),
+            abs_i,
+            _imaginary_number(mode),
+            ")",
+        )
     end
 end
 
