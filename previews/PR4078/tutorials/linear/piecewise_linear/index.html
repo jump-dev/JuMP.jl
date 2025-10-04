@@ -7,11 +7,11 @@
 import HiGHS
 import Plots</code></pre><h2 id="Minimizing-a-convex-function-(outer-approximation)"><a class="docs-heading-anchor" href="#Minimizing-a-convex-function-(outer-approximation)">Minimizing a convex function (outer approximation)</a><a id="Minimizing-a-convex-function-(outer-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Minimizing-a-convex-function-(outer-approximation)" title="Permalink"></a></h2><p>If the function you are approximating is convex, and you want to minimize &quot;down&quot; onto it, then you can use an outer approximation.</p><p>For example, <span>$f(x) = x^2$</span> is a convex function:</p><pre><code class="language-julia hljs">f(x) = x^2
 ∇f(x) = 2 * x
-plot = Plots.plot(f, -2:0.01:2; ylims = (-0.5, 4), label = false, width = 3)</code></pre><img src="7e68421d.svg" alt="Example block output"/><p>Because <span>$f$</span> is convex, we know that for any <span>$x_k$</span>, we have: <span>$f(x) \ge f(x_k) + \nabla f(x_k) \cdot (x - x_k)$</span></p><pre><code class="language-julia hljs">for x_k in -2:1:2  ## Tip: try changing the number of points x_k
+plot = Plots.plot(f, -2:0.01:2; ylims = (-0.5, 4), label = false, width = 3)</code></pre><img src="051c018c.svg" alt="Example block output"/><p>Because <span>$f$</span> is convex, we know that for any <span>$x_k$</span>, we have: <span>$f(x) \ge f(x_k) + \nabla f(x_k) \cdot (x - x_k)$</span></p><pre><code class="language-julia hljs">for x_k in -2:1:2  ## Tip: try changing the number of points x_k
     g = x -&gt; f(x_k) + ∇f(x_k) * (x - x_k)
     Plots.plot!(plot, g, -2:0.01:2; color = :red, label = false, width = 3)
 end
-plot</code></pre><img src="adebb149.svg" alt="Example block output"/><p>We can use these <em>tangent planes</em> as constraints in our model to create an outer approximation of the function. As we add more planes, the error between the true function and the piecewise linear outer approximation decreases.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function outer_approximate_x_squared(x̄)
+plot</code></pre><img src="d9f66252.svg" alt="Example block output"/><p>We can use these <em>tangent planes</em> as constraints in our model to create an outer approximation of the function. As we add more planes, the error between the true function and the piecewise linear outer approximation decreases.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function outer_approximate_x_squared(x̄)
     f(x) = x^2
     ∇f(x) = 2x
     model = Model(HiGHS.Optimizer)
@@ -29,7 +29,7 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
     ȳ = outer_approximate_x_squared(x̄)
     Plots.scatter!(plot, [x̄], [ȳ]; label = false, color = :black)
 end
-plot</code></pre><img src="36e633be.svg" alt="Example block output"/><div class="admonition is-info" id="Note-d79b07074428c3d9"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-d79b07074428c3d9" title="Permalink"></a></header><div class="admonition-body"><p>This formulation does not work if we want to maximize <code>y</code>.</p></div></div><h2 id="Maximizing-a-concave-function-(outer-approximation)"><a class="docs-heading-anchor" href="#Maximizing-a-concave-function-(outer-approximation)">Maximizing a concave function (outer approximation)</a><a id="Maximizing-a-concave-function-(outer-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Maximizing-a-concave-function-(outer-approximation)" title="Permalink"></a></h2><p>The outer approximation also works if we want to maximize &quot;up&quot; into a concave function.</p><pre><code class="language-julia hljs">f(x) = log(x)
+plot</code></pre><img src="3f8b5cf0.svg" alt="Example block output"/><div class="admonition is-info" id="Note-d79b07074428c3d9"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-d79b07074428c3d9" title="Permalink"></a></header><div class="admonition-body"><p>This formulation does not work if we want to maximize <code>y</code>.</p></div></div><h2 id="Maximizing-a-concave-function-(outer-approximation)"><a class="docs-heading-anchor" href="#Maximizing-a-concave-function-(outer-approximation)">Maximizing a concave function (outer approximation)</a><a id="Maximizing-a-concave-function-(outer-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Maximizing-a-concave-function-(outer-approximation)" title="Permalink"></a></h2><p>The outer approximation also works if we want to maximize &quot;up&quot; into a concave function.</p><pre><code class="language-julia hljs">f(x) = log(x)
 ∇f(x) = 1 / x
 X = 0.1:0.1:1.6
 plot = Plots.plot(
@@ -44,7 +44,7 @@ for x_k in 0.1:0.5:1.6  ## Tip: try changing the number of points x_k
     g = x -&gt; f(x_k) + ∇f(x_k) * (x - x_k)
     Plots.plot!(plot, g, X; color = :red, label = false, width = 3)
 end
-plot</code></pre><img src="295fbf80.svg" alt="Example block output"/><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function outer_approximate_log(x̄)
+plot</code></pre><img src="0e75af5e.svg" alt="Example block output"/><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function outer_approximate_log(x̄)
     f(x) = log(x)
     ∇f(x) = 1 / x
     model = Model(HiGHS.Optimizer)
@@ -62,18 +62,18 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
     ȳ = outer_approximate_log(x̄)
     Plots.scatter!(plot, [x̄], [ȳ]; label = false, color = :black)
 end
-plot</code></pre><img src="bf4880c9.svg" alt="Example block output"/><div class="admonition is-info" id="Note-90ff21b5e3f203dd"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-90ff21b5e3f203dd" title="Permalink"></a></header><div class="admonition-body"><p>This formulation does not work if we want to minimize <code>y</code>.</p></div></div><h2 id="Minimizing-a-convex-function-(inner-approximation)"><a class="docs-heading-anchor" href="#Minimizing-a-convex-function-(inner-approximation)">Minimizing a convex function (inner approximation)</a><a id="Minimizing-a-convex-function-(inner-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Minimizing-a-convex-function-(inner-approximation)" title="Permalink"></a></h2><p>Instead of creating an outer approximation, we can also create an inner approximation. For example, given <span>$f(x) = x^2$</span>, we may want to approximate the true function by the red piecewise linear function:</p><pre><code class="language-julia hljs">f(x) = x^2
+plot</code></pre><img src="1aa17786.svg" alt="Example block output"/><div class="admonition is-info" id="Note-90ff21b5e3f203dd"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-90ff21b5e3f203dd" title="Permalink"></a></header><div class="admonition-body"><p>This formulation does not work if we want to minimize <code>y</code>.</p></div></div><h2 id="Minimizing-a-convex-function-(inner-approximation)"><a class="docs-heading-anchor" href="#Minimizing-a-convex-function-(inner-approximation)">Minimizing a convex function (inner approximation)</a><a id="Minimizing-a-convex-function-(inner-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Minimizing-a-convex-function-(inner-approximation)" title="Permalink"></a></h2><p>Instead of creating an outer approximation, we can also create an inner approximation. For example, given <span>$f(x) = x^2$</span>, we may want to approximate the true function by the red piecewise linear function:</p><pre><code class="language-julia hljs">f(x) = x^2
 x̂ = -2:0.8:2  ## Tip: try changing the number of points in x̂
 plot = Plots.plot(f, -2:0.01:2; ylims = (-0.5, 4), label = false, linewidth = 3)
 Plots.plot!(plot, f, x̂; label = false, color = :red, linewidth = 3)
-plot</code></pre><img src="4209ba05.svg" alt="Example block output"/><p>To do so, we represent the decision variables <span>$(x, y)$</span> by the convex combination of a set of discrete points <span>$\{x_k, y_k\}_{k=1}^K$</span>:</p><p class="math-container">\[\begin{aligned}
+plot</code></pre><img src="e7f4c48d.svg" alt="Example block output"/><p>To do so, we represent the decision variables <span>$(x, y)$</span> by the convex combination of a set of discrete points <span>$\{x_k, y_k\}_{k=1}^K$</span>:</p><p class="math-container">\[\begin{aligned}
 x = \sum\limits_{k=1}^K \lambda_k x_k \\
 y = \sum\limits_{k=1}^K \lambda_k y_k \\
 \sum\limits_{k=1}^K \lambda_k = 1 \\
 \lambda_k \ge 0, k=1,\ldots,k \\
 \end{aligned}\]</p><p>The feasible region of the convex combination actually allows any <span>$(x, y)$</span> point inside this shaded region:</p><pre><code class="language-julia hljs">I = [1, 2, 3, 4, 5, 6, 1]
 Plots.plot!(x̂[I], f.(x̂[I]); fill = (0, 0, &quot;#f004&quot;), width = 0, label = false)
-plot</code></pre><img src="9aa4d965.svg" alt="Example block output"/><p>Thus, this formulation does not work if we want to maximize <span>$y$</span>.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function inner_approximate_x_squared(x̄)
+plot</code></pre><img src="613ee0d2.svg" alt="Example block output"/><p>Thus, this formulation does not work if we want to maximize <span>$y$</span>.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function inner_approximate_x_squared(x̄)
     f(x) = x^2
     ∇f(x) = 2x
     x̂ = -2:0.8:2  ## Tip: try changing the number of points in x̂
@@ -96,13 +96,13 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
     ȳ = inner_approximate_x_squared(x̄)
     Plots.scatter!(plot, [x̄], [ȳ]; label = false, color = :black)
 end
-plot</code></pre><img src="1ec88512.svg" alt="Example block output"/><h2 id="Maximizing-a-convex-function-(inner-approximation)"><a class="docs-heading-anchor" href="#Maximizing-a-convex-function-(inner-approximation)">Maximizing a convex function (inner approximation)</a><a id="Maximizing-a-convex-function-(inner-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Maximizing-a-convex-function-(inner-approximation)" title="Permalink"></a></h2><p>The inner approximation also works if we want to maximize &quot;up&quot; into a concave function.</p><pre><code class="language-julia hljs">f(x) = log(x)
+plot</code></pre><img src="ca560c45.svg" alt="Example block output"/><h2 id="Maximizing-a-convex-function-(inner-approximation)"><a class="docs-heading-anchor" href="#Maximizing-a-convex-function-(inner-approximation)">Maximizing a convex function (inner approximation)</a><a id="Maximizing-a-convex-function-(inner-approximation)-1"></a><a class="docs-heading-anchor-permalink" href="#Maximizing-a-convex-function-(inner-approximation)" title="Permalink"></a></h2><p>The inner approximation also works if we want to maximize &quot;up&quot; into a concave function.</p><pre><code class="language-julia hljs">f(x) = log(x)
 x̂ = 0.1:0.5:1.6  ## Tip: try changing the number of points in x̂
 plot = Plots.plot(f, 0.1:0.01:1.6; label = false, linewidth = 3)
 Plots.plot!(x̂, f.(x̂); linewidth = 3, color = :red, label = false)
 I = [1, 2, 3, 4, 1]
 Plots.plot!(x̂[I], f.(x̂[I]); fill = (0, 0, &quot;#f004&quot;), width = 0, label = false)
-plot</code></pre><img src="64c5480c.svg" alt="Example block output"/><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function inner_approximate_log(x̄)
+plot</code></pre><img src="da5eaa41.svg" alt="Example block output"/><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function inner_approximate_log(x̄)
     f(x) = log(x)
     x̂ = 0.1:0.5:1.6  ## Tip: try changing the number of points in x̂
     ŷ = f.(x̂)
@@ -124,13 +124,13 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
     ȳ = inner_approximate_log(x̄)
     Plots.scatter!(plot, [x̄], [ȳ]; label = false, color = :black)
 end
-plot</code></pre><img src="afaffdd4.svg" alt="Example block output"/><h2 id="Piecewise-linear-approximation"><a class="docs-heading-anchor" href="#Piecewise-linear-approximation">Piecewise linear approximation</a><a id="Piecewise-linear-approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Piecewise-linear-approximation" title="Permalink"></a></h2><p>If the model is non-convex (or non-concave), then we cannot use an outer approximation, and the inner approximation allows a solution far from the true function. For example, for <span>$f(x) = sin(x)$</span>, we have:</p><pre><code class="language-julia hljs">f(x) = sin(x)
+plot</code></pre><img src="0a2b28a2.svg" alt="Example block output"/><h2 id="Piecewise-linear-approximation"><a class="docs-heading-anchor" href="#Piecewise-linear-approximation">Piecewise linear approximation</a><a id="Piecewise-linear-approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Piecewise-linear-approximation" title="Permalink"></a></h2><p>If the model is non-convex (or non-concave), then we cannot use an outer approximation, and the inner approximation allows a solution far from the true function. For example, for <span>$f(x) = sin(x)$</span>, we have:</p><pre><code class="language-julia hljs">f(x) = sin(x)
 plot = Plots.plot(f, 0:0.01:2π; label = false)
 x̂ = range(; start = 0, stop = 2π, length = 7)
 Plots.plot!(x̂, f.(x̂); linewidth = 3, color = :red, label = false)
 I = [1, 5, 6, 7, 3, 2, 1]
 Plots.plot!(x̂[I], f.(x̂[I]); fill = (0, 0, &quot;#f004&quot;), width = 0, label = false)
-plot</code></pre><img src="866569b8.svg" alt="Example block output"/><p>We can force the inner approximation to stay on the red line by adding the constraint <code>λ in SOS2()</code>. The <a href="../../../api/JuMP/#SOS2"><code>SOS2</code></a> set is a Special Ordered Set of Type 2, and it ensures that at most two elements of <code>λ</code> can be non-zero, and if they are, that they must be adjacent. This prevents the model from taking a convex combination of points 1 and 5 to end up on the lower boundary of the shaded red area.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function piecewise_linear_sin(x̄)
+plot</code></pre><img src="d7a992d7.svg" alt="Example block output"/><p>We can force the inner approximation to stay on the red line by adding the constraint <code>λ in SOS2()</code>. The <a href="../../../api/JuMP/#SOS2"><code>SOS2</code></a> set is a Special Ordered Set of Type 2, and it ensures that at most two elements of <code>λ</code> can be non-zero, and if they are, that they must be adjacent. This prevents the model from taking a convex combination of points 1 and 5 to end up on the lower boundary of the shaded red area.</p><p>Here is the model in JuMP:</p><pre><code class="language-julia hljs">function piecewise_linear_sin(x̄)
     f(x) = sin(x)
     # Tip: try changing the number of points in x̂
     x̂ = range(; start = 0, stop = 2π, length = 7)
@@ -155,4 +155,4 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
     ȳ = piecewise_linear_sin(x̄)
     Plots.scatter!(plot, [x̄], [ȳ]; label = false, color = :black)
 end
-plot</code></pre><img src="70e5bfb4.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Tips and tricks</a><a class="docs-footer-nextpage" href="../facility_location/">The facility location problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 3 October 2025 11:04">Friday 3 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot</code></pre><img src="4a9d65c9.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Tips and tricks</a><a class="docs-footer-nextpage" href="../facility_location/">The facility location problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Saturday 4 October 2025 17:49">Saturday 4 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
