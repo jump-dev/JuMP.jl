@@ -253,7 +253,7 @@ function test_add_additional_args()
     call = :(f.(1; a = 4))
     Containers.add_additional_args(call, [2, 3], kwargs)
     @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
-    call = :(f.(1; a = 4))
+    call = :(f.(1, a = 4))
     kwargs = Dict{Symbol,Any}(:b => 4, :c => false)
     Containers.add_additional_args(call, Any[2], kwargs; kwarg_exclude = [:b])
     @test call == Expr(
