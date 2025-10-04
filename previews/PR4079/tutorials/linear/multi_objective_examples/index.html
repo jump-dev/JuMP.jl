@@ -26,7 +26,7 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [0.00000e+00,0.00000e+00]
 └ Work counters
-  └ solve_time (sec)   : 1.30296e-03</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 1.17683e-03</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, round.(Int, objective_value(model; result = i)), &quot; | &quot;)
     println(&quot;x = &quot;, value.([x1, x2]; result = i))
@@ -55,7 +55,7 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [6.00000e+00,2.40000e+01]
 └ Work counters
-  └ solve_time (sec)   : 4.14262e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 4.17600e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, round.(Int, objective_value(model; result = i)), &quot; | &quot;)
     println(&quot;x = &quot;, round.(Int, value.(x; result = i)))
@@ -104,7 +104,7 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [8.00000e+00,9.00000e+00]
 └ Work counters
-  └ solve_time (sec)   : 2.00131e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 2.02110e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, round.(Int, objective_value(model; result = i)), &quot; | &quot;)
     X = round.(Int, value.(x; result = i))
@@ -117,4 +117,4 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1: z = [8, 9] | Path: 1-&gt;2 2-&gt;4 4-&gt;6
 2: z = [10, 7] | Path: 1-&gt;2 2-&gt;5 5-&gt;6
 3: z = [11, 5] | Path: 1-&gt;2 2-&gt;6
-4: z = [13, 4] | Path: 1-&gt;3 3-&gt;4 4-&gt;6</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multi_objective_knapsack/">« Multi-objective knapsack</a><a class="docs-footer-nextpage" href="../sudoku/">Sudoku »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 3 October 2025 11:05">Friday 3 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+4: z = [13, 4] | Path: 1-&gt;3 3-&gt;4 4-&gt;6</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multi_objective_knapsack/">« Multi-objective knapsack</a><a class="docs-footer-nextpage" href="../sudoku/">Sudoku »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Saturday 4 October 2025 17:28">Saturday 4 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
