@@ -869,11 +869,11 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     end
     if startswith(var_name, "real(") && endswith(var_name, ")")
         var_name =
-            string("\\mathfrak{R}(", chop(var_name; head = 5, tail = 1), ")")
+            string("\\text{Re}(", chop(var_name; head = 5, tail = 1), ")")
     end
     if startswith(var_name, "imag(") && endswith(var_name, ")")
         var_name =
-            string("\\mathfrak{I}(", chop(var_name; head = 5, tail = 1), ")")
+            string("\\text{Im}(", chop(var_name; head = 5, tail = 1), ")")
     end
     return var_name
 end
