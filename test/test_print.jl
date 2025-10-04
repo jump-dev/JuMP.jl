@@ -911,6 +911,8 @@ function test_print_complex_string_round()
         -1.0-1.0im=>"(-1 - im)",
     ]
         @test JuMP._string_round(MIME("text/plain"), test) == result
+        latex_result = replace(result, "im" => "i")
+        @test JuMP._string_round(MIME("text/latex"), test) == latex_result
     end
     return
 end
