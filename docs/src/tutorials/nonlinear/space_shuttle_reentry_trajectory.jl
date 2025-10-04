@@ -246,36 +246,32 @@ initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
 set_start_value.(all_variables(model), vec(initial_guess))
 
 ## Functions to restore `h` and `v` to their true scale
-@expression(model, h[j = 1:n], scaled_h[j] * 1e5)
-@expression(model, v[j = 1:n], scaled_v[j] * 1e4)
+@expression(model, h[j=1:n], scaled_h[j] * 1e5)
+@expression(model, v[j=1:n], scaled_v[j] * 1e4)
 
 ## Helper functions
-@expression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
-@expression(model, c_D[j = 1:n], b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2)
-@expression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
-@expression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
-@expression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
-@expression(model, r[j = 1:n], Rₑ + h[j])
-@expression(model, g[j = 1:n], μ / r[j]^2)
+@expression(model, c_L[j=1:n], a₀ + a₁ * rad2deg(α[j]))
+@expression(model, c_D[j=1:n], b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2)
+@expression(model, ρ[j=1:n], ρ₀ * exp(-h[j] / hᵣ))
+@expression(model, D[j=1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
+@expression(model, L[j=1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
+@expression(model, r[j=1:n], Rₑ + h[j])
+@expression(model, g[j=1:n], μ / r[j]^2)
 
 ## Motion of the vehicle as a differential-algebraic system of equations (DAEs)
-@expression(model, δh[j = 1:n], v[j] * sin(γ[j]))
+@expression(model, δh[j=1:n], v[j] * sin(γ[j]))
+@expression(model, δϕ[j=1:n], (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j]))
+@expression(model, δθ[j=1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
+@expression(model, δv[j=1:n], -(D[j] / m) - g[j] * sin(γ[j]))
 @expression(
     model,
-    δϕ[j = 1:n],
-    (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j])
-)
-@expression(model, δθ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
-@expression(model, δv[j = 1:n], -(D[j] / m) - g[j] * sin(γ[j]))
-@expression(
-    model,
-    δγ[j = 1:n],
+    δγ[j=1:n],
     (L[j] / (m * v[j])) * cos(β[j]) +
     cos(γ[j]) * ((v[j] / r[j]) - (g[j] / v[j]))
 )
 @expression(
     model,
-    δψ[j = 1:n],
+    δψ[j=1:n],
     (1 / (m * v[j] * cos(γ[j]))) * L[j] * sin(β[j]) +
     (v[j] / (r[j] * cos(θ[j]))) * cos(γ[j]) * sin(ψ[j]) * sin(θ[j])
 )
@@ -324,7 +320,7 @@ println(
 # Let's plot the results to visualize the optimal trajectory:
 
 using Plots
-ts = cumsum([0; value.(Δt)])[1:end-1]
+ts = cumsum([0; value.(Δt)])[1:(end-1)]
 plt_altitude = plot(
     ts,
     value.(scaled_h);
@@ -369,14 +365,14 @@ function q(h, v, a)
 end
 
 plt_attack_angle = plot(
-    ts[1:end-1],
-    rad2deg.(value.(α)[1:end-1]);
+    ts[1:(end-1)],
+    rad2deg.(value.(α)[1:(end-1)]);
     legend = nothing,
     title = "Angle of Attack (deg)",
 )
 plt_bank_angle = plot(
-    ts[1:end-1],
-    rad2deg.(value.(β)[1:end-1]);
+    ts[1:(end-1)],
+    rad2deg.(value.(β)[1:(end-1)]);
     legend = nothing,
     title = "Bank Angle (deg)",
 )

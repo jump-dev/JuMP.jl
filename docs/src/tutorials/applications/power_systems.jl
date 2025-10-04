@@ -101,7 +101,7 @@ function solve_economic_dispatch(generators::Vector, wind, scenario)
     ## Define decision variables
     ## power output of generators
     N = length(generators)
-    @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
+    @variable(model, generators[i].min <= g[i=1:N] <= generators[i].max)
     ## wind power injection
     @variable(model, 0 <= w <= scenario.wind)
     ## Define the objective function
@@ -199,7 +199,7 @@ function solve_economic_dispatch_inplace(
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     N = length(generators)
-    @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
+    @variable(model, generators[i].min <= g[i=1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
     @objective(
         model,
@@ -364,11 +364,11 @@ function solve_unit_commitment(generators::Vector, wind, scenario)
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     N = length(generators)
-    @variable(model, 0 <= g[i = 1:N] <= generators[i].max)
+    @variable(model, 0 <= g[i=1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
     @constraint(model, sum(g[i] for i in 1:N) + w == scenario.demand)
     ## !!! New: add binary on-off variables for each generator
-    @variable(model, u[i = 1:N], Bin)
+    @variable(model, u[i=1:N], Bin)
     @constraint(model, [i = 1:N], g[i] <= generators[i].max * u[i])
     @constraint(model, [i = 1:N], g[i] >= generators[i].min * u[i])
     @objective(
@@ -518,7 +518,7 @@ function solve_nonlinear_economic_dispatch(
     end
     @operator(model, op_tcf, 1, thermal_cost_function)
     N = length(generators)
-    @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
+    @variable(model, generators[i].min <= g[i=1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
     @objective(
         model,

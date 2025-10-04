@@ -129,7 +129,7 @@ solution = value.(E)
 
 model = Model(Clarabel.Optimizer)
 set_silent(model)
-E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N-1]
+E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:(N-1)]
 E_N = LinearAlgebra.Hermitian(LinearAlgebra.I - sum(E))
 @constraint(model, E_N in HermitianPSDCone())
 push!(E, E_N)

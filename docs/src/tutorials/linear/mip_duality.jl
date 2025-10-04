@@ -34,9 +34,9 @@ N = length(generators)
 model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variables(model, begin
-    generators[i].min <= g[i = 1:N] <= generators[i].max
+    generators[i].min <= g[i=1:N] <= generators[i].max
     0 <= w <= 200
-    dispatch[i = 1:N], Bin
+    dispatch[i=1:N], Bin
 end)
 @constraints(model, begin
     power_balance, sum(g[i] for i in 1:N) + w == 1500

@@ -181,10 +181,10 @@ B = 1                          # Utility function coefficients
 model = Model(PATHSolver.Optimizer)
 set_silent(model)
 @variable(model, x >= 0, start = 1)           # Installed capacity
-@variable(model, Q[ω = 1:5] >= 0, start = 1)  # Consumption
-@variable(model, Y[ω = 1:5] >= 0, start = 1)  # Production
-@variable(model, P[ω = 1:5], start = 1)       # Electricity price
-@variable(model, μ[ω = 1:5] >= 0, start = 1)  # Capital scarcity margin
+@variable(model, Q[ω=1:5] >= 0, start = 1)  # Consumption
+@variable(model, Y[ω=1:5] >= 0, start = 1)  # Production
+@variable(model, P[ω=1:5], start = 1)       # Electricity price
+@variable(model, μ[ω=1:5] >= 0, start = 1)  # Capital scarcity margin
 ## Unit investment cost equals annualized scarcity profit or investment is 0
 @constraint(model, I - τ * θ' * μ ⟂ x)
 ## Difference between price and scarcity margin is equal to operation cost

@@ -16,8 +16,8 @@ model = JuMP.Model()
 sense = JuMP.MOI.MIN_SENSE
 JuMP.@variable(model, x >= 0)
 r = 3:5
-JuMP.@variable(model, y[i = r] <= i)
-JuMP.@variable(model, z[i = 1:2, j = 1:2], Symmetric)
+JuMP.@variable(model, y[i=r] <= i)
+JuMP.@variable(model, z[i=1:2, j=1:2], Symmetric)
 Test.@test z isa LinearAlgebra.Symmetric
 
 JuMP.@constraint(model, x + sum(j * y[j] for j in r) <= 1)
@@ -51,7 +51,7 @@ JuMP.@NLobjective(model, Max, sum(y[j] for j in r if j == 4))
 model = JuMP.Model()
 i = 10
 j = 10
-JuMP.@expression(model, ex[j = 2:3], sum(i for i in 1:j))
+JuMP.@expression(model, ex[j=2:3], sum(i for i in 1:j))
 Test.@test ex[2] == 3
 Test.@test ex[3] == 6
 Test.@test i == 10

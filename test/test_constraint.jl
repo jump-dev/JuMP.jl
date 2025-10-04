@@ -42,7 +42,7 @@ function test_extension_VariableIndex_constraints(
     @test c.func == x
     @test c.set == MOI.LessThan(T(10))
     @variable(m, y[1:2])
-    @constraint(m, cref2[i = 1:2], y[i] in MOI.LessThan(i))
+    @constraint(m, cref2[i=1:2], y[i] in MOI.LessThan(i))
     c = constraint_object(cref2[1])
     @test c.func == y[1]
     @test c.set == MOI.LessThan(T(1))
@@ -313,14 +313,14 @@ function test_extension_broadcasted_constraint_with_indices(
 )
     m = ModelType()
     @variable m x[1:2]
-    @constraint m cref1[i = 2:4] x .== [i, i + 1]
+    @constraint m cref1[i=2:4] x .== [i, i + 1]
     ConstraintRefType = eltype(cref1[2])
     @test cref1 isa Containers.DenseAxisArray{Vector{ConstraintRefType}}
-    @constraint m cref2[i = 1:3, j = 1:4] x .≤ [i + j, i - j]
+    @constraint m cref2[i=1:3, j=1:4] x .≤ [i + j, i - j]
     ConstraintRefType = eltype(cref2[1])
     @test cref2 isa Matrix{Vector{ConstraintRefType}}
     @variable m y[1:2, 1:2]
-    @constraint m cref3[i = 1:2] y[i, :] .== 1
+    @constraint m cref3[i=1:2] y[i, :] .== 1
     ConstraintRefType = eltype(cref3[1])
     @test cref3 isa Vector{Vector{ConstraintRefType}}
     return
@@ -475,7 +475,7 @@ function test_extension_SDP_constraint(
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
     @test c.shape isa SquareMatrixShape
 
-    @constraint(m, iref[i = 1:2], 0 <= [x+i x+y; x+y -y], PSDCone())
+    @constraint(m, iref[i=1:2], 0 <= [x+i x+y; x+y -y], PSDCone())
     for i in 1:2
         _test_constraint_name_util(
             iref[i],
@@ -723,23 +723,23 @@ function test_extension_nonsensical_SDP_constraint(
     end
     @test_throws_runtime(
         _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD)"),
-        @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD),
+        @variable(m, foo[i=1:2, j=1:2] >= Y[i, j], PSD),
     )
     @test_throws_runtime(
         _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD)"),
-        @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD),
+        @variable(m, foo[i=1:2, j=1:2] <= Y[i, j], PSD),
     )
     @test_throws_runtime(
         _ErrorException(
             "@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric)",
         ),
-        @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric),
+        @variable(m, foo[i=1:2, j=1:2] >= Y[i, j], Symmetric),
     )
     @test_throws_runtime(
         _ErrorException(
             "@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric)",
         ),
-        @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric),
+        @variable(m, foo[i=1:2, j=1:2] <= Y[i, j], Symmetric),
     )
     return
 end
@@ -2064,7 +2064,7 @@ end
 
 function test_abstract_vector_orthants()
     model = Model()
-    @variable(model, x[i = 2:3], start = i)
+    @variable(model, x[i=2:3], start = i)
     y = Containers.DenseAxisArray([4, 6], 2:3)
     g = [x[2] - 4, x[3] - 6]
     for (c, set) in (

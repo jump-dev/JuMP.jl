@@ -775,7 +775,7 @@ function test_more_expression_graphs()
     register(m, :t, 2, t; autodiff = true)
     @NLobjective(m, Min, x^y)
     @NLconstraint(m, sin(x) * cos(y) == 5)
-    @NLconstraint(m, nlconstr[i = 1:2], i * x^2 == i)
+    @NLconstraint(m, nlconstr[i=1:2], i * x^2 == i)
     @NLconstraint(m, -0.5 <= sin(x) <= 0.5)
     @NLconstraint(m, ψ(x) + t(x, y) <= 3)
     d = NLPEvaluator(m)
@@ -837,7 +837,7 @@ function test_NLconstraints()
     @variable(model, y[1:3])
     @objective(model, Max, x)
     @NLconstraints(model, begin
-        ref[i = 1:3], y[i] == 0
+        ref[i=1:3], y[i] == 0
         x + y[1] * y[2] * y[3] <= 0.5
     end)
     @test num_nonlinear_constraints(model) == 4
@@ -1450,7 +1450,7 @@ end
 function test_nonlinear_delete_constraint()
     model = Model()
     @variable(model, x)
-    @NLconstraint(model, c[i = 1:3], x^i <= i)
+    @NLconstraint(model, c[i=1:3], x^i <= i)
     @test num_nonlinear_constraints(model) == 3
     @test all_nonlinear_constraints(model) == [c[1], c[2], c[3]]
     @test is_valid.(model, c) == [true, true, true]
@@ -1496,7 +1496,7 @@ function test_nlp_comparison()
     a, b = 1.0, 2.0
     c2 = @NLconstraint(model, a / b <= sin(x) <= a * b)
     @test c2 isa NonlinearConstraintRef
-    @NLconstraint(model, c3[i = 1:2], -i <= sin(x) <= i^2)
+    @NLconstraint(model, c3[i=1:2], -i <= sin(x) <= i^2)
     @test c3 isa Vector{<:NonlinearConstraintRef}
     return
 end

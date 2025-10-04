@@ -153,7 +153,7 @@ function example_k_means_clustering()
     m = length(a)
     num_clusters = 2
     W = zeros(m, m)
-    for i in 1:m, j in i+1:m
+    for i in 1:m, j in (i+1):m
         W[i, j] = W[j, i] = exp(-LinearAlgebra.norm(a[i] - a[j]) / 1.0)
     end
     model = Model(Clarabel.Optimizer)

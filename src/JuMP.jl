@@ -1408,7 +1408,7 @@ PrecompileTools.@setup_workload begin
             end)
             @constraints(model, begin
                 c1, a >= 0
-                c2[i = 2:3, j = ["a"]], a <= i
+                c2[i=2:3, j=["a"]], a <= i
                 c3, a == 0
                 c4, 0 <= a <= 1
                 c5, b >= 0

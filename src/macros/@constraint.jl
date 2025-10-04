@@ -488,14 +488,12 @@ function parse_constraint_head(
         $parse_ub
     end
     build_call = if lvectorized
-        :(
-            build_constraint.(
-                $error_fn,
-                _desparsify($new_aff),
-                _desparsify($new_lb),
-                _desparsify($new_ub),
-            )
-        )
+        :(build_constraint.(
+            $error_fn,
+            _desparsify($new_aff),
+            _desparsify($new_lb),
+            _desparsify($new_ub),
+        ))
     else
         :(build_constraint($error_fn, $new_aff, $new_lb, $new_ub))
     end

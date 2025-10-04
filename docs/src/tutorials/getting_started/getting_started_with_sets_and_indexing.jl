@@ -244,7 +244,7 @@ model = Model()
 
 N = length(cities)
 model = Model()
-@variable(model, x[i = 1:N, j = 1:N; distances[i, j] > 0])
+@variable(model, x[i=1:N, j=1:N; distances[i, j] > 0])
 @objective(model, Min, sum(distances[i...] * x[i] for i in eachindex(x)))
 
 # !!! note

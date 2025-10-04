@@ -60,19 +60,19 @@ model = Model()
 
 # Accessing `x` in the correct order works:
 
-x[f = 1, m = 2]
+x[f=1, m=2]
 
 # But the wrong order errors:
 
 try                         #hide
-    x[m = 2, f = 1]
+    x[m=2, f=1]
 catch err                   #hide
     showerror(stderr, err)  #hide
 end                         #hide
 
 # Keyword indexing means we can write constraints like this:
 
-@constraint(model, [f in 1:F], sum(x[f = f, m = m] for m in 1:M) == 1)
+@constraint(model, [f in 1:F], sum(x[f=f, m=m] for m in 1:M) == 1)
 
 # ## Typed indices
 

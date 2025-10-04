@@ -359,11 +359,11 @@ n = 10
 l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
-@variable(model, l[i] <= x[i = 1:n] <= u[i])
+@variable(model, l[i] <= x[i=1:n] <= u[i])
 
 # We can also create variable bounds that depend upon the indices:
 
-@variable(model, y[i = 1:2, j = 1:2] >= 2i + j)
+@variable(model, y[i=1:2, j=1:2] >= 2i + j)
 
 # #### DenseAxisArrays
 
@@ -371,7 +371,7 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 # integer ranges. The syntax is similar, except with an arbitrary vector as an
 # index as opposed to a one-based range:
 
-@variable(model, z[i = 2:3, j = 1:2:3] >= 0)
+@variable(model, z[i=2:3, j=1:2:3] >= 0)
 
 # Indices do not have to be integers. They can be any Julia type:
 
@@ -393,7 +393,7 @@ w[2:3, ["red", "blue"]]
 # a Cartesian product. For example, this applies when indices have a dependence
 # upon previous indices (called triangular indexing):
 
-@variable(model, u[i = 1:2, j = i:3])
+@variable(model, u[i=1:2, j=i:3])
 
 # We can also conditionally create variables by adding a comparison check that
 # depends upon the named indices and is separated from the indices by a

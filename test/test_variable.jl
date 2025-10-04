@@ -194,7 +194,7 @@ function test_extension_variable_custom_index_sets(
     @test !has_upper_bound(manyrangelb[0, 15, 1])
 
     s = ["Green", "Blue"]
-    @variable(model, x[i = -10:10, s] <= 5.5, Int, start = i + 1)
+    @variable(model, x[i=-10:10, s] <= 5.5, Int, start = i + 1)
     @test 5.5 == @inferred upper_bound(x[-4, "Green"])
     _test_variable_name_util(x[-10, "Green"], "x[-10,Green]")
     @test start_value(x[-3, "Blue"]) == -2
@@ -362,7 +362,7 @@ function test_extension_variable_base_name_in_macro(
     no_indices = @variable(model, base_name = "foo")
     _test_variable_name_util(no_indices, "foo")
     # Note that `z` will be ignored in name.
-    indices = @variable(model, z[i = 2:3], base_name = "t")
+    indices = @variable(model, z[i=2:3], base_name = "t")
     _test_variable_name_util(indices[2], "t[2]")
     _test_variable_name_util(indices[3], "t[3]")
     return
@@ -419,7 +419,7 @@ function test_extension_variable_condition_in_indexing(
     anon_one_dim = @variable(model, [i = 1:10; iseven(i)])
     test_one_dim(anon_one_dim)
     # Parses as typed_vcat on 0.7.
-    @variable(model, named_two_dim[j = 1:10, k = 3:2:9; isodd(j + k) && k <= 8])
+    @variable(model, named_two_dim[j=1:10, k=3:2:9; isodd(j + k) && k <= 8])
     test_two_dim(named_two_dim)
     # Parses as vect on 0.7.
     anon_two_dim =
@@ -691,7 +691,7 @@ end
 function test_macro_variables()
     model = Model()
     @variables model begin
-        0 ≤ x[i = 1:2] ≤ i
+        0 ≤ x[i=1:2] ≤ i
         y ≥ 2, Int, (start = 0.7)
         z ≤ 3, (start = 10)
         q, (Bin, start = 0.5)
@@ -1283,37 +1283,29 @@ end
 function _test_Hermitian_errors(model, set)
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in set,
+        H[i=1:2, j=1:2] in set,
         lower_bound = (i + j) * im
     )
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in set,
+        H[i=1:2, j=1:2] in set,
         upper_bound = (i + j) * im
     )
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in set,
+        H[i=1:2, j=1:2] in set,
         start = (i + j) * im
     )
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in set,
+        H[i=1:2, j=1:2] in set,
         integer = i > j
     )
+    @test_throws ErrorException @variable(model, H[i=1:2, j=1:2] in set, Bin)
+    @test_throws ErrorException @variable(model, H[i=1:2, j=1:2] in set, Int,)
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in set,
-        Bin
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in set,
-        Int,
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in set,
+        H[i=1:2, j=1:2] in set,
         integer = i != j,
     )
     return
@@ -1339,12 +1331,12 @@ function test_Hermitian_PSD_keyword()
     model = Model()
     @test_throws ErrorException @variable(
         model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        H[i=1:2, j=1:2] in HermitianPSDCone(),
         integer = i != j,
     )
     @variable(
         model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        H[i=1:2, j=1:2] in HermitianPSDCone(),
         lower_bound = (i + j) + (i - j) * im,
         upper_bound = i * j + (j - i) * im
     )
@@ -1357,7 +1349,7 @@ function test_Hermitian_PSD_keyword()
     end
     @variable(
         model,
-        T[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        T[i=1:2, j=1:2] in HermitianPSDCone(),
         start = (i + j) + (j - i) * im
     )
     for i in 1:2, j in 1:2
@@ -1424,18 +1416,18 @@ end
 function test_dependent_set_variable_macro()
     for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
         model = Model()
-        @variable(model, x[i = 1:3] in MOI.EqualTo(1.0 * i), container = C)
+        @variable(model, x[i=1:3] in MOI.EqualTo(1.0 * i), container = C)
         @test all(is_fixed.(x))
         @test [fix_value(x[i]) for i in 1:3] == [1.0, 2.0, 3.0]
     end
     for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
         model = Model()
-        @variable(model, x[i = 1:3] in MOI.ZeroOne(), container = C)
+        @variable(model, x[i=1:3] in MOI.ZeroOne(), container = C)
         @test all(is_binary.(x))
     end
     for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
         model = Model()
-        @variable(model, x[i = 1:3] in MOI.GreaterThan(sqrt(i)), container = C)
+        @variable(model, x[i=1:3] in MOI.GreaterThan(sqrt(i)), container = C)
         @test all(has_lower_bound.(x))
         @test [lower_bound(x[i]) for i in 1:3] == sqrt.([1.0, 2.0, 3.0])
     end
@@ -1475,7 +1467,7 @@ end
 function test_parameter_vector()
     model = Model()
     @variable(model, x)
-    @variable(model, p[i = 1:2] in Parameter(i))
+    @variable(model, p[i=1:2] in Parameter(i))
     @test parameter_value.(p) == [1.0, 2.0]
     set_parameter_value(p[2], 3.0)
     @test parameter_value.(p) == [1.0, 3.0]
@@ -1530,14 +1522,14 @@ function test_parameter_arrays()
     @variable(model, x1[1:2, 1:2] in Parameter(0.0))
     @test all(is_parameter.(x1))
     @test parameter_value.(x1) == [0.0 0.0; 0.0 0.0]
-    @variable(model, x2[i = 1:2, j = 1:2] in Parameter(i + j))
+    @variable(model, x2[i=1:2, j=1:2] in Parameter(i + j))
     @test all(is_parameter.(x2))
     @test parameter_value.(x2) == [2.0 3.0; 3.0 4.0]
-    @variable(model, x3[i = 1:2, j = [:A, :B]] in Parameter(i))
+    @variable(model, x3[i=1:2, j=[:A, :B]] in Parameter(i))
     @test all(is_parameter.(x3))
     @test parameter_value.(x3) ==
           Containers.@container([i = 1:2, j = [:A, :B]], 1.0 * i)
-    @variable(model, x4[i = 1:2, j = i:2] in Parameter(i + j))
+    @variable(model, x4[i=1:2, j=i:2] in Parameter(i + j))
     @test all(is_parameter.(x4))
     @test parameter_value.(x4) ==
           Containers.@container([i = 1:2, j = i:2], 1.0 * i + j)

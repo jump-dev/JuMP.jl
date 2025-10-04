@@ -105,7 +105,7 @@ import SCS
 model_primal = Model()
 @variable(model_primal, X[1:2, 1:2], PSD)
 @objective(model_primal, Max, sum([1 -1; -1 1] .* X))
-@constraint(model_primal, primal_c[i = 1:2], 1 - X[i, i] == 0)
+@constraint(model_primal, primal_c[i=1:2], 1 - X[i, i] == 0)
 print(model_primal)
 
 # This problem has three scalar decision variables (the matrix `X` is symmetric),

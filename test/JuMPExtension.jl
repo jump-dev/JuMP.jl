@@ -105,12 +105,11 @@ function JuMP.add_variable(
     variable::JuMP.VariablesConstrainedOnCreation,
     names,
 )
-    var_refs =
-        JuMP.add_variable.(
-            model,
-            variable.scalar_variables,
-            JuMP.vectorize(names, variable.shape),
-        )
+    var_refs = JuMP.add_variable.(
+        model,
+        variable.scalar_variables,
+        JuMP.vectorize(names, variable.shape),
+    )
     if !isa(variable.set, JuMP.MOI.Reals)
         constraint = JuMP.VectorConstraint(var_refs, variable.set)
         JuMP.add_constraint(model, constraint)

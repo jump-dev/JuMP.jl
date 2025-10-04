@@ -10,7 +10,7 @@ using Test
 
 function test_denseaxisarray()
     model = Model()
-    @variable(model, x[i = 4:10, j = 2002:2022] >= 0, start = 0.0)
+    @variable(model, x[i=4:10, j=2002:2022] >= 0, start = 0.0)
     @test typeof(x) <: Containers.DenseAxisArray
     start_table = Containers.rowtable(start_value, x; header = [:i1, :i2, :i3])
     T = NamedTuple{(:i1, :i2, :i3),Tuple{Int,Int,Float64}}
@@ -40,7 +40,7 @@ end
 
 function test_sparseaxisarray()
     model = Model()
-    @variable(model, x[i = 1:10, j = 1:5; i + j <= 8] >= 0, start = 0)
+    @variable(model, x[i=1:10, j=1:5; i + j <= 8] >= 0, start = 0)
     @test typeof(x) <: Containers.SparseAxisArray
     start_table = Containers.rowtable(start_value, x; header = [:i1, :i2, :i3])
     T = NamedTuple{(:i1, :i2, :i3),Tuple{Int,Int,Float64}}
@@ -94,7 +94,7 @@ function test_custom_variable()
     model = Model()
     @variable(
         model,
-        x[i = 1:3, j = 100:102] >= 0,
+        x[i=1:3, j=100:102] >= 0,
         _Mock(),
         container = Containers.DenseAxisArray,
         start = 0.0,

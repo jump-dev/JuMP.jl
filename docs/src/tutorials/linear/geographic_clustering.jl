@@ -138,7 +138,7 @@ fix(x[1, 1], 1; force = true)
 # group, we add the constraints $z_{i,j} \geq x_{i,k} + x_{j,k} - 1$ for every
 # pair $i,j$ and every $k$:
 
-@variable(model, z[i = 1:n, j = 1:i], Bin)
+@variable(model, z[i=1:n, j=1:i], Bin)
 for k in 1:k, i in 1:n, j in 1:i
     @constraint(model, z[i, j] >= x[i, k] + x[j, k] - 1)
 end

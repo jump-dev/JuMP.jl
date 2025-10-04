@@ -60,7 +60,7 @@ sudoku = Model(HiGHS.Optimizer)
 set_silent(sudoku)
 
 # Create our variables
-@variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin);
+@variable(sudoku, x[i=1:9, j=1:9, k=1:9], Bin);
 
 # Now we can begin to add our constraints. We'll actually start with something
 # obvious to us as humans, but what we need to enforce: that there can be only
@@ -191,7 +191,7 @@ set_attribute(model, "presolve", "off")
 # And that the values in each 3x3 sub-grid must be all-different:
 
 for i in (0, 3, 6), j in (0, 3, 6)
-    @constraint(model, vec(x[i.+(1:3), j.+(1:3)]) in MOI.AllDifferent(9))
+    @constraint(model, vec(x[i .+ (1:3), j .+ (1:3)]) in MOI.AllDifferent(9))
 end
 
 # Finally, as before we set the initial solution and optimize:

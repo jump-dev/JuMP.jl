@@ -139,7 +139,7 @@ df = DataFrames.DataFrame(
 
 # Next, we compute the percentage return for the stock in each month:
 
-returns = diff(Matrix(df); dims = 1) ./ Matrix(df[1:end-1, :])
+returns = diff(Matrix(df); dims = 1) ./ Matrix(df[1:(end-1), :])
 
 # The expected monthly return is:
 
