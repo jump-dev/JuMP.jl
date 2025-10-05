@@ -156,7 +156,7 @@ function test_Check_Julia_condition_expression_parsing()
     @test ex.head == :typed_vcat
     @test ex.args == [:x, 12, 3]
 
-    ex = :(x[i = 1:3, j = S; isodd(i) && i + j >= 2])
+    ex = :(x[i=1:3, j=S; isodd(i) && i + j >= 2])
     @test ex.head == :ref
     @test ex.args == [
         :x,
@@ -736,7 +736,7 @@ function test_constraints()
     @variable(model, y[1:3])
     @constraints(model, begin
         x + y[1] == 1
-        ref[i = 1:3], y[1] + y[i] >= i
+        ref[i=1:3], y[1] + y[i] >= i
     end)
     @test string(model) ==
           "Feasibility\n" *
@@ -752,7 +752,7 @@ function test_NLparameters()
     model = Model()
     @NLparameters(model, begin
         a == 1
-        b[i = 1:2] == i
+        b[i=1:2] == i
     end)
     @test value(a) == 1
     @test value.(b) == [1, 2]
@@ -763,7 +763,7 @@ function test_Index_variables_dont_leak_out_of_macros()
     model = Model()
     i = 10
     j = 10
-    @expression(model, ex[j = 2:3], sum(i for i in 1:j))
+    @expression(model, ex[j=2:3], sum(i for i in 1:j))
     @test ex[2] == 3
     @test ex[3] == 6
     @test i == 10
@@ -794,7 +794,7 @@ function test_Plural_returns()
     @test vars == (x, y)
     eqs = @constraints(model, begin
         E_x, x == 0
-        E_y[i = 1:2], y[i] == 0
+        E_y[i=1:2], y[i] == 0
     end)
     @test eqs == (E_x, E_y)
     return
@@ -956,7 +956,7 @@ function test_Model_as_index()
     msg = "the index name `m` conflicts with another variable in this scope. Use a different name for the index."
     @test_throws_parsetime(
         ErrorException("In `@variable(m, y[m = 1:2] <= m)`: $(msg)"),
-        @variable(m, y[m = 1:2] <= m),
+        @variable(m, y[m=1:2] <= m),
     )
     @test_throws_parsetime(
         ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: $(msg)"),
@@ -978,7 +978,7 @@ function test_Model_as_index()
     )
     @test_throws_parsetime(
         ErrorException("In `@NLparameter(m, p[m = 1:2] == m)`: $(msg)"),
-        @NLparameter(m, p[m = 1:2] == m),
+        @NLparameter(m, p[m=1:2] == m),
     )
     return
 end
@@ -1128,7 +1128,7 @@ end
 
 function test_nlparameter_Vector()
     model = Model()
-    @NLparameter(model, p[i = 1:3] == i)
+    @NLparameter(model, p[i=1:3] == i)
     @test p isa Vector{NonlinearParameter}
     @test value(p[2]) == 2
     return
@@ -1136,7 +1136,7 @@ end
 
 function test_nlparameter_DenseAxisArray()
     model = Model()
-    @NLparameter(model, p[i = 2:3] == i)
+    @NLparameter(model, p[i=2:3] == i)
     @test p isa Containers.DenseAxisArray{NonlinearParameter}
     @test value(p[2]) == 2
     return
@@ -1153,7 +1153,7 @@ end
 function test_nlparameter_requested_container()
     model = Model()
     S = 1:3
-    @NLparameter(model, p[i = S] == i, container = Array)
+    @NLparameter(model, p[i=S] == i, container = Array)
     @test p isa Vector{NonlinearParameter}
     @test value(p[2]) == 2
     return
@@ -1453,11 +1453,11 @@ function test_broadcasting_variable_in_set()
     )
     @test num_variables(model) == 6
     # SparseAxisArray
-    @variable(model, b[i = 1:2, j = 1:2; i + j == 3] in MOI.GreaterThan(3.0))
+    @variable(model, b[i=1:2, j=1:2; i + j == 3] in MOI.GreaterThan(3.0))
     @test num_variables(model) == 8
     @variable(
         model,
-        a[i = 1:2, j = 1:2; i + j == 3] in Containers.SparseAxisArray(
+        a[i=1:2, j=1:2; i + j == 3] in Containers.SparseAxisArray(
             Dict(
                 (1, 2) => MOI.GreaterThan(3.0),
                 (2, 1) => MOI.GreaterThan(3.0),
@@ -1466,7 +1466,7 @@ function test_broadcasting_variable_in_set()
     )
     @test num_variables(model) == 10
     # DenseAxisArray
-    @variable(model, dense_a[i = ["x", "xx"]] in MOI.GreaterThan(3.0))
+    @variable(model, dense_a[i=["x", "xx"]] in MOI.GreaterThan(3.0))
     @test num_variables(model) == 12
     @variable(model, dense_b[1:2, 2:4] in MOI.GreaterThan(3.0))
     @test num_variables(model) == 18
@@ -1519,7 +1519,7 @@ end
 function test_MA_Zero_expression()
     model = Model()
     @test @expression(model, sum(i for i in 1:0)) === 0.0
-    @expression(model, expr[j = 1:2], sum(i for i in j:0))
+    @expression(model, expr[j=1:2], sum(i for i in j:0))
     @test expr == [0.0, 0.0]
     @test expr isa Vector{Float64}
     return
@@ -1557,8 +1557,8 @@ end
 
 function test_broadcasted_SparseAxisArray_constraint()
     model = Model()
-    @variable(model, u[i = 1:2, i:3])
-    Containers.@container(c[i = 1:2, i:3], rand())
+    @variable(model, u[i=1:2, i:3])
+    Containers.@container(c[i=1:2, i:3], rand())
     cons = @constraint(model, u .<= c)
     @test cons isa Containers.SparseAxisArray
     @test length(cons) == 5
@@ -1578,7 +1578,7 @@ end
 
 function test_set_string_name_variables()
     model = Model()
-    @variable(model, w[i = 1:2], set_string_name = isodd(i))
+    @variable(model, w[i=1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
     @test isempty(name(w[2]))
     @test model[:w] == w
@@ -1597,14 +1597,14 @@ end
 function test_set_string_name_constraints()
     model = Model()
     @variable(model, x)
-    @constraint(model, c1[i = 1:2], x <= i, set_string_name = isodd(i))
+    @constraint(model, c1[i=1:2], x <= i, set_string_name = isodd(i))
     @test !isempty(name(c1[1]))
     @test isempty(name(c1[2]))
     @test model[:c1] == c1
     @constraint(model, c2, x <= 1, set_string_name = false)
     @test isempty(name(c2))
     @test model[:c2] == c2
-    @constraint(model, c3[i = 1:2], x <= i, set_string_name = false)
+    @constraint(model, c3[i=1:2], x <= i, set_string_name = false)
     @test all(isempty.(name.(c3)))
     @test model[:c3] == c3
     flag = false
@@ -1616,7 +1616,7 @@ end
 function test_set_string_name_model()
     model = Model()
     set_string_names_on_creation(model, false)
-    @variable(model, w[i = 1:2], set_string_name = isodd(i))
+    @variable(model, w[i=1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
     @test isempty(name(w[2]))
     @test model[:w] == w
@@ -2087,14 +2087,14 @@ function test_wrap_let_non_symbol_models()
         @test x isa VariableRef
         @objective(data.model, Min, x^2)
         @test isequal_canonical(objective_function(data.model), x^2)
-        @expression(data.model, expr[i = 1:2], x + i)
+        @expression(data.model, expr[i=1:2], x + i)
         @test expr == [x + 1, x + 2]
-        @constraint(data.model, c[i = 1:2], i * expr[i] <= i)
+        @constraint(data.model, c[i=1:2], i * expr[i] <= i)
         @test c isa Vector{<:ConstraintRef}
         @variable(data.model, bad_var[1:0])
         @test bad_var isa Vector{<:Any}
         @test !(bad_var isa Vector{VariableRef})  # Cannot prove type
-        @expression(data.model, bad_expr[i = 1:0], x + i)
+        @expression(data.model, bad_expr[i=1:0], x + i)
         @test bad_expr isa Vector{Any}
     end
     return
@@ -2112,13 +2112,13 @@ function test_wrap_let_symbol_models()
         @test x isa VariableRef
         @objective(model, Min, x^2)
         @test isequal_canonical(objective_function(model), x^2)
-        @expression(model, expr[i = 1:2], x + i)
+        @expression(model, expr[i=1:2], x + i)
         @test expr == [x + 1, x + 2]
-        @constraint(model, c[i = 1:2], i * expr[i] <= i)
+        @constraint(model, c[i=1:2], i * expr[i] <= i)
         @test c isa Vector{<:ConstraintRef}
         @variable(model, bad_var[1:0])
         @test bad_var isa Vector{VariableRef}
-        @expression(model, bad_expr[i = 1:0], x + i)
+        @expression(model, bad_expr[i=1:0], x + i)
         @test bad_expr isa Vector{Any}
     end
     return
@@ -2289,13 +2289,13 @@ function test_error_parsing_reference_sets()
         ErrorException(
             "In `@variable(model, b[i = 1:a, 1:i])`: unexpected error parsing reference set: 1:a",
         ),
-        @variable(model, b[i = 1:a, 1:i]),
+        @variable(model, b[i=1:a, 1:i]),
     )
     @test_throws_runtime(
         ErrorException(
             "In `@variable(model, b[i = 1:2, a:i])`: unexpected error parsing reference set: a:i",
         ),
-        @variable(model, b[i = 1:2, a:i]),
+        @variable(model, b[i=1:2, a:i]),
     )
     @test_throws_runtime(
         ErrorException(
@@ -2319,13 +2319,13 @@ function test_error_parsing_reference_sets()
         ErrorException(
             "In `@expression(model, b[i = 1:a, 1:i], a + 1)`: unexpected error parsing reference set: 1:a",
         ),
-        @expression(model, b[i = 1:a, 1:i], a + 1),
+        @expression(model, b[i=1:a, 1:i], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
             "In `@expression(model, b[i = 1:2, a:i], a + 1)`: unexpected error parsing reference set: a:i",
         ),
-        @expression(model, b[i = 1:2, a:i], a + 1),
+        @expression(model, b[i=1:2, a:i], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
@@ -2337,7 +2337,7 @@ function test_error_parsing_reference_sets()
         ErrorException(
             "In `@constraint(model, b[i = 1:a], a <= 1)`: unexpected error parsing reference set: 1:a",
         ),
-        @constraint(model, b[i = 1:a], a <= 1),
+        @constraint(model, b[i=1:a], a <= 1),
     )
     @test_throws_runtime(
         ErrorException(

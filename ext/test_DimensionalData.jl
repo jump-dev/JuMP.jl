@@ -12,7 +12,7 @@ using JuMP
 
 function test_dimension_data_variable()
     model = Model()
-    @variable(model, x[i = 2:4, j = ["a", "b"]], container = DimArray)
+    @variable(model, x[i=2:4, j=["a", "b"]], container = DimArray)
     @test x isa DimArray
     @test x[At(2), At("a")] isa VariableRef
     @test JuMP.name(x[At(4), At("b")]) == "x[4,b]"
@@ -25,10 +25,10 @@ end
 function test_dimension_data_expression()
     model = Model()
     B = ["a", "b"]
-    @variable(model, x[i = 2:4, j = B], container = DimArray)
+    @variable(model, x[i=2:4, j=B], container = DimArray)
     @expression(
         model,
-        expr[j = B],
+        expr[j=B],
         sum(x[At(i), At(j)] for i in 2:4),
         container = DimArray,
     )

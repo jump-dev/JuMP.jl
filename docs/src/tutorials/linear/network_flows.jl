@@ -76,7 +76,7 @@ set_silent(shortest_path)
 ## Arcs with zero cost are not a part of the path as they do no exist
 @constraint(shortest_path, [i = 1:n, j = 1:n; G[i, j] == 0], x[i, j] == 0)
 ## Flow conservation constraint
-@constraint(shortest_path, [i = 1:n], sum(x[i, :]) - sum(x[:, i]) == b[i],)
+@constraint(shortest_path, [i = 1:n], sum(x[i, :]) - sum(x[:, i]) == b[i])
 @objective(shortest_path, Min, sum(G .* x))
 optimize!(shortest_path)
 assert_is_solved_and_feasible(shortest_path)

@@ -163,7 +163,7 @@ N = 3
 x0 = rand(N)
 model = Model(Clarabel.Optimizer)
 set_silent(model)
-@variable(model, x[i = 1:N] == x0[i])
+@variable(model, x[i=1:N] == x0[i])
 @variable(model, t)
 @objective(model, Min, t)
 @variable(model, u[1:N])

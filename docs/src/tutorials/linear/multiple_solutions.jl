@@ -94,7 +94,7 @@ set_lower_bound.(x_digits[:, 1], 1)
 # last row:
 
 @expression(model, x_base_10, x_digits * [1_000, 100, 10, 1]);
-@constraint(model, sum(x_base_10[i] for i in 1:n-1) == x_base_10[n])
+@constraint(model, sum(x_base_10[i] for i in 1:(n-1)) == x_base_10[n])
 
 # And we use [`MOI.AllDifferent`](@ref) to ensure that each digit is used
 # exactly once in the upper triangle matrix of `x_digits`:

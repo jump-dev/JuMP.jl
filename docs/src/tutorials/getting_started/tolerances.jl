@@ -136,7 +136,7 @@ model = Model(SCS.Optimizer)
 @variable(model, x[1:N] >= 0)
 @objective(model, Min, x[1])
 @constraint(model, sum(x) == 1)
-z = [(-1)^((i & (1 << j)) >> j) for j in 0:n-1, i in 0:N-1]
+z = [(-1)^((i & (1 << j)) >> j) for j in 0:(n-1), i in 0:(N-1)]
 @constraint(model, z * x .>= 1 - ε)
 optimize!(model)
 

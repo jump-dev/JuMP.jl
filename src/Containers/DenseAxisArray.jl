@@ -653,8 +653,8 @@ function Base.show_nd(
                 ind = tailinds[i]
                 if length(ind) > 10
                     if ii == ind[4] &&
-                       all(d -> idxs[d] == first(tailinds[d]), 1:i-1)
-                        for j in i+1:nd
+                       all(d -> idxs[d] == first(tailinds[d]), 1:(i-1))
+                        for j in (i+1):nd
                             szj = size(a.data, j + 2)
                             indj = tailinds[j]
                             if szj > 10 &&

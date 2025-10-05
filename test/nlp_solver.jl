@@ -37,7 +37,7 @@ import MathOptInterface as MOI
         # End at (1.000..., 4.743..., 3.821..., 1.379...)
         m = Model(Ipopt.Optimizer)
         initval = [1, 5, 5, 1]
-        @variable(m, 1 <= x[i = 1:4] <= 5, start = initval[i])
+        @variable(m, 1 <= x[i=1:4] <= 5, start = initval[i])
         @NLobjective(m, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
         @NLconstraint(m, x[1] * x[2] * x[3] * x[4] >= 25)
         @NLconstraint(m, sum(x[i]^2 for i in 1:4) == 40)
@@ -63,7 +63,7 @@ import MathOptInterface as MOI
         # End at (1.000..., 4.743..., 3.821..., 1.379...)
         m = Model(Ipopt.Optimizer)
         initval = [1, 5, 5, 1]
-        @variable(m, 1 <= x[i = 1:4] <= 5, start = initval[i])
+        @variable(m, 1 <= x[i=1:4] <= 5, start = initval[i])
         set_nonlinear_objective(
             m,
             MIN_SENSE,
@@ -98,7 +98,7 @@ import MathOptInterface as MOI
         #     ...
         model = Model(Ipopt.Optimizer)
         start = [1.0, 5.0, 5.0, 1.0]
-        @variable(model, 1 <= x[i = 1:4] <= 5, start = start[i])
+        @variable(model, 1 <= x[i=1:4] <= 5, start = start[i])
         @variable(model, t, start = 100)
         @objective(model, Min, t)
         @NLconstraint(model, t >= x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
@@ -122,7 +122,7 @@ import MathOptInterface as MOI
         U = [Inf, Inf, 0.55, 0.55, 252, 252, 252, 800, 800]
 
         m = Model(Ipopt.Optimizer)
-        @variable(m, L[i] <= x[i = 1:9] <= U[i], start = 0.0)
+        @variable(m, L[i] <= x[i=1:9] <= U[i], start = 0.0)
 
         @NLobjective(
             m,
@@ -307,7 +307,7 @@ import MathOptInterface as MOI
         start = [1745, 12000, 110, 3048, 1974, 89.2, 92.8, 8, 3.6, 145]
 
         m = Model(Ipopt.Optimizer)
-        @variable(m, lower[i] <= x[i = 1:n] <= upper[i], start = start[i])
+        @variable(m, lower[i] <= x[i=1:n] <= upper[i], start = start[i])
 
         @NLobjective(
             m,
@@ -413,7 +413,7 @@ import MathOptInterface as MOI
             [0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650 0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650]
 
         m = Model(Ipopt.Optimizer)
-        @variable(m, lower[i] <= x[i = 1:N] <= upper[i], start = start[i])
+        @variable(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
         @NLobjective(m, Min, x[11] + x[12] + x[13])
 
         @NLconstraints m begin
@@ -484,7 +484,7 @@ import MathOptInterface as MOI
             20.0,
         ]
 
-        @variable(m, L[i] <= x[i = 1:15] <= U[i])
+        @variable(m, L[i] <= x[i=1:15] <= U[i])
 
         # Initial solution (could also use 'start' keyword in @variable)
         set_start_value.(x, start)
@@ -590,7 +590,7 @@ import MathOptInterface as MOI
         @variable(m, x >= 0)
         @variable(m, y <= 5)
         @variable(m, 2 <= z <= 4)
-        @variable(m, 0 <= r[i = 3:6] <= i)
+        @variable(m, 0 <= r[i=3:6] <= i)
         @NLobjective(m, Min, -((x + y) / 2.0 + 3.0) / 3.0 - z - r[3])
         @constraint(m, cons1, x + y >= 2)
         @constraint(m, cons2, sum(r[i] for i in 3:5) <= (2 - x) / 2.0)
@@ -719,9 +719,9 @@ import MathOptInterface as MOI
         # (Attempt to) solve an infeasible problem
         model = Model(Ipopt.Optimizer)
         n = 10
-        @variable(model, 0 <= x[i = 1:n] <= 1)
+        @variable(model, 0 <= x[i=1:n] <= 1)
         @NLobjective(model, Max, x[n])
-        for i in 1:n-1
+        for i in 1:(n-1)
             @NLconstraint(model, x[i+1] - x[i] == 0.15)
         end
         set_silent(model)
@@ -757,15 +757,15 @@ import MathOptInterface as MOI
         model = Model(Ipopt.Optimizer)
         @variable(model, x[1:4] >= 0, start = 1)
         @variable(model, z[1:4], start = 0)
-        @NLexpression(model, entropy[i = 1:4], -x[i] * log(x[i]))
+        @NLexpression(model, entropy[i=1:4], -x[i] * log(x[i]))
         @NLobjective(
             model,
             Max,
             sum(z[i] for i in 1:2) + sum(z[i] / 2 for i in 3:4)
         )
-        @NLconstraint(model, z_constr1[i = 1], z[i] <= entropy[i])
-        @NLconstraint(model, z_constr1_dup[i = 2], z[i] <= entropy[i]) # duplicate expressions
-        @NLconstraint(model, z_constr2[i = 3:4], z[i] <= 2 * entropy[i])
+        @NLconstraint(model, z_constr1[i=1], z[i] <= entropy[i])
+        @NLconstraint(model, z_constr1_dup[i=2], z[i] <= entropy[i]) # duplicate expressions
+        @NLconstraint(model, z_constr2[i=3:4], z[i] <= 2 * entropy[i])
         @constraint(model, sum(x) == 1)
         set_silent(model)
         optimize!(model)
