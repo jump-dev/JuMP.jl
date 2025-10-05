@@ -887,7 +887,7 @@ function test_print_hermitian_psd_cone()
     @test sprint(io -> show(io, MIME("text/plain"), c)) ==
           "[x[1]  im\n -im   x[2]] $in_sym $(HermitianPSDCone())"
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
-          "\$\$ \\begin{bmatrix}\nx_{1} & im\\\\\n-im & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
+          "\$\$ \\begin{bmatrix}\nx_{1} & i\\\\\n-i & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
     return
 end
 
