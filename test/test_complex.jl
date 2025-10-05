@@ -174,8 +174,10 @@ function test_complex_print_zeros()
     @variable(model, y[1:2] in ComplexPlane())
     @test sprint(show, real(y[1])) == "real(y[1])"
     @test sprint(show, imag(y[1])) == "imag(y[1])"
-    @test sprint(show, MIME("text/latex"), real(y[1])) == "\$ \\text{Re}(y[1]) \$"
-    @test sprint(show, MIME("text/latex"), imag(y[1])) == "\$ \\text{Im}(y[1]) \$"
+    @test sprint(show, MIME("text/latex"), real(y[1])) ==
+          "\$ \\text{Re}(y_{1}) \$"
+    @test sprint(show, MIME("text/latex"), imag(y[1])) ==
+          "\$ \\text{Im}(y_{1}) \$"
     return
 end
 
