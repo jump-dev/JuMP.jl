@@ -671,7 +671,7 @@ function test_containers_denseaxisarray_ambiguous_slice()
 end
 
 function test_containers_denseaxisarray_kwarg_indexing()
-    Containers.@container(x[i=2:3, j=1:2], i + j,)
+    Containers.@container(x[i=2:3, j=1:2], i + j)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i=i, j=j] == x[i, j]
         @test_throws ErrorException x[j=j, i=i]
@@ -709,7 +709,7 @@ function test_containers_denseaxisarray_kwarg_indexing()
 end
 
 function test_containers_denseaxisarray_kwarg_setindex()
-    Containers.@container(x[i=2:3, j=1:2], i + j,)
+    Containers.@container(x[i=2:3, j=1:2], i + j)
     for i in 2:3, j in 1:2
         @test x[i=i, j=j] == i + j
         x[i=i, j=j] = i + j + 2
@@ -741,7 +741,7 @@ function test_containers_denseaxisarray_kwarg_setindex()
 end
 
 function test_containers_denseaxisarray_kwarg_indexing_slicing()
-    Containers.@container(x[i=2:3, j=1:2], i + j,)
+    Containers.@container(x[i=2:3, j=1:2], i + j)
     y = x[i=2, j = :]
     @test y[j=2] == 4
     y = x[i = :, j=1]
@@ -752,7 +752,7 @@ function test_containers_denseaxisarray_kwarg_indexing_slicing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing()
-    Containers.@container(a[i=2:3, j=1:2], i + j,)
+    Containers.@container(a[i=2:3, j=1:2], i + j)
     x = view(a, :, :)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i=i, j=j] == x[i, j]
@@ -784,7 +784,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
-    Containers.@container(a[i=2:3, j=1:2], i + j,)
+    Containers.@container(a[i=2:3, j=1:2], i + j)
     x = view(a, 2, 1:2)
     for j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[j=j] == x[j]
@@ -801,7 +801,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
-    Containers.@container(a[i=2:3, j=1:2], i + j,)
+    Containers.@container(a[i=2:3, j=1:2], i + j)
     x = view(a, :, :)
     y = x[i=2, j = :]
     @test y[j=2] == 4
@@ -813,7 +813,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_setindex()
-    Containers.@container(a[i=2:3, j=1:2], i + j,)
+    Containers.@container(a[i=2:3, j=1:2], i + j)
     x = view(a, :, :)
     for i in 2:3, j in 1:2
         @test x[i=i, j=j] == i + j
@@ -846,7 +846,7 @@ function test_containers_denseaxisarrayview_kwarg_setindex()
 end
 
 function test_sum_dims()
-    Containers.@container(x[i=1:2, j=1:2], i + j, container = DenseAxisArray,)
+    Containers.@container(x[i=1:2, j=1:2], i + j, container = DenseAxisArray)
     @test_throws(
         ErrorException(
             "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *

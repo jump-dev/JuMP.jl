@@ -1302,7 +1302,7 @@ function _test_Hermitian_errors(model, set)
         integer = i > j
     )
     @test_throws ErrorException @variable(model, H[i=1:2, j=1:2] in set, Bin)
-    @test_throws ErrorException @variable(model, H[i=1:2, j=1:2] in set, Int,)
+    @test_throws ErrorException @variable(model, H[i=1:2, j=1:2] in set, Int)
     @test_throws ErrorException @variable(
         model,
         H[i=1:2, j=1:2] in set,

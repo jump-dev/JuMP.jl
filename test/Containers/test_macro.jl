@@ -91,7 +91,7 @@ function test_duplicate_indices()
         @eval $expr
     catch err
         throw(err)
-    end,)
+    end)
     return
 end
 
@@ -101,18 +101,18 @@ function test_double_filter_typed_vcat()
         @eval $expr
     catch err
         throw(err)
-    end,)
+    end)
     return
 end
 
 function test_double_filter_vect()
     expr =
-        :(Containers.@container(x[i=1:2, 1:2; isodd(i); iseven(i + 1)], i + i,))
+        :(Containers.@container(x[i=1:2, 1:2; isodd(i); iseven(i + 1)], i + i))
     @test_throws(LoadError, try
         @eval $expr
     catch err
         throw(err)
-    end,)
+    end)
     return
 end
 
@@ -158,7 +158,7 @@ function test_invalid_container()
 end
 
 function test_compound_indexing_expressions()
-    Containers.@container(x[(i, j) in [(1, 1), (2, 2)], k in i:3], i + j + k,)
+    Containers.@container(x[(i, j) in [(1, 1), (2, 2)], k in i:3], i + j + k)
     @test x isa Containers.SparseAxisArray
     @test length(x) == 5
     @test x[(2, 2), 3] == 7
@@ -253,7 +253,12 @@ function test_add_additional_args()
     call = :(f.(1; a = 4))
     Containers.add_additional_args(call, [2, 3], kwargs)
     @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
+    #!format:off
+    # We don't want to reformat this to f.(1, a = 4) because we explicitly want
+    # to test the case where the user has passed the keyword as a `, kwarg`
+    # instead of `; kwarg`.
     call = :(f.(1, a = 4))
+    #!format:on
     kwargs = Dict{Symbol,Any}(:b => 4, :c => false)
     Containers.add_additional_args(call, Any[2], kwargs; kwarg_exclude = [:b])
     @test call == Expr(

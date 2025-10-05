@@ -21,9 +21,7 @@ jobs:
           # If you update the version, also update the style guide docs.
           Pkg.add(PackageSpec(name="JuliaFormatter", version="2"))
           using JuliaFormatter
-          format("src", verbose=true)
-          format("test", verbose=true)
-          format("docs", verbose=true)
+          format("."; verbose = true)
           out = String(read(Cmd(`git diff`)))
           if isempty(out)
               exit(0)

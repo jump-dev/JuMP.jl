@@ -1293,7 +1293,7 @@ function test_dual_start_value()
     @test nonlinear_dual_start_value(model) == [1.0, -1.0]
     set_nonlinear_dual_start_value(model, nothing)
     @test nonlinear_dual_start_value(model) === nothing
-    @test_throws(ArgumentError, set_nonlinear_dual_start_value(model, [1.0]),)
+    @test_throws(ArgumentError, set_nonlinear_dual_start_value(model, [1.0]))
     return
 end
 

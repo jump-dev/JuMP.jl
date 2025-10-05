@@ -307,8 +307,9 @@ b * b'
 isapprox(
     sin(π),
     0.0;
-    #= We need an explicit atol here because we are comparing with 0 =#
-
+    #=
+    We need an explicit atol here because we are comparing with 0
+    =#
     atol = 0.001,
 )
 
