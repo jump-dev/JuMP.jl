@@ -7,6 +7,19 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.29.2 (October 15, 2025)
+
+### Fixed
+
+ - Fixed missing `MA.promote_operation` methods (#4071)
+
+### Other
+
+ - Documentation updates (#4072), (#4074), (#4075), (#4077), (#4083)
+ - Updated to JuliaFormatter@v2 (#4080)
+ - Improved LaTeX rendering of complex variables (#4078), (#4079)
+ - Relax tests for upcoming MOI release (#4082)
+
 ## Version 1.29.1 (September 10, 2025)
 
 ### Fixed
