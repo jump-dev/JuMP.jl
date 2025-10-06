@@ -847,8 +847,16 @@ function function_string(mode::MIME"text/plain", v::AbstractVariableRef)
     return var_name
 end
 
+function _convert_args_to_subscript(name::AbstractString)
+    # Convert any x[args] to x_{args} so that indices on x print as subscripts.
+    if (m = match(r"^(.*)\[(.+)\]$", name)) !== nothing
+        return string(m[1]::AbstractString, "_{", m[2]::AbstractString, "}")
+    end
+    return name
+end
+
 function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
-    if !is_valid(owner_model(v), v)
+    if !is_valid(owner_model(v), v)::Bool
         return "InvalidVariableRef"
     end
     var_name = name(v)
@@ -862,12 +870,13 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     var_name = replace(var_name, "_" => "\\_")
     # Escape carets to prevent them being treated as superscript markers.
     var_name = replace(var_name, "^" => "\\^")
-    # Convert any x[args] to x_{args} so that indices on x print as subscripts.
-    m = match(r"^(.*)\[(.+)\]$", var_name)
-    if m !== nothing
-        return string(m[1]::AbstractString, "_{", m[2]::AbstractString, "}")
+    # Replace `real(_) => Re(_)` and `imag(_) => Im(_)`
+    if (m = match(r"^real\((.+)\)$", var_name)) !== nothing
+        return string("\\text{Re}(", _convert_args_to_subscript(m[1]), ")")
+    elseif (m = match(r"^imag\((.+)\)$", var_name)) !== nothing
+        return string("\\text{Im}(", _convert_args_to_subscript(m[1]), ")")
     end
-    return var_name
+    return _convert_args_to_subscript(var_name)
 end
 
 function _term_string(mode, coef, factor)
