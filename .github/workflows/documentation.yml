@@ -14,7 +14,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
-          version: '1'
+          # Fix the Julia version, because Enzyme doesn't always like being updated
+          # to `latest`.
+          version: '1.11'
       - uses: julia-actions/cache@v2
       - name: Install Gurobi license
         env: 
