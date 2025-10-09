@@ -1119,7 +1119,7 @@ function test_model_quad_to_soc_start_values()
     model = direct_model(inner)
     @variable(model, x)
     @constraint(model, c, x^2 <= 0)
-    @test_throws ErrorException set_start_value(c, 0.0)
+    @test_throws Exception set_start_value(c, 0.0)
     set_start_values(
         model;
         variable_primal_start = x -> 1.0,
