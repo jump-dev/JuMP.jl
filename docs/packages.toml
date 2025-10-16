@@ -47,7 +47,7 @@
 [CSDP]
     rev = "v1.1.2"
 [cuOpt]
-    rev = "51d58b848a1743ba943fd4f887a2cf8db93e21b0"
+    rev = "v0.1.1"
 [DiffOpt]
     rev = "v0.5.2"
     extension = true
@@ -62,7 +62,7 @@
 [Gurobi]
     rev = "v1.7.6"
 [HiGHS]
-    rev = "v1.19.1"
+    rev = "v1.19.3"
 [Hypatia]
     rev = "v0.9.1"
     has_html = true
@@ -102,7 +102,7 @@
     rev = "v0.7.5"
     extension = true
 [SCS]
-    rev = "v2.2.0"
+    rev = "v2.3.0"
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
