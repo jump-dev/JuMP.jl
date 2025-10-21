@@ -162,6 +162,7 @@ JSONSchema
 MATLAB
 MOI
 (Mosek|MOSEK)
+(Nvidia|NVIDIA)
 Octeract
 Optim
 ORTools
