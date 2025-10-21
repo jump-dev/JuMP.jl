@@ -102,7 +102,7 @@
     rev = "v0.7.5"
     extension = true
 [SCS]
-    rev = "v2.3.0"
+    rev = "v2.4.0"
 [SDPA]
     rev = "v0.6.0"
 [SDPLR]
