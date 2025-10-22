@@ -856,21 +856,22 @@ end
 
 function Base.sum(
     f::F,
-    x::Union{DenseAxisArray,DenseAxisArrayView};
+    x::Union{DenseAxisArray{T},DenseAxisArrayView{T}};
     dims = Colon(),
-) where {F<:Function}
-    if dims == Colon()
-        return sum(f(xi) for xi in x)
+    init = zero(T),
+) where {F<:Function,T}
+    if dims != Colon()
+        return error(
+            "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
+            "to an `Array` using `sum(Array(x); dims=$dims)`, or use an explicit " *
+            "for-loop summation instead.",
+        )
     end
-    return error(
-        "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
-        "to an `Array` using `sum(Array(x); dims=$dims)`, or use an explicit " *
-        "for-loop summation instead.",
-    )
+    return sum(f(xi) for xi in x; init)
 end
 
-function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; dims = Colon())
-    return sum(identity, x; dims = dims)
+function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; kwargs...)
+    return sum(identity, x; kwargs...)
 end
 
 function Base.promote_shape(a::DenseAxisArray, b::DenseAxisArray)
