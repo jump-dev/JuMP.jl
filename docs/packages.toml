@@ -51,8 +51,9 @@
 [DiffOpt]
     rev = "v0.5.2"
     extension = true
-[DSDP]
-    rev = "v0.2.1"
+# There are number of known issues with DSDP
+# [DSDP]
+#     rev = "v0.2.1"
 [Dualization]
     rev = "v0.7.1"
 [ECOS]

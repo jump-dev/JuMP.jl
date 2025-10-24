@@ -124,7 +124,6 @@ The link in the `Solver` column is the corresponding Julia package.
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   |        | EPL      | LP, SDP                   |
 | [NVIDIA cuOpt](https://github.com/NVIDIA/cuOpt)                                | [cuOpt.jl](https://github.com/jump-dev/cuOpt.jl)                                 |        | Apache   | (MI)LP                    |
 | [DAQP](https://github.com/darnstrom/daqp)                                      | [DAQP.jl](https://github.com/darnstrom/DAQP.jl)                                  |        | MIT      | (Mixed-binary) QP         |
-| [DSDP](http://www.mcs.anl.gov/hs/software/DSDP/)                               | [DSDP.jl](https://github.com/jump-dev/DSDP.jl)                                   |        | DSDP     | LP, SDP                   |
 | [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | MIT      | (MI)NLP                   |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/jump-dev/ECOS.jl)                                   |        | GPL      | LP, SOCP                  |
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
@@ -163,7 +162,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | Manualᴹ | GPL      | LP, SOCP, SDP            |
 | [SHOT](https://github.com/coin-or/SHOT)                                        | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL       | (MI)NLP                  |
 | [StatusSwitchingQP.jl](https://github.com/PharosAbad/StatusSwitchingQP.jl)     |                                                                                  |        | MIT       | LP, QP                   |
-| [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |        | MPL-2     | LP                       | 
+| [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |        | MPL-2     | LP                       |
 |[CATrustRegionMethod.jl](https://github.com/fadihamad94/CATrustRegionMethod.jl)                           |   |     | MIT      | NLP |
 
 Where:
