@@ -229,3 +229,8 @@
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.8"
+[Uno]
+    user = "cvanaret"
+    rev = "v2.3.0"
+    filename = "interfaces/Julia/README.md"
+    ext = ""

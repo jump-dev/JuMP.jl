@@ -15,6 +15,7 @@ camelCase
 compat
 dataframe(?s)
 datastructure
+demuxer
 denoise
 destructuring
 dev
@@ -35,6 +36,7 @@ invalidations
 jll|JLL
 [Jj]ulia
 juxtaposted
+libblastrampoline
 [Mm]ultiline
 [Mm]ulticriteria
 multithread(ed|ing)
@@ -287,6 +289,7 @@ Teghem
 Tejada
 Tillmann
 Ulungu
+Vanaret
 Vandenberghe
 Vielma
 Watson, H.A.J.
