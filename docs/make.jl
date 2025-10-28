@@ -164,14 +164,15 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
     tag = data["rev"]
     filename = get(data, "filename", "README.md")
     out_filename = joinpath(@__DIR__, "src", "packages", "$solver.md")
+    user_repo = string(user, "/", solver, get(data, "ext", ".jl"))
     Downloads.download(
-        "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
+        "https://raw.githubusercontent.com/$user_repo/$tag/$filename",
         out_filename;
         headers = Dict("Authorization" => "token " * ENV["GITHUB_TOKEN"]),
     )
     _add_edit_url(
         out_filename,
-        "https://github.com/$user/$solver.jl/blob/$tag/$filename",
+        "https://github.com/$user_repo/blob/$tag/$filename",
     )
     if get(data, "has_html", false) == true
         # Very simple detector of HTML to wrap in ```@raw html
@@ -214,9 +215,9 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         end
     end
     if get(data, "extension", false)
-        push!(_LIST_OF_EXTENSIONS, "$user/$solver.jl" => "packages/$solver.md")
+        push!(_LIST_OF_EXTENSIONS, user_repo => "packages/$solver.md")
     else
-        push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "packages/$solver.md")
+        push!(_LIST_OF_SOLVERS, user_repo => "packages/$solver.md")
     end
 end
 push!(
