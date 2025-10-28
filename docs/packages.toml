@@ -229,7 +229,7 @@
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.8"
-[UnoSolver]
+[Uno]
     user = "cvanaret"
-    rev = "0.1.0"
+    rev = "v2.3.0"
     filename = "interfaces/Julia/README.md"
