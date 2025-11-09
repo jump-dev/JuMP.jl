@@ -1739,7 +1739,9 @@ function set_start_values(
     )
     if support_variable_primal && variable_primal_start !== nothing
         for x in all_variables(model)
-            variable_primal[x] = variable_primal_start(x)
+            if !is_parameter(x)
+                variable_primal[x] = variable_primal_start(x)
+            end
         end
     end
     constraint_primal = Dict{ConstraintRef,T}()

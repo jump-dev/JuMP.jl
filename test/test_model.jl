@@ -1537,4 +1537,19 @@ function test_with_cache_type_set_optimizer()
     return
 end
 
+function test_issue_4089()
+    model = Model()
+    @variable(model, x)
+    @variable(model, p in Parameter(42))
+    set_start_values(
+        model;
+        variable_primal_start = x -> index(x).value,
+        constraint_primal_start = nothing,
+        constraint_dual_start = nothing,
+    )
+    @test start_value(x) == index(x).value
+    @test !has_start_value(p)
+    return
+end
+
 end  # module TestModels
