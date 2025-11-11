@@ -68,7 +68,7 @@
     rev = "v0.9.1"
     has_html = true
 [Ipopt]
-    rev = "v1.1130"
+    rev = "v1.11.30"
 [KNITRO]
     rev = "v1.0.3"
 [MathOptAnalyzer]
