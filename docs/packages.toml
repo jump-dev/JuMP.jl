@@ -49,7 +49,7 @@
 [cuOpt]
     rev = "v0.1.1"
 [DiffOpt]
-    rev = "v0.5.2"
+    rev = "v0.5.4"
     extension = true
 # There are number of known issues with DSDP
 # [DSDP]
@@ -63,14 +63,14 @@
 [Gurobi]
     rev = "v1.7.6"
 [HiGHS]
-    rev = "v1.19.3"
+    rev = "v1.20.1"
 [Hypatia]
     rev = "v0.9.1"
     has_html = true
 [Ipopt]
-    rev = "v1.11.0"
+    rev = "v1.1130"
 [KNITRO]
-    rev = "v0.14.10"
+    rev = "v1.0.3"
 [MathOptAnalyzer]
     rev = "v0.1.0"
 [MathOptIIS]
@@ -89,7 +89,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.14.0"
+    rev = "v0.14.1"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -100,12 +100,12 @@
     rev = "f674332f09b8f4c1216a9c4cf309fa27cbad9e1b"
     extension = true
 [PolyJuMP]
-    rev = "v0.7.5"
+    rev = "v0.7.6"
     extension = true
 [SCS]
     rev = "v2.4.0"
 [SDPA]
-    rev = "v0.6.0"
+    rev = "v0.6.1"
 [SDPLR]
     rev = "v0.2.1"
 [SDPNAL]
@@ -115,10 +115,10 @@
 [SeDuMi]
     rev = "v0.4.4"
 [SumOfSquares]
-    rev = "v0.7.4"
+    rev = "v0.7.5"
     extension = true
 [Xpress]
-    rev = "v0.17.1"
+    rev = "v0.17.2"
 
 # =========================== non-jump-dev packages ========================== #
 
@@ -144,7 +144,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.28"
+    rev = "v1.1.29"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -166,7 +166,7 @@
     rev = "dc2bcebb58b1bbeae69453084ff437905eb2463d"
 [InfiniteOpt]
     user = "infiniteopt"
-    rev = "v0.5.9"
+    rev = "v0.6.0"
     filename = "docs/jump/README.md"
     extension = true
 [Juniper]
@@ -184,11 +184,11 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.25"
+    rev = "v0.5.27"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.15"
+    rev = "v0.1.18"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -211,7 +211,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.6.5"
+    rev = "v0.7.0"
     has_html = true
     extension = true
 [ProxSDP]
@@ -223,7 +223,7 @@
     rev = "v0.12.7"
 [SDDP]
     user = "odow"
-    rev = "v1.13.0"
+    rev = "v1.13.1"
     has_html = true
     extension = true
 [Tulip]
@@ -231,6 +231,7 @@
     rev = "v0.9.8"
 [Uno]
     user = "cvanaret"
+    package = "UnoSolver"
     rev = "v2.3.0"
     filename = "interfaces/Julia/README.md"
     ext = ""

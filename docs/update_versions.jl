@@ -18,6 +18,7 @@ function list_changes()
     )
     println("docs/packages.toml")
     for (name, pkg_data) in TOML.parsefile("docs/packages.toml")
+        name = get(pkg_data, "package", name)
         versions_file = data["$(uppercase(first(name)))/$(name)/Versions.toml"]
         versions = TOML.parse(versions_file)
         latest_version = maximum(VersionNumber.(keys(versions)))
