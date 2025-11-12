@@ -432,6 +432,32 @@ the [`optimize!`](@ref) call.
 Here's a simple example of adding an optimize hook that extends [`optimize!`](@ref)
 to take a keyword argument `silent`:
 ```jldoctest
+julia> using JuMP, HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> @variable(model, x >= 1.5, Int);
+
+julia> @objective(model, Min, x);
+
+julia> function silent_hook(model; silent::Bool)
+           if silent
+               set_silent(model)
+           else
+               unset_silent(model)
+           end
+           ## Make sure you set ignore_optimize_hook = true, or we'll
+           ## recursively enter the optimize hook!
+           return optimize!(model; ignore_optimize_hook = true)
+       end
+silent_hook (generic function with 1 method)
+
+julia> set_optimize_hook(model, silent_hook)
+silent_hook (generic function with 1 method)
+
+julia> optimize!(model; silent = true)
+
+julia> optimize!(model; silent = false)
 MIP has 0 rows; 1 col; 0 nonzeros; 1 integer variables (0 binary)
 Assessing feasibility of MIP using primal feasibility and integrality tolerance of       1e-06
 Solution has               num          max          sum
