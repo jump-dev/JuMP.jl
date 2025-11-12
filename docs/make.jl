@@ -565,6 +565,11 @@ function _add_moi_pages()
     id = "# [Infeasibility certificates](@id moi_infeasibility_certificates)"
     contents = replace(contents, r"^# Infeasibility certificates$"m => id)
     write(filename, contents)
+    # Fix `JSON.Object` in moi/submodules/FileFormats/overview.md
+    # This can be removed once we support JSON@1 in the documentation
+    filename = joinpath(moi_dir, "submodules", "FileFormats", "overview.md")
+    contents = read(filename, String)
+    write(filename, replace(contents, "JSON.Object" => "Dict"))
     return
 end
 
