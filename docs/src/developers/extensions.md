@@ -458,10 +458,7 @@ silent_hook (generic function with 1 method)
 julia> optimize!(model; silent = true)
 
 julia> optimize!(model; silent = false)
-MIP  has 0 rows; 1 cols; 0 nonzeros; 1 integer variables (0 binary)
-Coefficient ranges:
-  Cost   [1e+00, 1e+00]
-  Bound  [2e+00, 2e+00]
+MIP has 0 rows; 1 col; 0 nonzeros; 1 integer variables (0 binary)
 Assessing feasibility of MIP using primal feasibility and integrality tolerance of       1e-06
 Solution has               num          max          sum
 Col     infeasibilities      0            0            0
@@ -471,12 +468,13 @@ Row     residuals            0            0            0
 Presolving model
 0 rows, 0 cols, 0 nonzeros  0s
 0 rows, 0 cols, 0 nonzeros  0s
+Presolve reductions: rows 0(-0); columns 0(-1); nonzeros 0(-0) - Reduced to empty
 Presolve: Optimal
 
-Src: B => Branching; C => Central rounding; F => Feasibility pump; J => Feasibility jump;
-     H => Heuristic; L => Sub-MIP; P => Empty MIP; R => Randomized rounding; Z => ZI Round;
-     I => Shifting; S => Solve LP; T => Evaluate node; U => Unbounded; X => User solution;
-     z => Trivial zero; l => Trivial lower; u => Trivial upper; p => Trivial point
+Src: B => Branching; C => Central rounding; F => Feasibility pump; H => Heuristic;
+     I => Shifting; J => Feasibility jump; L => Sub-MIP; P => Empty MIP; R => Randomized rounding;
+     S => Solve LP; T => Evaluate node; U => Unbounded; X => User solution; Y => HiGHS solution;
+     Z => ZI Round; l => Trivial lower; p => Trivial point; u => Trivial upper; z => Trivial zero
 
         Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work
 Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
@@ -494,17 +492,11 @@ Solving report
                     0 (bound viol.)
                     0 (int. viol.)
                     0 (row viol.)
-  Timing            0.00 (total)
-                    0.00 (presolve)
-                    0.00 (solve)
-                    0.00 (postsolve)
+  Timing            0.00
   Max sub-MIP depth 0
   Nodes             0
-  Repair LPs        0 (0 feasible; 0 iterations)
-  LP iterations     0 (total)
-                    0 (strong br.)
-                    0 (separation)
-                    0 (heuristics)
+  Repair LPs        0
+  LP iterations     0
 ```
 
 ## Creating new container types

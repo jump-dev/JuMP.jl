@@ -7,6 +7,17 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.29.3 (November 12, 2025)
+
+### Fixed
+
+ - Fixed support for `Base.sum(::Containers.DenseAxisArray; init)` (#4085)
+ - Fixed [`set_start_values`](@ref) when parameters are present (#4090)
+
+### Other
+
+ - Removed DSDP from the documentation and added `UnoSolver.jl` (#4086), (#4087)
+
 ## Version 1.29.2 (October 21, 2025)
 
 ### Fixed
