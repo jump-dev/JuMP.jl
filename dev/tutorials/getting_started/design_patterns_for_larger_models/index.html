@@ -90,11 +90,11 @@ end
 solve_knapsack_2(data)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><h2 id="Read-in-data-from-files"><a class="docs-heading-anchor" href="#Read-in-data-from-files">Read in data from files</a><a id="Read-in-data-from-files-1"></a><a class="docs-heading-anchor-permalink" href="#Read-in-data-from-files" title="Permalink"></a></h2><p>Having a data structure is a good step. But it is still annoying that we have to hard-code the data into Julia. A good next step is to separate the data into an external file format; JSON is a common choice.</p><pre><code class="language-julia hljs">json_data = &quot;&quot;&quot;
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><h2 id="Read-in-data-from-files"><a class="docs-heading-anchor" href="#Read-in-data-from-files">Read in data from files</a><a id="Read-in-data-from-files-1"></a><a class="docs-heading-anchor-permalink" href="#Read-in-data-from-files" title="Permalink"></a></h2><p>Having a data structure is a good step. But it is still annoying that we have to hard-code the data into Julia. A good next step is to separate the data into an external file format; JSON is a common choice.</p><pre><code class="language-julia hljs">json_data = &quot;&quot;&quot;
 {
     &quot;objects&quot;: {
         &quot;apple&quot;: {&quot;profit&quot;: 5.0, &quot;weight&quot;: 2.0},
@@ -147,11 +147,11 @@ data = read_data(knapsack_json_filename)</code></pre><pre class="documenter-exam
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solve_knapsack_3 (generic function with 1 method)</code></pre><p>Now we can solve the binary knapsack:</p><pre><code class="language-julia hljs">solve_knapsack_3(data; binary_knapsack = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><p>And an integer knapsack where we can take more than one copy of each item:</p><pre><code class="language-julia hljs">solve_knapsack_3(data; binary_knapsack = false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><p>And an integer knapsack where we can take more than one copy of each item:</p><pre><code class="language-julia hljs">solve_knapsack_3(data; binary_knapsack = false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
  0.0
@@ -188,11 +188,11 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">add_knapsack_variables (generic function with 2 methods)</code></pre><p>Now we can solve the binary knapsack:</p><pre><code class="language-julia hljs">solve_knapsack_4(data, BinaryKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><p>and the integer knapsack problem:</p><pre><code class="language-julia hljs">solve_knapsack_4(data, IntegerKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><p>and the integer knapsack problem:</p><pre><code class="language-julia hljs">solve_knapsack_4(data, IntegerKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
  0.0
@@ -255,11 +255,11 @@ end
 solve_knapsack_5(data, BinaryKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><h2 id="Function-barriers"><a class="docs-heading-anchor" href="#Function-barriers">Function barriers</a><a id="Function-barriers-1"></a><a class="docs-heading-anchor-permalink" href="#Function-barriers" title="Permalink"></a></h2><p>Querying a variable like <code>x = model[:x]</code> is not type stable. The lack of type stability means that Julia cannot statically prove what the type of <code>x</code> will be within a function. As a consequence, the functions <code>add_knapsack_constraints</code> and <code>add_knapsack_objective</code> are slower than they would be if Julia could prove that <code>x</code> was a <a href="../../../api/JuMP.Containers/#JuMP.Containers.DenseAxisArray"><code>Containers.DenseAxisArray</code></a>.</p><p>One solution to the problem of type stability is to use a function barrier:</p><pre><code class="language-julia hljs">function add_knapsack_constraints(
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><h2 id="Function-barriers"><a class="docs-heading-anchor" href="#Function-barriers">Function barriers</a><a id="Function-barriers-1"></a><a class="docs-heading-anchor-permalink" href="#Function-barriers" title="Permalink"></a></h2><p>Querying a variable like <code>x = model[:x]</code> is not type stable. The lack of type stability means that Julia cannot statically prove what the type of <code>x</code> will be within a function. As a consequence, the functions <code>add_knapsack_constraints</code> and <code>add_knapsack_objective</code> are slower than they would be if Julia could prove that <code>x</code> was a <a href="../../../api/JuMP.Containers/#JuMP.Containers.DenseAxisArray"><code>Containers.DenseAxisArray</code></a>.</p><p>One solution to the problem of type stability is to use a function barrier:</p><pre><code class="language-julia hljs">function add_knapsack_constraints(
     model::Model,
     data::KnapsackData,
     config::AbstractConfiguration,
@@ -311,11 +311,11 @@ solution = solve_knapsack_6(
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><h2 id="Create-a-module"><a class="docs-heading-anchor" href="#Create-a-module">Create a module</a><a id="Create-a-module-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-module" title="Permalink"></a></h2><p>Now we&#39;re ready to expose our model to the wider world. That might be as part of a larger Julia project that we&#39;re contributing to, or as a stand-alone script that we can run on-demand. In either case, it&#39;s good practice to wrap everything in a module. This further encapsulates our code into a single namespace, and we can add documentation in the form of <a href="https://docs.julialang.org/en/v1/manual/documentation/">docstrings</a>.</p><p>Some good rules to follow when creating a module are:</p><ul><li>use <code>import</code> in a module instead of <code>using</code> to make it clear which functions are from which packages</li><li>use <code>_</code> to start function and type names that are considered private</li><li>add docstrings to all public variables and functions.</li></ul><pre><code class="language-julia hljs">module KnapsackModel
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><h2 id="Create-a-module"><a class="docs-heading-anchor" href="#Create-a-module">Create a module</a><a id="Create-a-module-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-module" title="Permalink"></a></h2><p>Now we&#39;re ready to expose our model to the wider world. That might be as part of a larger Julia project that we&#39;re contributing to, or as a stand-alone script that we can run on-demand. In either case, it&#39;s good practice to wrap everything in a module. This further encapsulates our code into a single namespace, and we can add documentation in the form of <a href="https://docs.julialang.org/en/v1/manual/documentation/">docstrings</a>.</p><p>Some good rules to follow when creating a module are:</p><ul><li>use <code>import</code> in a module instead of <code>using</code> to make it clear which functions are from which packages</li><li>use <code>_</code> to start function and type names that are considered private</li><li>add docstrings to all public variables and functions.</li></ul><pre><code class="language-julia hljs">module KnapsackModel
 
 import JuMP
 import JSON
@@ -501,11 +501,11 @@ KnapsackModel.solve_knapsack(
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
 And data, a 5-element Vector{Float64}:
- -0.0
-  0.0
-  1.0
-  1.0
-  1.0</code></pre><div class="admonition is-info" id="Note-8dfef021145d86f1"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-8dfef021145d86f1" title="Permalink"></a></header><div class="admonition-body"><p>The <code>.</code> in <code>.KnapsackModel</code> denotes that it is a submodule and not a separate package that we installed with <code>Pkg.add</code>. If you put the <code>KnapsackModel</code> in a separate file, load it with:</p><pre><code class="language-julia hljs">include(&quot;path/to/KnapsackModel.jl&quot;)
+ 0.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0</code></pre><div class="admonition is-info" id="Note-8dfef021145d86f1"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-8dfef021145d86f1" title="Permalink"></a></header><div class="admonition-body"><p>The <code>.</code> in <code>.KnapsackModel</code> denotes that it is a submodule and not a separate package that we installed with <code>Pkg.add</code>. If you put the <code>KnapsackModel</code> in a separate file, load it with:</p><pre><code class="language-julia hljs">include(&quot;path/to/KnapsackModel.jl&quot;)
 import .KnapsackModel</code></pre></div></div><h2 id="Add-tests"><a class="docs-heading-anchor" href="#Add-tests">Add tests</a><a id="Add-tests-1"></a><a class="docs-heading-anchor-permalink" href="#Add-tests" title="Permalink"></a></h2><p>As a final step, you should add tests for your model. This often means testing on a small problem for which you can work out the optimal solution by hand. The Julia standard library <code>Test</code> has good unit-testing functionality.</p><pre><code class="language-julia hljs">import .KnapsackModel
 using Test
 
@@ -557,4 +557,4 @@ using Test
         )
         @test x === nothing
     end
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Test.DefaultTestSet(&quot;KnapsackModel&quot;, Any[Test.DefaultTestSet(&quot;feasible_binary_knapsack&quot;, Any[], 5, false, false, true, 1.762901672534846e9, 1.762901672543992e9, false, &quot;design_patterns_for_larger_models.md&quot;), Test.DefaultTestSet(&quot;feasible_integer_knapsack&quot;, Any[], 5, false, false, true, 1.762901672544018e9, 1.762901672717728e9, false, &quot;design_patterns_for_larger_models.md&quot;), Test.DefaultTestSet(&quot;infeasible_binary_knapsack&quot;, Any[], 1, false, false, true, 1.762901672717773e9, 1.762901672719623e9, false, &quot;design_patterns_for_larger_models.md&quot;)], 0, false, false, true, 1.762901672534801e9, 1.76290167271963e9, false, &quot;design_patterns_for_larger_models.md&quot;)</code></pre><div class="admonition is-success" id="Tip-3df1f26706fec2c5"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-3df1f26706fec2c5" title="Permalink"></a></header><div class="admonition-body"><p>Place these tests in a separate file <code>test_knapsack_model.jl</code> so that you can run the tests by adding <code>include(&quot;test_knapsack_model.jl&quot;)</code> to any file where needed.</p></div></div><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><p>We&#39;ve only briefly scratched the surface of ways to create and structure large JuMP models, so consider this tutorial a starting point, rather than a comprehensive list of all the possible ways to structure JuMP models.  If you are embarking on a large project that uses JuMP, a good next step is to look at ways people have written large JuMP projects &quot;in the wild.&quot;</p><p>Here are some good examples (all co-incidentally related to energy):</p><ul><li>AnyMOD.jl<ul><li><a href="https://www.youtube.com/watch?v=QE_tNDER0F4">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/leonardgoeke/AnyMOD.jl">source code</a></li></ul></li><li>PowerModels.jl<ul><li><a href="https://www.youtube.com/watch?v=POOt1FCA8LI">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/lanl-ansi/PowerModels.jl">source code</a></li></ul></li><li>PowerSimulations.jl<ul><li><a href="https://www.youtube.com/watch?v=-ZoO3npjwYU">JuliaCon 2021 talk</a></li><li><a href="https://github.com/NREL-SIIP/PowerSimulations.jl">source code</a></li></ul></li><li>UnitCommitment.jl<ul><li><a href="https://www.youtube.com/watch?v=rYUZK9kYeIY">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/ANL-CEEESA/UnitCommitment.jl">source code</a></li></ul></li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tolerances/">« Tolerances and numerical issues</a><a class="docs-footer-nextpage" href="../performance_tips/">Performance tips »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 11 November 2025 22:57">Tuesday 11 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Test.DefaultTestSet(&quot;KnapsackModel&quot;, Any[Test.DefaultTestSet(&quot;feasible_binary_knapsack&quot;, Any[], 5, false, false, true, 1.762979560228828e9, 1.76297956023075e9, false, &quot;design_patterns_for_larger_models.md&quot;), Test.DefaultTestSet(&quot;feasible_integer_knapsack&quot;, Any[], 5, false, false, true, 1.762979560230781e9, 1.762979560405315e9, false, &quot;design_patterns_for_larger_models.md&quot;), Test.DefaultTestSet(&quot;infeasible_binary_knapsack&quot;, Any[], 1, false, false, true, 1.762979560405362e9, 1.762979560407516e9, false, &quot;design_patterns_for_larger_models.md&quot;)], 0, false, false, true, 1.762979560228778e9, 1.762979560407524e9, false, &quot;design_patterns_for_larger_models.md&quot;)</code></pre><div class="admonition is-success" id="Tip-3df1f26706fec2c5"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-3df1f26706fec2c5" title="Permalink"></a></header><div class="admonition-body"><p>Place these tests in a separate file <code>test_knapsack_model.jl</code> so that you can run the tests by adding <code>include(&quot;test_knapsack_model.jl&quot;)</code> to any file where needed.</p></div></div><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><p>We&#39;ve only briefly scratched the surface of ways to create and structure large JuMP models, so consider this tutorial a starting point, rather than a comprehensive list of all the possible ways to structure JuMP models.  If you are embarking on a large project that uses JuMP, a good next step is to look at ways people have written large JuMP projects &quot;in the wild.&quot;</p><p>Here are some good examples (all co-incidentally related to energy):</p><ul><li>AnyMOD.jl<ul><li><a href="https://www.youtube.com/watch?v=QE_tNDER0F4">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/leonardgoeke/AnyMOD.jl">source code</a></li></ul></li><li>PowerModels.jl<ul><li><a href="https://www.youtube.com/watch?v=POOt1FCA8LI">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/lanl-ansi/PowerModels.jl">source code</a></li></ul></li><li>PowerSimulations.jl<ul><li><a href="https://www.youtube.com/watch?v=-ZoO3npjwYU">JuliaCon 2021 talk</a></li><li><a href="https://github.com/NREL-SIIP/PowerSimulations.jl">source code</a></li></ul></li><li>UnitCommitment.jl<ul><li><a href="https://www.youtube.com/watch?v=rYUZK9kYeIY">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/ANL-CEEESA/UnitCommitment.jl">source code</a></li></ul></li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tolerances/">« Tolerances and numerical issues</a><a class="docs-footer-nextpage" href="../performance_tips/">Performance tips »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Wednesday 12 November 2025 20:35">Wednesday 12 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

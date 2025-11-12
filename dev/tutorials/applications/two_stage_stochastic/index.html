@@ -18,7 +18,7 @@ N = 100
 d = sort!(rand(D, N));
 Ω = 1:N
 P = fill(1 / N, N);
-StatsPlots.histogram(d; bins = 20, label = &quot;&quot;, xlabel = &quot;Demand&quot;)</code></pre><img src="a5412ebe.svg" alt="Example block output"/><h2 id="JuMP-model"><a class="docs-heading-anchor" href="#JuMP-model">JuMP model</a><a id="JuMP-model-1"></a><a class="docs-heading-anchor-permalink" href="#JuMP-model" title="Permalink"></a></h2><p>The implementation of our two-stage stochastic program in JuMP is:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+StatsPlots.histogram(d; bins = 20, label = &quot;&quot;, xlabel = &quot;Demand&quot;)</code></pre><img src="771d0c0d.svg" alt="Example block output"/><h2 id="JuMP-model"><a class="docs-heading-anchor" href="#JuMP-model">JuMP model</a><a id="JuMP-model-1"></a><a class="docs-heading-anchor-permalink" href="#JuMP-model" title="Permalink"></a></h2><p>The implementation of our two-stage stochastic program in JuMP is:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x &gt;= 0)
 @variable(model, 0 &lt;= y[ω in Ω] &lt;= d[ω])
@@ -33,38 +33,38 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ termination_status : OPTIMAL
 │ ├ result_count       : 1
 │ ├ raw_status         : kHighsModelStatusOptimal
-│ └ objective_bound    : 5.58788e+02
+│ └ objective_bound    : 5.55933e+02
 ├ Solution (result = 1)
 │ ├ primal_status        : FEASIBLE_POINT
 │ ├ dual_status          : FEASIBLE_POINT
-│ ├ objective_value      : 5.58788e+02
-│ ├ dual_objective_value : 5.58788e+02
-│ └ relative_gap         : 2.03453e-16
+│ ├ objective_value      : 5.55933e+02
+│ ├ dual_objective_value : 5.55933e+02
+│ └ relative_gap         : 2.04498e-16
 └ Work counters
-  ├ solve_time (sec)   : 4.29630e-04
+  ├ solve_time (sec)   : 4.87566e-04
   ├ simplex_iterations : 42
   ├ barrier_iterations : 0
-  └ node_count         : -1</code></pre><p>The optimal number of pies to make is:</p><pre><code class="language-julia hljs">value(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">207.6184581231869</code></pre><p>The distribution of total profit is:</p><pre><code class="language-julia hljs">total_profit = [-2 * value(x) + value(z[ω]) for ω in Ω]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100-element Vector{Float64}:
- 368.1212967839171
- 400.1240452446984
- 409.84900897713743
- 424.2173516543815
- 427.7229071977984
- 430.3702327442605
- 435.39896010012677
- 439.0302475281903
- 439.7995386477241
- 441.99753139954026
+  └ node_count         : -1</code></pre><p>The optimal number of pies to make is:</p><pre><code class="language-julia hljs">value(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">201.48799851464503</code></pre><p>The distribution of total profit is:</p><pre><code class="language-julia hljs">total_profit = [-2 * value(x) + value(z[ω]) for ω in Ω]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100-element Vector{Float64}:
+ 354.47167229251
+ 390.82845927998073
+ 393.5739208825928
+ 403.53005749307295
+ 403.61085239978684
+ 409.78198830767224
+ 411.3639741774132
+ 425.9932963131821
+ 431.8824258618454
+ 442.4382680394938
    ⋮
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609
- 622.8553743695609</code></pre><p>Let&#39;s plot it:</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935
+ 604.463995543935</code></pre><p>Let&#39;s plot it:</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
     bin_distribution(x::Vector{Float64}, N::Int)
 
 A helper function that discretizes `x` into bins of width `N`.
@@ -85,7 +85,7 @@ Plots.vline!(
     label = &quot;Expected profit (\$$(round(Int, μ)))&quot;,
     linewidth = 3,
 )
-plot</code></pre><img src="de447ec5.svg" alt="Example block output"/><h2 id="Risk-measures"><a class="docs-heading-anchor" href="#Risk-measures">Risk measures</a><a id="Risk-measures-1"></a><a class="docs-heading-anchor-permalink" href="#Risk-measures" title="Permalink"></a></h2><p>A risk measure is a function which maps a random variable to a real number. Common risk measures include the mean (expectation), median, mode, and maximum. We need a risk measure to convert the distribution of second stage costs into a single number that can be optimized.</p><p>Our model currently uses the expectation risk measure, but others are possible too. One popular risk measure is the conditional value at risk (CVaR).</p><p>CVaR has a parameter <span>$\gamma$</span>, and it computes the expectation of the worst <span>$\gamma$</span> fraction of outcomes.</p><p>If we are maximizing, so that small outcomes are bad, the definition of CVaR is:</p><p class="math-container">\[CVaR_{\gamma}[Z] = \max\limits_{\xi} \;\; \xi - \frac{1}{\gamma}\mathbb{E}_\omega\left[(\xi - Z)_+\right]\]</p><p>which can be formulated as the linear program:</p><p class="math-container">\[\begin{aligned}
+plot</code></pre><img src="12ddd81a.svg" alt="Example block output"/><h2 id="Risk-measures"><a class="docs-heading-anchor" href="#Risk-measures">Risk measures</a><a id="Risk-measures-1"></a><a class="docs-heading-anchor-permalink" href="#Risk-measures" title="Permalink"></a></h2><p>A risk measure is a function which maps a random variable to a real number. Common risk measures include the mean (expectation), median, mode, and maximum. We need a risk measure to convert the distribution of second stage costs into a single number that can be optimized.</p><p>Our model currently uses the expectation risk measure, but others are possible too. One popular risk measure is the conditional value at risk (CVaR).</p><p>CVaR has a parameter <span>$\gamma$</span>, and it computes the expectation of the worst <span>$\gamma$</span> fraction of outcomes.</p><p>If we are maximizing, so that small outcomes are bad, the definition of CVaR is:</p><p class="math-container">\[CVaR_{\gamma}[Z] = \max\limits_{\xi} \;\; \xi - \frac{1}{\gamma}\mathbb{E}_\omega\left[(\xi - Z)_+\right]\]</p><p>which can be formulated as the linear program:</p><p class="math-container">\[\begin{aligned}
 CVaR_{\gamma}[Z] = \max\limits_{\xi, z_\omega} \;\; &amp; \xi - \frac{1}{\gamma}\sum P_\omega z_\omega\\
  &amp; z_\omega \ge \xi - Z_\omega &amp; \quad \forall \omega \\
  &amp; z_\omega \ge 0 &amp; \quad \forall \omega.
@@ -101,7 +101,7 @@ CVaR_{\gamma}[Z] = \max\limits_{\xi, z_\omega} \;\; &amp; \xi - \frac{1}{\gamma}
     optimize!(model)
     assert_is_solved_and_feasible(model)
     return objective_value(model)
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">CVaR (generic function with 1 method)</code></pre><p>When <code>γ</code> is <code>1.0</code>, we compute the mean of the profit:</p><pre><code class="language-julia hljs">cvar_10 = CVaR(total_profit, P; γ = 1.0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">558.7880412131301</code></pre><pre><code class="language-julia hljs">Statistics.mean(total_profit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">558.7880412131304</code></pre><p>As <code>γ</code> approaches <code>0.0</code>, we compute the worst-case (minimum) profit:</p><pre><code class="language-julia hljs">cvar_00 = CVaR(total_profit, P; γ = 0.0001)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">368.1212967839171</code></pre><pre><code class="language-julia hljs">minimum(total_profit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">368.1212967839171</code></pre><p>By varying <code>γ</code> between <code>0</code> and <code>1</code> we can compute some trade-off of these two extremes:</p><pre><code class="language-julia hljs">cvar_05 = CVaR(total_profit, P; γ = 0.5)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">496.72452408154874</code></pre><p>Let&#39;s plot these outcomes on our distribution:</p><pre><code class="language-julia hljs">plot = StatsPlots.histogram(
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">CVaR (generic function with 1 method)</code></pre><p>When <code>γ</code> is <code>1.0</code>, we compute the mean of the profit:</p><pre><code class="language-julia hljs">cvar_10 = CVaR(total_profit, P; γ = 1.0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">555.932569150522</code></pre><pre><code class="language-julia hljs">Statistics.mean(total_profit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">555.932569150522</code></pre><p>As <code>γ</code> approaches <code>0.0</code>, we compute the worst-case (minimum) profit:</p><pre><code class="language-julia hljs">cvar_00 = CVaR(total_profit, P; γ = 0.0001)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">354.47167229251</code></pre><pre><code class="language-julia hljs">minimum(total_profit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">354.47167229251</code></pre><p>By varying <code>γ</code> between <code>0</code> and <code>1</code> we can compute some trade-off of these two extremes:</p><pre><code class="language-julia hljs">cvar_05 = CVaR(total_profit, P; γ = 0.5)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">508.634443192953</code></pre><p>Let&#39;s plot these outcomes on our distribution:</p><pre><code class="language-julia hljs">plot = StatsPlots.histogram(
     total_profit;
     bins = bin_distribution(total_profit, 25),
     label = &quot;&quot;,
@@ -114,7 +114,7 @@ Plots.vline!(
     label = [&quot;γ = 1.0&quot; &quot;γ = 0.5&quot; &quot;γ = 0.0&quot;],
     linewidth = 3,
 )
-plot</code></pre><img src="c048bd0a.svg" alt="Example block output"/><h2 id="Risk-averse-sample-average-approximation"><a class="docs-heading-anchor" href="#Risk-averse-sample-average-approximation">Risk averse sample average approximation</a><a id="Risk-averse-sample-average-approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Risk-averse-sample-average-approximation" title="Permalink"></a></h2><p>Because CVaR can be formulated as a linear program, we can form a risk averse sample average approximation model by combining the two formulations:</p><pre><code class="language-julia hljs">γ = 0.4
+plot</code></pre><img src="1a02b7c3.svg" alt="Example block output"/><h2 id="Risk-averse-sample-average-approximation"><a class="docs-heading-anchor" href="#Risk-averse-sample-average-approximation">Risk averse sample average approximation</a><a id="Risk-averse-sample-average-approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Risk-averse-sample-average-approximation" title="Permalink"></a></h2><p>Because CVaR can be formulated as a linear program, we can form a risk averse sample average approximation model by combining the two formulations:</p><pre><code class="language-julia hljs">γ = 0.4
 model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x &gt;= 0)
@@ -126,7 +126,7 @@ set_silent(model)
 @constraint(model, [ω in Ω], z[ω] &gt;= ξ - Z[ω])
 @objective(model, Max, -2x + ξ - 1 / γ * sum(P[ω] * z[ω] for ω in Ω))
 optimize!(model)
-assert_is_solved_and_feasible(model)</code></pre><p>When <span>$\gamma = 0.4$</span>, the optimal number of pies to bake is:</p><pre><code class="language-julia hljs">value(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">181.90928585209483</code></pre><p>The distribution of total profit is:</p><pre><code class="language-julia hljs">risk_averse_total_profit = [value(-2x + Z[ω]) for ω in Ω]
+assert_is_solved_and_feasible(model)</code></pre><p>When <span>$\gamma = 0.4$</span>, the optimal number of pies to bake is:</p><pre><code class="language-julia hljs">value(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">184.27492771840042</code></pre><p>The distribution of total profit is:</p><pre><code class="language-julia hljs">risk_averse_total_profit = [value(-2x + Z[ω]) for ω in Ω]
 bins = bin_distribution([total_profit; risk_averse_total_profit], 25)
 plot = StatsPlots.histogram(total_profit; label = &quot;Expectation&quot;, bins = bins)
 StatsPlots.histogram!(
@@ -136,4 +136,4 @@ StatsPlots.histogram!(
     bins = bins,
     alpha = 0.5,
 )
-plot</code></pre><img src="cccfaea5.svg" alt="Example block output"/><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><ul><li>Try solving this problem for different numbers of samples and different distributions.</li><li>Refactor the example to avoid hard-coding the costs. What happens to the solution if the cost of disposing unsold pies increases?</li><li>Plot the optimal number of pies to make for different values of the risk aversion parameter <span>$\gamma$</span>. What is the relationship?</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../web_app/">« Serving web apps</a><a class="docs-footer-nextpage" href="../../../manual/models/">Models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 11 November 2025 22:57">Tuesday 11 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot</code></pre><img src="5a3bf8d1.svg" alt="Example block output"/><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><ul><li>Try solving this problem for different numbers of samples and different distributions.</li><li>Refactor the example to avoid hard-coding the costs. What happens to the solution if the cost of disposing unsold pies increases?</li><li>Plot the optimal number of pies to make for different values of the risk aversion parameter <span>$\gamma$</span>. What is the relationship?</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../web_app/">« Serving web apps</a><a class="docs-footer-nextpage" href="../../../manual/models/">Models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Wednesday 12 November 2025 20:35">Wednesday 12 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

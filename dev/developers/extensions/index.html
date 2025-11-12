@@ -211,10 +211,7 @@ silent_hook (generic function with 1 method)
 julia&gt; optimize!(model; silent = true)
 
 julia&gt; optimize!(model; silent = false)
-MIP  has 0 rows; 1 cols; 0 nonzeros; 1 integer variables (0 binary)
-Coefficient ranges:
-  Cost   [1e+00, 1e+00]
-  Bound  [2e+00, 2e+00]
+MIP has 0 rows; 1 col; 0 nonzeros; 1 integer variables (0 binary)
 Assessing feasibility of MIP using primal feasibility and integrality tolerance of       1e-06
 Solution has               num          max          sum
 Col     infeasibilities      0            0            0
@@ -224,12 +221,13 @@ Row     residuals            0            0            0
 Presolving model
 0 rows, 0 cols, 0 nonzeros  0s
 0 rows, 0 cols, 0 nonzeros  0s
+Presolve reductions: rows 0(-0); columns 0(-1); nonzeros 0(-0) - Reduced to empty
 Presolve: Optimal
 
-Src: B =&gt; Branching; C =&gt; Central rounding; F =&gt; Feasibility pump; J =&gt; Feasibility jump;
-     H =&gt; Heuristic; L =&gt; Sub-MIP; P =&gt; Empty MIP; R =&gt; Randomized rounding; Z =&gt; ZI Round;
-     I =&gt; Shifting; S =&gt; Solve LP; T =&gt; Evaluate node; U =&gt; Unbounded; X =&gt; User solution;
-     z =&gt; Trivial zero; l =&gt; Trivial lower; u =&gt; Trivial upper; p =&gt; Trivial point
+Src: B =&gt; Branching; C =&gt; Central rounding; F =&gt; Feasibility pump; H =&gt; Heuristic;
+     I =&gt; Shifting; J =&gt; Feasibility jump; L =&gt; Sub-MIP; P =&gt; Empty MIP; R =&gt; Randomized rounding;
+     S =&gt; Solve LP; T =&gt; Evaluate node; U =&gt; Unbounded; X =&gt; User solution; Y =&gt; HiGHS solution;
+     Z =&gt; ZI Round; l =&gt; Trivial lower; p =&gt; Trivial point; u =&gt; Trivial upper; z =&gt; Trivial zero
 
         Nodes      |    B&amp;B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work
 Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
@@ -247,17 +245,11 @@ Solving report
                     0 (bound viol.)
                     0 (int. viol.)
                     0 (row viol.)
-  Timing            0.00 (total)
-                    0.00 (presolve)
-                    0.00 (solve)
-                    0.00 (postsolve)
+  Timing            0.00
   Max sub-MIP depth 0
   Nodes             0
-  Repair LPs        0 (0 feasible; 0 iterations)
-  LP iterations     0 (total)
-                    0 (strong br.)
-                    0 (separation)
-                    0 (heuristics)</code></pre><h2 id="Creating-new-container-types"><a class="docs-heading-anchor" href="#Creating-new-container-types">Creating new container types</a><a id="Creating-new-container-types-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-new-container-types" title="Permalink"></a></h2><p>JuMP macros (for example, <a href="../../api/JuMP/#@variable"><code>@variable</code></a>) accept a <code>container</code> keyword argument to force the type of container that is chosen. By default, JuMP supports <code>container = Array</code>, <code>container = DenseAxisArray</code>, <code>container = SparseAxisArray</code> and <code>container = Auto</code>. You can extend support to user-defined types by implementing <a href="../../api/JuMP.Containers/#Containers.container"><code>Containers.container</code></a>.</p><p>For example, here is a container that reverses the order of the indices:</p><pre><code class="language-julia-repl hljs">julia&gt; struct Foo end
+  Repair LPs        0
+  LP iterations     0</code></pre><h2 id="Creating-new-container-types"><a class="docs-heading-anchor" href="#Creating-new-container-types">Creating new container types</a><a id="Creating-new-container-types-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-new-container-types" title="Permalink"></a></h2><p>JuMP macros (for example, <a href="../../api/JuMP/#@variable"><code>@variable</code></a>) accept a <code>container</code> keyword argument to force the type of container that is chosen. By default, JuMP supports <code>container = Array</code>, <code>container = DenseAxisArray</code>, <code>container = SparseAxisArray</code> and <code>container = Auto</code>. You can extend support to user-defined types by implementing <a href="../../api/JuMP.Containers/#Containers.container"><code>Containers.container</code></a>.</p><p>For example, here is a container that reverses the order of the indices:</p><pre><code class="language-julia-repl hljs">julia&gt; struct Foo end
 
 julia&gt; function Containers.container(f::Function, indices, ::Type{Foo})
            return reverse([f(i...) for i in indices])
@@ -320,4 +312,4 @@ function all_names_fast(model)
         _function_barrier(names, model, F, S)
     end
     return names
-end</code></pre><div class="admonition is-info" id="Note-c718cfa6c4e9a42d"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-c718cfa6c4e9a42d" title="Permalink"></a></header><div class="admonition-body"><p>It is important to explicitly type the <code>F</code> and <code>S</code> arguments. If you leave them untyped, for example, <code>function _function_barrier(names, model, F, S)</code>, Julia will not specialize the function calls and performance will not be improved.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../contributing/">« Contributing</a><a class="docs-footer-nextpage" href="../custom_solver_binaries/">Custom binaries »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 11 November 2025 22:57">Tuesday 11 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><div class="admonition is-info" id="Note-c718cfa6c4e9a42d"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-c718cfa6c4e9a42d" title="Permalink"></a></header><div class="admonition-body"><p>It is important to explicitly type the <code>F</code> and <code>S</code> arguments. If you leave them untyped, for example, <code>function _function_barrier(names, model, F, S)</code>, Julia will not specialize the function calls and performance will not be improved.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../contributing/">« Contributing</a><a class="docs-footer-nextpage" href="../custom_solver_binaries/">Custom binaries »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Wednesday 12 November 2025 20:36">Wednesday 12 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

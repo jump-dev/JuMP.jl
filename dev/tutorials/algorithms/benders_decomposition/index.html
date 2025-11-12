@@ -63,7 +63,7 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ dual_objective_value : NaN
 │ └ relative_gap         : 0.00000e+00
 └ Work counters
-  ├ solve_time (sec)   : 6.56772e-03
+  ├ solve_time (sec)   : 6.60324e-03
   ├ simplex_iterations : 15
   ├ barrier_iterations : -1
   └ node_count         : 1</code></pre><p>The optimal objective value is -5.1:</p><pre><code class="language-julia hljs">objective_value(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-5.1</code></pre><p>and the optimal flows are:</p><pre><code class="language-julia hljs">function optimal_flows(x)
@@ -140,7 +140,9 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + x[3,5] + 3 x[3,6] + x[4,6] + x[3,7] + θ ≥ 0
         6  -6.1000e+00  -4.1000e+00   4.8780e-01
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + 2 x[1,3] + x[4,6] + θ ≥ 0
-        7  -5.1000e+00  -5.1000e+00   0.0000e+00
+        7  -5.1000e+00  -4.1000e+00   2.4390e-01
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + x[3,5] + x[3,7] + 2 x[6,8] + θ ≥ 0
+        8  -5.1000e+00  -5.1000e+00   0.0000e+00
 Terminating with the optimal solution</code></pre><p>Finally, we can obtain the optimal solution:</p><pre><code class="language-julia hljs">optimize!(model)
 assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
@@ -273,7 +275,9 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + x[3,5] + 3 x[3,6] + x[4,6] + x[3,7] + θ ≥ 0
         6  -6.1000e+00  -4.1000e+00   4.8780e-01
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + 2 x[1,3] + x[4,6] + θ ≥ 0
-        7  -5.1000e+00  -5.1000e+00   0.0000e+00
+        7  -5.1000e+00  -4.1000e+00   2.4390e-01
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the cut 3 x[1,2] + x[3,5] + x[3,7] + 2 x[6,8] + θ ≥ 0
+        8  -5.1000e+00  -5.1000e+00   0.0000e+00
 Terminating with the optimal solution</code></pre><p>Finally, we can obtain the optimal solution:</p><pre><code class="language-julia hljs">optimize!(model)
 assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
@@ -372,38 +376,36 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,2] - 6 x[1,3] - 4 x[1,4] - 4 x[5,8] - 2 x[6,8] ≤ -1
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,2] - 6 x[1,3] - 2 x[4,6] - 4 x[5,8] - 2 x[6,8] ≤ -1
 <span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,2] - 2 x[1,4] - 2 x[3,5] - 6 x[3,6] - x[4,6] - 2 x[3,7] - 4 x[5,8] - 2 x[6,8] - 4 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -15 x[2,5] - 3 x[3,5] - 2 x[2,6] - 6 x[3,6] - 2 x[4,6] - 2 x[3,7] - 2 x[6,8] - 4 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -x[2,6] - 3 x[3,6] - x[4,6] - 2 x[3,7] - 12 x[5,8] - 4 x[6,8] - 4 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -x[3,7] - 12 x[5,8] - 6 x[6,8] - 8 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[2,6] - 9 x[3,6] - 3 x[4,6] - x[3,7] - 12 x[5,8] - 8 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -9 x[1,2] - 2 x[1,3] - 2 x[3,5] - 2 x[2,6] - 12 x[3,6] - 5 x[4,6] - x[3,7] - 4 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -9.000000000000004 x[1,2] - 4.000000000000002 x[1,3] - 6.000000000000006 x[1,4] - x[3,5] - 2.9999999999999987 x[3,6] - x[3,7] ≤ -1.0000000000000004
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -5.999999999999995 x[1,2] - 3.9999999999999982 x[1,4] - 1.9999999999999982 x[3,5] - 5.999999999999997 x[3,6] - 2.999999999999999 x[3,7] - 4 x[5,8] - 2 x[6,8] ≤ -0.9999999999999991
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -4.5 x[1,2] - 2 x[1,4] - 1.5 x[3,5] - 4.5 x[3,6] - 0.5 x[4,6] - 6 x[7,8] ≤ -0.5
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 2 x[1,4] - 10 x[2,5] - x[3,5] - 2 x[2,6] - 3 x[3,6] - x[4,6] - 2 x[3,7] - 4 x[5,8] - 2 x[6,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 2 x[1,4] - 10 x[2,5] - x[3,5] - 2 x[3,7] - 4 x[5,8] - 6 x[6,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 10 x[2,5] - x[3,5] - 2 x[3,7] - 4 x[5,8] - 6 x[6,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -5 x[2,5] - x[3,5] - 8 x[5,8] - 6 x[6,8] - 12 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 2 x[1,4] - 3 x[3,6] - 3 x[3,7] - 12 x[5,8] - 4 x[6,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3.000000000000023 x[1,2] - 4.000000000000014 x[1,3] - 4.9999999999999964 x[2,5] - 2.000000000000007 x[2,6] - 2.9999999999999956 x[3,6] - 3.000000000000006 x[4,6] - 4.000000000000077 x[5,8] - 2.3092638912203256e-14 x[6,8] - 3.9999999999999933 x[7,8] ≤ -1.0000000000000078
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 10 x[2,5] - x[3,5] - 3 x[2,6] - 6 x[3,6] - 3 x[4,6] - 2 x[3,7] - 4 x[5,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -10 x[2,5] - 2 x[3,5] - 3 x[2,6] - 9 x[3,6] - 3 x[4,6] - 3 x[3,7] - 4 x[5,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,4] - 10 x[2,5] - 2 x[3,5] - 3 x[2,6] - 9 x[3,6] - 3 x[3,7] - 4 x[5,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,4] - 10 x[2,5] - 2 x[3,5] - 3 x[2,6] - 9 x[3,6] - 4 x[5,8] - 12 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,4] - 3 x[2,6] - 9 x[3,6] - 12 x[5,8] - 12 x[7,8] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 14.999999999999996 x[2,5] - 1.9999999999999993 x[3,5] - 1.9999999999999996 x[2,6] - 2.999999999999999 x[3,6] - 2.000000000000001 x[4,6] - 1.9999999999999993 x[3,7] - 1.9999999999999996 x[6,8] ≤ -0.9999999999999998
-       29  -2.8700e+01  -7.0000e-01   4.0000e+01
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -9 x[1,2] - 6 x[1,3] - 6 x[1,4] ≤ -1
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -1.9999999999999998 x[1,3] - 11.999999999999998 x[5,8] - 5.999999999999999 x[6,8] - 7.999999999999999 x[7,8] ≤ -0.9999999999999999
-<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -11.999999999999996 x[5,8] - 5.999999999999998 x[6,8] - 11.999999999999996 x[7,8] ≤ -0.9999999999999998
-       33  -1.1200e+01  -2.0000e-01   5.5000e+01
-       34  -6.4000e+00  -2.4000e+00   1.6667e+00
-       35  -6.2000e+00  -3.2000e+00   9.3750e-01
-       36  -6.1000e+00  -4.1000e+00   4.8780e-01
-       37  -5.2000e+00  -4.2000e+00   2.3810e-01
-       38  -5.1000e+00  -2.1000e+00   1.4286e+00
-       39  -5.1000e+00  -4.1000e+00   2.4390e-01
-       40  -5.1000e+00  -5.1000e+00   0.0000e+00
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,2] - 2 x[3,5] - 6 x[3,6] - 2 x[4,6] - 2 x[3,7] - 4 x[5,8] - 2 x[6,8] - 4 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -5 x[2,5] - x[3,5] - x[2,6] - 3 x[3,6] - x[4,6] - x[3,7] - 8 x[5,8] - 4 x[6,8] - 8 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,3] - 6 x[1,4] - 9.999999999999998 x[2,5] - x[3,5] - 3 x[2,6] - 6.000000000000002 x[3,6] - x[3,7] - 3.999999999999999 x[5,8] - 3.999999999999999 x[7,8] ≤ -0.9999999999999998
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -1.9999999999999987 x[1,3] - 5.999999999999997 x[1,4] - 14.999999999999996 x[2,5] - 1.9999999999999991 x[3,5] - 2.9999999999999987 x[2,6] - 5.9999999999999964 x[3,6] - x[3,7] - 3.999999999999999 x[7,8] ≤ -0.9999999999999998
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 5.999999999999997 x[1,4] - 9.999999999999996 x[2,5] - 2.999999999999999 x[3,5] - 1.999999999999999 x[2,6] - 8.999999999999996 x[3,6] - 1.9999999999999996 x[3,7] - 3.999999999999999 x[7,8] ≤ -0.9999999999999998
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 6 x[1,4] - 2 x[2,6] - 9 x[3,6] - 2 x[3,7] - 12 x[5,8] - 4 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -9 x[1,2] - 4 x[1,4] - 3 x[3,5] - 9 x[3,6] - x[4,6] - 2 x[3,7] - 4 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,2] - 2 x[1,4] - 2 x[3,5] - x[2,6] - 9 x[3,6] - 2 x[4,6] - 4 x[5,8] - 12 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 10 x[2,5] - 3 x[3,5] - 2 x[2,6] - 9 x[3,6] - 3 x[4,6] - 12 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 10 x[2,5] - 3 x[3,5] - 6 x[6,8] - 12 x[7,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[1,2] - 2 x[1,4] - 10 x[2,5] - 3 x[3,5] - 3 x[3,7] - 6 x[6,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,4] - 15 x[2,5] - 3 x[3,5] - 3 x[3,7] - 6 x[6,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[3,7] - 12 x[5,8] - 6 x[6,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -2 x[1,4] - 3 x[2,6] - 9 x[3,6] - 2 x[4,6] - 3 x[3,7] - 12 x[5,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -3 x[2,6] - 9 x[3,6] - 3 x[4,6] - 3 x[3,7] - 12 x[5,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,3] - 10 x[2,5] - 3 x[2,6] - 3 x[4,6] - 4 x[5,8] ≤ -1
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -6 x[1,3] - 15 x[2,5] - 3 x[2,6] - 3 x[4,6] ≤ -1
+       26  -2.8700e+01  -1.7000e+00   1.5882e+01
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -8.999999999999996 x[1,2] - 5.999999999999999 x[1,4] - 2.9999999999999996 x[3,5] - 8.999999999999996 x[3,6] - 3 x[3,7] ≤ -0.9999999999999998
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -4.499999999999998 x[1,2] - 2.9999999999999996 x[1,4] - 1.4999999999999998 x[3,5] - 4.499999999999998 x[3,6] - 6 x[7,8] ≤ -0.4999999999999999
+       29  -8.4000e+00  -4.0000e-01   2.0000e+01
+<span class="sgr36"><span class="sgr1">[ Info: </span></span>Adding the feasibility cut -12 x[5,8] - 6 x[6,8] - 12 x[7,8] ≤ -1
+       31  -8.1000e+00  -1.0000e-01   8.0000e+01
+       32  -6.3000e+00  -4.3000e+00   4.6512e-01
+       33  -6.2000e+00  -4.2000e+00   4.7619e-01
+       34  -5.2000e+00  -4.2000e+00   2.3810e-01
+       35  -5.2000e+00  -4.2000e+00   2.3810e-01
+       36  -5.1000e+00  -4.1000e+00   2.4390e-01
+       37  -5.1000e+00  -4.1000e+00   2.4390e-01
+       38  -5.1000e+00  -5.1000e+00   0.0000e+00
 Terminating with the optimal solution</code></pre><p>Finally, we can obtain the optimal solution:</p><pre><code class="language-julia hljs">optimize!(model)
 assert_is_solved_and_feasible(model)
 x_optimal = value.(x)
@@ -417,4 +419,4 @@ feasible_inplace_solution = optimal_flows(optimal_ret.y)</code></pre><pre class=
  (3, 6) =&gt; 1.0
  (4, 6) =&gt; 1.0
  (5, 8) =&gt; 4.0
- (6, 8) =&gt; 2.0</code></pre><p>which is the same as the monolithic solution (because <code>sum(y) &gt;= 1</code> in the monolithic solution):</p><pre><code class="language-julia hljs">feasible_inplace_solution == monolithic_solution</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../conic/quantum_discrimination/">« Example: quantum state discrimination</a><a class="docs-footer-nextpage" href="../cutting_stock_column_generation/">Column generation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 11 November 2025 22:57">Tuesday 11 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ (6, 8) =&gt; 2.0</code></pre><p>which is the same as the monolithic solution (because <code>sum(y) &gt;= 1</code> in the monolithic solution):</p><pre><code class="language-julia hljs">feasible_inplace_solution == monolithic_solution</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../conic/quantum_discrimination/">« Example: quantum state discrimination</a><a class="docs-footer-nextpage" href="../cutting_stock_column_generation/">Column generation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Wednesday 12 November 2025 20:35">Wednesday 12 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
