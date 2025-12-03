@@ -66,7 +66,7 @@ julia> expr
 ### Operator overloading
 
 Expressions can also be created without macros. However, note that in some
-cases, this can be much slower that constructing an expression using macros.
+cases, this can be much slower than constructing an expression using macros.
 
 ```jldoctest
 julia> model = Model();
