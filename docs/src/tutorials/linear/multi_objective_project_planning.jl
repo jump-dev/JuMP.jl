@@ -110,10 +110,10 @@ start_ub = sum(tasks.duration)
 @objective(model, Min, [obj_time, obj_cost, obj_people])
 
 # For the constraints, the start time of a task must be after any required
-# preceeding tasks have finished:
+# preceding tasks have finished:
 
 for r in eachrow(tasks)
-    for dependent_task in split(r.preceeds, ","; keepempty = false)
+    for dependent_task in split(r.precedes, ","; keepempty = false)
         @constraint(
             model,
             x_start_time[dependent_task] >=

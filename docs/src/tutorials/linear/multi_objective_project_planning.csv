@@ -1,4 +1,4 @@
-task,description,duration,staff,max_accelerate,cost_accelerate,preceeds
+task,description,duration,staff,max_accelerate,cost_accelerate,precedes
 "A","Purchase of land",12,2,2,6000,"C,D"
 "B","Building plans and plot",6,4,2,6000,"C,D"
 "C","Municipal approval to build",5,0,2,6000,"E,F"
