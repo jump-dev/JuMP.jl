@@ -37,6 +37,7 @@ jll|JLL
 [Jj]ulia
 juxtaposted
 libblastrampoline
+makespan
 [Mm]ultiline
 [Mm]ulticriteria
 multithread(ed|ing)
@@ -137,6 +138,7 @@ Clarabel
 Clp
 CPLEXLink
 Colab
+Complutense
 (cosmo|COSMO)
 COSMOAccelerators
 Couenne
@@ -184,6 +186,7 @@ Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
+Universidad
 Uno
 (Xpress|XPRESS)
 
@@ -216,6 +219,7 @@ Farkas
 Ferrolho
 Fourer
 Frobenius
+Gandibleux
 Garfinkel
 Garstka
 Gleixner
@@ -292,6 +296,7 @@ Ulungu
 Vanaret
 Vandenberghe
 Vielma
+Vitoriano
 Watson, H.A.J.
 Wechsung
 Wei
