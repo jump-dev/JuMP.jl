@@ -11,7 +11,7 @@
 # **This tutorial was originally contributed by Xavier Gandibleux. It was
 # adapted from an example created by Begoña Vitoriano from the Universidad
 # Complutense de Madrid and originally presented at the EURO PhD School on
-# multicriteria decision making with mathematical orogramming, held February
+# multicriteria decision making with mathematical programming, held February
 # 17-28, 2014 in Madrid.**
 
 # ## Required packages
@@ -30,7 +30,7 @@ import Test  #src
 
 # This tutorial investigates the problem of project planning. To complete the
 # project, a number of tasks need to be completed in some precedence order.
-# Each task requires a diferent amount of resources, for example time, money,
+# Each task requires a different amount of resources, for example time, money,
 # and labor. The optimal schedule depends on the objective function. Do we want
 # to minimize the makespan (the time to complete the project)? Or do we want to
 # complete the project while minimizing the cost to complete it? Instead of
@@ -109,8 +109,8 @@ start_ub = sum(tasks.duration)
 
 @objective(model, Min, [obj_time, obj_cost, obj_people])
 
-# For the constraints, the start time of a task must be after any dependent
-# tasks have finished.
+# For the constraints, the start time of a task must be after any required
+# preceeding tasks have finished:
 
 for r in eachrow(tasks)
     for dependent_task in split(r.preceeds, ","; keepempty = false)
@@ -142,7 +142,7 @@ solution_summary(model)
 objective_bound(model)
 
 # In the ideal case, we cannot do better than a makespan of 77, paying \$0 in
-# extra cost and employing zero extra staff. In reality, we cannot achieve this
+# extra cost, and employing zero extra staff. In reality, we cannot achieve this
 # ideal outcome, and we need to trade-off the three objectives against each
 # other.
 

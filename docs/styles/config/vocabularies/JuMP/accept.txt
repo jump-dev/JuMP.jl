@@ -186,6 +186,7 @@ Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
+Universidad
 Uno
 (Xpress|XPRESS)
 
