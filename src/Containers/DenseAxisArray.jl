@@ -854,11 +854,13 @@ function Base.summary(io::IO, x::DenseAxisArrayView)
     return print(io, "view(::DenseAxisArray, ", join(x.axes, ", "), "), over")
 end
 
+struct _InitNotProvided end
+
 function Base.sum(
     f::F,
     x::Union{DenseAxisArray{T},DenseAxisArrayView{T}};
     dims = Colon(),
-    init = zero(T),
+    init = _InitNotProvided(),
 ) where {F<:Function,T}
     if dims != Colon()
         return error(
@@ -867,7 +869,11 @@ function Base.sum(
             "for-loop summation instead.",
         )
     end
-    return sum(f(xi) for xi in x; init)
+    if init == _InitNotProvided()
+        return sum(f(xi) for xi in x)
+    else
+        return sum(f(xi) for xi in x; init)
+    end
 end
 
 function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; kwargs...)
