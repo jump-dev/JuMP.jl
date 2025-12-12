@@ -110,7 +110,6 @@ model = Model()
 # package.
 
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_silent(model)
 
 # MultiObjectiveAlgorithms.jl supports many different algorithms for solving
 # multiobjective optimization problems. One option is the epsilon-constraint
@@ -121,6 +120,9 @@ set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 # Let's solve the problem and see the solution
 
 optimize!(model)
+
+#-
+
 assert_is_solved_and_feasible(model)
 solution_summary(model)
 

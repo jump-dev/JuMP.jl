@@ -61,7 +61,7 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.7.6"
+    rev = "v1.9.0"
 [HiGHS]
     rev = "v1.20.1"
 [Hypatia]
@@ -70,9 +70,9 @@
 [Ipopt]
     rev = "v1.13.0"
 [KNITRO]
-    rev = "v1.0.3"
+    rev = "v1.1.0"
 [MathOptAnalyzer]
-    rev = "v0.1.0"
+    rev = "v0.1.1"
 [MathOptIIS]
     rev = "v0.1.1"
 [MiniZinc]
@@ -115,7 +115,7 @@
 [SeDuMi]
     rev = "v0.4.4"
 [SumOfSquares]
-    rev = "v0.7.5"
+    rev = "v0.7.6"
     extension = true
 [Xpress]
     rev = "v0.17.2"
@@ -144,7 +144,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.29"
+    rev = "v1.1.30"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -184,11 +184,11 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.27"
+    rev = "v0.5.30"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.18"
+    rev = "v0.1.19"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -199,7 +199,7 @@
     extension = true
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v1.13.2"
+    rev = "v1.13.3"
 [OSQP]
     user = "osqp"
     rev = "v0.8.1"
@@ -211,7 +211,7 @@
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "v0.7.0"
+    rev = "v0.7.1"
     has_html = true
     extension = true
 [ProxSDP]

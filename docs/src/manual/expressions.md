@@ -100,7 +100,7 @@ julia> ex = AffExpr(-1.0, x => 2.0, y => 1.0)
 2 x + y - 1
 ```
 
-### `add_to_expression!`
+### [`add_to_expression!`](@id manual_affine_add_to_expr)
 
 The fourth way to create an affine expression is by using
 [`add_to_expression!`](@ref). Compared to the operator overloading method,
@@ -271,7 +271,7 @@ julia> quad_expr = QuadExpr(
 x² + 2 x*y + y² + x + y - 1
 ```
 
-### `add_to_expression!`
+### [`add_to_expression!`](@id manual_quadratic_add_to_expr)
 
 Finally, [`add_to_expression!`](@ref) can also be used to add quadratic terms.
 
