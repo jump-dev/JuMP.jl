@@ -992,14 +992,18 @@ end
 
 function test_sum_init()
     x = Containers.@container([i in Int[]], i)
-    @test sum(x) == 0
+    @test_throws ArgumentError sum(x)
     @test sum(x; init = 1) == 1
     y = Containers.@container([i in BigInt[]], i)
-    y_1 = sum(y)
-    @test y_1 == 0
-    @test y_1 isa BigInt
+    @test_throws ArgumentError sum(y)
     y_2 = sum(y; init = 0)
     @test y_2 === 0
+    return
+end
+
+function test_sum_init_any()
+    x = Containers.@container([i in Any[]], i)
+    @test_throws ArgumentError sum(x)
     return
 end
 
