@@ -282,7 +282,9 @@ end
 function test_init_issue_4096()
     x = Containers.DenseAxisArray(Any[1, 2, 3], Int[1, 2, 3])
     @test sum(x) == 6
+    @test (@allocated sum(x)) == 0
     @test sum(x; init = 0) == 6
+    @test (@allocated sum(x; init = 0)) == 0
     return
 end
 
