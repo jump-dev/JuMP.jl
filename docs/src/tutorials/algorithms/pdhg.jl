@@ -493,6 +493,3 @@ optimize!(model)
 #-
 
 solution_summary(model; verbose = true)
-
-# Behind the scenes, JuMP and MathOptInterface reformulate the problem from the
-# modeller's form into the standard form defined by our `Optimizer`.

@@ -20,7 +20,7 @@
 
 # # Finding multiple feasible solutions
 
-# _Author: James Foster (@jd-foster)_
+# **This tutorial was originally contributed by James Foster (@jd-foster).**
 
 # This tutorial demonstrates how to formulate and solve a combinatorial problem
 # with multiple feasible solutions. In fact, we will see how to find _all_

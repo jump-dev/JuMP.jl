@@ -23,22 +23,23 @@ import MultiObjectiveAlgorithms as MOA
 # was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
 # by [@xgandibleux](https://github.com/xgandibleux).
 
-model = Model()
-set_silent(model)
+model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
+set_attribute(model, MOA.Algorithm(), MOA.Lexicographic())
 @variable(model, x1 >= 0)
 @variable(model, 0 <= x2 <= 3)
 @objective(model, Min, [3x1 + x2, -x1 - 2x2])
 @constraint(model, 3x1 - x2 <= 6)
-set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_attribute(model, MOA.Algorithm(), MOA.Lexicographic())
 optimize!(model)
+
+#-
+
 solution_summary(model)
 
 #-
 
 for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
-    print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
+    print(i, ": z = ", objective_value(model; result = i), " | ")
     println("x = ", value.([x1, x2]; result = i))
 end
 
@@ -52,15 +53,16 @@ end
 C1 = [5 1 4 7; 6 2 2 6; 2 8 4 4; 3 5 7 1]
 C2 = [3 6 4 2; 1 3 8 3; 5 2 2 3; 4 2 3 5]
 n = size(C2, 1)
-model = Model()
-set_silent(model)
+model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
+set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 @variable(model, x[1:n, 1:n], Bin)
 @objective(model, Min, [sum(C1 .* x), sum(C2 .* x)])
-@constraint(model, [i = 1:n], sum(x[i, :]) == 1)
-@constraint(model, [j = 1:n], sum(x[:, j]) == 1)
-set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+@constraint(model, [i in 1:n], sum(x[i, :]) == 1)
+@constraint(model, [j in 1:n], sum(x[:, j]) == 1)
 optimize!(model)
+
+#-
+
 solution_summary(model)
 
 #-
@@ -96,16 +98,17 @@ C2 = [
     M M M M M M
 ]
 n = size(C2, 1)
-model = Model()
-set_silent(model)
+model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
+set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 @variable(model, x[1:n, 1:n], Bin)
 @objective(model, Min, [sum(C1 .* x), sum(C2 .* x)])
 @constraint(model, sum(x[1, :]) == 1)
 @constraint(model, sum(x[:, n]) == 1)
-@constraint(model, [i = 2:(n-1)], sum(x[i, :]) - sum(x[:, i]) == 0)
-set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+@constraint(model, [i in 2:(n-1)], sum(x[i, :]) - sum(x[:, i]) == 0)
 optimize!(model)
+
+#-
+
 solution_summary(model)
 
 #-

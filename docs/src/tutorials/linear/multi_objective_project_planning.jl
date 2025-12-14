@@ -128,7 +128,6 @@ end
 
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
 set_attribute(model, MOA.Algorithm(), MOA.KirlikSayin())
-set_silent(model)
 optimize!(model)
 
 # The algorithm found 21 non-dominated solutions:

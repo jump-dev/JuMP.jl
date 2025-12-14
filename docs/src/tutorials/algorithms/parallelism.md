@@ -85,7 +85,7 @@ julia> ids
     end
     ```
     For more information, read
-    [PSA: Thread-local state is no longer recommended](https://julialang.org/blog/2023/07/PSA-dont-use-threadid/).
+    [PSA: thread-local state is no longer recommended](https://julialang.org/blog/2023/07/PSA-dont-use-threadid/).
 
 ### Data races
 
