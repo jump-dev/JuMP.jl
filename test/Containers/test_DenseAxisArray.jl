@@ -992,10 +992,18 @@ end
 
 function test_sum_init()
     x = Containers.@container([i in Int[]], i)
-    @test_throws ArgumentError sum(x)
+    if VERSION < v"1.7"
+        @test sum(x) == 0
+    else
+        @test_throws ArgumentError sum(x)
+    end
     @test sum(x; init = 1) == 1
     y = Containers.@container([i in BigInt[]], i)
-    @test_throws ArgumentError sum(y)
+    if VERSION < v"1.7"
+        @test sum(y) == 0
+    else
+        @test_throws ArgumentError sum(y)
+    end
     y_2 = sum(y; init = 0)
     @test y_2 === 0
     return
@@ -1003,7 +1011,11 @@ end
 
 function test_sum_init_any()
     x = Containers.@container([i in Any[]], i)
-    @test_throws ArgumentError sum(x)
+    if VERSION < v"1.7"
+        @test_throws MethodError sum(x)
+    else
+        @test_throws ArgumentError sum(x)
+    end
     return
 end
 
