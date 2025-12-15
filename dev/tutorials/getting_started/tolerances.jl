@@ -305,6 +305,13 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
 # barrier) may also come to different conclusions. Even changing settings like
 # turning presolve on and off can make a difference.
 
+# !!! info
+#     Contradictory results are not bugs in the HiGHS solver. They are an
+#     expected result of the interaction between the tolerances and the solution
+#     algorithm. There will always be models in the gray boundary at the edge of
+#     feasibility, for which the question of feasibility is not a clear true or
+#     false.
+
 # Here is an example where HiGHS reports the problem is infeasible, but there
 # exists a feasible (to tolerance) solution:
 
@@ -363,13 +370,41 @@ optimize!(model)
 assert_is_solved_and_feasible(model)  #src
 is_solved_and_feasible(model)
 
-# ### Contradictory results are not a bug in the solver
+# ## Problem is optimal, solution is infeasible
 
-# These contradictory examples are not bugs in the HiGHS solver. They are an
-# expected result of the interaction between the tolerances and the solution
-# algorithm. There will always be models in the gray boundary at the edge of
-# feasibility, for which the question of feasibility is not a clear true or
-# false.
+# A situation to be aware of is the "optimal-infeasible" status. With these
+# models, the solver reports that it found an optimal solution:
+# ```julia
+# julia> termination_status(model)
+# OPTIMAL
+# ```
+# but it also reports that the primal status is an infeasible point:
+# ```julia
+# julia> primal_status(model)
+# INFEASIBLE_POINT
+# ```
+
+# Unfortunately (or fortunately, depending on your point of view), finding a
+# model to reliably trigger this status is difficult, so we don't have a small
+# example that we can run in the documentation. However, this status can happen
+# to any solver, even commercial ones. For example, CPLEX has the status
+# [`CPX_STAT_OPTIMAL_INFEAS`](https://www.ibm.com/docs/en/icos/22.1.0?topic=api-cpx-stat-optimal-infeas),
+# which it defines as "Optimal solution is available, but with infeasibilities
+# after unscaling."
+
+# The optimal-infeasible case happens because many solvers perform an internal
+# rescaling of the problem before they solve it. This means that the problem
+# they solve is numerically different (but mathematically equivalent) to the
+# problem you provided. Because of the interaction between tolerances and the
+# numerical difference between the two problems, an "optimal" solution for the
+# internally scaled problem may be slightly infeasible when the solution is
+# unscaled back to the user's original formulation.
+
+# Use [`primal_feasibility_report`](@ref) to quantify the primal feasibility
+# violation of the returned solution. It might be acceptable to you, or you
+# might need to change some solver parameters and re-solve. Alternatively, you
+# should re-scale your problem to improve its numerical stability. See
+# [Problem scaling](@ref) for more details.
 
 # ## Problem scaling
 
