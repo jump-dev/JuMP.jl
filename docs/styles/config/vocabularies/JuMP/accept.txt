@@ -123,6 +123,7 @@ unboundedness
 unregister
 [Uu]ncapacitated
 [Uu]nivariate
+unscaling
 warmstart
 
 % Proper nouns
