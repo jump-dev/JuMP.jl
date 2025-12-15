@@ -388,15 +388,15 @@ is_solved_and_feasible(model)
 # model to reliably trigger this status is difficult, so we don't have a small
 # example that we can run in the documentation. However, this status can happen
 # to any solver, even commercial ones. For example, CPLEX has the status
-# [CPX_STAT_OPTIMAL_INFEAS](https://www.ibm.com/docs/en/icos/22.1.0?topic=api-cpx-stat-optimal-infeas),
-# which it defines as ``Optimal solution is available, but with infeasibilities
-# after unscaling.''
+# [`CPX_STAT_OPTIMAL_INFEAS`](https://www.ibm.com/docs/en/icos/22.1.0?topic=api-cpx-stat-optimal-infeas),
+# which it defines as "Optimal solution is available, but with infeasibilities
+# after unscaling."
 
 # The optimal-infeasible case happens because many solvers perform an internal
 # rescaling of the problem before they solve it. This means that the problem
 # they solve is numerically different (but mathematically equivalent) to the
 # problem you provided. Because of the interaction between tolerances and the
-# numerical difference between the two problems, an ``optimal'' solution for the
+# numerical difference between the two problems, an "optimal" solution for the
 # internally scaled problem may be slightly infeasible when the solution is
 # unscaled back to the user's original formulation.
 
