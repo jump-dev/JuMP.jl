@@ -351,12 +351,12 @@ function test_extension_basic_operators_number(
     @test_expression_with_string 1.5 + aff "7.1 x + 4"
     @test_expression_with_string 1.5 - aff "-7.1 x - 1"
     @test_expression_with_string 2 * aff "14.2 x + 5"
-    @test_expression_with_string 2 / aff "2.0 / (7.1 x + 2.5)"
+    @test_expression_with_string 2 / aff "2 / (7.1 x + 2.5)"
     # 1-4 Number--QuadExpr
     @test_expression_with_string 1.5 + q "2.5 y*z + 7.1 x + 4"
     @test_expression_with_string 1.5 - q "-2.5 y*z - 7.1 x - 1"
     @test_expression_with_string 2 * q "5 y*z + 14.2 x + 5"
-    @test_expression_with_string 2 / q "2.0 / (2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string 2 / q "2 / (2.5 y*z + 7.1 x + 2.5)"
     return
 end
 
