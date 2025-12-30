@@ -67,14 +67,14 @@ julia> @variable(model, x)
 x
 
 julia> f = sin(x)^2
-sin(x) ^ 2.0
+sin(x) ^ 2
 
 julia> f = GenericNonlinearExpr{VariableRef}(
            :^,
            GenericNonlinearExpr{VariableRef}(:sin, x),
            2.0,
        )
-sin(x) ^ 2.0
+sin(x) ^ 2
 ```
 """
 struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
@@ -1202,7 +1202,7 @@ julia> @variable(model, x);
 julia> @variable(model, y);
 
 julia> f = sin(x)^1
-sin(x) ^ 1.0
+sin(x) ^ 1
 
 julia> simplify(model, f)
 sin(x)
@@ -1252,7 +1252,7 @@ julia> @variable(model, x);
 julia> @variable(model, y);
 
 julia> derivative(model, log(x), x)
-1.0 / x
+1 / x
 
 julia> derivative(model, log(x), y)
 0.0
