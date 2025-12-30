@@ -25,7 +25,7 @@ N = length(profit)</code></pre><pre class="documenter-example-output"><code clas
     xlabel = &quot;Profit&quot;,
     ylabel = &quot;Desire&quot;,
     legend = false,
-)</code></pre><img src="6ececc9d.svg" alt="Example block output"/><p>The goal of the bi-objective knapsack problem is to choose a subset which maximizes both objectives.</p><h2 id="JuMP-formulation"><a class="docs-heading-anchor" href="#JuMP-formulation">JuMP formulation</a><a id="JuMP-formulation-1"></a><a class="docs-heading-anchor-permalink" href="#JuMP-formulation" title="Permalink"></a></h2><p>Our JuMP formulation is a direct translation of the mathematical formulation:</p><pre><code class="language-julia hljs">model = Model()
+)</code></pre><img src="c1f3cfe9.svg" alt="Example block output"/><p>The goal of the bi-objective knapsack problem is to choose a subset which maximizes both objectives.</p><h2 id="JuMP-formulation"><a class="docs-heading-anchor" href="#JuMP-formulation">JuMP formulation</a><a id="JuMP-formulation-1"></a><a class="docs-heading-anchor-permalink" href="#JuMP-formulation" title="Permalink"></a></h2><p>Our JuMP formulation is a direct translation of the mathematical formulation:</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, x[1:N], Bin)
 @constraint(model, sum(weight[i] * x[i] for i in 1:N) &lt;= capacity)
 @expression(model, profit_expr, sum(profit[i] * x[i] for i in 1:N))
@@ -39,18 +39,18 @@ Algorithm: EpsilonConstraint
 ----------------------------------------------
 solve #     Obj. 1       Obj. 2       Time
 ----------------------------------------------
-    1   -9.55000e+02 -9.06000e+02  5.65696e-03
-    2   -9.55000e+02 -9.06000e+02  1.76179e-02
-    3   -9.18000e+02 -9.83000e+02  2.89319e-02
-    4   -9.18000e+02 -9.83000e+02  5.19791e-02
-    5   -9.27000e+02 -9.72000e+02  5.81620e-02
-    6   -9.34000e+02 -9.71000e+02  6.76339e-02
-    7   -9.35000e+02 -9.47000e+02  1.03698e-01
-    8   -9.36000e+02 -9.42000e+02  1.61923e-01
-    9   -9.43000e+02 -9.40000e+02  1.92002e-01
-   10   -9.48000e+02 -9.39000e+02  2.12526e-01
-   11   -9.49000e+02 -9.15000e+02  2.66058e-01
-   12   -9.55000e+02 -9.06000e+02  2.80139e-01
+    1   -9.55000e+02 -9.06000e+02  5.19586e-03
+    2   -9.55000e+02 -9.06000e+02  1.72248e-02
+    3   -9.18000e+02 -9.83000e+02  2.84770e-02
+    4   -9.18000e+02 -9.83000e+02  5.15809e-02
+    5   -9.27000e+02 -9.72000e+02  5.77648e-02
+    6   -9.34000e+02 -9.71000e+02  6.74779e-02
+    7   -9.35000e+02 -9.47000e+02  1.04300e-01
+    8   -9.36000e+02 -9.42000e+02  1.61540e-01
+    9   -9.43000e+02 -9.40000e+02  1.91477e-01
+   10   -9.48000e+02 -9.39000e+02  2.12067e-01
+   11   -9.49000e+02 -9.15000e+02  2.65162e-01
+   12   -9.55000e+02 -9.06000e+02  2.79150e-01
 ----------------------------------------------
 TerminationStatus: OPTIMAL
 ResultCount: 9
@@ -67,7 +67,7 @@ solution_summary(model)</code></pre><pre class="documenter-example-output"><code
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [9.55000e+02,9.06000e+02]
 └ Work counters
-  └ solve_time (sec)   : 2.86563e-01</code></pre><p>There are 9 solutions available. We can also use <a href="../../../api/JuMP/#result_count"><code>result_count</code></a> to see how many solutions are available:</p><pre><code class="language-julia hljs">result_count(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">9</code></pre><h2 id="Accessing-multiple-solutions"><a class="docs-heading-anchor" href="#Accessing-multiple-solutions">Accessing multiple solutions</a><a id="Accessing-multiple-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Accessing-multiple-solutions" title="Permalink"></a></h2><p>Access the nine different solutions in the model using the <code>result</code> keyword to <a href="../../../api/JuMP/#solution_summary"><code>solution_summary</code></a>, <a href="../../../api/JuMP/#value"><code>value</code></a>, and <a href="../../../api/JuMP/#objective_value"><code>objective_value</code></a>:</p><pre><code class="language-julia hljs">solution_summary(model; result = 5)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 5, verbose = false)
+  └ solve_time (sec)   : 2.85462e-01</code></pre><p>There are 9 solutions available. We can also use <a href="../../../api/JuMP/#result_count"><code>result_count</code></a> to see how many solutions are available:</p><pre><code class="language-julia hljs">result_count(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">9</code></pre><h2 id="Accessing-multiple-solutions"><a class="docs-heading-anchor" href="#Accessing-multiple-solutions">Accessing multiple solutions</a><a id="Accessing-multiple-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Accessing-multiple-solutions" title="Permalink"></a></h2><p>Access the nine different solutions in the model using the <code>result</code> keyword to <a href="../../../api/JuMP/#solution_summary"><code>solution_summary</code></a>, <a href="../../../api/JuMP/#value"><code>value</code></a>, and <a href="../../../api/JuMP/#objective_value"><code>objective_value</code></a>:</p><pre><code class="language-julia hljs">solution_summary(model; result = 5)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 5, verbose = false)
 └ Solution (result = 5)
   ├ primal_status        : FEASIBLE_POINT
   ├ dual_status          : NO_SOLUTION
@@ -87,7 +87,7 @@ for i in 1:result_count(model)
     Plots.annotate!(y[1] - 1, y[2], (i, 10))
 end
 ideal_point = objective_bound(model)
-Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = &quot;Ideal point&quot;)</code></pre><img src="186e742a.svg" alt="Example block output"/><p>Visualizing the objective space lets the decision maker choose a solution that suits their personal preferences. For example, result <code>#7</code> is close to the maximum value of profit, but offers significantly higher desirability compared with solutions <code>#8</code> and <code>#9</code>.</p><p>The set of items that are chosen in solution <code>#7</code> are:</p><pre><code class="language-julia hljs">items_chosen = [i for i in 1:N if value(x[i]; result = 7) &gt; 0.9]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">11-element Vector{Int64}:
+Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = &quot;Ideal point&quot;)</code></pre><img src="481ee986.svg" alt="Example block output"/><p>Visualizing the objective space lets the decision maker choose a solution that suits their personal preferences. For example, result <code>#7</code> is close to the maximum value of profit, but offers significantly higher desirability compared with solutions <code>#8</code> and <code>#9</code>.</p><p>The set of items that are chosen in solution <code>#7</code> are:</p><pre><code class="language-julia hljs">items_chosen = [i for i in 1:N if value(x[i]; result = 7) &gt; 0.9]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">11-element Vector{Int64}:
   2
   3
   5
@@ -98,4 +98,4 @@ Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = &quot;Ideal point&quo
  12
  15
  16
- 17</code></pre><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><p><a href="../../../packages/MultiObjectiveAlgorithms/#MultiObjectiveAlgorithms.jl">MultiObjectiveAlgorithms.jl</a> implements a number of different algorithms. Try solving the same problem using <code>MOA.Dichotomy()</code>. Does it find the same solution?</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multi_objective_examples/">« Simple multi-objective examples</a><a class="docs-footer-nextpage" href="../multi_objective_project_planning/">Multi-objective project planning »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Monday 15 December 2025 04:22">Monday 15 December 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 17</code></pre><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><p><a href="../../../packages/MultiObjectiveAlgorithms/#MultiObjectiveAlgorithms.jl">MultiObjectiveAlgorithms.jl</a> implements a number of different algorithms. Try solving the same problem using <code>MOA.Dichotomy()</code>. Does it find the same solution?</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multi_objective_examples/">« Simple multi-objective examples</a><a class="docs-footer-nextpage" href="../multi_objective_project_planning/">Multi-objective project planning »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Tuesday 30 December 2025 22:47">Tuesday 30 December 2025</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
