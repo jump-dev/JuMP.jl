@@ -1623,7 +1623,7 @@ julia> rhs = false
 false
 
 julia> @constraint(model, (x[1] == x[2]) == rhs)
-(x[1] == x[2]) - 0.0 = 0
+(x[1] == x[2]) - 0 = 0
 
 julia> @constraint(model, x[1] == x[2] := rhs)
 x[1] == x[2] = false

@@ -37,12 +37,12 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, exp(x[1]) <= 1)
-exp(x[1]) - 1.0 ≤ 0
+exp(x[1]) - 1 ≤ 0
 
 julia> @constraint(model, con[i = 1:2], 2^x[i] >= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- con[1] : (2.0 ^ x[1]) - 1.0 ≥ 0
- con[2] : (2.0 ^ x[2]) - 2.0 ≥ 0
+ con[1] : (2 ^ x[1]) - 1 ≥ 0
+ con[2] : (2 ^ x[2]) - 2 ≥ 0
 ```
 
 Delete a nonlinear constraint using [`delete`](@ref):
@@ -128,12 +128,12 @@ A [`NonlinearExpr`](@ref) can be used in [`@objective`](@ref),
 
 ```jldoctest nl_expression
 julia> @objective(model, Min, expr^2 + 1)
-((exp(x[1]) + sqrt(x[2])) ^ 2.0) + 1.0
+((exp(x[1]) + sqrt(x[2])) ^ 2) + 1
 
 julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- sin(x[1]) - 1.0 ≤ 0
- sin(x[2]) - 2.0 ≤ 0
+ sin(x[1]) - 1 ≤ 0
+ sin(x[2]) - 2 ≤ 0
 
 julia> @expression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Vector{NonlinearExpr}:
@@ -169,10 +169,10 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @expression(model, expr, sum(exp.(x)))
-0.0 + exp(x[2]) + exp(x[1])
+0 + exp(x[2]) + exp(x[1])
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
-(exp(x[1]) / (0.0 + exp(x[2]) + exp(x[1]))) + (exp(x[2]) / (0.0 + exp(x[2]) + exp(x[1])))
+(exp(x[1]) / (0 + exp(x[2]) + exp(x[1]))) + (exp(x[2]) / (0 + exp(x[2]) + exp(x[1])))
 ```
 In this model, JuMP will compute the value (and derivatives) of the denominator
 twice, without realizing that it is the same expression.
@@ -189,7 +189,7 @@ julia> @variable(model, x[1:2]);
 julia> @variable(model, expr);
 
 julia> @constraint(model, expr == sum(exp.(x)))
-expr - (0.0 + exp(x[2]) + exp(x[1])) = 0
+expr - (0 + exp(x[2]) + exp(x[1])) = 0
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
 (exp(x[1]) / expr) + (exp(x[2]) / expr)
@@ -353,7 +353,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> expr = @expression(model, ifelse(x < -1 || x >= 1, x^2, 0.0))
-ifelse((x < -1) || (x >= 1), x², 0.0)
+ifelse((x < -1) || (x >= 1), x², 0)
 ```
 
 As an alternative, use the `JuMP.op_` functions, which fallback to the
@@ -368,7 +368,7 @@ julia> expr = op_ifelse(
            x^2,
            0.0,
        )
-ifelse((x < -1) || (x >= 1), x², 0.0)
+ifelse((x < -1) || (x >= 1), x², 0)
 ```
 
 The available functions are:

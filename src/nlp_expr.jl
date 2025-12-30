@@ -67,14 +67,14 @@ julia> @variable(model, x)
 x
 
 julia> f = sin(x)^2
-sin(x) ^ 2.0
+sin(x) ^ 2
 
 julia> f = GenericNonlinearExpr{VariableRef}(
            :^,
            GenericNonlinearExpr{VariableRef}(:sin, x),
            2.0,
        )
-sin(x) ^ 2.0
+sin(x) ^ 2
 ```
 """
 struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
@@ -185,6 +185,12 @@ op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:<=}) = "\\le"
 op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:>=}) = "\\ge"
 op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:(==)}) = "="
 
+function _string_round_if_number(mode::MIME, x::Union{Float32,Float64})
+    return _string_round(mode, x)
+end
+
+_string_round_if_number(mode, x::Any) = x
+
 function function_string(mime::MIME, x::GenericNonlinearExpr)
     p_left, p_right, p_open, p_close, p_textsf = _parens(mime)
     io, stack = IOBuffer(), Any[x]
@@ -213,7 +219,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                         push!(stack, arg.args[i])
                         push!(stack, p_left)
                     else
-                        push!(stack, arg.args[i])
+                        push!(stack, _string_round_if_number(mime, arg.args[i]))
                     end
                     if i > 1
                         push!(stack, "$p_close $op $p_open")
@@ -223,11 +229,11 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                 print(io, p_textsf, p_open, op, p_close, p_left, p_open)
                 push!(stack, p_close * p_right)
                 for i in length(arg.args):-1:2
-                    push!(stack, arg.args[i])
+                    push!(stack, _string_round_if_number(mime, arg.args[i]))
                     push!(stack, "$p_close, $p_open")
                 end
                 if length(arg.args) >= 1
-                    push!(stack, arg.args[1])
+                    push!(stack, _string_round_if_number(mime, arg.args[1]))
                 end
             end
         elseif arg isa AbstractJuMPScalar
@@ -1196,7 +1202,7 @@ julia> @variable(model, x);
 julia> @variable(model, y);
 
 julia> f = sin(x)^1
-sin(x) ^ 1.0
+sin(x) ^ 1
 
 julia> simplify(model, f)
 sin(x)
@@ -1246,7 +1252,7 @@ julia> @variable(model, x);
 julia> @variable(model, y);
 
 julia> derivative(model, log(x), x)
-1.0 / x
+1 / x
 
 julia> derivative(model, log(x), y)
 0.0
