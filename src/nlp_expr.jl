@@ -185,7 +185,10 @@ op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:<=}) = "\\le"
 op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:>=}) = "\\ge"
 op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:(==)}) = "="
 
-_string_round_if_number(mode, x::Union{Float32,Float64,Complex}) = _string_round(mode, x)
+function _string_round_if_number(mode::MIME, x::Union{Float32,Float64})
+    return _string_round(mode, x)
+end
+
 _string_round_if_number(mode, x::Any) = x
 
 function function_string(mime::MIME, x::GenericNonlinearExpr)
