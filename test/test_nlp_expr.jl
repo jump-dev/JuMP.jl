@@ -1200,4 +1200,39 @@ function test_gradient()
     return
 end
 
+function test_extension_euler_to_exp(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    xy = [x, y]
+
+    expr = ℯ^x
+    @test expr isa GenericNonlinearExpr{VariableRefType}
+    @test expr.head == :exp
+    @test expr.args[1] == x
+    @test isequal_canonical(expr, exp(x))
+
+    @test isequal_canonical(ℯ^(1.0 + x), exp(1.0 + x))
+    @test isequal_canonical(ℯ^x^2, exp(x^2))
+    @test isequal_canonical(ℯ^sin(x), exp(sin(x)))
+    @test isequal_canonical(ℯ^(ℯ^x), exp(exp(x)))
+    @test isequal_canonical(ℯ^(ℯ^(ℯ^x)), exp(exp(exp(x))))
+    @test isequal_canonical(ℯ^(x + ℯ^x), exp(x + exp(x)))
+    @test isequal_canonical(ℯ^(sin(x) + ℯ^x), exp(sin(x) + exp(x)))
+    @test isequal_canonical((ℯ^x)^2, exp(x)^2)
+    @test isequal_canonical(ℯ^x + y, exp(x) + y)
+    @test isequal_canonical(2 * ℯ^x, 2 * exp(x))
+    @test isequal_canonical(ℯ^x * y, exp(x) * y)
+    @test isequal_canonical(ℯ^x / y, exp(x) / y)
+    @test isequal_canonical(y / ℯ^x, y / exp(x))
+    @test isequal_canonical(ℯ^(sum(xy)), exp(x + y))
+    @test isequal_canonical(sum(ℯ^xᵢ for xᵢ in xy), exp(x) + exp(y))
+    @test isequal_canonical(ℯ^prod(xy), exp(x*y))
+
+    return
+end
+
 end  # module

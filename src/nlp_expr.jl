@@ -398,6 +398,10 @@ for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
         end
     end
 end
+function Base.:^(::Irrational{:ℯ}, y::AbstractJuMPScalar)
+    # without this, ℯ^y becomes 2.718281828459045^y instead of exp(y)
+    return exp(y)
+end
 
 # Base has unary methods `min(x::Real) = x` and `max(x::Real) = x`, so I guess
 # we need to replicate them.
