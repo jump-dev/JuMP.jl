@@ -1208,13 +1208,11 @@ function test_extension_euler_to_exp(
     @variable(model, x)
     @variable(model, y)
     xy = [x, y]
-
     expr = ℯ^x
     @test expr isa GenericNonlinearExpr{VariableRefType}
     @test expr.head == :exp
     @test expr.args[1] == x
     @test isequal_canonical(expr, exp(x))
-
     @test isequal_canonical(ℯ^(1.0 + x), exp(1.0 + x))
     @test isequal_canonical(ℯ^x^2, exp(x^2))
     @test isequal_canonical(ℯ^sin(x), exp(sin(x)))
@@ -1231,7 +1229,6 @@ function test_extension_euler_to_exp(
     @test isequal_canonical(ℯ^(sum(xy)), exp(x + y))
     @test isequal_canonical(sum(ℯ^xᵢ for xᵢ in xy), exp(x) + exp(y))
     @test isequal_canonical(ℯ^prod(xy), exp(x*y))
-
     return
 end
 
