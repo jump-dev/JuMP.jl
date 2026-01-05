@@ -47,7 +47,7 @@
 [CSDP]
     rev = "v1.1.2"
 [cuOpt]
-    rev = "v0.1.1"
+    rev = "v0.1.2"
 [DiffOpt]
     rev = "v0.5.4"
     extension = true
@@ -61,7 +61,7 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.9.0"
+    rev = "v1.9.1"
 [HiGHS]
     rev = "v1.20.1"
 [Hypatia]
@@ -70,7 +70,7 @@
 [Ipopt]
     rev = "v1.13.0"
 [KNITRO]
-    rev = "v1.1.0"
+    rev = "v1.2.0"
 [MathOptAnalyzer]
     rev = "v0.1.1"
 [MathOptIIS]
@@ -80,7 +80,7 @@
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "3bf253221cfa943532b5030ab7d5bed6157b9786"
+    rev = "v1.8.1"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -103,7 +103,7 @@
     rev = "v0.7.6"
     extension = true
 [SCS]
-    rev = "v2.4.0"
+    rev = "v2.5.0"
 [SDPA]
     rev = "v0.6.1"
 [SDPLR]
@@ -144,7 +144,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.30"
+    rev = "v1.1.31"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -159,7 +159,7 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "v0.8.3"
+    rev = "v0.8.4"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"

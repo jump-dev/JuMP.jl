@@ -796,7 +796,7 @@ works.
 
 The operator takes `f(x::Vector)` as input, instead of the splatted `f(x...)`.
 
-```jldoctest
+```jldoctest; filter=r"\(::ForwardDiff.+\)"
 julia> import ForwardDiff
 
 julia> my_operator_bad(x::Vector) = sum(x[i]^2 for i in eachindex(x))
@@ -806,7 +806,7 @@ julia> my_operator_good(x...) = sum(x[i]^2 for i in eachindex(x))
 my_operator_good (generic function with 1 method)
 
 julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
-ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2})
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual, ::ForwardDiff.Dual)
 [...]
 
 julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
@@ -820,7 +820,7 @@ julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
 The operator assumes `Float64` will be passed as input, but it must work for any
 generic `Real` type.
 
-```jldoctest
+```jldoctest; filter=r"\(::ForwardDiff.+\)"
 julia> import ForwardDiff
 
 julia> my_operator_bad(x::Float64...) = sum(x[i]^2 for i in eachindex(x))
@@ -830,7 +830,7 @@ julia> my_operator_good(x::Real...) = sum(x[i]^2 for i in eachindex(x))
 my_operator_good (generic function with 1 method)
 
 julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
-ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2})
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual, ::ForwardDiff.Dual)
 [...]
 
 julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
