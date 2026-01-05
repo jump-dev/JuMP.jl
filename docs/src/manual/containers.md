@@ -138,7 +138,7 @@ julia> DataFrames.DataFrame(table)
    6 │     2      3  (2, 3)
 ```
 
-## ## [DenseAxisArray](@id manual_dense_axis_array)
+## [DenseAxisArray](@id manual_dense_axis_array)
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
 rectangular, but not of the form `1:n`. The index sets can be of any type.
