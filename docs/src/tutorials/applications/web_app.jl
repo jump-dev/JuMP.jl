@@ -71,23 +71,16 @@ endpoint_solve(Dict{String,Any}("lower_bound" => 1.2))
 
 endpoint_solve(Dict{String,Any}())
 
-# For a second function, we need a function that accepts an `HTTP.Request`
-# object and returns an `HTTP.Response` object.
+# We now need to turn each endpoint into a function that accepts an
+# `HTTP.Request`, parses the JSON input, runs the endpoint, converts the result
+# to JSON, and returns an `HTTP.Response`. In addition, the computation is
+# handled in a separate thread, and we catch any unhandled exceptions.
 
-function serve_solve(request::HTTP.Request)
-    data = JSON.parse(String(request.body))
-    solution = endpoint_solve(data)
-    return HTTP.Response(200, JSON.json(solution))
-end
-
-# Finally, we need an HTTP server. There are a variety of ways you can do this
-# in HTTP.jl. Here's one way. We wrap each route in a function that runs the
-# function in a separate thread and catches any unhandled exceptions.
-
-function wrap_serve_request(serve_fn::Function)
-    function serve_request(request::HTTP.Request)
+function wrap_endpoint(endpoint::Function)
+    function serve_request(request::HTTP.Request)::HTTP.Response
         task = Threads.@spawn try
-            serve_fn(request)
+            ret = request.body |> String |> JSON.parse |> endpoint |> JSON.json
+            HTTP.Response(200, ret)
         catch err
             HTTP.Response(500, "internal error: $err")
         end
@@ -95,8 +88,12 @@ function wrap_serve_request(serve_fn::Function)
     end
 end
 
+# Finally, we need an HTTP server. There are a variety of ways you can do this
+# in HTTP.jl. Here's one way:
+
 router = HTTP.Router()
-HTTP.register!(router, "/api/solve", wrap_serve_request(serve_solve))
+## Register other routes as needed
+HTTP.register!(router, "/api/solve", wrap_endpoint(endpoint_solve))
 server = HTTP.serve!(router, HTTP.ip"127.0.0.1", 8080)
 
 # ## The client side
