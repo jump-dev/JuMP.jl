@@ -98,7 +98,7 @@ function setup_server(host, port)
             ## Log details about the exception server-side
             @info "Unhandled exception: $err"
             ## Return a response to the client
-            return HTTP.Response(500, "internal error")
+            return HTTP.Response(500, "internal error: $err")
         end
     end
     return server
