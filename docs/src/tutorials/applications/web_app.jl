@@ -81,33 +81,23 @@ function serve_solve(request::HTTP.Request)
 end
 
 # Finally, we need an HTTP server. There are a variety of ways you can do this
-# in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
-# when we shutdown the server.
+# in HTTP.jl. Here's one way. We wrap each route in a function that runs the
+# function in a separate thread and catches any unhandled exceptions.
 
-## Extend the server by adding other endpoints here.
-_ROUTES = Dict{String,Function}("/api/solve" => serve_solve)
-
-function serve_request(request::HTTP.Request)
-    if !haskey(_ROUTES, request.target)
-        return HTTP.Response(404, "target $(request.target) not found")
-    end
-    try
-        return _ROUTES[request.target](request)::HTTP.Response
-    catch err
-        @info "Unhandled exception: $err"
-        return HTTP.Response(500, "internal error: $err")
+function wrap_serve_request(serve_fn::Function)
+    function serve_request(request::HTTP.Request)
+        task = Threads.@spawn try
+            serve_fn(request)
+        catch err
+            HTTP.Response(500, "internal error: $err")
+        end
+        return fetch(task)
     end
 end
 
-function setup_server(host, port)
-    server = HTTP.Sockets.listen(host, port)
-    HTTP.serve!(host, port; server = server) do request
-        return fetch(Threads.@spawn serve_request(request))
-    end
-    return server
-end
-
-server = setup_server(HTTP.ip"127.0.0.1", 8080)
+router = HTTP.Router()
+HTTP.register!(router, "/api/solve", wrap_serve_request(serve_solve))
+server = HTTP.serve!(router, HTTP.ip"127.0.0.1", 8080)
 
 # ## The client side
 
