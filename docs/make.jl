@@ -560,17 +560,24 @@ function _add_moi_pages()
             end
         end
     end
-    # Fix `# Infeasibility certificates` in moi/background/infeasibility_certificates.md
-    filename = joinpath(moi_dir, "background", "infeasibility_certificates.md")
-    contents = read(filename, String)
-    id = "# [Infeasibility certificates](@id moi_infeasibility_certificates)"
-    contents = replace(contents, r"^# Infeasibility certificates$"m => id)
-    write(filename, contents)
-    # Fix `JSON.Object` in moi/submodules/FileFormats/overview.md
-    # This can be removed once we support JSON@1 in the documentation
-    filename = joinpath(moi_dir, "submodules", "FileFormats", "overview.md")
-    contents = read(filename, String)
-    write(filename, replace(contents, "JSON.Object" => "Dict"))
+    for (filename, replacements) in [
+        "background/infeasibility_certificates.md" => [
+            r"^# Infeasibility certificates$"m => "# [Infeasibility certificates](@id moi_infeasibility_certificates)",
+        ],
+        "reference/models.md" => ["# ResultStatusCode" => "# Result Status"],
+        # This can be removed once we support JSON@1 in the documentation
+        "submodules/FileFormats/overview.md" => ["JSON.Object" => "Dict"],
+        # These can be removed once we support MOI@1.48.1 or later
+        "reference/models.md" => ["# ResultStatusCode" => "# Result Status"],
+        "submodules/Nonlinear/SymbolicAD.md" => [
+            "# `simplify`" => "# [`simplify`](@id symbolic_ad_manual_simplify)",
+            "# `variables`" => "# [`variables`](@id symbolic_ad_manual_variables)",
+            "# `derivative`" => "# [`derivative`](@id symbolic_ad_manual_derivative)",
+        ],
+    ]
+        filename = joinpath(moi_dir, filename)
+        write(filename, replace(read(filename, String), replacements...))
+    end
     return
 end
 
