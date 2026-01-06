@@ -84,32 +84,28 @@ end
 # in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
 # when we shutdown the server.
 
+## Extend the server by adding other endpoints here.
+_ROUTES = Dict{String,Function}("/api/solve" => serve_solve)
+
+function serve_request(request::HTTP.Request)
+    if !haskey(_ROUTES, request.target)
+        return HTTP.Response(404, "target $(request.target) not found")
+    end
+    try
+        return _ROUTES[request.target](request)::HTTP.Response
+    catch err
+        @info "Unhandled exception: $err"
+        return HTTP.Response(500, "internal error: $err")
+    end
+end
+
 function setup_server(host, port)
     server = HTTP.Sockets.listen(host, port)
     HTTP.serve!(host, port; server = server) do request
-        try
-            ## Extend the server by adding other endpoints here.
-            if request.target == "/api/solve"
-                return serve_solve(request)
-            else
-                return HTTP.Response(404, "target $(request.target) not found")
-            end
-        catch err
-            ## Log details about the exception server-side
-            @info "Unhandled exception: $err"
-            ## Return a response to the client
-            return HTTP.Response(500, "internal error: $err")
-        end
+        return fetch(Threads.@spawn serve_request(request))
     end
     return server
 end
-
-# !!! warning
-#     HTTP.jl does not serve requests on a separate thread. Therefore, a
-#     long-running job will block the main thread, preventing concurrent users from
-#     submitting requests. To work-around this, read [HTTP.jl issue 798](https://github.com/JuliaWeb/HTTP.jl/issues/798)
-#     or watch [Building Microservices and Applications in Julia](https://www.youtube.com/watch?v=uLhXgt_gKJc&t=9543s)
-#     from JuliaCon 2020.
 
 server = setup_server(HTTP.ip"127.0.0.1", 8080)
 
