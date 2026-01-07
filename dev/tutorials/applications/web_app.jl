@@ -71,47 +71,30 @@ endpoint_solve(Dict{String,Any}("lower_bound" => 1.2))
 
 endpoint_solve(Dict{String,Any}())
 
-# For a second function, we need a function that accepts an `HTTP.Request`
-# object and returns an `HTTP.Response` object.
+# We now need to turn each endpoint into a function that accepts an
+# `HTTP.Request`, parses the JSON input, runs the endpoint, converts the result
+# to JSON, and returns an `HTTP.Response`. In addition, the computation is
+# handled in a separate thread, and we catch any unhandled exceptions.
 
-function serve_solve(request::HTTP.Request)
-    data = JSON.parse(String(request.body))
-    solution = endpoint_solve(data)
-    return HTTP.Response(200, JSON.json(solution))
+function wrap_endpoint(endpoint::Function)
+    function serve_request(request::HTTP.Request)::HTTP.Response
+        task = Threads.@spawn try
+            ret = request.body |> String |> JSON.parse |> endpoint |> JSON.json
+            HTTP.Response(200, ret)
+        catch err
+            HTTP.Response(500, "internal error: $err")
+        end
+        return fetch(task)
+    end
 end
 
 # Finally, we need an HTTP server. There are a variety of ways you can do this
-# in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
-# when we shutdown the server.
+# in HTTP.jl. Here's one way:
 
-function setup_server(host, port)
-    server = HTTP.Sockets.listen(host, port)
-    HTTP.serve!(host, port; server = server) do request
-        try
-            ## Extend the server by adding other endpoints here.
-            if request.target == "/api/solve"
-                return serve_solve(request)
-            else
-                return HTTP.Response(404, "target $(request.target) not found")
-            end
-        catch err
-            ## Log details about the exception server-side
-            @info "Unhandled exception: $err"
-            ## Return a response to the client
-            return HTTP.Response(500, "internal error")
-        end
-    end
-    return server
-end
-
-# !!! warning
-#     HTTP.jl does not serve requests on a separate thread. Therefore, a
-#     long-running job will block the main thread, preventing concurrent users from
-#     submitting requests. To work-around this, read [HTTP.jl issue 798](https://github.com/JuliaWeb/HTTP.jl/issues/798)
-#     or watch [Building Microservices and Applications in Julia](https://www.youtube.com/watch?v=uLhXgt_gKJc&t=9543s)
-#     from JuliaCon 2020.
-
-server = setup_server(HTTP.ip"127.0.0.1", 8080)
+router = HTTP.Router()
+## Register other routes as needed
+HTTP.register!(router, "/api/solve", wrap_endpoint(endpoint_solve))
+server = HTTP.serve!(router, HTTP.ip"127.0.0.1", 8080)
 
 # ## The client side
 

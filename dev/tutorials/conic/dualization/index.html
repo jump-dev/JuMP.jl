@@ -40,10 +40,10 @@ Subject to
 print(model_dual)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Min y[1] + y[2]
 Subject to
  dual_c : [y[1] - 1  1
-  ⋯         y[2] - 1] ∈ PSDCone()</code></pre><p>This problem has two scalar decision variables, and a 2x2 positive semidefinite matrix constraint.</p><div class="admonition is-success" id="Tip-2577b9b32812dadb"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-2577b9b32812dadb" title="Permalink"></a></header><div class="admonition-body"><p>If you haven&#39;t seen conic duality before, try deriving the dual problem based on the description in <a href="../../../moi/background/duality/#Duality">Duality</a>. You&#39;ll need to know that the dual cone of <a href="../../../api/JuMP/#PSDCone"><code>PSDCone</code></a> is the <a href="../../../api/JuMP/#PSDCone"><code>PSDCone</code></a>.</p></div></div><p>When we solve <code>model_primal</code> with <code>SCS.Optimizer</code>, SCS reports three variables (<code>variables n: 3</code>), five rows in the constraint matrix (<code>constraints m: 5</code>), and five non-zeros in the matrix (<code>nnz(A): 5</code>):</p><pre><code class="language-julia hljs">set_optimizer(model_primal, SCS.Optimizer)
+  ⋯         y[2] - 1] ∈ PSDCone()</code></pre><p>This problem has two scalar decision variables, and a 2x2 positive semidefinite matrix constraint.</p><div class="admonition is-success" id="Tip-1823d8daefe10c53"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-1823d8daefe10c53" title="Permalink"></a></header><div class="admonition-body"><p>If you haven&#39;t seen conic duality before, try deriving the dual problem based on the description in <a href="../../../moi/background/duality/#Duality">Duality</a>. You&#39;ll need to know that the dual cone of <a href="../../../api/JuMP/#PSDCone"><code>PSDCone</code></a> is the <a href="../../../api/JuMP/#PSDCone"><code>PSDCone</code></a>.</p></div></div><p>When we solve <code>model_primal</code> with <code>SCS.Optimizer</code>, SCS reports three variables (<code>variables n: 3</code>), five rows in the constraint matrix (<code>constraints m: 5</code>), and five non-zeros in the matrix (<code>nnz(A): 5</code>):</p><pre><code class="language-julia hljs">set_optimizer(model_primal, SCS.Optimizer)
 optimize!(model_primal)
 assert_is_solved_and_feasible(model_primal; dual = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 3, constraints m: 5
@@ -59,12 +59,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.27e-04
-    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.05e-04
+     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.42e-04
+    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.27e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.06e-04s = setup: 4.73e-05s + solve: 1.59e-04s
-	 lin-sys: 1.17e-05s, cones: 6.10e-05s, accel: 2.78e-06s
+timings: total: 2.29e-04s = setup: 5.24e-05s + solve: 1.76e-04s
+	 lin-sys: 1.25e-05s, cones: 6.62e-05s, accel: 2.61e-06s
 ------------------------------------------------------------------
 objective = -4.000000
 ------------------------------------------------------------------</code></pre><p>(There are five rows in the constraint matrix because SCS expects problems in geometric conic form, and so JuMP has reformulated the <code>X, PSD</code> variable constraint into the affine constraint <code>X .+ 0 in PSDCone()</code>.)</p><p>The solution we obtain is:</p><pre><code class="language-julia hljs">value(X)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 LinearAlgebra.Symmetric{Float64, Matrix{Float64}}:
@@ -76,7 +76,7 @@ objective = -4.000000
  1.9999999997299085</code></pre><pre><code class="language-julia hljs">objective_value(model_primal)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3.9999999506359716</code></pre><p>When we solve <code>model_dual</code> with <code>SCS.Optimizer</code>, SCS reports two variables (<code>variables n: 2</code>), three rows in the constraint matrix (<code>constraints m: 3</code>), and two non-zeros in the matrix (<code>nnz(A): 2</code>):</p><pre><code class="language-julia hljs">set_optimizer(model_dual, SCS.Optimizer)
 optimize!(model_dual)
 assert_is_solved_and_feasible(model_dual; dual = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
@@ -91,12 +91,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.19e-04
-    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.00e-04
+     0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.36e-04
+    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.26e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.01e-04s = setup: 4.74e-05s + solve: 1.54e-04s
-	 lin-sys: 9.99e-06s, cones: 5.98e-05s, accel: 2.56e-06s
+timings: total: 2.27e-04s = setup: 5.08e-05s + solve: 1.76e-04s
+	 lin-sys: 1.11e-05s, cones: 6.85e-05s, accel: 2.51e-06s
 ------------------------------------------------------------------
 objective = 4.000000
 ------------------------------------------------------------------</code></pre><p>and the solution we obtain is:</p><pre><code class="language-julia hljs">dual(dual_c)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 LinearAlgebra.Symmetric{Float64, Matrix{Float64}}:
@@ -108,7 +108,7 @@ objective = 4.000000
  2.000000159272681</code></pre><pre><code class="language-julia hljs">objective_value(model_dual)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">4.000000318545362</code></pre><p>This particular problem is small enough that it isn&#39;t meaningful to compare the solve times, but in general, we should expect <code>model_dual</code> to solve faster than <code>model_primal</code> because it contains fewer variables and constraints. The difference is particularly noticeable on large-scale optimization problems.</p><h2 id="dual_optimizer"><a class="docs-heading-anchor" href="#dual_optimizer"><code>dual_optimizer</code></a><a id="dual_optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#dual_optimizer" title="Permalink"></a></h2><p>Manually deriving the conic dual is difficult and error-prone. The package <a href="../../../packages/Dualization/#Dualization.jl">Dualization.jl</a> provides the <code>Dualization.dual_optimizer</code> meta-solver, which wraps any MathOptInterface-compatible solver in an interface that automatically formulates and solves the dual of an input problem.</p><p>To demonstrate, we use <code>Dualization.dual_optimizer</code> to solve <code>model_primal</code>:</p><pre><code class="language-julia hljs">set_optimizer(model_primal, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_primal)
 assert_is_solved_and_feasible(model_primal; dual = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 2, constraints m: 3
@@ -124,11 +124,11 @@ lin-sys:  sparse-direct-amd-qdldl
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
      0| 1.23e+01  1.00e+00  2.73e+01 -9.03e+00  1.00e-01  1.25e-04
-    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.07e-04
+    50| 1.13e-07  1.05e-09  3.23e-07  4.00e+00  1.00e-01  2.33e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.07e-04s = setup: 4.48e-05s + solve: 1.63e-04s
-	 lin-sys: 9.97e-06s, cones: 6.03e-05s, accel: 2.57e-06s
+timings: total: 2.34e-04s = setup: 4.55e-05s + solve: 1.88e-04s
+	 lin-sys: 1.30e-05s, cones: 8.11e-05s, accel: 2.52e-06s
 ------------------------------------------------------------------
 objective = 4.000000
 ------------------------------------------------------------------</code></pre><p>The performance is the same as if we solved <code>model_dual</code>, and the correct solution is returned to <code>X</code>:</p><pre><code class="language-julia hljs">value(X)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 LinearAlgebra.Symmetric{Float64, Matrix{Float64}}:
@@ -140,7 +140,7 @@ objective = 4.000000
  2.000000159272681</code></pre><p>Moreover, if we use <code>dual_optimizer</code> on <code>model_dual</code>, then we get the same performance as if we had solved <code>model_primal</code>:</p><pre><code class="language-julia hljs">set_optimizer(model_dual, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_dual)
 assert_is_solved_and_feasible(model_dual; dual = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 3, constraints m: 5
@@ -156,12 +156,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.29e-04
-    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.26e-04
+     0| 1.65e+01  1.60e-01  5.09e+01 -2.91e+01  1.00e-01  1.54e-04
+    50| 1.74e-08  2.70e-10  4.88e-08 -4.00e+00  1.00e-01  2.41e-04
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.27e-04s = setup: 4.46e-05s + solve: 1.82e-04s
-	 lin-sys: 1.18e-05s, cones: 7.58e-05s, accel: 2.77e-06s
+timings: total: 2.42e-04s = setup: 6.71e-05s + solve: 1.75e-04s
+	 lin-sys: 1.32e-05s, cones: 6.79e-05s, accel: 3.11e-06s
 ------------------------------------------------------------------
 objective = -4.000000
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">dual(dual_c)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 LinearAlgebra.Symmetric{Float64, Matrix{Float64}}:
@@ -182,7 +182,7 @@ end
 @constraint(model, Q[1, 1] == 0)
 @constraint(model, c² &gt;= 1)</code></pre><p class="math-container">\[ c² \geq 1 \]</p><p>In this formulation, the <code>Q</code> variable is of the form <span>$x\in\mathcal{K}$</span>, but there is also a free variable, <code>c²</code>, a linear equality constraint, <code>Q[1, 1] == 0</code>, and some linear inequality constraints. Rather than attempting to derive the formulation that JuMP would pass to SCS and its dual, the simplest solution is to try solving the problem with and without <code>dual_optimizer</code> to see which formulation is most efficient.</p><pre><code class="language-julia hljs">set_optimizer(model, SCS.Optimizer)
 optimize!(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 11, constraints m: 24
@@ -199,17 +199,17 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 4.73e+00  1.00e+00  2.92e+00  1.23e+00  1.00e-01  1.58e-04
-   150| 1.01e-04  3.07e-05  6.08e-05  1.33e+00  1.00e-01  7.13e-04
+     0| 4.73e+00  1.00e+00  2.92e+00  1.23e+00  1.00e-01  2.33e-04
+   150| 1.01e-04  3.07e-05  6.08e-05  1.33e+00  1.00e-01  1.33e-03
 ------------------------------------------------------------------
 status:  solved
-timings: total: 7.14e-04s = setup: 7.28e-05s + solve: 6.42e-04s
-	 lin-sys: 9.45e-05s, cones: 3.84e-04s, accel: 3.73e-05s
+timings: total: 1.33e-03s = setup: 1.30e-04s + solve: 1.20e-03s
+	 lin-sys: 1.08e-04s, cones: 9.21e-04s, accel: 3.75e-05s
 ------------------------------------------------------------------
 objective = 1.333363
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">set_optimizer(model, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
-	       SCS v3.2.9 - Splitting Conic Solver
+	       SCS v3.2.10 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
 problem:  variables n: 14, constraints m: 24
@@ -226,12 +226,12 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 3.71e+01  1.48e+00  2.23e+02 -1.13e+02  1.00e-01  1.52e-04
-   150| 1.57e-04  2.28e-05  2.08e-04 -1.33e+00  1.00e-01  7.26e-04
+     0| 3.71e+01  1.48e+00  2.23e+02 -1.13e+02  1.00e-01  1.82e-04
+   150| 1.57e-04  2.28e-05  2.08e-04 -1.33e+00  1.00e-01  1.54e-03
 ------------------------------------------------------------------
 status:  solved
-timings: total: 7.28e-04s = setup: 6.58e-05s + solve: 6.62e-04s
-	 lin-sys: 9.92e-05s, cones: 4.07e-04s, accel: 2.71e-05s
+timings: total: 1.54e-03s = setup: 7.28e-05s + solve: 1.47e-03s
+	 lin-sys: 1.11e-04s, cones: 1.18e-03s, accel: 2.78e-05s
 ------------------------------------------------------------------
 objective = -1.333460
-------------------------------------------------------------------</code></pre><p>For this problem, SCS reports that the primal has <code>variables n: 11, constraints m: 24</code> and that the dual has <code>variables n: 14, constraints m: 24</code>. Therefore, we should probably use the primal formulation because it has fewer variables and the same number of constraints.</p><h2 id="When-to-use-dual_optimizer"><a class="docs-heading-anchor" href="#When-to-use-dual_optimizer">When to use <code>dual_optimizer</code></a><a id="When-to-use-dual_optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#When-to-use-dual_optimizer" title="Permalink"></a></h2><p>Because it can make the problem larger or smaller, depending on the problem and the choice of solver, there is no definitive rule on when you should use <code>dual_optimizer</code>. However, you should try <code>dual_optimizer</code> if your conic optimization problem takes a long time to solve, or if you need to repeatedly solve similarly structured problems with different data. In some cases solving the dual instead of the primal can make a large difference.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Modeling with cones</a><a class="docs-footer-nextpage" href="../arbitrary_precision/">Arbitrary precision arithmetic »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Sunday 4 January 2026 21:02">Sunday 4 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+------------------------------------------------------------------</code></pre><p>For this problem, SCS reports that the primal has <code>variables n: 11, constraints m: 24</code> and that the dual has <code>variables n: 14, constraints m: 24</code>. Therefore, we should probably use the primal formulation because it has fewer variables and the same number of constraints.</p><h2 id="When-to-use-dual_optimizer"><a class="docs-heading-anchor" href="#When-to-use-dual_optimizer">When to use <code>dual_optimizer</code></a><a id="When-to-use-dual_optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#When-to-use-dual_optimizer" title="Permalink"></a></h2><p>Because it can make the problem larger or smaller, depending on the problem and the choice of solver, there is no definitive rule on when you should use <code>dual_optimizer</code>. However, you should try <code>dual_optimizer</code> if your conic optimization problem takes a long time to solve, or if you need to repeatedly solve similarly structured problems with different data. In some cases solving the dual instead of the primal can make a large difference.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tips_and_tricks/">« Modeling with cones</a><a class="docs-footer-nextpage" href="../arbitrary_precision/">Arbitrary precision arithmetic »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 7 January 2026 01:33">Wednesday 7 January 2026</span>. Using Julia version 1.12.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
