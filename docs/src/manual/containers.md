@@ -138,7 +138,7 @@ julia> DataFrames.DataFrame(table)
    6 │     2      3  (2, 3)
 ```
 
-## DenseAxisArray
+## [DenseAxisArray](@id manual_dense_axis_array)
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
 rectangular, but not of the form `1:n`. The index sets can be of any type.
@@ -275,7 +275,7 @@ And data, a 2-element Vector{Tuple{Int64, Symbol}}:
  (2, :B)
 ```
 
-## SparseAxisArray
+## [SparseAxisArray](@id manual_sparse_axis_array)
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
 non-rectangular. This occurs in two circumstances:

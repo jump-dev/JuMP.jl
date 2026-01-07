@@ -227,7 +227,7 @@ julia> @variable(model, y);
 julia> c = [1, 2];
 
 julia> @NLobjective(model, Min, c' * x + 3y)
-ERROR: Unexpected array [1 2] in nonlinear expression. Nonlinear expressions may contain only scalar expressions.
+ERROR: Unexpected array adjoint([1, 2]) in nonlinear expression. Nonlinear expressions may contain only scalar expressions.
 [...]
 ```
 

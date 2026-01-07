@@ -255,7 +255,7 @@ end
 
 MOI.get(::Optimizer, ::MOI.SolverName) = "PDHG"
 
-# ### GenericModel
+# ### [GenericModel](@id tutorial_pdhg_generic_model)
 
 # The simplest way to solve a problem with your optimizer is to implement the
 # method `MOI.optimize!(dest::Optimizer, src::MOI.ModelLike)`, where `src` is an
