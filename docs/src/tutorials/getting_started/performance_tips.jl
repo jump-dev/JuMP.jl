@@ -60,7 +60,9 @@ import HiGHS
 
 model = Model()
 @variable(model, x[1:3])
+x[1] + x[2] + x[3]                                                 #hide
 @assert @allocated(x[1] + x[2] + x[3]) > 1000                      #hide
+@expression(model, x[1] + x[2] + x[3])                             #hide
 @assert @allocated(@expression(model, x[1] + x[2] + x[3])) < 1000  #hide
 @allocated x[1] + x[2] + x[3]
 @allocated @expression(model, x[1] + x[2] + x[3])
