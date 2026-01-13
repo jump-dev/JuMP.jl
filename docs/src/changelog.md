@@ -7,6 +7,21 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.29.4 (January 14, 2026)
+
+### Fixed
+
+ - Fixed sum of [`Containers.DenseAxisArray`](@ref) that doesn't support
+   `zero(T)` (#4097)
+ - Fixed calling `_string_round` for numbers in nonlinear expressions (#4100)
+ - Fixed parsing `ℯ^x` as `exp(x)` instead of `2.718281828459045^x` (#4101)
+
+### Other
+
+ - Documentation updates (#4093), (#4095), (#4098), (#4102), (#4104)
+ - Added a [Multi-objective project planning](@ref) tutorial (#4094)
+ - Changed a test to avoid type inference issue (#4105)
+
 ## Version 1.29.3 (November 12, 2025)
 
 ### Fixed

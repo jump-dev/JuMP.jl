@@ -220,7 +220,7 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.12.7"
+    rev = "v0.12.8"
 [SDDP]
     user = "odow"
     rev = "v1.13.1"
