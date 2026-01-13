@@ -42,36 +42,27 @@ import HiGHS
 # Constructing an expression outside the macro results in intermediate copies of
 # the expression. For example,
 # ```julia
-# x[1] + x[2] + x[3]
+# result = x[1] + x[2] + x[3]
 # ```
 # is equivalent to
 # ```julia
-# a = x[1]
-# b = a + x[2]
-# c = b + x[3]
+# tmp = x[1] + x[2]
+# result = tmp + x[3]
 # ```
-# Since we only care about `c`, the `a` and `b` expressions are not needed and
-# constructing them slows the program down.
+# Since we only care about `result`, the `tmp` expression is not needed, and
+# constructing it slows the program down.
 
-# JuMP's macros rewrite the expressions to operate in-place and avoid these
-# extra copies. Because they allocate less memory, they are faster, particularly
+# JuMP's macros rewrite the expressions to operate in-place and avoid temporary
+# expressions. Because they allocate less memory, they are faster, particularly
 # for large expressions.
 
 # Here's an example.
 
 model = Model()
 @variable(model, x[1:3])
-
-# Here's what happens if we construct the expression outside the macro:
-
+@assert @allocated(x[1] + x[2] + x[3]) > 1000                      #hide
+@assert @allocated(@expression(model, x[1] + x[2] + x[3])) < 1000  #hide
 @allocated x[1] + x[2] + x[3]
-
-# !!! info
-#     The `@allocated` measures how many bytes were allocated during the
-#     evaluation of an expression. Fewer is better.
-
-# If we use the [`@expression`](@ref) macro, we get many fewer allocations:
-
 @allocated @expression(model, x[1] + x[2] + x[3])
 
 # ## Use `add_to_expression!` to build summations
