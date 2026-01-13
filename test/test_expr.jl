@@ -318,8 +318,8 @@ function test_extension_MA_add_mul(
     @test_expression_with_string MA.add_mul(x^2, x, x + 1) "2 x² + x"
     @test_expression_with_string MA.add_mul!!(x^2, x, x + 1) "2 x² + x"
     # MA.add_mul!!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
-    @test_expression_with_string MA.add_mul(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
-    @test_expression_with_string MA.add_mul!!(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
+    @test_expression_with_string MA.add_mul(x^2 + x, x^2 + x, 2 // 1) "3 x² + 3 x"
+    @test_expression_with_string MA.add_mul!!(x^2 + x, x^2 + x, 2 // 1) "3 x² + 3 x"
     # MA.add_mul!!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
     @test_expression_with_string MA.add_mul(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
     @test_expression_with_string MA.add_mul!!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
