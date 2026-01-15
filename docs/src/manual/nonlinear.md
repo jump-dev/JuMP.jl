@@ -491,8 +491,8 @@ operators, which let you represent nonlinear functions that cannot (or should
 not) be traced, for example, because they rely on non-Julia subroutines.
 
 !!! warning
-    User-defined operators must return a scalar output. For a work-around, see
-    [User-defined operators with vector outputs](@ref).
+    User-defined operators must return a scalar output. For work-arounds, see
+    [The `VectorNonlinearOracle` set](@ref) and [User-defined operators with vector outputs](@ref).
 
 ### Add an operator
 

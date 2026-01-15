@@ -390,6 +390,7 @@ const _PAGES = [
             "tutorials/nonlinear/portfolio.md",
             "tutorials/nonlinear/rocket_control.md",
             "tutorials/nonlinear/space_shuttle_reentry_trajectory.md",
+            "tutorials/nonlinear/vector_nonlinear_oracle.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",
