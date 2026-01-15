@@ -156,19 +156,14 @@ value(x)
 # ## Hessians
 
 # To improve performance, we can also compute and pass the explicit Hessian of
-# the Lagrangian
+# the Lagrangian:
 # ```math
-# L(x, u) = \nabla^2 u^\top f(x)
-# ```
-# In math, the Hessian of our example is:
-# ```math
-# \nabla^2 L(x, u) = \begin{bmatrix}
+# \nabla^2 L(x, u) =  \nabla^2 u^\top f(x) = \begin{bmatrix}
 #     2(u_2 + u_3) & \cdot & \cdot \\
 #     \cdot & 2u_2 & -u_3 \\
 #     \cdot & -u_3 & -2u_2
 # \end{bmatrix}
 # ```
-# (If you need the practice, try deriving it.)
 
 # Like the Jacobian, we need the sparsity structure and a function to compute
 # the non-zeros. Importantly, because the Hessian is symmetric, we need to pass
