@@ -85,11 +85,17 @@ f_ret
 
 jacobian_structure = [
     ## The first constraint
-    (1, 1), (1, 2), (1, 3),
+    (1, 1),
+    (1, 2),
+    (1, 3),
     ## The second constraint
-    (2, 1), (2, 2), (2, 3),
+    (2, 1),
+    (2, 2),
+    (2, 3),
     ## The third constraint
-    (3, 1), (3, 2), (3, 3),
+    (3, 1),
+    (3, 2),
+    (3, 3),
 ]
 
 function eval_jacobian(ret::AbstractVector, x::AbstractVector)
