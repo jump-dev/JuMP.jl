@@ -8,6 +8,9 @@
 # The purpose of this tutorial is to demonstrate how to write a user-defined
 # operator with a vector-valued output.
 
+# !!! info
+#     As an alternative, see [The `VectorNonlinearOracle` set](@ref) tutorial.
+
 # ## Required packages
 
 # This tutorial uses the following packages:
