@@ -21,7 +21,7 @@ using JuMP
 import Ipopt
 import Test
 
-## Example
+# ## Example
 
 # As an example, we use the model from [Quadratically constrained programs](@ref).
 # It can be formulated as:
@@ -47,12 +47,12 @@ print(model)
 # \begin{bmatrix} 1\\0\\0 \end{bmatrix}
 # ```
 
-## Inputs to the `VectorNonlinearOracle` set
+# ## Inputs to the `VectorNonlinearOracle` set
 
 # To create a [`MOI.VectorNonlinearOracle`](@ref) set, we need a few components.
 
 # First, we need a function with the signature `(ret::AbstractVector, x::AbstractVector)`
-# that evalutes $f(x)$ and stores the result in `ret`:
+# that evaluates $f(x)$ and stores the result in `ret`:
 
 function eval_f(ret::AbstractVector, x::AbstractVector)
     ret[1] = sum(x)
@@ -78,7 +78,7 @@ f_ret
 # ```
 # In code, the Jacobian has two components: a vector of the `(row, column)`
 # tuples indicating the structural non-zeros of the Jacobian, and a function
-# with the signature `(ret::AbstractVector, x::AbstractVector)` that evalutes
+# with the signature `(ret::AbstractVector, x::AbstractVector)` that evaluates
 # the non-zeros and stores the result in `ret`. Note that our example Jacobian
 # is dense. If it was sparse, we could omit some of the structure tuples to end
 # up with a vector with fewer than 9 elements.
@@ -168,7 +168,7 @@ value(x)
 #     \cdot & -u_3 & -2u_2
 # \end{bmatrix}
 # ```
-# (If you need the practice, try computing it).
+# (If you need the practice, try deriving it.)
 
 # Like the Jacobian, we need the sparsity structure and a function to compute
 # the non-zeros. Importantly, because the Hessian is symmetric, we need to pass
