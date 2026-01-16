@@ -46,7 +46,7 @@
 # then we can solve it with any integer programming solver.
 
 using JuMP
-using HiGHS
+import HiGHS
 
 # We will define a binary variable (a variable that is either 0 or 1) for each
 # possible number in each possible cell. The meaning of each variable is as

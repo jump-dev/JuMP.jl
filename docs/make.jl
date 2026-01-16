@@ -335,6 +335,7 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
 const _PAGES = [
     "Introduction" => ["index.md", "should_i_use.md", "installation.md"],
     "Tutorials" => [
+        "tutorials/overview.md",
         "Getting started" => [
             "tutorials/getting_started/introduction.md",
             "tutorials/getting_started/getting_started_with_julia.md",
