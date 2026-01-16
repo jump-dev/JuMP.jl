@@ -327,20 +327,36 @@ plt_altitude = Plots.plot(
     legend = nothing,
     title = "Altitude (100,000 ft)",
 )
-plt_longitude =
-    Plots.plot(ts, rad2deg.(value.(ϕ)); legend = nothing, title = "Longitude (deg)")
-plt_latitude =
-    Plots.plot(ts, rad2deg.(value.(θ)); legend = nothing, title = "Latitude (deg)")
+plt_longitude = Plots.plot(
+    ts,
+    rad2deg.(value.(ϕ));
+    legend = nothing,
+    title = "Longitude (deg)",
+)
+plt_latitude = Plots.plot(
+    ts,
+    rad2deg.(value.(θ));
+    legend = nothing,
+    title = "Latitude (deg)",
+)
 plt_velocity = Plots.plot(
     ts,
     value.(scaled_v);
     legend = nothing,
     title = "Velocity (1000 ft/sec)",
 )
-plt_flight_path =
-    Plots.plot(ts, rad2deg.(value.(γ)); legend = nothing, title = "Flight Path (deg)")
-plt_azimuth =
-    Plots.plot(ts, rad2deg.(value.(ψ)); legend = nothing, title = "Azimuth (deg)")
+plt_flight_path = Plots.plot(
+    ts,
+    rad2deg.(value.(γ));
+    legend = nothing,
+    title = "Flight Path (deg)",
+)
+plt_azimuth = Plots.plot(
+    ts,
+    rad2deg.(value.(ψ));
+    legend = nothing,
+    title = "Azimuth (deg)",
+)
 
 Plots.plot(
     plt_altitude,
