@@ -734,7 +734,7 @@ mistakes.
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
     this section.
 
-#### [Debugging](@id debugging_operators)
+#### Debugging operators
 
 If you add an operator that does not support ForwardDiff, a long error message
 will be printed. You can review the stacktrace for more information, but it can

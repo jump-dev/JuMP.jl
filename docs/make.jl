@@ -175,7 +175,8 @@ for (root, dirs, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
             m = match(r"\[(.+)\]\(@id (.+)\)", title)
             anchor = "[$(m[1])](@ref $(m[2]))"
         end
-        for m in eachmatch(r"\nimport ([a-z][A-Z]+)\n"i, contents; overlap = true)
+        import_regex = r"\nimport ([a-z][A-Z]+)\n"i
+        for m in eachmatch(import_regex, contents; overlap = true)
             push!(get!(package_to_headers, m[1], String[]), anchor)
         end
     end
