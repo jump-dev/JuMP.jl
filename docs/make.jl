@@ -200,7 +200,7 @@ open(joinpath(@__DIR__, "src", "tutorials", "overview.md"), "w") do io
             continue
         end
         println(io, "## [$(pkg).jl](@id tutorial_$pkg)")
-        println(io, join(unique(sort!(tutorials)), ", "))
+        println(io, join(unique(sort!(tutorials)), " • "))
         println(io)
     end
     return
