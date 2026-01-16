@@ -68,7 +68,7 @@
     rev = "v0.9.1"
     has_html = true
 [Ipopt]
-    rev = "v1.13.0"
+    rev = "v1.14.0"
 [KNITRO]
     rev = "v1.2.0"
 [MathOptAnalyzer]
@@ -80,7 +80,7 @@
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.8.1"
+    rev = "v1.8.2"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -184,11 +184,11 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.31"
+    rev = "v0.5.32"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.2.0"
+    rev = "v0.2.1"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
