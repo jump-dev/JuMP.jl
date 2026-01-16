@@ -10,3 +10,5 @@ src/packages/*.md
 !src/packages/solvers.md
 !src/packages/extensions.md
 src/JuMP.pdf
+src/tutorials/overview.md
+src/tutorials/linear/callbacks.md
