@@ -103,7 +103,7 @@
     rev = "v0.7.6"
     extension = true
 [SCS]
-    rev = "v2.5.0"
+    rev = "v2.6.0"
 [SDPA]
     rev = "v0.6.1"
 [SDPLR]
@@ -166,7 +166,7 @@
     rev = "dc2bcebb58b1bbeae69453084ff437905eb2463d"
 [InfiniteOpt]
     user = "infiniteopt"
-    rev = "v0.6.0"
+    rev = "v0.6.1"
     filename = "docs/jump/README.md"
     extension = true
 [Juniper]
@@ -184,11 +184,11 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.30"
+    rev = "v0.5.31"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.1.19"
+    rev = "v0.2.0"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -199,7 +199,7 @@
     extension = true
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v1.13.3"
+    rev = "v2.0.0"
 [OSQP]
     user = "osqp"
     rev = "v0.8.1"
