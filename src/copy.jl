@@ -339,7 +339,8 @@ function MOI.copy_to(dest::MOI.ModelLike, src::GenericModel)
         evaluator = MOI.Nonlinear.Evaluator(
             nlp,
             MOI.Nonlinear.SparseReverseMode(),
-            index.(all_variables(src)),
+            # Type annotation needed for JET.
+            index.(all_variables(src))::Vector{MOI.VariableIndex},
         )
         MOI.set(src, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
     end

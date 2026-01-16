@@ -197,7 +197,8 @@ end
 # AbstractVariableRef--GenericQuadExpr
 
 function Base.:+(v::AbstractVariableRef, q::GenericQuadExpr)
-    return GenericQuadExpr(v + q.aff, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((v + q.aff)::GenericAffExpr, copy(q.terms))
 end
 
 function Base.:-(v::AbstractVariableRef, q::GenericQuadExpr)
@@ -375,7 +376,8 @@ end
 # GenericAffExpr--GenericQuadExpr
 
 function Base.:+(a::GenericAffExpr, q::GenericQuadExpr)
-    return GenericQuadExpr(a + q.aff, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((a + q.aff)::GenericAffExpr, copy(q.terms))
 end
 
 function Base.:-(a::GenericAffExpr{S}, q::GenericQuadExpr{T}) where {S,T}
@@ -405,21 +407,25 @@ Base.:/(lhs::GenericQuadExpr, rhs::_Constant) = (*)(inv(rhs), lhs)
 # GenericQuadExpr--AbstractVariableRef
 
 function Base.:+(q::GenericQuadExpr, v::AbstractVariableRef)
-    return GenericQuadExpr(q.aff + v, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((q.aff + v)::GenericAffExpr, copy(q.terms))
 end
 
 function Base.:-(q::GenericQuadExpr, v::AbstractVariableRef)
-    return GenericQuadExpr(q.aff - v, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((q.aff - v)::GenericAffExpr, copy(q.terms))
 end
 
 # GenericQuadExpr--GenericAffExpr
 
 function Base.:+(q::GenericQuadExpr, a::GenericAffExpr)
-    return GenericQuadExpr(q.aff + a, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((q.aff + a)::GenericAffExpr, copy(q.terms))
 end
 
 function Base.:-(q::GenericQuadExpr, a::GenericAffExpr)
-    return GenericQuadExpr(q.aff - a, copy(q.terms))
+    # Type annotation needed for JET.
+    return GenericQuadExpr((q.aff - a)::GenericAffExpr, copy(q.terms))
 end
 
 # GenericQuadExpr--GenericQuadExpr

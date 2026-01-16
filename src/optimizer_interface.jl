@@ -579,7 +579,8 @@ function optimize!(
         evaluator = MOI.Nonlinear.Evaluator(
             nlp,
             _differentiation_backend,
-            index.(all_variables(model)),
+            # Type annotation needed for JET.
+            index.(all_variables(model))::Vector{MOI.VariableIndex},
         )
         MOI.set(model, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
     end
