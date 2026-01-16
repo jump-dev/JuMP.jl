@@ -365,7 +365,7 @@ Plots.plot(
     plt_flight_path,
     plt_latitude,
     plt_azimuth;
-    layout = grid(3, 2),
+    layout = Plots.grid(3, 2),
     linewidth = 2,
     size = (700, 700),
 )
@@ -403,7 +403,7 @@ Plots.plot(
     plt_attack_angle,
     plt_bank_angle,
     plt_heating;
-    layout = grid(3, 1),
+    layout = Plots.grid(3, 1),
     linewidth = 2,
     size = (700, 700),
 )
