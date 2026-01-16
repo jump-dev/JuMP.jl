@@ -3270,16 +3270,22 @@ julia> normalized_coefficient(con_vec, x)
 ```
 """
 function normalized_coefficient(
-    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    constraint::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     variable::AbstractVariableRef,
-) where {F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction}}
+) where {
+    F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction},
+    S<:MOI.AbstractScalarSet,
+}
     return coefficient(constraint_object(constraint).func, variable)
 end
 
 function normalized_coefficient(
-    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    constraint::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     variable::AbstractVariableRef,
-) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+) where {
+    F<:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction},
+    S<:MOI.AbstractVectorSet,
+}
     c = coefficient.(constraint_object(constraint).func, variable)
     return filter!(!iszero ∘ last, collect(enumerate(c)))
 end
@@ -3324,19 +3330,19 @@ Tuple{Int64, Float64}[]
 ```
 """
 function normalized_coefficient(
-    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    constraint::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     variable_1::AbstractVariableRef,
     variable_2::AbstractVariableRef,
-) where {F<:MOI.ScalarQuadraticFunction}
+) where {F<:MOI.ScalarQuadraticFunction,S<:MOI.AbstractScalarSet}
     con = constraint_object(constraint)
     return coefficient(con.func, variable_1, variable_2)
 end
 
 function normalized_coefficient(
-    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    constraint::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     variable_1::AbstractVariableRef,
     variable_2::AbstractVariableRef,
-) where {T,F<:MOI.VectorQuadraticFunction{T}}
+) where {F<:MOI.VectorQuadraticFunction,S<:MOI.AbstractVectorSet}
     f = constraint_object(constraint).func
     c = coefficient.(f, variable_1, variable_2)
     return filter!(!iszero ∘ last, collect(enumerate(c)))

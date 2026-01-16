@@ -429,17 +429,16 @@ macro NLexpression(args...)
         error_fn(
             "To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.",
         )
-    elseif length(args) == 2
-        m, x = args
-        c = nothing
-    elseif length(args) == 3
-        m, c, x = args
-    end
-    if Meta.isexpr(args[2], :block)
+    elseif length(args) > 3 || length(kw_args) > 0
+        error_fn("To many arguments ($(length(args))).")
+    elseif Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@NLexpressions`?")
     end
-    if length(args) > 3 || length(kw_args) > 0
-        error_fn("To many arguments ($(length(args))).")
+    m, c, x = if length(args) == 2
+        args[1], nothing, args[2]
+    else
+        @assert length(args) == 3
+        args
     end
     name, idxvars, indices = Containers.parse_ref_sets(error_fn, c)
     name, idxvars, indices = Containers.parse_ref_sets(
