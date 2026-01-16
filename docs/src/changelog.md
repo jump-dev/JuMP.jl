@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Documentation updates (#4093), (#4095), (#4098), (#4102), (#4104)
+ - Documentation updates (#4093), (#4095), (#4098), (#4102), (#4104), (#4107)
  - Added a [Multi-objective project planning](@ref) tutorial (#4094)
  - Changed a test to avoid type inference issue (#4105)
  - Added [The `VectorNonlinearOracle` set](@ref) tutorial (#4106)
