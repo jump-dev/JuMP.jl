@@ -154,6 +154,59 @@ function _add_edit_url(filename, url)
 end
 
 # ==============================================================================
+#  Add tutorial overview
+# ==============================================================================
+
+package_to_headers = Dict{String,Vector{String}}()
+
+for (root, dirs, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
+    for file in filter(f -> endswith(f, ".jl") | endswith(f, ".md"), files)
+        contents = read(joinpath(root, file), String)
+        if startswith(contents, "```@meta")
+            continue  # Already literated
+        end
+        m = match(r"\n# # (.+)\n", contents)
+        if m === nothing
+            m = match(r"^# (.+)\n", contents)
+        end
+        title = m[1]
+        anchor = "[$title](@ref)"
+        if occursin("@id", title)
+            m = match(r"\[(.+)\]\(@id (.+)\)", title)
+            anchor = "[$(m[1])](@ref $(m[2]))"
+        end
+        import_regex = r"\nimport ([a-z][A-Z]+)( as [a-zA-Z]+)?\n"i
+        for m in eachmatch(import_regex, contents; overlap = true)
+            push!(get!(package_to_headers, m[1], String[]), anchor)
+        end
+    end
+end
+
+open(joinpath(@__DIR__, "src", "tutorials", "overview.md"), "w") do io
+    println(
+        io,
+        """
+        # Tutorials by package
+
+        To make it easier to find relevant tutorials, this page lists all the tutorials
+        by the packages they import.
+
+        For example, to find tutorials that solve nonlinear programs, look at the
+        [Ipopt.jl](@ref tutorial_Ipopt) section.
+        """,
+    )
+    for (pkg, tutorials) in sort!(collect(package_to_headers))
+        if pkg == "JuMP"
+            continue
+        end
+        println(io, "## [$(pkg).jl](@id tutorial_$pkg)")
+        println(io, join(unique(sort!(tutorials)), " • "))
+        println(io)
+    end
+    return
+end
+
+# ==============================================================================
 #  Add solver README
 # ==============================================================================
 
@@ -335,6 +388,7 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
 const _PAGES = [
     "Introduction" => ["index.md", "should_i_use.md", "installation.md"],
     "Tutorials" => [
+        "tutorials/overview.md",
         "Getting started" => [
             "tutorials/getting_started/introduction.md",
             "tutorials/getting_started/getting_started_with_julia.md",

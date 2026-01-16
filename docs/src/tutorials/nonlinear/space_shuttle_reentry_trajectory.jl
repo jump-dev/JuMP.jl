@@ -45,6 +45,7 @@
 using JuMP
 import Interpolations
 import Ipopt
+import Plots
 
 # ## Formulation
 
@@ -319,37 +320,52 @@ println(
 
 # Let's plot the results to visualize the optimal trajectory:
 
-using Plots
 ts = cumsum([0; value.(Δt)])[1:(end-1)]
-plt_altitude = plot(
+plt_altitude = Plots.plot(
     ts,
     value.(scaled_h);
     legend = nothing,
     title = "Altitude (100,000 ft)",
 )
-plt_longitude =
-    plot(ts, rad2deg.(value.(ϕ)); legend = nothing, title = "Longitude (deg)")
-plt_latitude =
-    plot(ts, rad2deg.(value.(θ)); legend = nothing, title = "Latitude (deg)")
-plt_velocity = plot(
+plt_longitude = Plots.plot(
+    ts,
+    rad2deg.(value.(ϕ));
+    legend = nothing,
+    title = "Longitude (deg)",
+)
+plt_latitude = Plots.plot(
+    ts,
+    rad2deg.(value.(θ));
+    legend = nothing,
+    title = "Latitude (deg)",
+)
+plt_velocity = Plots.plot(
     ts,
     value.(scaled_v);
     legend = nothing,
     title = "Velocity (1000 ft/sec)",
 )
-plt_flight_path =
-    plot(ts, rad2deg.(value.(γ)); legend = nothing, title = "Flight Path (deg)")
-plt_azimuth =
-    plot(ts, rad2deg.(value.(ψ)); legend = nothing, title = "Azimuth (deg)")
+plt_flight_path = Plots.plot(
+    ts,
+    rad2deg.(value.(γ));
+    legend = nothing,
+    title = "Flight Path (deg)",
+)
+plt_azimuth = Plots.plot(
+    ts,
+    rad2deg.(value.(ψ));
+    legend = nothing,
+    title = "Azimuth (deg)",
+)
 
-plot(
+Plots.plot(
     plt_altitude,
     plt_velocity,
     plt_longitude,
     plt_flight_path,
     plt_latitude,
     plt_azimuth;
-    layout = grid(3, 2),
+    layout = Plots.grid(3, 2),
     linewidth = 2,
     size = (700, 700),
 )
@@ -364,37 +380,37 @@ function q(h, v, a)
     return qₐ(a) * qᵣ(h, v)
 end
 
-plt_attack_angle = plot(
+plt_attack_angle = Plots.plot(
     ts[1:(end-1)],
     rad2deg.(value.(α)[1:(end-1)]);
     legend = nothing,
     title = "Angle of Attack (deg)",
 )
-plt_bank_angle = plot(
+plt_bank_angle = Plots.plot(
     ts[1:(end-1)],
     rad2deg.(value.(β)[1:(end-1)]);
     legend = nothing,
     title = "Bank Angle (deg)",
 )
-plt_heating = plot(
+plt_heating = Plots.plot(
     ts,
     q.(value.(scaled_h) * 1e5, value.(scaled_v) * 1e4, value.(α));
     legend = nothing,
     title = "Heating (BTU/ft/ft/sec)",
 )
 
-plot(
+Plots.plot(
     plt_attack_angle,
     plt_bank_angle,
     plt_heating;
-    layout = grid(3, 1),
+    layout = Plots.grid(3, 1),
     linewidth = 2,
     size = (700, 700),
 )
 
 #-
 
-plot(
+Plots.plot(
     rad2deg.(value.(ϕ)),
     rad2deg.(value.(θ)),
     value.(scaled_h);

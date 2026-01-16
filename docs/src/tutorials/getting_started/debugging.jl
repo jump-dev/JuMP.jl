@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Debugging
+# # [Debugging](@id tutorial_debugging)
 
 # Dealing with bugs is an unavoidable part of coding optimization models in
 # any framework, including JuMP. Sources of bugs include not only generic coding

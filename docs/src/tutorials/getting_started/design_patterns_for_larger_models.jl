@@ -45,7 +45,8 @@
 # Your first prototype of a JuMP model is probably a script that uses a small
 # set of hard-coded data.
 
-using JuMP, HiGHS
+using JuMP
+import HiGHS
 profit = [5, 3, 2, 7, 4]
 weight = [2, 8, 4, 2, 5]
 capacity = 10

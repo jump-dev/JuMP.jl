@@ -543,7 +543,8 @@ Solvers supporting internal parallelism will typically support the
 [`set_attribute`](@ref):
 
 ```julia
-using JuMP, Gurobi
+using JuMP
+import Gurobi
 model = Model(Gurobi.Optimizer)
 set_attribute(model, MOI.NumberOfThreads(), 4)
 ```
@@ -556,7 +557,9 @@ GPU.
 One example is [SCS.jl](@ref), which supports using a GPU to internally solve
 a system of linear equations. If you are on `x86_64` Linux machine, do:
 ```julia
-using JuMP, SCS, SCS_GPU_jll
+using JuMP
+import SCS
+import SCS_GPU_jll
 model = Model(SCS.Optimizer)
 set_attribute(model, "linear_solver", SCS.GpuIndirectSolver)
 ```

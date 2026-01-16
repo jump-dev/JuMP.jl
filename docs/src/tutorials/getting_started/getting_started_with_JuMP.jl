@@ -104,7 +104,7 @@
 # And here's the code to solve this problem:
 
 using JuMP
-using HiGHS
+import HiGHS
 model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 @variable(model, 0 <= y <= 3)
@@ -132,7 +132,7 @@ using JuMP
 # We want to use `HiGHS.Optimizer` here which is provided by the `HiGHS.jl`
 # package:
 
-using HiGHS
+import HiGHS
 
 # JuMP builds problems incrementally in a `Model` object. Create a model by
 # passing an optimizer to the [`Model`](@ref) function:
