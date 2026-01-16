@@ -186,7 +186,7 @@ open(joinpath(@__DIR__, "src", "tutorials", "overview.md"), "w") do io
     println(
         io,
         """
-        # Tutorial overview
+        # Tutorials by package
 
         To make it easier to find relevant tutorials, this page lists all the tutorials
         by the packages they import.
