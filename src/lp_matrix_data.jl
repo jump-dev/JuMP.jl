@@ -222,12 +222,13 @@ function _fill_standard_form(
     for c in all_constraints(model, F, S)
         push!(cache.affine_constraints, c)
         c_obj = constraint_object(c)
-        @assert iszero(c_obj.func.constant)
+        f = c_obj.func::F
+        @assert iszero(f.constant)
         row = length(cache.b_l) + 1
         l, u = _bounds(c_obj.set)
         push!(cache.b_l, l)
         push!(cache.b_u, u)
-        for (x, coef) in c_obj.func.terms
+        for (x, coef) in f.terms
             push!(cache.I, row)
             push!(cache.J, cache.variable_to_column[x])
             push!(cache.V, coef)

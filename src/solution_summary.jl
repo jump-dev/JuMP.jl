@@ -205,7 +205,7 @@ function _format(x::Vector{<:Real})
     return string("[", join((Printf.@sprintf("%.5e", v) for v in x), ","), "]")
 end
 
-function _print_tree(io::IO, args::Pair{String,<:Any}, prefix = "")
+function _print_tree(io::IO, args::Pair{String}, prefix = "")
     if !isempty(prefix)
         println(io)
     end

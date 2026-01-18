@@ -872,9 +872,13 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     var_name = replace(var_name, "^" => "\\^")
     # Replace `real(_) => Re(_)` and `imag(_) => Im(_)`
     if (m = match(r"^real\((.+)\)$", var_name)) !== nothing
-        return string("\\text{Re}(", _convert_args_to_subscript(m[1]), ")")
+        # Type annotation needed for JET.
+        x = _convert_args_to_subscript(m[1]::SubString)
+        return string("\\text{Re}(", x, ")")
     elseif (m = match(r"^imag\((.+)\)$", var_name)) !== nothing
-        return string("\\text{Im}(", _convert_args_to_subscript(m[1]), ")")
+        # Type annotation needed for JET.
+        x = _convert_args_to_subscript(m[1]::SubString)
+        return string("\\text{Im}(", x, ")")
     end
     return _convert_args_to_subscript(var_name)
 end
