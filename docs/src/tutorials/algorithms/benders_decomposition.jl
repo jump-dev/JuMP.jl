@@ -249,7 +249,7 @@ ABSOLUTE_OPTIMALITY_GAP = 1e-6
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    assert_is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model; allow_local = false)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(x_k)
@@ -409,7 +409,7 @@ end
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    assert_is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model; allow_local = false)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(subproblem, x_k)
@@ -509,7 +509,7 @@ end
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
-    assert_is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model; allow_local = false)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem_with_feasibility(subproblem, x_k)
