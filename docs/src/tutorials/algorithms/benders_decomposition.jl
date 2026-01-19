@@ -250,7 +250,7 @@ println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
     assert_is_solved_and_feasible(model)
-    lower_bound = objective_value(model)
+    lower_bound = objective_bound(model)
     x_k = value.(x)
     ret = solve_subproblem(x_k)
     upper_bound = (objective_value(model) - value(θ)) + ret.obj
