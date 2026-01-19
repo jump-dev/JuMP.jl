@@ -478,8 +478,8 @@ set_attribute(subproblem, "presolve", "off")
 subproblem
 
 # The function to solve the subproblem now checks for feasibility, and returns
-# the dual objective value and an dual unbounded ray if the subproblem is
-# infeasible:
+# the dual objective value and a [dual unbounded ray](@ref dual_unbounded_ray)
+# if the subproblem is infeasible:
 
 function solve_subproblem_with_feasibility(model, x)
     fix.(model[:x_copy], x)
@@ -490,6 +490,11 @@ function solve_subproblem_with_feasibility(model, x)
             obj = objective_value(model),
             y = value.(model[:y]),
             π = reduced_cost.(model[:x_copy]),
+        )
+    elseif dual_status(model) != INFEASIBILITY_CERTIFICATE
+        error(
+            "Unable to compute feasibility cut. The solver did not provide " *
+            "an infeasibility certificate as the dual result.",
         )
     end
     return (

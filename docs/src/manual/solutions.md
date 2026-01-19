@@ -315,7 +315,7 @@ And data, a 2-element Vector{Float64}:
  -0.0
 ```
 
-### Unbounded rays
+### [Unbounded rays](@id dual_unbounded_ray)
 
 If the [`termination_status`](@ref) is [`INFEASIBLE`](@ref) and
 [`dual_status`](@ref) is [`INFEASIBILITY_CERTIFICATE`](@ref), then the
