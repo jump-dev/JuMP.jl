@@ -151,7 +151,7 @@
     has_html = true
 [CuPDLPx]
     user = "MIT-Lu-Lab"
-    rev = "v0.2.3"
+    rev = "v0.2.5"
 [DAQP]
     user = "darnstrom"
     rev = "v0.7.1"
