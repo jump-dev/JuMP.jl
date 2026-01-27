@@ -149,6 +149,9 @@
     user = "oxfordcontrol"
     rev = "v0.8.9"
     has_html = true
+[CuPDLPx]
+    user = "MIT-Lu-Lab"
+    rev = "v0.2.5"
 [DAQP]
     user = "darnstrom"
     rev = "v0.7.1"
