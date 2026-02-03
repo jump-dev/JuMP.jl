@@ -65,7 +65,7 @@ dual_status(model)
 # can work around this problem by fixing the integer variables to their optimal
 # solution, relaxing integrality, and re-solving as a linear program.
 
-discrete_values = value.(dispatch)
+discrete_values = round.(Int, value.(dispatch))
 fix.(dispatch, discrete_values; force = true)
 unset_binary.(dispatch)
 print(model)
