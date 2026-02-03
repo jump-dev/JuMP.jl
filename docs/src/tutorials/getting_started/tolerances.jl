@@ -282,7 +282,7 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
 # `value(x)` of an integer variable or `::Bool` for `value(x)` of a binary
 # variable.
 
-# In most cases, it is safe to post-process the solution using
+# For some models, it is safe to post-process the solution using
 # `y_int = round(Int, value(y))`. However, in some cases "fixing" the
 # integrality like this can cause violations in primal feasibility that exceed
 # the primal feasibility tolerance. For example, if we rounded our
@@ -291,6 +291,33 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 1e-6))
 # typical feasibility tolerance of `1e-8`.
 
 primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
+
+# If strict integer feasibility matters to you, one heuristic that sometimes
+# works is to round and fix the integer variables, and then re-solve the problem
+# to find new values for the remaining continuous variables:
+
+function round_and_repair_heuristic!(model)
+    ## Query all values first...
+    vars = filter!(xi -> is_integer(xi) || is_binary(xi), all_variables(model))
+    solution = round.(Int, value.(solution))
+    ## ...then modify the model
+    fix.(vars, solution; force = true)
+    optimize!(model)
+    assert_is_solved_and_feasible(model)
+    return
+end
+
+# Here it is in action:
+
+set_optimizer(model, HiGHS.Optimizer)
+set_silent(model)
+optimize!(model)
+assert_is_solved_and_feasible(model)
+round_and_repair_heuristic(model)
+solution_summary(model)
+
+# Note that this heuristic will fail if no feasible solution exists for the
+# rounded integer values.
 
 # ### Why you shouldn't use a small tolerance
 
