@@ -176,5 +176,5 @@ value(c2)
 # Because the solution is in exact arithmetic, there are no primal
 # infeasibilities:
 
-Test.@test isempty(primal_feasibility_report(model))
+Test.@test isempty(primal_feasibility_report(model))  #src
 primal_feasibility_report(model)
