@@ -299,7 +299,7 @@ primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
 function round_and_repair_heuristic!(model)
     ## Query all values first...
     vars = filter!(xi -> is_integer(xi) || is_binary(xi), all_variables(model))
-    solution = round.(Int, value.(solution))
+    solution = round.(Int, value.(vars))
     ## ...then modify the model
     fix.(vars, solution; force = true)
     optimize!(model)
