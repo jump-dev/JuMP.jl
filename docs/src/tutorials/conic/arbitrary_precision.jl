@@ -15,13 +15,14 @@
 using JuMP
 import CDDLib
 import Clarabel
+import Test     #src
 
 # ## Higher-precision arithmetic
 
 # To create a model with a number type other than `Float64`, use [`GenericModel`](@ref)
 # with an optimizer which supports the same number type:
 
-model = GenericModel{BigFloat}(Clarabel.Optimizer{BigFloat})
+model = GenericModel{BigFloat}()
 
 # The syntax for adding decision variables is the same as a normal JuMP
 # model, except that values are converted to `BigFloat`:
@@ -77,6 +78,7 @@ print(model)
 
 # Let's solve and inspect the solution:
 
+set_optimizer(model, Clarabel.Optimizer{BigFloat})
 optimize!(model)
 assert_is_solved_and_feasible(model; dual = true)
 solution_summary(model)
@@ -98,13 +100,24 @@ dual(c)
 
 value.(x) .- [3 // 7, 3 // 14]
 
+# The primal feasibility violation is on the order of `1e-16`
+
+Test.@test 1e-16 <= maximum(values(primal_feasibility_report(model))) <= 1e-15 #src
+primal_feasibility_report(model)
+
 # But by reducing the tolerances, we can obtain a more accurate solution:
 
+set_optimizer(model, Clarabel.Optimizer{BigFloat})
 set_attribute(model, "tol_gap_abs", 1e-32)
 set_attribute(model, "tol_gap_rel", 1e-32)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 value.(x) .- [3 // 7, 3 // 14]
+
+# The primal feasibility violation is also much smaller:
+
+Test.@test maximum(values(primal_feasibility_report(model))) < 1e-30  #src
+primal_feasibility_report(model)
 
 # ## Rational arithmetic
 
@@ -159,3 +172,9 @@ objective_value(model)
 #-
 
 value(c2)
+
+# Because the solution is in exact arithmetic, there are no primal
+# infeasibilities:
+
+Test.@test isempty(primal_feasibility_report(model))  #src
+primal_feasibility_report(model)
