@@ -313,7 +313,7 @@ set_optimizer(model, HiGHS.Optimizer)
 set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
-round_and_repair_heuristic(model)
+round_and_repair_heuristic!(model)
 solution_summary(model)
 
 # Note that this heuristic will fail if no feasible solution exists for the
