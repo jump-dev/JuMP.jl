@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Solutions · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img class="docs-light-only" src="../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../tutorials/getting_started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../tutorials/getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../tutorials/linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../tutorials/linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../tutorials/linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../tutorials/linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../tutorials/linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../tutorials/linear/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../tutorials/linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../tutorials/linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../tutorials/linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../tutorials/linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../tutorials/linear/prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../../tutorials/linear/steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../../tutorials/linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../tutorials/linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../tutorials/linear/urban_plan/">The urban planning problem</a></li><li><a class="tocitem" href="../../tutorials/linear/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/qcp/">Quadratically constrained programs</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../tutorials/conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../tutorials/conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../tutorials/conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../tutorials/conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../tutorials/conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../tutorials/conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../tutorials/conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../tutorials/conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../tutorials/conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../tutorials/algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../tutorials/algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../tutorials/applications/web_app/">Serving web apps</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../models/">Models</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li><li><a class="tocitem" href="../expressions/">Expressions</a></li><li><a class="tocitem" href="../objective/">Objectives</a></li><li><a class="tocitem" href="../containers/">Containers</a></li><li class="is-active"><a class="tocitem" href>Solutions</a><ul class="internal"><li><a class="tocitem" href="#Solutions-summary"><span>Solutions summary</span></a></li><li><a class="tocitem" href="#Why-did-the-solver-stop?"><span>Why did the solver stop?</span></a></li><li><a class="tocitem" href="#Primal-solutions"><span>Primal solutions</span></a></li><li><a class="tocitem" href="#Dual-solutions"><span>Dual solutions</span></a></li><li><a class="tocitem" href="#Recommended-workflow"><span>Recommended workflow</span></a></li><li><a class="tocitem" href="#OptimizeNotCalled-errors"><span>OptimizeNotCalled errors</span></a></li><li><a class="tocitem" href="#Accessing-attributes"><span>Accessing attributes</span></a></li><li><a class="tocitem" href="#Sensitivity-analysis-for-LP"><span>Sensitivity analysis for LP</span></a></li><li><a class="tocitem" href="#Conflicts"><span>Conflicts</span></a></li><li><a class="tocitem" href="#Multiple-solutions"><span>Multiple solutions</span></a></li><li><a class="tocitem" href="#Checking-feasibility-of-solutions"><span>Checking feasibility of solutions</span></a></li></ul></li><li><a class="tocitem" href="../nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../reference/models/">Models</a></li><li><a class="tocitem" href="../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/">Introduction</a></li><li><a class="tocitem" href="../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Solutions</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Solutions</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/manual/solutions.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="jump_solutions"><a class="docs-heading-anchor" href="#jump_solutions">Solutions</a><a id="jump_solutions-1"></a><a class="docs-heading-anchor-permalink" href="#jump_solutions" title="Permalink"></a></h1><p>This section of the manual describes how to access a solved solution to a problem. It uses the following model as an example:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x &gt;= 0)
+@variable(model, y[[:a, :b]] &lt;= 1)
+@objective(model, Max, -12x - 20y[:a])
+@expression(model, my_expr, 6x + 8y[:a])
+@constraint(model, my_expr &gt;= 100)
+@constraint(model, c1, 7x + 12y[:a] &gt;= 120)
+optimize!(model)
+print(model)
+
+# output
+
+Max -12 x - 20 y[a]
+Subject to
+ 6 x + 8 y[a] ≥ 100.0
+ c1 : 7 x + 12 y[a] ≥ 120.0
+ x ≥ 0.0
+ y[a] ≤ 1.0
+ y[b] ≤ 1.0</code></pre><h2 id="Solutions-summary"><a class="docs-heading-anchor" href="#Solutions-summary">Solutions summary</a><a id="Solutions-summary-1"></a><a class="docs-heading-anchor-permalink" href="#Solutions-summary" title="Permalink"></a></h2><p><a href="../../reference/solutions/#JuMP.solution_summary"><code>solution_summary</code></a> can be used for checking the summary of the optimization solutions.</p><pre><code class="language-julia-repl hljs">julia&gt; solution_summary(model)
+* Solver : HiGHS
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  &quot;kHighsModelStatusOptimal&quot;
+
+* Candidate solution
+  Objective value      : -2.05143e+02
+  Objective bound      : -0.00000e+00
+  Relative gap         : Inf
+  Dual objective value : -2.05143e+02
+
+* Work counters
+  Solve time (sec)   : 6.70987e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
+  Node count         : -1
+
+julia&gt; solution_summary(model, verbose=true)
+* Solver : HiGHS
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has duals          : true
+  Message from the solver:
+  &quot;kHighsModelStatusOptimal&quot;
+
+* Candidate solution
+  Objective value      : -2.05143e+02
+  Objective bound      : -0.00000e+00
+  Relative gap         : Inf
+  Dual objective value : -2.05143e+02
+  Primal solution :
+    x : 1.54286e+01
+    y[a] : 1.00000e+00
+    y[b] : 1.00000e+00
+  Dual solution :
+    c1 : 1.71429e+00
+
+* Work counters
+  Solve time (sec)   : 6.70987e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
+  Node count         : -1</code></pre><h2 id="Why-did-the-solver-stop?"><a class="docs-heading-anchor" href="#Why-did-the-solver-stop?">Why did the solver stop?</a><a id="Why-did-the-solver-stop?-1"></a><a class="docs-heading-anchor-permalink" href="#Why-did-the-solver-stop?" title="Permalink"></a></h2><p>Use<a href="../../reference/solutions/#JuMP.termination_status"><code>termination_status</code></a> to understand why the solver stopped.</p><pre><code class="language-julia-repl hljs">julia&gt; termination_status(model)
+OPTIMAL::TerminationStatusCode = 1</code></pre><p>The <a href="../../moi/reference/models/#MathOptInterface.TerminationStatusCode"><code>MOI.TerminationStatusCode</code></a> enum describes the full list of statuses that could be returned.</p><p>Common return values include <code>OPTIMAL</code>, <code>LOCALLY_SOLVED</code>, <code>INFEASIBLE</code>, <code>DUAL_INFEASIBLE</code>, and <code>TIME_LIMIT</code>.</p><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>A return status of <code>OPTIMAL</code> means the solver found (and proved) a globally optimal solution. A return status of <code>LOCALLY_SOLVED</code> means the solver found a locally optimal solution (which may also be globally optimal, but it could not prove so).</p></div></div><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>A return status of <code>DUAL_INFEASIBLE</code> does not guarantee that the primal is unbounded. When the dual is infeasible, the primal is unbounded if there exists a feasible primal solution.</p></div></div><p>Use <a href="../../reference/solutions/#JuMP.raw_status"><code>raw_status</code></a> to get a solver-specific string explaining why the optimization stopped:</p><pre><code class="language-julia-repl hljs">julia&gt; raw_status(model)
+&quot;kHighsModelStatusOptimal&quot;</code></pre><h2 id="Primal-solutions"><a class="docs-heading-anchor" href="#Primal-solutions">Primal solutions</a><a id="Primal-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Primal-solutions" title="Permalink"></a></h2><h3 id="Primal-solution-status"><a class="docs-heading-anchor" href="#Primal-solution-status">Primal solution status</a><a id="Primal-solution-status-1"></a><a class="docs-heading-anchor-permalink" href="#Primal-solution-status" title="Permalink"></a></h3><p>Use <a href="../../reference/solutions/#JuMP.primal_status"><code>primal_status</code></a> to return an <a href="../../moi/reference/models/#MathOptInterface.ResultStatusCode"><code>MOI.ResultStatusCode</code></a> enum describing the status of the primal solution.</p><pre><code class="language-julia-repl hljs">julia&gt; primal_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1</code></pre><p>Other common returns are <code>NO_SOLUTION</code>, and <code>INFEASIBILITY_CERTIFICATE</code>. The first means that the solver doesn&#39;t have a solution to return, and the second means that the primal solution is a certificate of dual infeasibility (a primal unbounded ray).</p><p>You can also use <a href="../../reference/solutions/#JuMP.has_values"><code>has_values</code></a>, which returns <code>true</code> if there is a solution that can be queried, and <code>false</code> otherwise.</p><pre><code class="language-julia-repl hljs">julia&gt; has_values(model)
+true</code></pre><h3 id="Objective-values"><a class="docs-heading-anchor" href="#Objective-values">Objective values</a><a id="Objective-values-1"></a><a class="docs-heading-anchor-permalink" href="#Objective-values" title="Permalink"></a></h3><p>The objective value of a solved problem can be obtained via <a href="../../reference/solutions/#JuMP.objective_value"><code>objective_value</code></a>. The best known bound on the optimal objective value can be obtained via <a href="../../reference/solutions/#JuMP.objective_bound"><code>objective_bound</code></a>. If the solver supports it, the value of the dual objective can be obtained via <a href="../../reference/solutions/#JuMP.dual_objective_value"><code>dual_objective_value</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; objective_value(model)
+-205.14285714285714
+
+julia&gt; objective_bound(model)  # HiGHS only implements objective bound for MIPs
+-0.0
+
+julia&gt; dual_objective_value(model)
+-205.1428571428571</code></pre><h3 id="Primal-solution-values"><a class="docs-heading-anchor" href="#Primal-solution-values">Primal solution values</a><a id="Primal-solution-values-1"></a><a class="docs-heading-anchor-permalink" href="#Primal-solution-values" title="Permalink"></a></h3><p>If the solver has a primal solution to return, use <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> to access it:</p><pre><code class="language-julia hljs">julia&gt; value(x)
+15.428571428571429</code></pre><p>Broadcast <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> over containers:</p><pre><code class="language-julia hljs">julia&gt; value.(y)
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+ 1.0
+ 1.0</code></pre><p><a href="../../reference/solutions/#JuMP.value"><code>value</code></a> also works on expressions:</p><pre><code class="language-julia-repl hljs">julia&gt; value(my_expr)
+100.57142857142857</code></pre><p>and constraints:</p><pre><code class="language-julia-repl hljs">julia&gt; value(c1)
+120.0</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>Calling <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> on a constraint returns the constraint function evaluated at the solution.</p></div></div><h2 id="Dual-solutions"><a class="docs-heading-anchor" href="#Dual-solutions">Dual solutions</a><a id="Dual-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solutions" title="Permalink"></a></h2><h3 id="Dual-solution-status"><a class="docs-heading-anchor" href="#Dual-solution-status">Dual solution status</a><a id="Dual-solution-status-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solution-status" title="Permalink"></a></h3><p>Use <a href="../../reference/solutions/#JuMP.dual_status"><code>dual_status</code></a> to return an <a href="../../moi/reference/models/#MathOptInterface.ResultStatusCode"><code>MOI.ResultStatusCode</code></a> enum describing the status of the dual solution.</p><pre><code class="language-julia-repl hljs">julia&gt; dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1</code></pre><p>Other common returns are <code>NO_SOLUTION</code>, and <code>INFEASIBILITY_CERTIFICATE</code>. The first means that the solver doesn&#39;t have a solution to return, and the second means that the dual solution is a certificate of primal infeasibility (a dual unbounded ray).</p><p>You can also use <a href="../../reference/solutions/#JuMP.has_duals"><code>has_duals</code></a>, which returns <code>true</code> if there is a solution that can be queried, and <code>false</code> otherwise.</p><pre><code class="language-julia-repl hljs">julia&gt; has_duals(model)
+true</code></pre><h3 id="Dual-solution-values"><a class="docs-heading-anchor" href="#Dual-solution-values">Dual solution values</a><a id="Dual-solution-values-1"></a><a class="docs-heading-anchor-permalink" href="#Dual-solution-values" title="Permalink"></a></h3><p>If the solver has a dual solution to return, use <a href="../../reference/solutions/#JuMP.dual"><code>dual</code></a> to access it:</p><pre><code class="language-julia hljs">julia&gt; dual(c1)
+1.7142857142857142</code></pre><p>Query the duals of variable bounds using <a href="../../reference/variables/#JuMP.LowerBoundRef"><code>LowerBoundRef</code></a>, <a href="../../reference/variables/#JuMP.UpperBoundRef"><code>UpperBoundRef</code></a>, and <a href="../../reference/variables/#JuMP.FixRef"><code>FixRef</code></a>:</p><pre><code class="language-julia hljs">julia&gt; dual(LowerBoundRef(x))
+0.0
+
+julia&gt; dual.(UpperBoundRef.(y))
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+ -0.5714285714285694
+  0.0</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>JuMP&#39;s definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. <strong>This is a different convention from linear programming duality in some common textbooks.</strong> If you have a linear program, and you want the textbook definition, you probably want to use <a href="../../reference/solutions/#JuMP.shadow_price"><code>shadow_price</code></a> and <a href="../../reference/solutions/#JuMP.reduced_cost"><code>reduced_cost</code></a> instead.</p></div></div><pre><code class="language-julia hljs">julia&gt; shadow_price(c1)
+1.7142857142857142
+
+julia&gt; reduced_cost(x)
+0.0
+
+julia&gt; reduced_cost.(y)
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+  0.5714285714285694
+ -0.0</code></pre><h2 id="Recommended-workflow"><a class="docs-heading-anchor" href="#Recommended-workflow">Recommended workflow</a><a id="Recommended-workflow-1"></a><a class="docs-heading-anchor-permalink" href="#Recommended-workflow" title="Permalink"></a></h2><p>The recommended workflow for solving a model and querying the solution is something like the following:</p><pre><code class="language-julia hljs">if termination_status(model) == OPTIMAL
+    println(&quot;Solution is optimal&quot;)
+elseif termination_status(model) == TIME_LIMIT &amp;&amp; has_values(model)
+    println(&quot;Solution is suboptimal due to a time limit, but a primal solution is available&quot;)
+else
+    error(&quot;The model was not solved correctly.&quot;)
+end
+println(&quot;  objective value = &quot;, objective_value(model))
+if primal_status(model) == FEASIBLE_POINT
+    println(&quot;  primal solution: x = &quot;, value(x))
+end
+if dual_status(model) == FEASIBLE_POINT
+    println(&quot;  dual solution: c1 = &quot;, dual(c1))
+end
+
+# output
+
+Solution is optimal
+  objective value = -205.14285714285714
+  primal solution: x = 15.428571428571429
+  dual solution: c1 = 1.7142857142857142</code></pre><h2 id="OptimizeNotCalled-errors"><a class="docs-heading-anchor" href="#OptimizeNotCalled-errors">OptimizeNotCalled errors</a><a id="OptimizeNotCalled-errors-1"></a><a class="docs-heading-anchor-permalink" href="#OptimizeNotCalled-errors" title="Permalink"></a></h2><p>Due to differences in how solvers cache solutions internally, modifying a model after calling <a href="../../reference/solutions/#JuMP.optimize!"><code>optimize!</code></a> will reset the model into the <code>MOI.OPTIMIZE_NOT_CALLED</code> state. If you then attempt to query solution information, an <code>OptimizeNotCalled</code> error will be thrown.</p><p>If you are iteratively querying solution information and modifying a model, query all the results first, then modify the problem.</p><p>For example, instead of:</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x &gt;= 0);
+
+julia&gt; optimize!(model)
+
+julia&gt; termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia&gt; set_upper_bound(x, 1)
+
+julia&gt; x_val = value(x)
+ERROR: OptimizeNotCalled()
+Stacktrace:
+[...]
+
+julia&gt; termination_status(model)
+OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0</code></pre><p>do</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x &gt;= 0);
+
+julia&gt; optimize!(model);
+
+julia&gt; x_val = value(x)
+0.0
+
+julia&gt; termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia&gt; set_upper_bound(x, 1)
+
+julia&gt; set_lower_bound(x, x_val)
+
+julia&gt; termination_status(model)
+OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0</code></pre><p>If you know that your particular solver supports querying solution information after modifications, you can use <a href="../../reference/models/#JuMP.direct_model"><code>direct_model</code></a> to bypass the <code>MOI.OPTIMIZE_NOT_CALLED</code> state:</p><pre><code class="language-julia-repl hljs">julia&gt; model = direct_model(HiGHS.Optimizer());
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x &gt;= 0);
+
+julia&gt; optimize!(model)
+
+julia&gt; termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia&gt; set_upper_bound(x, 1)
+
+julia&gt; x_val = value(x)
+0.0
+
+julia&gt; set_lower_bound(x, x_val)
+
+julia&gt; termination_status(model)
+OPTIMAL::TerminationStatusCode = 1</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>Be careful doing this! If your particular solver does not support querying solution information after modification, it may silently return incorrect solutions or throw an error.</p></div></div><h2 id="Accessing-attributes"><a class="docs-heading-anchor" href="#Accessing-attributes">Accessing attributes</a><a id="Accessing-attributes-1"></a><a class="docs-heading-anchor-permalink" href="#Accessing-attributes" title="Permalink"></a></h2><p><a href="../../moi/#moi_documentation">MathOptInterface</a> defines many model attributes that can be queried. Some attributes can be directly accessed by getter functions. These include:</p><ul><li><a href="../../reference/solutions/#JuMP.solve_time"><code>solve_time</code></a></li><li><a href="../../reference/solutions/#JuMP.relative_gap"><code>relative_gap</code></a></li><li><a href="../../reference/solutions/#JuMP.simplex_iterations"><code>simplex_iterations</code></a></li><li><a href="../../reference/solutions/#JuMP.barrier_iterations"><code>barrier_iterations</code></a></li><li><a href="../../reference/solutions/#JuMP.node_count"><code>node_count</code></a></li></ul><h2 id="Sensitivity-analysis-for-LP"><a class="docs-heading-anchor" href="#Sensitivity-analysis-for-LP">Sensitivity analysis for LP</a><a id="Sensitivity-analysis-for-LP-1"></a><a class="docs-heading-anchor-permalink" href="#Sensitivity-analysis-for-LP" title="Permalink"></a></h2><p>Given an LP problem and an optimal solution corresponding to a basis, we can question how much an objective coefficient or standard form right-hand side coefficient (c.f., <a href="../../reference/constraints/#JuMP.normalized_rhs"><code>normalized_rhs</code></a>) can change without violating primal or dual feasibility of the basic solution.</p><p>Note that not all solvers compute the basis, and for sensitivity analysis, the solver interface must implement <code>MOI.ConstraintBasisStatus</code>.</p><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Read the <a href="../../tutorials/linear/lp_sensitivity/#Sensitivity-analysis-of-a-linear-program">Sensitivity analysis of a linear program</a> for more information on sensitivity analysis.</p></div></div><p>To give a simple example, we could analyze the sensitivity of the optimal solution to the following (non-degenerate) LP problem:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x[1:2])
+set_lower_bound(x[2], -0.5)
+set_upper_bound(x[2], 0.5)
+@constraint(model, c1, x[1] + x[2] &lt;= 1)
+@constraint(model, c2, x[1] - x[2] &lt;= 1)
+@objective(model, Max, x[1])
+print(model)
+
+# output
+
+Max x[1]
+Subject to
+ c1 : x[1] + x[2] ≤ 1.0
+ c2 : x[1] - x[2] ≤ 1.0
+ x[2] ≥ -0.5
+ x[2] ≤ 0.5</code></pre><p>To analyze the sensitivity of the problem we could check the allowed perturbation ranges of, for example, the cost coefficients and the right-hand side coefficient of the constraint <code>c1</code> as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; optimize!(model)
+
+julia&gt; value.(x)
+2-element Vector{Float64}:
+  1.0
+ -0.0
+
+julia&gt; report = lp_sensitivity_report(model);
+
+julia&gt; x1_lo, x1_hi = report[x[1]]
+(-1.0, Inf)
+
+julia&gt; println(&quot;The objective coefficient of x[1] could decrease by $(x1_lo) or increase by $(x1_hi).&quot;)
+The objective coefficient of x[1] could decrease by -1.0 or increase by Inf.
+
+julia&gt; x2_lo, x2_hi = report[x[2]]
+(-1.0, 1.0)
+
+julia&gt; println(&quot;The objective coefficient of x[2] could decrease by $(x2_lo) or increase by $(x2_hi).&quot;)
+The objective coefficient of x[2] could decrease by -1.0 or increase by 1.0.
+
+julia&gt; c_lo, c_hi = report[c1]
+(-1.0, 1.0)
+
+julia&gt; println(&quot;The RHS of c1 could decrease by $(c_lo) or increase by $(c_hi).&quot;)
+The RHS of c1 could decrease by -1.0 or increase by 1.0.</code></pre><p>The range associated with a variable is the range of the allowed perturbation of the corresponding objective coefficient. Note that the current primal solution remains optimal within this range; however the corresponding dual solution might change since a cost coefficient is perturbed. Similarly, the range associated with a constraint is the range of the allowed perturbation of the corresponding right-hand side coefficient. In this range the current dual solution remains optimal, but the optimal primal solution might change.</p><p>If the problem is degenerate, there are multiple optimal bases and hence these ranges might not be as intuitive and seem too narrow, for example, a larger cost coefficient perturbation might not invalidate the optimality of the current primal solution. Moreover, if a problem is degenerate, due to finite precision, it can happen that, for example, a perturbation seems to invalidate a basis even though it doesn&#39;t (again providing too narrow ranges). To prevent this, increase the <code>atol</code> keyword argument to <a href="../../reference/solutions/#JuMP.lp_sensitivity_report"><code>lp_sensitivity_report</code></a>. Note that this might make the ranges too wide for numerically challenging instances. Thus, do not blindly trust these ranges, especially not for highly degenerate or numerically unstable instances.</p><h2 id="Conflicts"><a class="docs-heading-anchor" href="#Conflicts">Conflicts</a><a id="Conflicts-1"></a><a class="docs-heading-anchor-permalink" href="#Conflicts" title="Permalink"></a></h2><p>When the model you input is infeasible, some solvers can help you find the cause of this infeasibility by offering a conflict, that is, a subset of the constraints that create this infeasibility. Depending on the solver, this can also be called an IIS (irreducible inconsistent subsystem).</p><p>The function <a href="../../reference/solutions/#JuMP.compute_conflict!"><code>compute_conflict!</code></a> is used to trigger the computation of a conflict. Once this process is finished, the attribute <a href="../../moi/reference/models/#MathOptInterface.ConflictStatus"><code>MOI.ConflictStatus</code></a> returns a <a href="../../moi/reference/models/#MathOptInterface.ConflictStatusCode"><code>MOI.ConflictStatusCode</code></a>.</p><p>If there is a conflict, you can query from each constraint whether it participates in the conflict or not using the attribute <a href="../../moi/reference/models/#MathOptInterface.ConstraintConflictStatus"><code>MOI.ConstraintConflictStatus</code></a>, which returns a <a href="../../moi/reference/models/#MathOptInterface.ConflictParticipationStatusCode"><code>MOI.ConflictParticipationStatusCode</code></a>.</p><p>To create a new model containing only the constraints that participate in the conflict, use <a href="../../reference/solutions/#JuMP.copy_conflict"><code>copy_conflict</code></a>. It may be helpful to write this model to a file for easier debugging using <a href="../../reference/models/#JuMP.write_to_file"><code>write_to_file</code></a>.</p><p>For instance, this is how you can use this functionality:</p><pre><code class="language-julia hljs">using JuMP
+model = Model() # You must use a solver that supports conflict refining/IIS
+# computation, like CPLEX or Gurobi
+# for example, using Gurobi; model = Model(Gurobi.Optimizer)
+@variable(model, x &gt;= 0)
+@constraint(model, c1, x &gt;= 2)
+@constraint(model, c2, x &lt;= 1)
+optimize!(model)
+
+# termination_status(model) will likely be INFEASIBLE,
+# depending on the solver
+
+compute_conflict!(model)
+if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
+    error(&quot;No conflict could be found for an infeasible model.&quot;)
+end
+
+# Both constraints participate in the conflict.
+MOI.get(model, MOI.ConstraintConflictStatus(), c1)
+MOI.get(model, MOI.ConstraintConflictStatus(), c2)
+
+# Get a copy of the model with only the constraints in the conflict.
+new_model, reference_map = copy_conflict(model)</code></pre><p>Conflicting constraints can be collected in a list and printed as follows:</p><pre><code class="language-julia hljs">conflict_constraint_list = ConstraintRef[]
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
+            push!(conflict_constraint_list, con)
+            println(con)
+        end
+    end
+end</code></pre><h2 id="Multiple-solutions"><a class="docs-heading-anchor" href="#Multiple-solutions">Multiple solutions</a><a id="Multiple-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Multiple-solutions" title="Permalink"></a></h2><p>Some solvers support returning multiple solutions. You can check how many solutions are available to query using <a href="../../reference/solutions/#JuMP.result_count"><code>result_count</code></a>.</p><p>Functions for querying the solutions, for example, <a href="../../reference/solutions/#JuMP.primal_status"><code>primal_status</code></a> and <a href="../../reference/solutions/#JuMP.value"><code>value</code></a>, all take an additional keyword argument <code>result</code> which can be used to specify which result to return.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>Even if <a href="../../reference/solutions/#JuMP.termination_status"><code>termination_status</code></a> is <code>OPTIMAL</code>, some of the returned solutions may be suboptimal! However, if the solver found at least one optimal solution, then <code>result = 1</code> will always return an optimal solution. Use <a href="../../reference/solutions/#JuMP.objective_value"><code>objective_value</code></a> to assess the quality of the remaining solutions.</p></div></div><pre><code class="language-julia hljs">using JuMP
+model = Model()
+@variable(model, x[1:10] &gt;= 0)
+# ... other constraints ...
+optimize!(model)
+
+if termination_status(model) != OPTIMAL
+    error(&quot;The model was not solved correctly.&quot;)
+end
+
+an_optimal_solution = value.(x; result = 1)
+optimal_objective = objective_value(model; result = 1)
+for i in 2:result_count(model)
+    @assert has_values(model; result = i)
+    println(&quot;Solution $(i) = &quot;, value.(x; result = i))
+    obj = objective_value(model; result = i)
+    println(&quot;Objective $(i) = &quot;, obj)
+    if isapprox(obj, optimal_objective; atol = 1e-8)
+        print(&quot;Solution $(i) is also optimal!&quot;)
+    end
+end</code></pre><h2 id="Checking-feasibility-of-solutions"><a class="docs-heading-anchor" href="#Checking-feasibility-of-solutions">Checking feasibility of solutions</a><a id="Checking-feasibility-of-solutions-1"></a><a class="docs-heading-anchor-permalink" href="#Checking-feasibility-of-solutions" title="Permalink"></a></h2><p>To check the feasibility of a primal solution, use <a href="../../reference/solutions/#JuMP.primal_feasibility_report"><code>primal_feasibility_report</code></a>, which takes a <code>model</code>, a dictionary mapping each variable to a primal solution value (defaults to the last solved solution), and a tolerance <code>atol</code> (defaults to <code>0.0</code>).</p><p>The function returns a dictionary which maps the infeasible constraint references to the distance between the primal value of the constraint and the nearest point in the corresponding set. A point is classed as infeasible if the distance is greater than the supplied tolerance <code>atol</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model(HiGHS.Optimizer);
+
+julia&gt; set_silent(model)
+
+julia&gt; @variable(model, x &gt;= 1, Int);
+
+julia&gt; @variable(model, y);
+
+julia&gt; @constraint(model, c1, x + y &lt;= 1.95);
+
+julia&gt; point = Dict(x =&gt; 1.9, y =&gt; 0.06);
+
+julia&gt; primal_feasibility_report(model, point)
+Dict{Any, Float64} with 2 entries:
+  x integer         =&gt; 0.1
+  c1 : x + y ≤ 1.95 =&gt; 0.01
+
+julia&gt; primal_feasibility_report(model, point; atol = 0.02)
+Dict{Any, Float64} with 1 entry:
+  x integer =&gt; 0.1</code></pre><p>If the point is feasible, an empty dictionary is returned:</p><pre><code class="language-julia-repl hljs">julia&gt; primal_feasibility_report(model, Dict(x =&gt; 1.0, y =&gt; 0.0))
+Dict{Any, Float64}()</code></pre><p>To use the primal solution from a solve, omit the <code>point</code> argument:</p><pre><code class="language-julia-repl hljs">julia&gt; optimize!(model)
+
+julia&gt; primal_feasibility_report(model; atol = 0.0)
+Dict{Any, Float64}()</code></pre><p>Calling <a href="../../reference/solutions/#JuMP.primal_feasibility_report"><code>primal_feasibility_report</code></a> without the <code>point</code> argument is useful when <a href="../../reference/solutions/#JuMP.primal_status"><code>primal_status</code></a> is <code>FEASIBLE_POINT</code> or <code>NEARLY_FEASIBLE_POINT</code>, and you want to assess the solution quality.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>To apply <a href="../../reference/solutions/#JuMP.primal_feasibility_report"><code>primal_feasibility_report</code></a> to infeasible models, you must also provide a candidate point (solvers generally do not provide one). To diagnose the source of infeasibility, see <a href="#Conflicts">Conflicts</a>.</p></div></div><p>Pass <code>skip_mising = true</code> to skip constraints which contain variables that are not in <code>point</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; primal_feasibility_report(model, Dict(x =&gt; 2.1); skip_missing = true)
+Dict{Any, Float64} with 1 entry:
+  x integer =&gt; 0.1</code></pre><p>You can also use the functional form, where the first argument is a function that maps variables to their primal values:</p><pre><code class="language-julia-repl hljs">julia&gt; optimize!(model)
+
+julia&gt; primal_feasibility_report(v -&gt; value(v), model)
+Dict{Any, Float64}()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../containers/">« Containers</a><a class="docs-footer-nextpage" href="../nlp/">Nonlinear Modeling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.19 on <span class="colophon-date" title="Tuesday 14 June 2022 10:07">Tuesday 14 June 2022</span>. Using Julia version 1.6.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
