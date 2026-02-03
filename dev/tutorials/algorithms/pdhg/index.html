@@ -84,14 +84,14 @@ status, k, x, y = solve_pdhg(SparseArrays.sparse(A), b, c);</code></pre><pre cla
   7000  2.050000e+02  2.050030e+02  2.811341e-05  3.065459e-04  2.964863e-03
   8000  2.050001e+02  2.050002e+02  1.316682e-04  1.674879e-05  8.453982e-05
   8365  2.049999e+02  2.050000e+02  9.473351e-05  2.381905e-06  7.955573e-05</code></pre><p>The termination status is:</p><pre><code class="language-julia hljs">status</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">OPTIMAL::TerminationStatusCode = 1</code></pre><p>The solve took the following number of iterations:</p><pre><code class="language-julia hljs">k</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8365</code></pre><p>The primal solution is:</p><pre><code class="language-julia hljs">x</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Float64}:
- 15.000070735249105
-  1.2499547393201815
-  1.750098059200116
+ 15.000070735249107
+  1.24995473932018
+  1.7500980592001225
   0.0
   0.0</code></pre><p>The dual multipliers are:</p><pre><code class="language-julia hljs">y</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
-  1.931930909998547e-6
- -0.2500022801722057
- -1.4999982446009117</code></pre><h2 id="The-MOI-interface"><a class="docs-heading-anchor" href="#The-MOI-interface">The MOI interface</a><a id="The-MOI-interface-1"></a><a class="docs-heading-anchor-permalink" href="#The-MOI-interface" title="Permalink"></a></h2><p>Converting a linear program from the modeler&#39;s form into the <code>A</code>, <code>b</code>, and <code>c</code> matrices of the standard form required by our implementation of PDHG is tedious and error-prone. This section walks through how to implement a basic interface to MathOptInterface, so that we can use our algorithm from JuMP.</p><p>For a more comprehensive guide, see <a href="../../../moi/tutorials/implementing/#Implementing-a-solver-interface">Implementing a solver interface</a>.</p><h3 id="The-Optimizer-type"><a class="docs-heading-anchor" href="#The-Optimizer-type">The Optimizer type</a><a id="The-Optimizer-type-1"></a><a class="docs-heading-anchor-permalink" href="#The-Optimizer-type" title="Permalink"></a></h3><p>Create an optimizer by subtyping <a href="../../../moi/reference/models/#MathOptInterface.AbstractOptimizer"><code>MOI.AbstractOptimizer</code></a>. By convention, the name of this type is <code>Optimizer</code>, and most optimizers are available as <code>PackageName.Optimizer</code>.</p><p>The fields inside the optimizer are arbitrary. Store whatever is useful.</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+  1.9319309059254164e-6
+ -0.2500022801722054
+ -1.4999982446009137</code></pre><h2 id="The-MOI-interface"><a class="docs-heading-anchor" href="#The-MOI-interface">The MOI interface</a><a id="The-MOI-interface-1"></a><a class="docs-heading-anchor-permalink" href="#The-MOI-interface" title="Permalink"></a></h2><p>Converting a linear program from the modeler&#39;s form into the <code>A</code>, <code>b</code>, and <code>c</code> matrices of the standard form required by our implementation of PDHG is tedious and error-prone. This section walks through how to implement a basic interface to MathOptInterface, so that we can use our algorithm from JuMP.</p><p>For a more comprehensive guide, see <a href="../../../moi/tutorials/implementing/#Implementing-a-solver-interface">Implementing a solver interface</a>.</p><h3 id="The-Optimizer-type"><a class="docs-heading-anchor" href="#The-Optimizer-type">The Optimizer type</a><a id="The-Optimizer-type-1"></a><a class="docs-heading-anchor-permalink" href="#The-Optimizer-type" title="Permalink"></a></h3><p>Create an optimizer by subtyping <a href="../../../moi/reference/models/#MathOptInterface.AbstractOptimizer"><code>MOI.AbstractOptimizer</code></a>. By convention, the name of this type is <code>Optimizer</code>, and most optimizers are available as <code>PackageName.Optimizer</code>.</p><p>The fields inside the optimizer are arbitrary. Store whatever is useful.</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
     Optimizer()
 
 Create a new optimizer for PDHG.
@@ -311,7 +311,7 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │ └ dual
 │   └ c3 : [-1.93193e-06,2.50002e-01,1.50000e+00]
 └ Work counters
-  ├ solve_time (sec)   : 2.38250e-01
+  ├ solve_time (sec)   : 2.23867e-01
   └ barrier_iterations : 8365</code></pre><p>But we could also have written:</p><pre><code class="language-julia hljs">model = Model(Optimizer)
 @variable(model, x &gt;= 0)
 @variable(model, 0 &lt;= y &lt;= 3)
@@ -345,7 +345,7 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │   ├ c1 : 2.50002e-01
 │   └ c2 : 1.50000e+00
 └ Work counters
-  ├ solve_time (sec)   : 1.82605e-03
+  ├ solve_time (sec)   : 1.81818e-03
   └ barrier_iterations : 8365</code></pre><p>Other variations are also possible:</p><pre><code class="language-julia hljs">model = Model(Optimizer)
 @variable(model, x[1:5] &gt;= 0)
 @objective(model, Max, -c&#39; * x)
@@ -379,5 +379,5 @@ optimize!(model)</code></pre><pre class="documenter-example-output"><code class=
 │ └ dual
 │   └ c4 : multiple constraints with the same name
 └ Work counters
-  ├ solve_time (sec)   : 1.80483e-03
-  └ barrier_iterations : 8365</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parallelism/">« Parallelism</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 3 February 2026 03:14">Tuesday 3 February 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  ├ solve_time (sec)   : 1.70708e-03
+  └ barrier_iterations : 8365</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parallelism/">« Parallelism</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 3 February 2026 19:49">Tuesday 3 February 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

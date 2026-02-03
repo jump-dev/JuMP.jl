@@ -37,35 +37,35 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  1.88e-02
-   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  7.54e-02
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  2.00e-02
+   100| 6.92e-05  7.92e-05  7.33e-06  2.41e-05  1.00e-01  8.48e-02
 ------------------------------------------------------------------
 status:  solved
-timings: total: 7.54e-02s = setup: 1.76e-02s + solve: 5.78e-02s
-	 lin-sys: 5.04e-02s, cones: 1.68e-03s, accel: 6.75e-04s
+timings: total: 8.48e-02s = setup: 1.86e-02s + solve: 6.62e-02s
+	 lin-sys: 5.78e-02s, cones: 2.06e-03s, accel: 8.90e-04s
 ------------------------------------------------------------------
 objective = 0.000024
-------------------------------------------------------------------</code></pre><p>SCS reports that it solved the problem to optimality:</p><pre><code class="language-julia hljs">is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>and that the solution for <code>x[1]</code> is nearly zero:</p><pre><code class="language-julia hljs">value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.04406873858532e-5</code></pre><p>However, the analytic solution for <code>x[1]</code> is:</p><pre><code class="language-julia hljs">1 - n * ε / 2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479</code></pre><p>The answer is very wrong, and there is no indication from the solver that anything untoward happened. What&#39;s going on?</p><p>One useful debugging tool is <a href="../../../api/JuMP/#primal_feasibility_report"><code>primal_feasibility_report</code></a>:</p><pre><code class="language-julia hljs">report = primal_feasibility_report(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 8192 entries:
-  x[5899] ≥ 0 =&gt; 1.71395e-5
-  x[5935] ≥ 0 =&gt; 2.01984e-5
-  x[4870] ≥ 0 =&gt; 1.56101e-5
-  x[47] ≥ 0   =&gt; 1.40807e-5
-  x[922] ≥ 0  =&gt; 1.71395e-5
-  x[5361] ≥ 0 =&gt; 1.71395e-5
-  x[1081] ≥ 0 =&gt; 1.40807e-5
-  x[1325] ≥ 0 =&gt; 1.56101e-5
-  x[5908] ≥ 0 =&gt; 1.8669e-5
-  x[4198] ≥ 0 =&gt; 1.56101e-5
-  x[5988] ≥ 0 =&gt; 2.01984e-5
-  x[5440] ≥ 0 =&gt; 2.17278e-5
-  x[6870] ≥ 0 =&gt; 2.01984e-5
-  x[4982] ≥ 0 =&gt; 2.01984e-5
-  x[610] ≥ 0  =&gt; 1.40807e-5
-  x[1383] ≥ 0 =&gt; 1.71395e-5
-  x[2459] ≥ 0 =&gt; 1.71395e-5
-  x[2244] ≥ 0 =&gt; 1.56101e-5
-  x[6329] ≥ 0 =&gt; 1.71395e-5
-  ⋮           =&gt; ⋮</code></pre><p><code>report</code> is a dictionary which maps constraints to the violation.  The largest violation is approximately <code>1e-5</code>:</p><pre><code class="language-julia hljs">maximum(values(report))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6.92133754155444e-5</code></pre><p>This makes sense, because the default primal feasibility tolerance for SCS is <code>1e-4</code>.</p><p>Most of the entries are lower bound constraints on the variables. Here are all the variables which violate their lower bound:</p><pre><code class="language-julia hljs">violated_variables = filter(xi -&gt; value(xi) &lt; 0, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8178-element Vector{VariableRef}:
+------------------------------------------------------------------</code></pre><p>SCS reports that it solved the problem to optimality:</p><pre><code class="language-julia hljs">is_solved_and_feasible(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>and that the solution for <code>x[1]</code> is nearly zero:</p><pre><code class="language-julia hljs">value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.044068757181727e-5</code></pre><p>However, the analytic solution for <code>x[1]</code> is:</p><pre><code class="language-julia hljs">1 - n * ε / 2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479</code></pre><p>The answer is very wrong, and there is no indication from the solver that anything untoward happened. What&#39;s going on?</p><p>One useful debugging tool is <a href="../../../api/JuMP/#primal_feasibility_report"><code>primal_feasibility_report</code></a>:</p><pre><code class="language-julia hljs">report = primal_feasibility_report(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 8192 entries:
+  x[1526] ≥ 0 =&gt; 2.01984e-5
+  x[3900] ≥ 0 =&gt; 2.17278e-5
+  x[6026] ≥ 0 =&gt; 1.8669e-5
+  x[1721] ≥ 0 =&gt; 1.71395e-5
+  x[2736] ≥ 0 =&gt; 2.01984e-5
+  x[4014] ≥ 0 =&gt; 2.17278e-5
+  x[7217] ≥ 0 =&gt; 1.56101e-5
+  x[5791] ≥ 0 =&gt; 2.01984e-5
+  x[1982] ≥ 0 =&gt; 2.17278e-5
+  x[5743] ≥ 0 =&gt; 2.01984e-5
+  x[8165] ≥ 0 =&gt; 2.17278e-5
+  x[5643] ≥ 0 =&gt; 1.56101e-5
+  x[7661] ≥ 0 =&gt; 2.17278e-5
+  x[3380] ≥ 0 =&gt; 1.8669e-5
+  x[6192] ≥ 0 =&gt; 1.8669e-5
+  x[3507] ≥ 0 =&gt; 1.8669e-5
+  x[3112] ≥ 0 =&gt; 1.71395e-5
+  x[7089] ≥ 0 =&gt; 1.8669e-5
+  x[6620] ≥ 0 =&gt; 2.17278e-5
+  ⋮           =&gt; ⋮</code></pre><p><code>report</code> is a dictionary which maps constraints to the violation.  The largest violation is approximately <code>1e-5</code>:</p><pre><code class="language-julia hljs">maximum(values(report))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6.921339763543699e-5</code></pre><p>This makes sense, because the default primal feasibility tolerance for SCS is <code>1e-4</code>.</p><p>Most of the entries are lower bound constraints on the variables. Here are all the variables which violate their lower bound:</p><pre><code class="language-julia hljs">violated_variables = filter(xi -&gt; value(xi) &lt; 0, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8178-element Vector{VariableRef}:
  x[4]
  x[6]
  x[7]
@@ -85,7 +85,7 @@ objective = 0.000024
  x[8189]
  x[8190]
  x[8191]
- x[8192]</code></pre><p>The first one is:</p><pre><code class="language-julia hljs">y = first(violated_variables)</code></pre><p class="math-container">\[ x_{4} \]</p><p>It has a primal value of:</p><pre><code class="language-julia hljs">value(y)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1.1021914231743998e-5</code></pre><p>which matches the value in the feasibility report:</p><pre><code class="language-julia hljs">report[LowerBoundRef(y)]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.1021914231743998e-5</code></pre><p>Despite the small primal feasibility tolerance and the small actual violations of the constraints, our optimal solution is very far from the theoretical optimum.</p><p>We can &quot;fix&quot; our model by decreasing <code>eps_abs</code> and <code>eps_rel</code>, which SCS uses to control the absolute and relative feasibility tolerances. Now the solver finds the correct solution:</p><pre><code class="language-julia hljs">set_attribute(model, &quot;eps_abs&quot;, 1e-5)
+ x[8192]</code></pre><p>The first one is:</p><pre><code class="language-julia hljs">y = first(violated_variables)</code></pre><p class="math-container">\[ x_{4} \]</p><p>It has a primal value of:</p><pre><code class="language-julia hljs">value(y)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1.1021914058815878e-5</code></pre><p>which matches the value in the feasibility report:</p><pre><code class="language-julia hljs">report[LowerBoundRef(y)]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.1021914058815878e-5</code></pre><p>Despite the small primal feasibility tolerance and the small actual violations of the constraints, our optimal solution is very far from the theoretical optimum.</p><p>We can &quot;fix&quot; our model by decreasing <code>eps_abs</code> and <code>eps_rel</code>, which SCS uses to control the absolute and relative feasibility tolerances. Now the solver finds the correct solution:</p><pre><code class="language-julia hljs">set_attribute(model, &quot;eps_abs&quot;, 1e-5)
 set_attribute(model, &quot;eps_rel&quot;, 1e-5)
 optimize!(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
@@ -104,18 +104,18 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  1.88e-02
-   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.64e-01
-   500| 3.69e-04  5.93e-04  8.84e-05  8.48e-01  6.13e-01  3.12e-01
-   550| 2.66e-06  6.58e-10  1.27e-05  8.48e-01  6.13e-01  3.42e-01
+     0| 2.00e+01  1.00e+00  2.00e+01 -9.98e+00  1.00e-01  2.05e-02
+   250| 2.01e-02  2.85e-04  2.00e-02  3.01e-02  3.86e-01  1.90e-01
+   500| 3.58e-04  5.95e-04  8.76e-05  8.48e-01  6.13e-01  3.59e-01
+   550| 2.45e-06  4.19e-10  1.45e-05  8.48e-01  6.13e-01  3.92e-01
 ------------------------------------------------------------------
 status:  solved
-timings: total: 3.42e-01s = setup: 1.76e-02s + solve: 3.24e-01s
-	 lin-sys: 2.73e-01s, cones: 9.08e-03s, accel: 5.57e-03s
+timings: total: 3.92e-01s = setup: 1.91e-02s + solve: 3.73e-01s
+	 lin-sys: 3.16e-01s, cones: 1.12e-02s, accel: 7.02e-03s
 ------------------------------------------------------------------
-objective = 0.847906
+objective = 0.847907
 ------------------------------------------------------------------</code></pre><pre><code class="language-julia hljs">assert_is_solved_and_feasible(model)
-value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479127435814551</code></pre><h3 id="Why-you-shouldn&#39;t-use-a-small-tolerance"><a class="docs-heading-anchor" href="#Why-you-shouldn&#39;t-use-a-small-tolerance">Why you shouldn&#39;t use a small tolerance</a><a id="Why-you-shouldn&#39;t-use-a-small-tolerance-1"></a><a class="docs-heading-anchor-permalink" href="#Why-you-shouldn&#39;t-use-a-small-tolerance" title="Permalink"></a></h3><p>There is no direct relationship between the size of feasibility tolerance and the quality of the solution.</p><p>You might surmise from this section that you should set the tightest feasibility tolerance possible. However, tighter tolerances come at the cost of increased solve time.</p><p>For example, SCS is a first-order solver. This means it uses only local gradient information at update each iteration. SCS took 100 iterations to solve the problem with the default tolerance of <code>1e-4</code>, and 550 iterations to solve the problem with <code>1e-5</code>. SCS may not be able to find a solution to our problem with a tighter tolerance in a reasonable amount of time.</p><h2 id="Integrality"><a class="docs-heading-anchor" href="#Integrality">Integrality</a><a id="Integrality-1"></a><a class="docs-heading-anchor-permalink" href="#Integrality" title="Permalink"></a></h2><p>Integrality tolerances control how the solver decides if a variable satisfies an integrality or binary constraint. The tolerance is typically defined as: <span>$|x - \lfloor x + 0.5 \rfloor | \le \varepsilon$</span>, which you can read as the absolute distance to the nearest integer.</p><p>Here&#39;s a simple example:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+value(x[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.8479145381803215</code></pre><h3 id="Why-you-shouldn&#39;t-use-a-small-tolerance"><a class="docs-heading-anchor" href="#Why-you-shouldn&#39;t-use-a-small-tolerance">Why you shouldn&#39;t use a small tolerance</a><a id="Why-you-shouldn&#39;t-use-a-small-tolerance-1"></a><a class="docs-heading-anchor-permalink" href="#Why-you-shouldn&#39;t-use-a-small-tolerance" title="Permalink"></a></h3><p>There is no direct relationship between the size of feasibility tolerance and the quality of the solution.</p><p>You might surmise from this section that you should set the tightest feasibility tolerance possible. However, tighter tolerances come at the cost of increased solve time.</p><p>For example, SCS is a first-order solver. This means it uses only local gradient information at update each iteration. SCS took 100 iterations to solve the problem with the default tolerance of <code>1e-4</code>, and 550 iterations to solve the problem with <code>1e-5</code>. SCS may not be able to find a solution to our problem with a tighter tolerance in a reasonable amount of time.</p><h2 id="Integrality"><a class="docs-heading-anchor" href="#Integrality">Integrality</a><a id="Integrality-1"></a><a class="docs-heading-anchor-permalink" href="#Integrality" title="Permalink"></a></h2><p>Integrality tolerances control how the solver decides if a variable satisfies an integrality or binary constraint. The tolerance is typically defined as: <span>$|x - \lfloor x + 0.5 \rfloor | \le \varepsilon$</span>, which you can read as the absolute distance to the nearest integer.</p><p>Here&#39;s a simple example:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
 # Set some options so that HiGHS does not trivially solve the problem
 set_attribute(model, &quot;presolve&quot;, &quot;off&quot;)
@@ -135,8 +135,39 @@ Subject to
  x - 1000000 y ≤ 0
  x ≥ 0
  y binary</code></pre><p>This model has a feasible solution (to tolerances) of <code>(x, y) = (1, 1e-6)</code>; there can be a non-zero value of <code>x</code> even when <code>y</code> is (approximately) <code>0</code>.</p><pre><code class="language-julia hljs">primal_feasibility_report(model, Dict(x =&gt; 1.0, y =&gt; 1e-6))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 1 entry:
-  y binary =&gt; 1.0e-6</code></pre><h3 id="Rounding-the-solution"><a class="docs-heading-anchor" href="#Rounding-the-solution">Rounding the solution</a><a id="Rounding-the-solution-1"></a><a class="docs-heading-anchor-permalink" href="#Rounding-the-solution" title="Permalink"></a></h3><p>Integrality tolerances are the reason why JuMP does not return <code>::Int</code> for <code>value(x)</code> of an integer variable or <code>::Bool</code> for <code>value(x)</code> of a binary variable.</p><p>In most cases, it is safe to post-process the solution using <code>y_int = round(Int, value(y))</code>. However, in some cases &quot;fixing&quot; the integrality like this can cause violations in primal feasibility that exceed the primal feasibility tolerance. For example, if we rounded our <code>(x, y) = (1, 1e-6)</code> solution to <code>(x, y) = (1, 0)</code>, then the constraint <code>x &lt;= M * y</code> is now violated by a value of <code>1.0</code>, which is much greater than a typical feasibility tolerance of <code>1e-8</code>.</p><pre><code class="language-julia hljs">primal_feasibility_report(model, Dict(x =&gt; 1.0, y =&gt; 0.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 1 entry:
-  x - 1000000 y ≤ 0 =&gt; 1.0</code></pre><h3 id="Why-you-shouldn&#39;t-use-a-small-tolerance-2"><a class="docs-heading-anchor" href="#Why-you-shouldn&#39;t-use-a-small-tolerance-2">Why you shouldn&#39;t use a small tolerance</a><a class="docs-heading-anchor-permalink" href="#Why-you-shouldn&#39;t-use-a-small-tolerance-2" title="Permalink"></a></h3><p>Just like primal feasibility tolerances, using a smaller value for the integrality tolerance can lead to greatly increased solve times.</p><h2 id="Contradictory-results"><a class="docs-heading-anchor" href="#Contradictory-results">Contradictory results</a><a id="Contradictory-results-1"></a><a class="docs-heading-anchor-permalink" href="#Contradictory-results" title="Permalink"></a></h2><p>The distinction between feasible and infeasible can be surprisingly nuanced. Solver A might decide the problem is feasible while solver B might decide it is infeasible. Different algorithms <em>within</em> solver A (like simplex and barrier) may also come to different conclusions. Even changing settings like turning presolve on and off can make a difference.</p><div class="admonition is-info" id="Info-d325a64d19f7a415"><header class="admonition-header">Info<a class="admonition-anchor" href="#Info-d325a64d19f7a415" title="Permalink"></a></header><div class="admonition-body"><p>Contradictory results are not bugs in the HiGHS solver. They are an expected result of the interaction between the tolerances and the solution algorithm. There will always be models in the gray boundary at the edge of feasibility, for which the question of feasibility is not a clear true or false.</p></div></div><p>Here is an example where HiGHS reports the problem is infeasible, but there exists a feasible (to tolerance) solution:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+  y binary =&gt; 1.0e-6</code></pre><h3 id="Rounding-the-solution"><a class="docs-heading-anchor" href="#Rounding-the-solution">Rounding the solution</a><a id="Rounding-the-solution-1"></a><a class="docs-heading-anchor-permalink" href="#Rounding-the-solution" title="Permalink"></a></h3><p>Integrality tolerances are the reason why JuMP does not return <code>::Int</code> for <code>value(x)</code> of an integer variable or <code>::Bool</code> for <code>value(x)</code> of a binary variable.</p><p>For some models, it is safe to post-process the solution using <code>y_int = round(Int, value(y))</code>. However, in some cases &quot;fixing&quot; the integrality like this can cause violations in primal feasibility that exceed the primal feasibility tolerance. For example, if we rounded our <code>(x, y) = (1, 1e-6)</code> solution to <code>(x, y) = (1, 0)</code>, then the constraint <code>x &lt;= M * y</code> is now violated by a value of <code>1.0</code>, which is much greater than a typical feasibility tolerance of <code>1e-8</code>.</p><pre><code class="language-julia hljs">primal_feasibility_report(model, Dict(x =&gt; 1.0, y =&gt; 0.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Any, Float64} with 1 entry:
+  x - 1000000 y ≤ 0 =&gt; 1.0</code></pre><p>If strict integer feasibility matters to you, one heuristic that sometimes works is to round and fix the integer variables, and then re-solve the problem to find new values for the remaining continuous variables:</p><pre><code class="language-julia hljs">function round_and_repair_heuristic!(model)
+    # Query all values first...
+    vars = filter!(xi -&gt; is_integer(xi) || is_binary(xi), all_variables(model))
+    solution = round.(Int, value.(vars))
+    # ...then modify the model
+    fix.(vars, solution; force = true)
+    optimize!(model)
+    assert_is_solved_and_feasible(model)
+    return
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">round_and_repair_heuristic! (generic function with 1 method)</code></pre><p>Here it is in action:</p><pre><code class="language-julia hljs">set_optimizer(model, HiGHS.Optimizer)
+set_silent(model)
+optimize!(model)
+assert_is_solved_and_feasible(model)
+round_and_repair_heuristic!(model)
+solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 1, verbose = false)
+├ solver_name          : HiGHS
+├ Termination
+│ ├ termination_status : OPTIMAL
+│ ├ result_count       : 1
+│ ├ raw_status         : kHighsModelStatusOptimal
+│ └ objective_bound    : 0.00000e+00
+├ Solution (result = 1)
+│ ├ primal_status        : FEASIBLE_POINT
+│ ├ dual_status          : NO_SOLUTION
+│ ├ objective_value      : 0.00000e+00
+│ ├ dual_objective_value : NaN
+│ └ relative_gap         : 0.00000e+00
+└ Work counters
+  ├ solve_time (sec)   : 1.90258e-04
+  ├ simplex_iterations : 0
+  ├ barrier_iterations : -1
+  └ node_count         : 0</code></pre><p>Note that this heuristic will fail if no feasible solution exists for the rounded integer values.</p><h3 id="Why-you-shouldn&#39;t-use-a-small-tolerance-2"><a class="docs-heading-anchor" href="#Why-you-shouldn&#39;t-use-a-small-tolerance-2">Why you shouldn&#39;t use a small tolerance</a><a class="docs-heading-anchor-permalink" href="#Why-you-shouldn&#39;t-use-a-small-tolerance-2" title="Permalink"></a></h3><p>Just like primal feasibility tolerances, using a smaller value for the integrality tolerance can lead to greatly increased solve times.</p><h2 id="Contradictory-results"><a class="docs-heading-anchor" href="#Contradictory-results">Contradictory results</a><a id="Contradictory-results-1"></a><a class="docs-heading-anchor-permalink" href="#Contradictory-results" title="Permalink"></a></h2><p>The distinction between feasible and infeasible can be surprisingly nuanced. Solver A might decide the problem is feasible while solver B might decide it is infeasible. Different algorithms <em>within</em> solver A (like simplex and barrier) may also come to different conclusions. Even changing settings like turning presolve on and off can make a difference.</p><div class="admonition is-info" id="Info-d325a64d19f7a415"><header class="admonition-header">Info<a class="admonition-anchor" href="#Info-d325a64d19f7a415" title="Permalink"></a></header><div class="admonition-body"><p>Contradictory results are not bugs in the HiGHS solver. They are an expected result of the interaction between the tolerances and the solution algorithm. There will always be models in the gray boundary at the edge of feasibility, for which the question of feasibility is not a clear true or false.</p></div></div><p>Here is an example where HiGHS reports the problem is infeasible, but there exists a feasible (to tolerance) solution:</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x &gt;= 0)
 @variable(model, y &gt;= 0)
@@ -171,4 +202,4 @@ INFEASIBLE_POINT</code></pre><p>Unfortunately (or fortunately, depending on your
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
 @constraint(model, 1.78e6 * x_capacity_MW &lt;= 200e6)</code></pre><p class="math-container">\[ 1780000 x\_capacity\_MW \leq 200000000 \]</p><p>We can improve our model further by dividing the constraint by <span>$10^6$</span> to change the units from dollars to million dollars.</p><pre><code class="language-julia hljs">model = Model()
 @variable(model, 0 &lt;= x_capacity_MW &lt;= 10^3)
-@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling. In real terms, our new constraint means that the capacity cost must not exceed 200 million dollars by more than 1 cent.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 3 February 2026 03:14">Tuesday 3 February 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+@constraint(model, 1.78 * x_capacity_MW &lt;= 200)</code></pre><p class="math-container">\[ 1.78 x\_capacity\_MW \leq 200 \]</p><p>This problem is equivalent to the original problem, but it has much better problem scaling. In real terms, our new constraint means that the capacity cost must not exceed 200 million dollars by more than 1 cent.</p><p>As a general rule, to fix problem scaling you must simultaneously scale both variables and constraints. It is usually not sufficient to scale variables or constraints in isolation.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../debugging/">« Debugging</a><a class="docs-footer-nextpage" href="../design_patterns_for_larger_models/">Design patterns for larger models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 3 February 2026 19:50">Tuesday 3 February 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
