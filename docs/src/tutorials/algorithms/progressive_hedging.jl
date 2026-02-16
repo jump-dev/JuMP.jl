@@ -27,26 +27,26 @@ import Printf
 # In Progressive Hedging, each scenario subproblem includes a quadratic penalty
 # term:
 # ```math
-# \min\limits_{x_s}: f_s(x_s) + \frac{\rho}{2} * ||x_s - \bar{x}||^2 + w_s^\top x_s
+# \min\limits_{x_s}: f_s(x_s) + \frac{\rho}{2} ||x_s - \bar{x}||^2 + w_s^\top x_s
 # ```
 # where:
-# - $x_s$ is the primal variable in scenario $s$
-# - $f_s(x)$ is the original scenario objective
-# - $\rho$ is the penalty parameter
-# - $\bar{x}$ is the current consensus (average) solution
-# - $w_s$ is the dual price (Lagrangian multiplier) in scenario $s$
+# - ``x_s`` is the primal variable in scenario ``s``
+# - ``f_s(x)`` is the original scenario objective
+# - ``\rho`` is the penalty parameter
+# - ``\bar{x}`` is the current consensus (average) solution
+# - ``w_s`` is the dual price (Lagrangian multiplier) in scenario ``s``
 
 # Progressive Hedging is an iterative algorithm. In each iteration, it solves
 # all the penalized scenario subproblems, then it applies two updates:
 #
-# 1. $\bar{x} = \mathbb{E}_s[x_s]$
-# 2. $w_s = w_s + \rho (x_s - \bar{x})$
+# 1. ``\bar{x} = \mathbb{E}_s[x_s]``
+# 2. ``w_s = w_s + \rho (x_s - \bar{x})``
 #
-# The algorithm terminates if $\bar{x} \approxeq x_s$ for all scenarios (the
-# primal residual), and $\bar{x}$ has not changed by much between iterations
-# (the dual residual).
+# The algorithm terminates if $|\bar{x} - x_s| \le \varepsilon$ for all
+# scenarios (the primal residual), and $\bar{x}$ has not changed by much between
+# iterations (the dual residual).
 
-# $\rho$ can be optionally updated between iterations. How to do so is an open
+# ``\rho`` can be optionally updated between iterations. How to do so is an open
 # question. There is a large literature on different updates strategies.
 
 # In this tutorial we use parameters for $\rho$, $w$, and $\bar{x}$ to
@@ -136,7 +136,11 @@ function solve_progressive_hedging(
     return x̄
 end
 
-x̄ = solve_progressive_hedging(subproblems)
+x̄ = solve_progressive_hedging(subproblems);
+
+# The consensus first-stage decision is:
+
+x̄
 
 # ## Progressive Hedging with an adaptive penalty parameter
 
@@ -185,7 +189,11 @@ function solve_adaptive_progressive_hedging(
     return x̄
 end
 
-x̄ = solve_adaptive_progressive_hedging(subproblems)
+x̄ = solve_adaptive_progressive_hedging(subproblems);
+
+# The consensus first-stage decision is:
+
+x̄
 
 # Try tuning the values of `τ` and `μ`. Can you get the algorithm to converge
 # in fewer iterations?
