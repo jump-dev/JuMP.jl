@@ -24,16 +24,16 @@ import Printf
 # programming. It decomposes a stochastic problem into scenario subproblems that
 # are solved iteratively, with penalty terms driving solutions toward consensus.
 
-# In progressive hedging, each scenario subproblem includes a quadratic penalty
+# In Progressive Hedging, each scenario subproblem includes a quadratic penalty
 # term:
 # ```math
 # \min\limits_{x_s}: f_s(x_s) + \frac{\rho}{2} * ||x_s - \bar{x}||^2 + w_s^\top x_s
 # ```
 # where:
+# - $x_s$ is the primal variable in scenario $s$
 # - $f_s(x)$ is the original scenario objective
 # - $\rho$ is the penalty parameter
 # - $\bar{x}$ is the current consensus (average) solution
-# - $x_s$ is the primal variable in scenario $s$
 # - $w_s$ is the dual price (Lagrangian multiplier) in scenario $s$
 
 # Progressive Hedging is an iterative algorithm. In each iteration, it solves
@@ -43,7 +43,8 @@ import Printf
 # 2. $w_s \pluseq \rho (x_s - \bar{x})$
 #
 # The algorithm terminates if $\bar{x} \approxeq x_s$ for all scenarios (the
-# primal residual), and $\bar{x}$ has not changed by much between iterations.
+# primal residual), and $\bar{x}$ has not changed by much between iterations
+# (the dual residual).
 
 # $\rho$ can be optionally updated between iterations. How to do so is an open
 # question. There is a large literature on different updates strategies.
@@ -54,7 +55,8 @@ import Printf
 # ## Building a single scenario
 
 # The building block of Progressive Hedging is a separate JuMP model for each
-# scenario. Here's an example, using the problem from [Two-stage stochastic programs](@ref):
+# scenario. Here's an example, using the problem from
+# [Two-stage stochastic programs](@ref):
 
 function build_subproblem(; demand::Float64)
     model = Model(Ipopt.Optimizer)
@@ -70,7 +72,9 @@ function build_subproblem(; demand::Float64)
     return model
 end
 
-# Initialize subproblems
+# Using the `build_subproblem` function, we can create one JuMP model for each
+# scenario:
+
 N = 10
 demands = rand(Distributions.TriangularDist(150.0, 250.0, 200.0), N);
 subproblems = map(demands) do demand
