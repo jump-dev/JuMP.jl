@@ -230,8 +230,8 @@
     has_html = true
     extension = true
 [SDPLRPlus]
-    user = "luotuoqingshan"
-    rev = "v0.1.0"
+    user = "blegat"
+    rev = "16d80332f0ace885e5d9960ff6c3b6b7675eedae"
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.8"
