@@ -40,7 +40,7 @@ import Printf
 # all the penalized scenario subproblems, then it applies two updates:
 #
 # 1. $\bar{x} = \mathbb{E}_s[x_s]$
-# 2. $w_s \pluseq \rho (x_s - \bar{x})$
+# 2. $w_s = w_s + \rho (x_s - \bar{x})$
 #
 # The algorithm terminates if $\bar{x} \approxeq x_s$ for all scenarios (the
 # primal residual), and $\bar{x}$ has not changed by much between iterations
