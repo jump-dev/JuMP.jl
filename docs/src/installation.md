@@ -158,6 +158,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |        | MIT      | LP, QP, SOCP, SDP         |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |  | GPL | LP, SDP |
 | [SDPLR](https://github.com/sburer/sdplr)                                       | [SDPLR.jl](https://github.com/jump-dev/SDPLR.jl)                                 |        | GPL      | LP, SDP                   |
+| [SDPLRPlus.jl](https://github.com/luotuoqingshan/SDPLRPlus.jl/)                | [SDPLRPlus.jl](https://github.com/luotuoqingshan/SDPLRPlus.jl/)                  |        | MIT      | LP, SDP                   |
 | [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Manualᴹ | CC BY-SA | LP, SDP                  |
 | [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | Manualᴹ | GPL      | LP, SOCP, SDP            |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | Manualᴹ | GPL      | LP, SOCP, SDP            |
