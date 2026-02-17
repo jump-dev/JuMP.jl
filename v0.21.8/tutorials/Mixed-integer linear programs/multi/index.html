@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>The multi-commodity flow problem · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview', {'page': location.pathname + location.search + location.hash});
+</script><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="JuMP logo"/></a><div class="docs-package-name"><span class="docs-autofit">JuMP</span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox" checked/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li><a class="tocitem" href="../cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../diet/">The diet problem</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../finance/">Finance</a></li><li><a class="tocitem" href="../geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li class="is-active"><a class="tocitem" href>The multi-commodity flow problem</a></li><li><a class="tocitem" href="../n-queens/">N-Queens</a></li><li><a class="tocitem" href="../network_flows/">Network Flows</a></li><li><a class="tocitem" href="../power_systems/">Power Systems</a></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Sudoku</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Mixed-integer linear programs</a></li><li class="is-active"><a href>The multi-commodity flow problem</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>The multi-commodity flow problem</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/multi.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="The-multi-commodity-flow-problem"><a class="docs-heading-anchor" href="#The-multi-commodity-flow-problem">The multi-commodity flow problem</a><a id="The-multi-commodity-flow-problem-1"></a><a class="docs-heading-anchor-permalink" href="#The-multi-commodity-flow-problem" title="Permalink"></a></h1><p>JuMP implementation of the multicommodity transportation model AMPL: A Modeling Language for Mathematical Programming, 2nd ed by Robert Fourer, David Gay, and Brian W. Kernighan 4-1.</p><p>Originally contributed by Louis Luangkesorn, February 26, 2015.</p><pre><code class="language-julia">using JuMP
+import GLPK
+import Test
+
+function example_multi(; verbose = true)
+    orig = [&quot;GARY&quot;, &quot;CLEV&quot;, &quot;PITT&quot;]
+    dest = [&quot;FRA&quot;, &quot;DET&quot;, &quot;LAN&quot;, &quot;WIN&quot;, &quot;STL&quot;, &quot;FRE&quot;, &quot;LAF&quot;]
+    prod = [&quot;bands&quot;, &quot;coils&quot;, &quot;plate&quot;]
+    numorig = length(orig)
+    numdest = length(dest)
+    numprod = length(prod)
+    # supply(prod, orig) amounts available at origins
+    supply = [
+        400    700    800;
+        800   1600   1800;
+        200    300    300
+    ]
+    # demand(prod, dest) amounts required at destinations
+    demand = [
+        300   300   100    75   650   225   250;
+        500   750   400   250   950   850   500;
+        100   100     0    50   200   100   250
+    ]
+    # limit(orig, dest) of total units from any origin to destination
+    limit = [625.0 for j in 1:numorig, i in 1:numdest]
+    # cost(dest, orig, prod) Shipment cost per unit
+    cost = reshape([
+        [
+            [  30,   10,    8,   10,   11,   71,    6];
+            [  22,    7,   10,    7,   21,   82,   13];
+            [  19,   11,   12,   10,   25,   83,   15]
+        ];
+        [
+            [  39,   14,   11,   14,   16,   82,    8];
+            [  27,    9,   12,    9,   26,   95,   17];
+            [  24,   14,   17,   13,   28,   99,   20]
+        ];
+        [
+            [  41,   15,   12,   16,   17,   86,    8];
+            [  29,    9,   13,    9,   28,   99,   18];
+            [  26,   14,   17,   13,   31,  104,   20]
+        ]
+    ], 7, 3, 3)
+    # DECLARE MODEL
+    multi = Model(GLPK.Optimizer)
+    # VARIABLES
+    @variable(multi, trans[1:numorig, 1:numdest, 1:numprod] &gt;= 0)
+    # OBJECTIVE
+    @objective(
+        multi,
+        Max,
+        sum(
+            cost[j, i, p] * trans[i, j, p]
+            for i in 1:numorig, j in 1:numdest, p in 1:numprod
+        )
+    )
+    # CONSTRAINTS
+    # Supply constraint
+    @constraint(
+        multi,
+        supply_con[i in 1:numorig, p in 1:numprod],
+        sum(trans[i, j, p] for j in 1:numdest) == supply[p, i]
+    )
+    # Demand constraint
+    @constraint(
+        multi,
+        demand_con[j in 1:numdest, p in 1:numprod],
+        sum(trans[i, j, p] for i in 1:numorig) == demand[p, j]
+    )
+    # Total shipment constraint
+    @constraint(
+        multi,
+        total_con[i in 1:numorig, j in 1:numdest],
+        sum(trans[i, j, p] for p in 1:numprod) - limit[i, j] &lt;= 0
+    )
+    optimize!(multi)
+    Test.@test termination_status(multi) == MOI.OPTIMAL
+    Test.@test primal_status(multi) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(multi) == 225_700.0
+    if verbose
+        println(&quot;RESULTS:&quot;)
+        for i in 1:length(orig)
+            for j in 1:length(dest)
+                for p in 1:length(prod)
+                    print(&quot; $(prod[p]) $(orig[i]) $(dest[j]) = $(value(trans[i, j, p]))\t&quot;)
+                end
+                println()
+            end
+        end
+    end
+    return
+end
+
+
+example_multi()</code></pre><pre class="documenter-example-output">RESULTS:
+ bands GARY FRA = 25.0	 coils GARY FRA = 500.0	 plate GARY FRA = 100.0
+ bands GARY DET = 125.0	 coils GARY DET = 0.0	 plate GARY DET = 50.0
+ bands GARY LAN = 0.0	 coils GARY LAN = 0.0	 plate GARY LAN = 0.0
+ bands GARY WIN = 0.0	 coils GARY WIN = 0.0	 plate GARY WIN = 50.0
+ bands GARY STL = 250.0	 coils GARY STL = 300.0	 plate GARY STL = 0.0
+ bands GARY FRE = 0.0	 coils GARY FRE = 0.0	 plate GARY FRE = 0.0
+ bands GARY LAF = 0.0	 coils GARY LAF = 0.0	 plate GARY LAF = 0.0
+ bands CLEV FRA = 275.0	 coils CLEV FRA = 0.0	 plate CLEV FRA = 0.0
+ bands CLEV DET = 100.0	 coils CLEV DET = 200.0	 plate CLEV DET = 50.0
+ bands CLEV LAN = 100.0	 coils CLEV LAN = 0.0	 plate CLEV LAN = 0.0
+ bands CLEV WIN = 0.0	 coils CLEV WIN = 75.0	 plate CLEV WIN = 0.0
+ bands CLEV STL = 0.0	 coils CLEV STL = 625.0	 plate CLEV STL = 0.0
+ bands CLEV FRE = 225.0	 coils CLEV FRE = 325.0	 plate CLEV FRE = 0.0
+ bands CLEV LAF = 0.0	 coils CLEV LAF = 375.0	 plate CLEV LAF = 250.0
+ bands PITT FRA = 0.0	 coils PITT FRA = 0.0	 plate PITT FRA = 0.0
+ bands PITT DET = 75.0	 coils PITT DET = 550.0	 plate PITT DET = 0.0
+ bands PITT LAN = 0.0	 coils PITT LAN = 400.0	 plate PITT LAN = 0.0
+ bands PITT WIN = 75.0	 coils PITT WIN = 175.0	 plate PITT WIN = 0.0
+ bands PITT STL = 400.0	 coils PITT STL = 25.0	 plate PITT STL = 200.0
+ bands PITT FRE = 0.0	 coils PITT FRE = 525.0	 plate PITT FRE = 100.0
+ bands PITT LAF = 250.0	 coils PITT LAF = 125.0	 plate PITT LAF = 0.0</pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/multi.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../knapsack/">« The knapsack problem</a><a class="docs-footer-nextpage" href="../n-queens/">N-Queens »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 8 May 2021 23:27">Saturday 8 May 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

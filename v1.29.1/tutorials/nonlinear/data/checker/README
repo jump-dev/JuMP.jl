@@ -1,0 +1,103 @@
+File: /afs/cs.wisc.edu/p/ftp/math-prog/cpo-dataset/machine-learn/checker/README
+This directory contains six files:
+
+README (this file),  checker.mat  and checker.txt, checkerboard.eps, poly6.eps and sin.eps.   
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This dataset is made public with the permission of its originators:
+
+@inproceedings{hk:96,
+	author = "Tin Kam Ho and Eugene M. Kleinberg",
+	title =  "Building Projectable Classifiers of Arbitrary Complexity",
+	booktitle={Proceedings of the 13th International Conference on Pattern R
+		ecognition},
+	editor = "",
+	publisher = "",
+	note = {http://cm.bell-labs.com/who/tkh/pubs.html},
+	address = {Vienna, Austria },
+	pages = {880-885},
+	date = {August 25--30},
+	year = 1996}
+
+This dataset has been used in the following papers:
+
+@incollection{Kaufman98a,
+	author = {L. Kaufman},
+	title={Solving the Quadratic Programming problem arising in support
+  	             vector classification},
+	editor = {Bernhard {Sch\"olkopf} and Christopher J. C. Burges and
+                                        Alexander J. Smola},
+                     booktitle = {Advances in Kernel Methods {-} Support Vector Learning},
+                     publisher = {MIT Press},
+	pages = {147-167},
+                     year= {1999} }
+
+
+@techreport{mm:99,
+	author = "O. L. Mangasarian and David R. Musicant",
+	title =  "Data Discrimination via Nonlinear Generalized Support
+	                 Vector Machines",
+	institution =  uwcs,
+	month = {March},
+	year =         1999,
+	number =       {99-03},
+	address =      "Madison, Wisconsin",
+	note={ftp://ftp.cs.wisc.edu/math-prog/tech-reports/99-03.ps}}
+
+
+@techreport{lm:99,
+	author = "Yuh-Jye Lee and O. L. Mangasarian",
+	title =  "{SSVM}: A Smooth Support Vector Machine",
+ 	institution =  "Data Mining Institute, Computer Sciences Department, University of Wisconsin",
+	month = {September},
+	year =         1999,
+	number =       {99-03},
+	address =      "Madison, Wisconsin",
+	note={ftp://ftp.cs.wisc.edu/pub/dmi/tech-reports/99-03.ps}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+checker.mat
+----------
+
+This file can be loaded into MATLAB directly and contains two matrices, A and B.
+
+A is 486 x 2 matrix which represents 486 points of class I  in R^2 space.
+
+B is 514 x 2 matrix which represents 514 points of class II in R^2 space.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+checker.txt
+----------
+
+This text file contains three columns which represent 1000 points in R^2,
+the two dimensional real space.
+
+The first column is the indicator of classes. 
+
+The second and third column are the coordinates of the data points.   
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+checkerboard.eps
+--------------
+
+This eps file contains the figure of checkerboard dataset.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+poly6.eps
+--------
+
+This eps file depicts the result of checkerboard problem using SSVM with sixth drgree polynomial kernel.
+SSVM stands for Smooth Support Vector Machine.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sin.eps
+
+This eps file depicts the result of checkerboard problem using SSVM with sinusoidal kernel.

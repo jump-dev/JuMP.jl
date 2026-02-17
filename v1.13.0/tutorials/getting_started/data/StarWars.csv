@@ -1,0 +1,21 @@
+Name,Gender,Height,Weight,Eyecolor,Haircolor,Skincolor,Homeland,Born,Died,Jedi,Species,Weapon
+Anakin Skywalker,male,1.88,84,blue,blond,fair,Tatooine,41.9BBY,4ABY,jedi,human,lightsaber
+Padme Amidala,female,1.65,45,brown,brown,light,Naboo,46BBY,19BBY,no_jedi,human,unarmed
+Luke Skywalker,male,1.72,77,blue,blond,fair,Tatooine,19BBY,unk_died,jedi,human,lightsaber
+Leia Skywalker,female,1.5,49,brown,brown,light,Alderaan,19BBY,unk_died,no_jedi,human,blaster
+Qui-Gon Jinn,male,1.93,88.5,blue,brown,light,unk_planet,92BBY,32BBY,jedi,human,lightsaber
+Obi-Wan Kenobi,male,1.82,77,bluegray,auburn,fair,Stewjon,57BBY,0BBY,jedi,human,lightsaber
+Han Solo,male,1.8,80,brown,brown,light,Corellia,29BBY,unk_died,no_jedi,human,blaster
+Sheev Palpatine,male,1.73,75,blue,red,pale,Naboo,82BBY,10ABY,no_jedi,human,force-lightning
+R2-D2,male,0.96,32,NA,NA,NA,Naboo,33BBY,unk_died,no_jedi,droid,unarmed
+C-3PO,male,1.67,75,NA,NA,NA,Tatooine,112BBY,3ABY,no_jedi,droid,unarmed
+Yoda,male,0.66,17,brown,brown,green,unk_planet,896BBY,4ABY,jedi,yoda,lightsaber
+Darth Maul,male,1.75,80,yellow,none,red,Dathomir,54BBY,unk_died,no_jedi,dathomirian,lightsaber
+Dooku,male,1.93,86,brown,brown,light,Serenno,102BBY,19BBY,jedi,human,lightsaber
+Chewbacca,male,2.28,112,blue,brown,NA,Kashyyyk,200BBY,25ABY,no_jedi,wookiee,bowcaster
+Jabba,male,3.9,NA,yellow,none,tan-green,Tatooine,unk_born,4ABY,no_jedi,hutt,unarmed
+Lando Calrissian,male,1.78,79,brown,blank,dark,Socorro,31BBY,unk_died,no_jedi,human,blaster
+Boba Fett,male,1.83,78,brown,black,brown,Kamino,31.5BBY,unk_died,no_jedi,human,blaster
+Jango Fett,male,1.83,79,brown,black,brown,ConcordDawn,66BBY,22BBY,no_jedi,human,blaster
+Grievous,male,2.16,159,gold,black,orange,Kalee,unk_born,19BBY,no_jedi,kaleesh,slugthrower
+Chief Chirpa,male,1,50,black,gray,brown,Endor,unk_born,4ABY,no_jedi,ewok,spear
