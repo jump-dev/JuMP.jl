@@ -229,6 +229,9 @@
     rev = "v1.13.1"
     has_html = true
     extension = true
+[SDPLRPlus]
+    user = "luotuoqingshan"
+    rev = "537e6d576876c6a98086b563fe806299499581bc"
 [Tulip]
     user = "ds4dm"
     rev = "v0.9.8"
