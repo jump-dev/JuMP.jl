@@ -334,18 +334,11 @@ Base.isassigned(A::DenseAxisArray, idx...) = _is_assigned(A, idx...)
 # For ambiguity with DenseAxisArray and Integer keys
 Base.isassigned(A::DenseAxisArray, idx::Integer...) = _is_assigned(A, idx...)
 
-if VERSION >= v"1.9.0-DEV"
-    # Disallow indexing with a mix of integers and Cartesian indices
-    function Base.isassigned(
-        A::DenseAxisArray,
-        i::Union{Integer,CartesianIndex}...,
-    )
-        return false
-    end
+# Disallow indexing with a mix of integers and Cartesian indices
+Base.isassigned(A::DenseAxisArray, i::Union{Integer,CartesianIndex}...) = false
 
-    function Base.isassigned(A::DenseAxisArray, i::CartesianIndex)
-        return isassigned(A.data, i)
-    end
+function Base.isassigned(A::DenseAxisArray, i::CartesianIndex)
+    return isassigned(A.data, i)
 end
 
 Base.eachindex(A::DenseAxisArray) = eachindex(IndexStyle(A), A)

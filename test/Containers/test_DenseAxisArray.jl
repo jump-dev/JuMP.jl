@@ -619,11 +619,9 @@ function test_ambiguity_isassigned()
     x = DenseAxisArray([:a, :b, :c], 2:4)
     @test !isassigned(x, 1)
     @test isassigned(x, 2)
-    if VERSION >= v"1.9.0-DEV"
-        @test isassigned(x, CartesianIndex(1))
-        @test isassigned(x, CartesianIndex(2, 1))
-        @test !isassigned(x, CartesianIndex(2, 1), 1)
-    end
+    @test isassigned(x, CartesianIndex(1))
+    @test isassigned(x, CartesianIndex(2, 1))
+    @test !isassigned(x, CartesianIndex(2, 1), 1)
     return
 end
 
@@ -990,20 +988,14 @@ function test_issue_4053()
     return
 end
 
+const _REDUCING_ERROR = VERSION < v"1.11" ? MethodError : ArgumentError
+
 function test_sum_init()
     x = Containers.@container([i in Int[]], i)
-    if VERSION < v"1.7"
-        @test sum(x) == 0
-    else
-        @test_throws ArgumentError sum(x)
-    end
+    @test_throws _REDUCING_ERROR sum(x)
     @test sum(x; init = 1) == 1
     y = Containers.@container([i in BigInt[]], i)
-    if VERSION < v"1.7"
-        @test sum(y) == 0
-    else
-        @test_throws ArgumentError sum(y)
-    end
+    @test_throws _REDUCING_ERROR sum(y)
     y_2 = sum(y; init = 0)
     @test y_2 === 0
     return
@@ -1011,11 +1003,7 @@ end
 
 function test_sum_init_any()
     x = Containers.@container([i in Any[]], i)
-    if VERSION < v"1.7"
-        @test_throws MethodError sum(x)
-    else
-        @test_throws ArgumentError sum(x)
-    end
+    @test_throws _REDUCING_ERROR sum(x)
     return
 end
 

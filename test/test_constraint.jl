@@ -1694,9 +1694,6 @@ function test_semiinteger()
 end
 
 function test_symmetric_vectorize_allocations()
-    if VERSION < v"1.8"
-        return
-    end
     model = Model()
     @variable(model, x[1:2])
     C = SparseArrays.sparse([0 1; 0 0])

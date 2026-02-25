@@ -59,9 +59,6 @@ for T in (
     macro_matvec = Symbol("test_$(T)_macro_matvec")
     matvec = Symbol("test_$(T)_matvec")
     matvec_alloc = Symbol("test_$(T)_matvec_alloc")
-    test_broken =
-        VERSION < v"1.10.0-DEV.1278" &&
-        T in (:LowerTriangular, :UpperTriangular)
     @eval begin
         function $macro_matvec()
             model = Model()
@@ -82,15 +79,11 @@ for T in (
             end
             model = Model()
             @variable(model, x[1:2, 1:2])
-            if $test_broken
-                @test_broken $f(x) * [1.0, 2.0] isa Vector{AffExpr}
-            else
-                @test $f(x) * [1.0, 2.0] isa Vector{AffExpr}
-            end
+            @test $f(x) * [1.0, 2.0] isa Vector{AffExpr}
             return
         end
         function $matvec_alloc()
-            if $test_broken || $f == LinearAlgebra.Hermitian
+            if $f == LinearAlgebra.Hermitian
                 return
             end
             model = Model()
