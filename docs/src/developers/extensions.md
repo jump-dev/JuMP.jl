@@ -405,21 +405,30 @@ implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/inf
 ### Testing JuMP extensions
 
 The JuMP test suite contains a large number of tests for JuMP extensions. You
-can run these tests by copying the MIT-licensed [`Kokako.jl`](https://github.com/jump-dev/JuMP.jl/blob/master/test/Kokako.jl)
-file in the JuMP tests into your `/test` folder, and then adding this snippet to
-your `/test/runtests.jl` file:
+can run these tests by copying the following snippet to your `/test/runtests.jl`
+file:
 
 ```julia
 using MyJuMPExtension
 import JuMP
-include("Kokako.jl")
-const MODULES_TO_TEST = Kokako.include_modules_to_test(JuMP)
-Kokako.run_tests(
-    MODULES_TO_TEST,
-    MyJuMPExtension.MyModel,
-    MyJuMPExtension.MyVariableRef;
-    test_prefix = "test_extension_",
-)
+import Test
+function runtests(mod::Module)
+    is_test_extension(f) = startswith("$f", "test_extension_")
+    for f in filter(is_test_extension, names(mod; all = true))
+        Test.@testset "$f" begin
+            getfield(mod, f)(
+                MyJuMPExtension.MyModel,
+                MyJuMPExtension.MyVariableRef,
+            )
+        end
+    end
+end
+is_test_file(f) = startswith(f, "test_") && endswith(f, ".jl")
+for (root, dirs, files) in walkdir(joinpath(pkgdir(JuMP), "test"))
+    Test.@testset "$file" for file in filter(is_test_file, files)
+        runtests(include(joinpath(root, file)))
+    end
+end
 ```
 
 ## Set an `optimize!` hook

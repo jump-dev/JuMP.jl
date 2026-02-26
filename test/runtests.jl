@@ -9,43 +9,23 @@
 #############################################################################
 
 import JuMP
+import ParallelTestRunner
 import Test
 
 # It is important to test this _before_ calling `include_modules_to_test`
 # because some of the tests introduce new ambiguities.
 Test.@test isempty(Test.detect_ambiguities(JuMP; recursive = true))
 
-include("Kokako.jl")
+is_test_file(f) = startswith(f, "test_") && endswith(f, ".jl")
 
-const MODULES_TO_TEST = Kokako.include_modules_to_test(JuMP)
-
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-if isempty(ARGS)
-    # JuMPExtension.jl also contains some tests.
-    push!(MODULES_TO_TEST, "JuMPExtension.jl" => JuMPExtension)
+testsuite = Dict{String,Expr}()
+for (root, dirs, files) in walkdir(@__DIR__)
+    for file in joinpath.(root, filter(is_test_file, files))
+        testsuite[file] = :(run_tests(include($file)))
+    end
 end
 
-Kokako.run_tests(MODULES_TO_TEST)
-
-# `Float32` is cheaper to test than `BigFloat` and is enough
-# for the purpose of testing that the types don't get promoted to `Float64`
-Kokako.run_tests(
-    MODULES_TO_TEST,
-    JuMP.GenericModel{Float32},
-    JuMP.GenericVariableRef{Float32};
-    test_prefix = "test_extension_",
-    include_names = Dict(
-        "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
-    ),
-)
-
-Kokako.run_tests(
-    MODULES_TO_TEST,
-    JuMPExtension.MyModel,
-    JuMPExtension.MyVariableRef;
-    test_prefix = "test_extension_",
-    include_names = Dict(
-        "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
-    ),
-)
+const init_code = quote
+    include(joinpath(@__DIR__, "parallel_test_setup.jl"))
+end
+ParallelTestRunner.runtests(JuMP, ARGS; testsuite, init_code)

@@ -553,9 +553,15 @@ function check_belongs_to_model(
     expr::GenericNonlinearExpr,
     model::AbstractModel,
 )
-    for arg in expr.args
-        if arg isa AbstractJuMPScalar
-            check_belongs_to_model(arg, model)
+    stack = Any[expr]
+    while !isempty(stack)
+        child = pop!(stack)
+        if child isa GenericNonlinearExpr
+            for arg in child.args
+                push!(stack, arg)
+            end
+        elseif child isa AbstractJuMPScalar
+            check_belongs_to_model(child, model)
         end
     end
     return

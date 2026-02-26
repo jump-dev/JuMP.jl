@@ -130,8 +130,8 @@ function test_extension_promote_operation(
     return
 end
 
-function test_extension_int(ModelType = Model, VariableRefType = VariableRef)
-    model = ModelType()
+function test_int()
+    model = Model()
     @variable(model, x)
     for a in [1, 1im]
         JuMP._MA.Test.int_test(
@@ -146,8 +146,8 @@ function test_extension_int(ModelType = Model, VariableRefType = VariableRef)
     return
 end
 
-function test_extension_scalar(ModelType = Model, VariableRefType = VariableRef)
-    model = ModelType()
+function test_scalar()
+    model = Model()
     @variable(model, x)
     exclude = ["cube"]
     JuMP._MA.Test.scalar_test(x; exclude = exclude)
@@ -158,19 +158,16 @@ function test_extension_scalar(ModelType = Model, VariableRefType = VariableRef)
     return
 end
 
-function test_extension_quadratic(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_quadratic()
+    model = Model()
     @variable(model, x[1:4])
     # Test is excluded because of https://github.com/jump-dev/MutableArithmetics.jl/issues/227
     JuMP._MA.Test.quadratic_test(x...; exclude = ["quadratic_add_canonical"])
     return
 end
 
-function test_extension_sparse(ModelType = Model, VariableRefType = VariableRef)
-    model = ModelType()
+function test_sparse()
+    model = Model()
     @variable(model, X11)
     @variable(model, X23)
     @variable(model, Xd[1:3, 1:3])
@@ -178,48 +175,36 @@ function test_extension_sparse(ModelType = Model, VariableRefType = VariableRef)
     return
 end
 
-function test_extension_vector(ModelType = Model, VariableRefType = VariableRef)
-    model = ModelType()
+function test_vector()
+    model = Model()
     @variable(model, x[1:3])
     JuMP._MA.Test.array_test(x)
     return
 end
 
-function test_extension_symmetric_matrix(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_symmetric()
+    model = Model()
     @variable(model, y[1:2, 1:2], Symmetric)
     JuMP._MA.Test.array_test(y)
     return
 end
 
-function test_extension_nonsquare_matrix(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_nonsquare_matrix()
+    model = Model()
     @variable(model, z[1:2, 1:3])
     JuMP._MA.Test.array_test(z)
     return
 end
 
-function test_extension_DenseAxisVector(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_DenseAxisVector()
+    model = Model()
     @variable(model, y[2:5])
     JuMP._MA.Test.array_test(y; exclude = ["matrix_vector", "non_array"])
     return
 end
 
-function test_extension_different_variables(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_different_variables()
+    model = Model()
     x = @variable(model)
     y = DummyVariableRef()
     for a in (x, x + 1, x + im)
