@@ -277,7 +277,7 @@ end
 
 function set_objective_function(model::GenericModel, func::AbstractJuMPScalar)
     check_belongs_to_model(func, model)
-    set_objective_function(model, moi_function(func))
+    set_objective_function(model, moi_function(func, model))
     return
 end
 
@@ -296,7 +296,7 @@ function set_objective_function(
     for f in func
         check_belongs_to_model(f, model)
     end
-    set_objective_function(model, moi_function(func))
+    set_objective_function(model, moi_function(func, model))
     return
 end
 
