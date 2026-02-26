@@ -583,7 +583,7 @@ function moi_function(
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         elseif f.args[i] isa AbstractJuMPScalar
-            ret.args[i] = moi_function(model, f.args[i])
+            ret.args[i] = moi_function(f.args[i], model)
         else
             ret.args[i] = moi_function(f.args[i])
         end
