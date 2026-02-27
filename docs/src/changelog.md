@@ -7,6 +7,25 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.30.0 (March 2, 2026)
+
+This release is a minor release because we are changing the Julia compat bounds.
+There are no new features.
+
+### Fixed
+
+ - Fixed various errors found by JET (#4108)
+
+### Other
+
+ - Added a tutorial on [Progressive Hedging](@ref) (#4117)
+ - Minor documentation updates (#4109), (#4111), (#4112), (#4114), (#4115),
+   (#4118), (#4122), (#4123)
+ - Added ParallelTestRunner in the tests (#4119)
+ - Added dependabot (#4120)
+ - Dropped support for Julia v1.6 and made v1.10 the new minimum (#4121)
+ - Changed to build the HTML and LaTeX docs in parallel (#4124)
+
 ## Version 1.29.4 (January 16, 2026)
 
 ### Fixed
