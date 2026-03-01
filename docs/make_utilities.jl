@@ -728,6 +728,7 @@ end
 # ==============================================================================
 
 function make_latex()
+    cd(joinpath(@__DIR__, "latex_src"))
     pages = documentation_structure()
     tutorial_dir = joinpath(@__DIR__, "latex_src", "tutorials")
     for (root, dirs, files) in walkdir(tutorial_dir)
@@ -774,5 +775,6 @@ function make_latex()
             ),
         ],
     )
+    cd(@__DIR__)
     return
 end
