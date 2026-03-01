@@ -15,7 +15,7 @@ import DataFrames
 import HiGHS
 import Plots
 import SparseArrays
-import Test  #src
+import Test
 
 # ## Background
 
@@ -236,8 +236,8 @@ set_silent(model)
 @constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d)
 optimize!(model)
 assert_is_solved_and_feasible(model)
+Test.@test isapprox(objective_value(model), 386; atol = 1e-6)
 solution_summary(model)
-Test.@test isapprox(objective_value(model), 386; atol = 1e-6)  #src
 
 # This solution requires 386 rolls. This solution is sub-optimal because the
 # model does not contain the full set of possible patterns.
@@ -359,8 +359,7 @@ filter!(row -> row.rolls > 0, solution)
 # solutions. We can create a integer feasible solution by rounding up the
 # orders. This requires 306 rolls:
 
-Test.@test sum(ceil.(Int, solution.rolls)) == 306  #src
-sum(ceil.(Int, solution.rolls))
+Test.@test sum(ceil.(Int, solution.rolls)) == 306
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
 # problem:
@@ -375,7 +374,7 @@ filter!(row -> row.rolls > 0, solution)
 
 # This now requires 299 rolls:
 
-Test.@test isapprox(sum(solution.rolls), 299; atol = 1e-6)  #src
+Test.@test isapprox(sum(solution.rolls), 299; atol = 1e-6)
 sum(solution.rolls)
 
 # Note that this may not be the global minimum because we are not adding new

@@ -206,7 +206,7 @@ f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 @objective(model, Max, 1 * t + 0)
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test isapprox(D, value.(Z); atol = 1e-3)  #src
+Test.@test isapprox(D, value.(Z); atol = 1e-3)
 solve_time_1 = solve_time(model)
 
 # This formulation gives the much smaller graph:
@@ -242,7 +242,7 @@ f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 @objective(model, Max, 1 * t + 0)
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test isapprox(D, value.(Z); atol = 1e-3)  #src
+Test.@test isapprox(D, value.(Z); atol = 1e-3)
 solve_time_2 = solve_time(model)
 
 # This formulation gives the much smaller graph:

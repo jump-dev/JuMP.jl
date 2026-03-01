@@ -166,7 +166,7 @@ function example_k_means_clustering()
     assert_is_solved_and_feasible(model)
     Z_val = value.(Z)
     current_cluster, visited = 0, Set{Int}()
-    solution = [1, 1, 2, 1, 2, 2]  #src
+    solution = [1, 1, 2, 1, 2, 2]
     for i in 1:m
         if !(i in visited)
             current_cluster += 1
@@ -175,7 +175,7 @@ function example_k_means_clustering()
                 if isapprox(Z_val[i, i], Z_val[i, j]; atol = 1e-3)
                     println(a[j])
                     push!(visited, j)
-                    Test.@test solution[j] == current_cluster  #src
+                    Test.@test solution[j] == current_cluster
                 end
             end
         end
@@ -218,12 +218,12 @@ function example_correlation_problem()
     optimize!(model)
     assert_is_solved_and_feasible(model)
     println("An upper bound for ρ_AC is $(value(ρ["A", "C"]))")
-    Test.@test value(ρ["A", "C"]) ≈ 0.87195 atol = 1e-4  #src
+    Test.@test value(ρ["A", "C"]) ≈ 0.87195 atol = 1e-4
     @objective(model, Min, ρ["A", "C"])
     optimize!(model)
     assert_is_solved_and_feasible(model)
     println("A lower bound for ρ_AC is $(value(ρ["A", "C"]))")
-    Test.@test value(ρ["A", "C"]) ≈ -0.978 atol = 1e-3  #src
+    Test.@test value(ρ["A", "C"]) ≈ -0.978 atol = 1e-3
     return
 end
 

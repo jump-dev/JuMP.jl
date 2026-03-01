@@ -136,8 +136,8 @@ q = P \ value.(P_q)
 # Finally, overlaying the solution in the plot we see the minimal area enclosing
 # ellipsoid:
 
-Test.@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163]; atol = 1e-2)  #src
-Test.@test isapprox(q, [-0.3960, -0.0214]; atol = 1e-2)                #src
+Test.@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163]; atol = 1e-2)
+Test.@test isapprox(q, [-0.3960, -0.0214]; atol = 1e-2)
 
 Plots.plot!(
     plot,

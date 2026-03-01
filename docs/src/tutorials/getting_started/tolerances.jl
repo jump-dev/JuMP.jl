@@ -107,7 +107,7 @@ set_silent(model)
 @variable(model, x >= 0)
 @constraint(model, x == -1e-8)
 optimize!(model)
-assert_is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 #-
@@ -122,7 +122,7 @@ value(x)
 
 set_attribute(model, "primal_feasibility_tolerance", 1e-10)
 optimize!(model)
-@assert !is_solved_and_feasible(model)  #src
+@assert !is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # ### Realistic example
@@ -142,7 +142,7 @@ optimize!(model)
 
 # SCS reports that it solved the problem to optimality:
 
-assert_is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # and that the solution for `x[1]` is nearly zero:
@@ -199,7 +199,6 @@ optimize!(model)
 
 #-
 
-assert_is_solved_and_feasible(model)  #src
 assert_is_solved_and_feasible(model)
 value(x[1])
 
@@ -234,12 +233,12 @@ set_attribute(model, "presolve", "off")
 set_attribute(model, "mip_heuristic_run_feasibility_jump", false)
 @variable(model, x == 1 + 1e-6, Int)
 optimize!(model)
-assert_is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # HiGHS found an optimal solution, and the value of `x` is:
 
-@assert isapprox(value(x), 1.000001)  #src
+@assert isapprox(value(x), 1.000001)
 value(x)
 
 # In other words, HiGHS thinks that the solution `x = 1.000001` satisfies the
@@ -255,7 +254,7 @@ primal_feasibility_report(model)
 
 set_attribute(model, "mip_feasibility_tolerance", 1e-10)
 optimize!(model)
-@assert !is_solved_and_feasible(model)  #src
+@assert !is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # ### Realistic example
@@ -348,7 +347,7 @@ set_silent(model)
 @variable(model, y >= 0)
 @constraint(model, x + 1e8 * y == -1)
 optimize!(model)
-@assert !is_solved_and_feasible(model)  #src
+@assert !is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # The feasible solution `(x, y) = (0.0, -1e-8)` has a maximum primal violation
@@ -371,7 +370,7 @@ set_silent(model)
 @constraint(model, y <= 0.5)
 @constraint(model, x <= M * y)
 optimize!(model)
-@assert !is_solved_and_feasible(model)  #src
+@assert !is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # HiGHS reports the problem is infeasible, but there is a feasible (to
@@ -394,7 +393,7 @@ set_start_value(y, 1e-6)
 # Now HiGHS will report that the problem is feasible:
 
 optimize!(model)
-assert_is_solved_and_feasible(model)  #src
+assert_is_solved_and_feasible(model)
 is_solved_and_feasible(model)
 
 # ## Problem is optimal, solution is infeasible

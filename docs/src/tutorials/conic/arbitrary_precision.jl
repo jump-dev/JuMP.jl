@@ -15,7 +15,7 @@
 using JuMP
 import CDDLib
 import Clarabel
-import Test     #src
+import Test
 
 # ## Higher-precision arithmetic
 
@@ -102,7 +102,7 @@ value.(x) .- [3 // 7, 3 // 14]
 
 # The primal feasibility violation is on the order of `1e-16`
 
-Test.@test 1e-16 <= maximum(values(primal_feasibility_report(model))) <= 1e-15 #src
+Test.@test 1e-16 <= maximum(values(primal_feasibility_report(model))) <= 1e-15
 primal_feasibility_report(model)
 
 # But by reducing the tolerances, we can obtain a more accurate solution:
@@ -116,7 +116,7 @@ value.(x) .- [3 // 7, 3 // 14]
 
 # The primal feasibility violation is also much smaller:
 
-Test.@test maximum(values(primal_feasibility_report(model))) < 1e-30  #src
+Test.@test maximum(values(primal_feasibility_report(model))) < 1e-30
 primal_feasibility_report(model)
 
 # ## Rational arithmetic
@@ -176,5 +176,5 @@ value(c2)
 # Because the solution is in exact arithmetic, there are no primal
 # infeasibilities:
 
-Test.@test isempty(primal_feasibility_report(model))  #src
+Test.@test isempty(primal_feasibility_report(model))
 primal_feasibility_report(model)

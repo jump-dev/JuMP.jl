@@ -148,7 +148,7 @@ nodes, edges, demand = build_random_graph(1_000, 2_000)
 run_times = Float64[]
 factors = 1:10
 for factor in factors
-    GC.gc()  #src
+    GC.gc()
     graph = build_random_graph(1_000 * factor, 5_000 * factor)
     push!(run_times, @elapsed build_naive_model(graph...))
 end
@@ -217,7 +217,7 @@ run_times_naive = Float64[]
 run_times_cached = Float64[]
 factors = 1:10
 for factor in factors
-    GC.gc()  #src
+    GC.gc()
     graph = build_random_graph(1_000 * factor, 5_000 * factor)
     push!(run_times_naive, @elapsed build_naive_model(graph...))
     push!(run_times_cached, @elapsed build_cached_model(graph...))

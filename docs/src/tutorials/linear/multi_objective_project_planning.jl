@@ -24,7 +24,7 @@ import DataFrames
 import HiGHS
 import MultiObjectiveAlgorithms as MOA
 import Plots
-import Test  #src
+import Test
 
 # ## Background
 
@@ -132,7 +132,7 @@ optimize!(model)
 
 # The algorithm found 21 non-dominated solutions:
 
-Test.@test result_count(model) == 21  #src
+Test.@test result_count(model) == 21
 solution_summary(model)
 
 # The [`objective_bound`](@ref) is the ideal point, that is, a lower bound on

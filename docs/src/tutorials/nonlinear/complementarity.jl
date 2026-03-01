@@ -14,7 +14,7 @@
 
 using JuMP
 import PATHSolver
-import Test  #src
+import Test
 
 # ## Background
 
@@ -51,7 +51,7 @@ set_silent(model)
 @constraint(model, M * x + q ⟂ x)
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test value.(x) ≈ [2.8, 0.0, 0.8, 1.2]  #src
+Test.@test value.(x) ≈ [2.8, 0.0, 0.8, 1.2]
 value.(x)
 
 # ## Other ways of writing linear complementarity problems
@@ -72,7 +72,7 @@ set_silent(model)
 @constraint(model, w - x + 2y - 2z - 2 ⟂ y)
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test value.([w, x, y, z]) ≈ [2.8, 0.0, 0.8, 1.2]  #src
+Test.@test value.([w, x, y, z]) ≈ [2.8, 0.0, 0.8, 1.2]
 value.([w, x, y, z])
 
 # ## Transportation
@@ -108,7 +108,7 @@ set_silent(model)
 )
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test isapprox(value(p["new-york"]), 0.225; atol = 1e-3)  #src
+Test.@test isapprox(value(p["new-york"]), 0.225; atol = 1e-3)
 value.(p)
 
 # ## Expected utility of insurance
@@ -144,7 +144,7 @@ set_silent(model)
 )
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)  #src
+Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)
 value(K)
 
 # ## Electricity consumption
@@ -201,15 +201,15 @@ solution_summary(model)
 
 # An equilibrium solution is to build 389 MW:
 
-Test.@test isapprox(value(x), 389; atol = 1)  #src
+Test.@test isapprox(value(x), 389; atol = 1)
 value(x)
 
 # The production in each scenario is:
 
-Test.@test isapprox(value.(Q), [240, 290, 340, 389, 389]; atol = 1)  #src
+Test.@test isapprox(value.(Q), [240, 290, 340, 389, 389]; atol = 1)
 value.(Q)
 
 # The price in each scenario is:
 
-Test.@test isapprox(value.(P), [60, 60, 60, 61, 111]; atol = 1)  #src
+Test.@test isapprox(value.(P), [60, 60, 60, 61, 111]; atol = 1)
 value.(P)
