@@ -90,7 +90,7 @@ function example_clnlbeam()
     objective_value    = $(objective_value(model))
     """)
     assert_is_solved_and_feasible(model)
-    Test.@test objective_value(model) ≈ 350.0  #src
+    Test.@test objective_value(model) ≈ 350.0
     return
 end
 

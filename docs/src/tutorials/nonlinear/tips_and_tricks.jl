@@ -62,8 +62,8 @@ optimize!(model)
 assert_is_solved_and_feasible(model)
 Test.@test objective_value(model) ≈ √3 atol = 1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
+naive_approach = function_calls
 println("Naive approach: function calls = $(function_calls)")
-naive_approach = function_calls  #src
 
 # ## Memoization
 
@@ -108,7 +108,7 @@ memoized_foo = memoize(foo, 2)
 
 function_calls = 0
 memoized_foo[1](1.0, 1.0)
-Test.@test function_calls == 1  #src
+Test.@test function_calls == 1
 println("function_calls = ", function_calls)
 
 # As expected, this evaluated the function once. However, if we call the
@@ -116,7 +116,7 @@ println("function_calls = ", function_calls)
 # `function_calls` is still `1`!
 
 memoized_foo[1](1.0, 1.0)
-Test.@test function_calls == 1  #src
+Test.@test function_calls == 1
 println("function_calls = ", function_calls)
 
 # Now let's see how this works during a real solve:
@@ -134,7 +134,7 @@ assert_is_solved_and_feasible(model)
 Test.@test objective_value(model) ≈ √3 atol = 1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Memoized approach: function_calls = $(function_calls)")
-Test.@test function_calls <= naive_approach / 2 + 1  #src
+Test.@test function_calls <= naive_approach / 2 + 1
 
 # Compared to the naive approach, the memoized approach requires half as many
 # function evaluations.

@@ -23,7 +23,7 @@ import CSV
 import DataFrames
 import HiGHS
 import StatsPlots
-import Test  #src
+import Test
 
 # ## Formulation
 
@@ -209,8 +209,8 @@ end
 
 solution = solve_factory_scheduling(demand_df, factory_df);
 
-Test.@test solution.termination_status == OPTIMAL  #src
-Test.@test solution.cost == 12_906_400.0  #src
+Test.@test solution.termination_status == OPTIMAL
+Test.@test solution.cost == 12_906_400.0
 
 # Let's see what `solution` contains:
 

@@ -121,7 +121,7 @@ set_silent(model)
 # real power range (all 10, as it turns out in this case):
 
 basic_lower_bound = value(lower_bound, objective_function(model));
-Test.@test isapprox(basic_lower_bound, 1188.75; atol = 1e-2)  #src
+Test.@test isapprox(basic_lower_bound, 1188.75; atol = 1e-2)
 println("Objective value (basic lower bound) : $basic_lower_bound")
 
 # to see that we can do no better than an objective cost of 1188.75.
@@ -282,7 +282,7 @@ P_G = real(S_G)
 
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test isapprox(objective_value(model), 3087.84; atol = 1e-2)  #src
+Test.@test isapprox(objective_value(model), 3087.84; atol = 1e-2)
 solution_summary(model)
 
 #-
@@ -422,7 +422,7 @@ optimize!(model)
 
 assert_is_solved_and_feasible(model; allow_almost = true)
 sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
-Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)     #src
+Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)
 println(
     "Objective value (W & V relax. lower bound): $sdp_relaxation_lower_bound",
 )
