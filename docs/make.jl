@@ -23,8 +23,9 @@ end
     # Copy the src into a new directory for the latex build
     cp(joinpath(@__DIR__, "src"), joinpath(@__DIR__, "latex_src"); force = true)
     f_latex = Distributed.@spawnat :any make_latex()
-    make_html()
+    f_html = Distributed.@spawnat :any make_html()
     fetch(f_latex)
+    fetch(f_html)
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
     # includes lots of extraneous LaTeX files.

@@ -76,6 +76,16 @@ function _link_example(content)
     return replace(content, line => new_title)
 end
 
+function _add_edit_url(filename, url)
+    contents = read(filename, String)
+    open(filename, "w") do io
+        write(io, "```@meta\nEditURL = \"$url\"\n```\n\n")
+        write(io, contents)
+        return
+    end
+    return
+end
+
 function literate_tutorials()
     tutorial_dir = joinpath(@__DIR__, "src", "tutorials")
     for (root, dir, files) in walkdir(tutorial_dir)
@@ -106,16 +116,6 @@ function literate_tutorials()
         content = read(filename, String)
         content = replace(content, "@example" => "@repl")
         write(filename, content)
-    end
-    return
-end
-
-function _add_edit_url(filename, url)
-    contents = read(filename, String)
-    open(filename, "w") do io
-        write(io, "```@meta\nEditURL = \"$url\"\n```\n\n")
-        write(io, contents)
-        return
     end
     return
 end
