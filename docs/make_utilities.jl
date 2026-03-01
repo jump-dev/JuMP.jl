@@ -78,31 +78,20 @@ end
 
 function literate_tutorials()
     tutorial_dir = joinpath(@__DIR__, "src", "tutorials")
-    tutorials = Pair{String,String}[]
     for (root, dir, files) in walkdir(tutorial_dir)
-        for file in files
-            if endswith(file, ".md")
-                if !(file in ("introduction.md", "parallelism.md"))
-                    rm(joinpath(root, file))
-                end
-            elseif endswith(file, ".jl")
-                if !_HAS_GUROBI && file == "callbacks.jl"
-                    continue  # Don't run if Gurobi not present
-                end
-                push!(tutorials, root => file)
+        for file in filter!(endswith(".jl"), files)
+            if !_HAS_GUROBI && file == "callbacks.jl"
+                continue  # Don't run if Gurobi not present
             end
+            Literate.markdown(
+                joinpath(root, file),
+                root;
+                documenter = true,
+                postprocess = _link_example,
+                # Turn off the footer. We manually add a modified one.
+                credit = false,
+            )
         end
-    end
-    Distributed.pmap(tutorials) do (root, file)
-        Literate.markdown(
-            joinpath(root, file),
-            root;
-            documenter = true,
-            postprocess = _link_example,
-            # Turn off the footer. We manually add a modified one.
-            credit = false,
-        )
-        return
     end
     # Convert `@example` blocks into `@repl` blocks in the following files:
     for file in [

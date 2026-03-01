@@ -11,9 +11,8 @@ Distributed.@everywhere include(joinpath(@__DIR__, "make_utilities.jl"))
 # link checking. In production we replace this by running the LaTeX build.
 write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
 
-@time literate_tutorials()
-
 @time begin
+    literate_tutorials()
     add_tutorial_overview()
     add_solver_readmes()
     add_changelog()
