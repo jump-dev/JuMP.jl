@@ -763,6 +763,7 @@ function make_latex()
         format = Documenter.LaTeX(;
             platform = "tectonic",
             tectonic = tectonic_jll.tectonic(),
+            code_listings = "listings",
         ),
         source = joinpath(@__DIR__, "latex_src"),
         build = joinpath(@__DIR__, "latex_build"),
