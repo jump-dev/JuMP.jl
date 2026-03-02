@@ -21,7 +21,6 @@ import MarkdownAST
 
 struct _Config
     current_module::Module
-    root::String
     subdirectory::String
     modules::Dict{Module,<:Vector}
     sort_by::Function
@@ -35,7 +34,6 @@ Documenter.Selectors.order(::Type{APIBuilder}) = 0.0
 
 """
     automatic_reference_documentation(;
-        root::String,
         subdirectory::String,
         modules::Dict{Module,Vector{Pair{String,DocType}}},
         sort_by::Function = identity,
@@ -60,7 +58,6 @@ Each time you call this function, a new object is added to the global variable
 `DocumenterReference.CONFIG`.
 """
 function automatic_reference_documentation(;
-    root::String,
     subdirectory::String,
     modules::Vector,
     sort_by::Function = identity,
@@ -73,7 +70,6 @@ function automatic_reference_documentation(;
         current_module = first(_to_extras(m))
         pages = _automatic_reference_documentation(
             current_module;
-            root,
             subdirectory,
             modules = _modules,
             sort_by,
@@ -85,12 +81,11 @@ end
 
 function _automatic_reference_documentation(
     current_module::Module;
-    root::String,
     subdirectory::String,
     modules::Dict{Module,<:Vector},
     sort_by::Function,
 )
-    push!(CONFIG, _Config(current_module, root, subdirectory, modules, sort_by))
+    push!(CONFIG, _Config(current_module, subdirectory, modules, sort_by))
     return "$subdirectory/$current_module.md"
 end
 

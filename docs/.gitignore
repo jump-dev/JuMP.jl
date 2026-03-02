@@ -1,5 +1,6 @@
 build/
 latex_build/
+latex_src/
 src/tutorials/*/*.md
 !src/tutorials/*/introduction.md
 !src/tutorials/algorithms/parallelism.md
