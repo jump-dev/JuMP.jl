@@ -37,7 +37,7 @@ jobs:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           DOCUMENTER_LATEX_DEBUG: ${{ github.workspace }}/latex-debug-logs
         run: julia --color=yes --project=docs -p 2 docs/make.jl
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: ${{ always() }}
         with:
           name: PDF build logs
