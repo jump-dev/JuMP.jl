@@ -22,7 +22,8 @@ Subject to
  c2 : 7 x + 12 y ≥ 120
  x ≥ 0
  y ≥ 0
- y ≤ 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.12.0 (git hash: 755a8e027a): Copyright (c) 2025 HiGHS under MIT licence terms
+ y ≤ 3</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.13.1 (git hash: 1d267d97c): Copyright (c) 2026 under Apache 2.0 license terms
+Using BLAS: blastrampoline 
 LP has 2 rows; 2 cols; 4 nonzeros
 Coefficient ranges:
   Matrix  [6e+00, 1e+01]
@@ -34,10 +35,10 @@ Presolving model
 2 rows, 2 cols, 4 nonzeros  0s
 Presolve reductions: rows 2(-0); columns 2(-0); nonzeros 4(-0) - Not reduced
 Problem not reduced by presolve: solving the LP
-Using EKK dual simplex solver - serial
+Using dual simplex solver
   Iteration        Objective     Infeasibilities num(sum)
-          0     0.0000000000e+00 Pr: 2(220) 0s
-          2     2.0500000000e+02 Pr: 0(0) 0s
+          0     0.0000000000e+00 Pr: 2(220) 0.0s
+          2     2.0500000000e+02 Pr: 0(0) 0.0s
 
 Model status        : Optimal
 Simplex   iterations: 2
@@ -54,7 +55,8 @@ Subject to
  c2 : 7 x + 12 y ≥ 120
  x ≥ 0
  y ≥ 0
- y ≤ 30</code></pre><p>To solve the optimization problem, call the <a href="../../../api/JuMP/#optimize!"><code>optimize!</code></a> function:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.12.0 (git hash: 755a8e027a): Copyright (c) 2025 HiGHS under MIT licence terms
+ y ≤ 30</code></pre><p>To solve the optimization problem, call the <a href="../../../api/JuMP/#optimize!"><code>optimize!</code></a> function:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.13.1 (git hash: 1d267d97c): Copyright (c) 2026 under Apache 2.0 license terms
+Using BLAS: blastrampoline 
 LP has 2 rows; 2 cols; 4 nonzeros
 Coefficient ranges:
   Matrix  [6e+00, 1e+01]
@@ -66,10 +68,10 @@ Presolving model
 2 rows, 2 cols, 4 nonzeros  0s
 Presolve reductions: rows 2(-0); columns 2(-0); nonzeros 4(-0) - Not reduced
 Problem not reduced by presolve: solving the LP
-Using EKK dual simplex solver - serial
+Using dual simplex solver
   Iteration        Objective     Infeasibilities num(sum)
-          0     0.0000000000e+00 Pr: 2(220) 0s
-          2     2.0500000000e+02 Pr: 0(0) 0s
+          0     0.0000000000e+00 Pr: 2(220) 0.0s
+          2     2.0500000000e+02 Pr: 0(0) 0.0s
 
 Model status        : Optimal
 Simplex   iterations: 2
@@ -117,7 +119,8 @@ end</code></pre></div></div><p>That&#39;s it for our simple model. In the rest o
                return
            end
            return value(x), value(y)
-       end</code><code class="nohighlight hljs ansi" style="display:block;">solve_infeasible (generic function with 1 method)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_infeasible()</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.12.0 (git hash: 755a8e027a): Copyright (c) 2025 HiGHS under MIT licence terms
+       end</code><code class="nohighlight hljs ansi" style="display:block;">solve_infeasible (generic function with 1 method)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_infeasible()</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.13.1 (git hash: 1d267d97c): Copyright (c) 2026 under Apache 2.0 license terms
+Using BLAS: blastrampoline 
 LP has 1 row; 2 cols; 2 nonzeros
 Coefficient ranges:
   Matrix  [1e+00, 1e+00]
@@ -137,10 +140,10 @@ Coefficient ranges:
   Bound   [1e+00, 1e+00]
   RHS     [3e+00, 3e+00]
 Solving LP without presolve or useful basis
-Using EKK dual simplex solver - serial
+Using dual simplex solver
   Iteration        Objective     Infeasibilities num(sum)
-          0    -0.0000000000e+00 Pr: 1(3) 0s
-          2    -1.7393294116e-06 0s
+          0    -0.0000000000e+00 Pr: 1(3) 0.0s
+          2    -1.7393294116e-06 0.0s
 
 Model status        : Infeasible
 Simplex   iterations: 2
@@ -249,7 +252,8 @@ And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{Ma
  x[4]</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @constraint(vector_model, A * x .== b)</code><code class="nohighlight hljs ansi" style="display:block;">3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
  x[1] + x[2] + 9 x[3] + 5 x[4] = 7
  3 x[1] + 5 x[2] + 8 x[4] = 3
- 2 x[1] + 6 x[3] + 13 x[4] = 5</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @objective(vector_model, Min, c&#39; * x)</code><code class="nohighlight hljs ansi" style="display:block;">x[1] + 3 x[2] + 5 x[3] + 2 x[4]</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(vector_model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.12.0 (git hash: 755a8e027a): Copyright (c) 2025 HiGHS under MIT licence terms
+ 2 x[1] + 6 x[3] + 13 x[4] = 5</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @objective(vector_model, Min, c&#39; * x)</code><code class="nohighlight hljs ansi" style="display:block;">x[1] + 3 x[2] + 5 x[3] + 2 x[4]</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; optimize!(vector_model)</code><code class="nohighlight hljs ansi" style="display:block;">Running HiGHS 1.13.1 (git hash: 1d267d97c): Copyright (c) 2026 under Apache 2.0 license terms
+Using BLAS: blastrampoline 
 LP has 3 rows; 4 cols; 10 nonzeros
 Coefficient ranges:
   Matrix  [1e+00, 1e+01]
@@ -263,13 +267,13 @@ Dependent equations search removed 0 rows and 0 nonzeros in 0.00s (limit = 1000.
 3 rows, 4 cols, 10 nonzeros  0s
 Presolve reductions: rows 3(-0); columns 4(-0); nonzeros 10(-0) - Not reduced
 Problem not reduced by presolve: solving the LP
-Using EKK dual simplex solver - serial
+Using dual simplex solver
   Iteration        Objective     Infeasibilities num(sum)
-          0     0.0000000000e+00 Pr: 3(13.5) 0s
-          4     4.9230769231e+00 Pr: 0(0) 0s
+          0     0.0000000000e+00 Pr: 3(13.5) 0.0s
+          4     4.9230769231e+00 Pr: 0(0) 0.0s
 
 Model status        : Optimal
 Simplex   iterations: 4
 Objective value     :  4.9230769231e+00
 P-D objective error :  0.0000000000e+00
-HiGHS run time      :          0.00</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; assert_is_solved_and_feasible(vector_model)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; objective_value(vector_model)</code><code class="nohighlight hljs ansi" style="display:block;">4.923076923076922</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../getting_started_with_julia/">« Getting started with Julia</a><a class="docs-footer-nextpage" href="../getting_started_with_sets_and_indexing/">Getting started with sets and indexing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 3 March 2026 19:38">Tuesday 3 March 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+HiGHS run time      :          0.00</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; assert_is_solved_and_feasible(vector_model)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; objective_value(vector_model)</code><code class="nohighlight hljs ansi" style="display:block;">4.923076923076922</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../getting_started_with_julia/">« Getting started with Julia</a><a class="docs-footer-nextpage" href="../getting_started_with_sets_and_indexing/">Getting started with sets and indexing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 3 March 2026 22:41">Tuesday 3 March 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
