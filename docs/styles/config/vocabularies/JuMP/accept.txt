@@ -17,11 +17,13 @@ dataframe(?s)
 datastructure
 demuxer
 denoise
+[Dd]ependabot
 destructuring
 dev
 discretize(d|s)
 docstring(?s)
 doctest(?s)
+doi|DOI
 embeddable
 elementwise
 [Ee]num(?s)

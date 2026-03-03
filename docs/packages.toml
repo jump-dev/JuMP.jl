@@ -49,7 +49,7 @@
 [cuOpt]
     rev = "v0.1.2"
 [DiffOpt]
-    rev = "v0.5.4"
+    rev = "v0.5.5"
     extension = true
 # There are number of known issues with DSDP
 # [DSDP]
@@ -61,26 +61,26 @@
 [GLPK]
     rev = "v1.2.1"
 [Gurobi]
-    rev = "v1.9.1"
+    rev = "v1.9.2"
 [HiGHS]
-    rev = "v1.20.1"
+    rev = "v1.21.1"
 [Hypatia]
     rev = "v0.9.1"
     has_html = true
 [Ipopt]
-    rev = "v1.14.0"
+    rev = "v1.14.1"
 [KNITRO]
     rev = "v1.2.0"
 [MathOptAnalyzer]
     rev = "v0.1.1"
 [MathOptIIS]
-    rev = "v0.1.1"
+    rev = "v0.1.2"
 [MiniZinc]
-    rev = "v0.3.13"
+    rev = "v0.3.14"
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.8.2"
+    rev = "v1.9.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -89,7 +89,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.14.1"
+    rev = "v0.15.0"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -103,7 +103,7 @@
     rev = "v0.7.6"
     extension = true
 [SCS]
-    rev = "v2.6.0"
+    rev = "v2.6.2"
 [SDPA]
     rev = "v0.6.1"
 [SDPLR]
@@ -124,7 +124,7 @@
 
 [Alpine]
     user = "lanl-ansi"
-    rev = "v0.5.7"
+    rev = "v0.5.8"
 [BilevelJuMP]
     user = "joaquimg"
     rev = "v0.6.2"
@@ -137,14 +137,14 @@
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "v0.10.1"
+    rev = "v0.10.2"
 [Clarabel]
     user = "oxfordcontrol"
     rev = "v0.11.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.31"
+    rev = "v1.1.32"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
@@ -162,7 +162,7 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "v0.8.4"
+    rev = "v0.9.0"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
@@ -180,18 +180,18 @@
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.8.12"
+    rev = "v0.9.1"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.32"
+    rev = "v0.5.33"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.2.1"
+    rev = "v0.2.2"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
@@ -202,7 +202,7 @@
     extension = true
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "v2.0.0"
+    rev = "v2.0.1"
 [OSQP]
     user = "osqp"
     rev = "v0.8.1"

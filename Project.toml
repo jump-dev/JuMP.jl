@@ -1,6 +1,6 @@
 name = "JuMP"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
-version = "1.29.4"
+version = "1.30.0"
 repo = "https://github.com/jump-dev/JuMP.jl.git"
 
 [deps]
@@ -20,7 +20,7 @@ DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 JuMPDimensionalDataExt = "DimensionalData"
 
 [compat]
-DimensionalData = "0.24, 0.25, 0.26.2, 0.27, 0.28, 0.29"
+DimensionalData = "0.24, 0.25, 0.26.2, 0.27, 0.28, 0.29, 0.30"
 LinearAlgebra = "1"
 MacroTools = "0.5"
 MathOptInterface = "1.38.0"
