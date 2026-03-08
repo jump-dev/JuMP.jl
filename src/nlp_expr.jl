@@ -330,14 +330,16 @@ Base.isreal(::GenericNonlinearExpr) = true
 
 # Univariate operators
 
-_is_real(::Any) = false
-_is_real(::Real) = true
-_is_real(::AbstractVariableRef) = true
-_is_real(::GenericAffExpr{<:Real}) = true
-_is_real(::GenericQuadExpr{<:Real}) = true
-_is_real(::GenericNonlinearExpr) = true
-_is_real(::NonlinearExpression) = true
-_is_real(::NonlinearParameter) = true
+_is_real(::Type) = false
+_is_real(::Type{<:Real}) = true
+_is_real(::Type{<:AbstractVariableRef}) = true
+_is_real(::Type{<:GenericAffExpr{<:Real}}) = true
+_is_real(::Type{<:GenericQuadExpr{<:Real}}) = true
+_is_real(::Type{<:GenericNonlinearExpr}) = true
+_is_real(::Type{<:NonlinearExpression}) = true
+_is_real(::Type{<:NonlinearParameter}) = true
+_is_real(::Type{<:AbstractArray{T}}) where {T} = _is_real(T)
+_is_real(x) = _is_real(typeof(x))
 
 function _throw_if_not_real(x)
     if !_is_real(x)
