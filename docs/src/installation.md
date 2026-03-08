@@ -117,6 +117,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         |        | GPL      | LP                        |
 | [Clarabel.jl](https://github.com/oxfordcontrol/Clarabel.jl)                    |                                                                                  |        | Apache   | LP, QP, SOCP, SDP         |
 | [Clp](https://github.com/coin-or/Clp)                                          | [Clp.jl](https://github.com/jump-dev/Clp.jl)                                     |        | EPL      | LP                        |
+| [CoolPDLP.jl](https://github.com/JuliaDecisionFocusedLearning/CoolPDLP.jl)     |                                                                                  |        | MIT      | LP                        |
 | [COPT](https://www.shanshu.ai/copt)                                            | [COPT.jl](https://github.com/COPT-Public/COPT.jl)                                |        | Comm.    | (MI)LP, SOCP, SDP         |
 | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                          |                                                                                  |        | Apache   | LP, QP, SOCP, SDP         |
 | [Couenne](http://github.com/coin-or/Couenne)                                   | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
