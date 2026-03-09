@@ -142,6 +142,9 @@
     user = "oxfordcontrol"
     rev = "v0.11.0"
     has_html = true
+[CoolPDLP]
+    user = "JuliaDecisionFocusedLearning"
+    rev = "v0.1.0"
 [COPT]
     user = "COPT-Public"
     rev = "v1.1.32"

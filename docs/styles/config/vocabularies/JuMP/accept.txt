@@ -13,6 +13,7 @@ broadcasted
 camelCase
 [Cc]odecov
 compat
+CPU(?s)
 dataframe(?s)
 datastructure
 demuxer
@@ -130,6 +131,7 @@ warmstart
 
 % Proper nouns
 Adagrad
+Agence
 AMPL
 Appveyor
 Artelys
@@ -169,6 +171,7 @@ JSONSchema
 MATLAB
 MOI
 (Mosek|MOSEK)
+Nationale
 (Nvidia|NVIDIA)
 Octeract
 Optim
@@ -210,6 +213,7 @@ Chachuat
 Chebyshev
 Cholesky
 Coey
+Dalle
 Dantzig
 Das
 Daubechies
@@ -228,6 +232,7 @@ Garstka
 Gleixner
 Goemans
 Grothey
+Guillaume
 Habibi
 Hamad
 Hande
