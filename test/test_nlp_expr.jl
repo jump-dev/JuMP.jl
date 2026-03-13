@@ -6,6 +6,7 @@
 module TestNLPExpr
 
 using JuMP
+using LinearAlgebra
 using Test
 
 import LinearAlgebra
@@ -1230,6 +1231,16 @@ function test_extension_euler_to_exp(
     @test isequal_canonical(sum(ℯ^xᵢ for xᵢ in xy), exp(x) + exp(y))
     @test isequal_canonical(ℯ^prod(xy), exp(x*y))
     return
+end
+
+function test_array()
+    model = Model()
+    @variable(model, x)
+    op_norm = NonlinearOperator(:det, det)
+    @objective(model, Min, op_norm([x]))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    @test f.head == :norm
+    @test f.args == [[index(x)]]
 end
 
 end  # module

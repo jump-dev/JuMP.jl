@@ -330,14 +330,16 @@ Base.isreal(::GenericNonlinearExpr) = true
 
 # Univariate operators
 
-_is_real(::Any) = false
-_is_real(::Real) = true
-_is_real(::AbstractVariableRef) = true
-_is_real(::GenericAffExpr{<:Real}) = true
-_is_real(::GenericQuadExpr{<:Real}) = true
-_is_real(::GenericNonlinearExpr) = true
-_is_real(::NonlinearExpression) = true
-_is_real(::NonlinearParameter) = true
+_is_real(::Type) = false
+_is_real(::Type{<:Real}) = true
+_is_real(::Type{<:AbstractVariableRef}) = true
+_is_real(::Type{<:GenericAffExpr{<:Real}}) = true
+_is_real(::Type{<:GenericQuadExpr{<:Real}}) = true
+_is_real(::Type{<:GenericNonlinearExpr}) = true
+_is_real(::Type{<:NonlinearExpression}) = true
+_is_real(::Type{<:NonlinearParameter}) = true
+_is_real(::Type{<:AbstractArray{T}}) where {T} = _is_real(T)
+_is_real(x) = _is_real(typeof(x))
 
 function _throw_if_not_real(x)
     if !_is_real(x)
@@ -575,6 +577,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
+        elseif f.args[i] isa AbstractArray
+            ret.args[i] = moi_function.(f.args[i])
         else
             ret.args[i] = moi_function(f.args[i])
         end
@@ -586,6 +590,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         for j in length(arg.args):-1:1
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
+            elseif arg.args[j] isa AbstractArray
+                child.args[j] = moi_function.(arg.args[j])
             else
                 child.args[j] = moi_function(arg.args[j])
             end
@@ -611,6 +617,8 @@ function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
             end
+        elseif arg isa AbstractArray
+            push!(parent.args, jump_function.(model, arg))
         else
             push!(parent.args, jump_function(model, arg))
         end
