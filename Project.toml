@@ -40,3 +40,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["DimensionalData", "ParallelTestRunner", "Test"]
+
+[sources]
+MathOptInterface = {url = "https://github.com/jump-dev/MathOptInterface.jl", rev = "od/lazy-scalar-set"}

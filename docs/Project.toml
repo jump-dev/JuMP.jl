@@ -74,7 +74,7 @@ LinearOperatorCollection = "2.4.1"
 Literate = "2.21.0"
 MarkdownAST = "0.1.3"
 MathOptChordalDecomposition = "=0.2.0"
-MathOptInterface = "=1.49.0"
+MathOptInterface = "1"
 MultiObjectiveAlgorithms = "=1.9.0"
 PATHSolver = "=1.7.9"
 ParametricOptInterface = "0.15.0"
@@ -86,3 +86,6 @@ SpecialFunctions = "2.7.1"
 StatsPlots = "0.15.8"
 Tables = "1.12.1"
 Wavelets = "0.10.1"
+
+[sources]
+MathOptInterface = {url = "https://github.com/jump-dev/MathOptInterface.jl", rev = "od/lazy-scalar-set"}

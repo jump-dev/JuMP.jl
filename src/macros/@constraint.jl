@@ -1171,3 +1171,34 @@ function build_constraint(
         MOI.SOS2{value_type(variable_ref_type(T))}(set.weights),
     )
 end
+
+"""
+    Lazy()
+
+A constraint tag to indicate that the constraint should be treated as a lazy
+constraint by the solver.
+
+```julia
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, [i in 1:10], x >= i, Lazy())
+```
+"""
+struct Lazy end
+
+Base.broadcastable(::Lazy) = Ref(Lazy())
+
+function build_constraint(
+    error_fn::Function,
+    f::AbstractJuMPScalar,
+    s::MOI.AbstractScalarSet,
+    ::Lazy,
+)
+    return build_constraint(error_fn, f, MOI.LazyScalarSet(s))
+end
+
+function model_convert(model::AbstractModel, set::MOI.LazyScalarSet)
+    return MOI.LazyScalarSet(model_convert(model, set.set))
+end
