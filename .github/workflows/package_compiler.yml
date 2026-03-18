@@ -1,0 +1,39 @@
+name: Package Compiler
+on:
+  push:
+    branches:
+      - master
+      - release-*
+  pull_request:
+    types: [opened, synchronize, reopened]
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '1'  # The latest point-release (Linux)
+            os: ubuntu-latest
+            arch: x64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - shell: julia --color=yes --project=test/PackageCompiler/MyApp {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - shell: julia --color=yes --project=test/PackageCompiler {0}
+        run: |
+          include("test/PackageCompiler/build_app.jl")
