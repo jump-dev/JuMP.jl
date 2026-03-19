@@ -12,20 +12,22 @@ using Test
 
 import PackageCompiler
 
-PackageCompiler.create_app("MyApp", "build"; force = true)
+PackageCompiler.create_app(
+    joinpath(@__DIR__, "MyApp"),
+    joinpath(@__DIR__, "build");
+    force = true,
+)
 
 @testset "test --solver=ipopt" begin
-    output = sprint() do io
-        return run(pipeline(`build/bin/MyApp --solver=highs`; stdout = io))
-    end
+    app = joinpath(@__DIR__, "build", "bin", "MyApp")
+    output = sprint(io -> run(pipeline(`$app --solver=highs`; stdout = io)))
     @test occursin("HiGHS", output)
     @test occursin("OPTIMAL", output)
 end
 
 @testset "test --solver=ipopt" begin
-    output = sprint() do io
-        return run(pipeline(`build/bin/MyApp --solver=ipopt`; stdout = io))
-    end
+    app = joinpath(@__DIR__, "build", "bin", "MyApp")
+    output = sprint(io -> run(pipeline(`$app --solver=ipopt`; stdout = io)))
     @test occursin("Ipopt", output)
     @test occursin("LOCALLY_SOLVED", output)
 end
