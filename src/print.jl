@@ -1141,6 +1141,14 @@ function in_set_string(
     end
 end
 
+function in_set_string(mime::MIME"text/plain", set::MOI.LazyScalarSet)
+    return in_set_string(mime, set.set) * " [lazy]"
+end
+
+function in_set_string(mime::MIME"text/latex", set::MOI.LazyScalarSet)
+    return in_set_string(mime, set.set) * "\\quad[lazy]"
+end
+
 """
     in_set_string(mode::MIME, constraint::AbstractConstraint)
 

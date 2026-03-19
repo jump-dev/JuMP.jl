@@ -1186,4 +1186,15 @@ function test_solver_name_not_implemented()
     return
 end
 
+function test_print_lazy_scalar_set()
+    model = Model()
+    @variable(model, x)
+    c = @constraint(model, 2x >= 0, Lazy())
+    ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+    @test sprint(show, c) == "2 x $ge 0 [lazy]"
+    @test sprint(io -> show(io, MIME("text/latex"), c)) ==
+          "\$\$ 2 x \\geq 0\\quad[lazy] \$\$"
+    return
+end
+
 end  # TestPrint

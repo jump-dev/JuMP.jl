@@ -1178,12 +1178,15 @@ end
 A constraint tag to indicate that the constraint should be treated as a lazy
 constraint by the solver.
 
+## Example
+
 ```julia
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @constraint(model, [i in 1:10], x >= i, Lazy())
+julia> @constraint(model, 2x >= 0, Lazy())
+2 x ≥ 0 [lazy]
 ```
 """
 struct Lazy end

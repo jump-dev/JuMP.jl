@@ -2246,4 +2246,19 @@ function test_reshape_vector_nothing()
     return
 end
 
+function test_lazy_constraint_tag()
+    model = GenericModel{Float32}()
+    @variable(model, x)
+    c = @constraint(model, x >= 0, Lazy())
+    o = constraint_object(c)
+    @test o.set == MOI.LazyScalarSet(MOI.GreaterThan{Float32}(0.0))
+    @variable(model, y[1:3])
+    d = @constraint(model, y .>= (1:3), Lazy())
+    o = constraint_object.(d)
+    for i in 1:3
+        @test o[i].set == MOI.LazyScalarSet(MOI.GreaterThan{Float32}(i))
+    end
+    return
+end
+
 end  # module
