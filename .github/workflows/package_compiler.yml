@@ -36,4 +36,6 @@ jobs:
           Pkg.instantiate()
       - shell: julia --color=yes --project=test/PackageCompiler {0}
         run: |
-          include("test/PackageCompiler/build_app.jl")
+          using Pkg
+          Pkg.instantiate()
+      - run: julia --color=yes --project=test/PackageCompiler test/PackageCompiler/build_app.jl
