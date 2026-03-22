@@ -1,43 +1,53 @@
-# JuMP community standards
+# Code of Conduct
 
-Welcome. JuMP is part of the Julia community, and we uphold its [community
-standards](https://julialang.org/community/standards/). We repeat the key points
-below with some minor specializations for JuMP.
+## NumFOCUS Code of Conduct
 
-The JuMP community is committed to maintaining a welcoming, civil, and
-constructive environment. We expect the following standards to be observed and
-upheld by all participants in any community forum (Discourse, GitHub, etc.).
+The NumFOCUS Code of Conduct applies in all spaces managed by JuMP, such as 
+JuMP GitHub repositories and JuMP-organized events.
 
-## Be respectful and inclusive
+You can find the whole document here [https://numfocus.org/code-of-conduct](https://numfocus.org/code-of-conduct).
 
-Please do not use overtly sexual language or imagery, and do not attack anyone
-based on any aspect of personal identity, including gender, sexuality, religion,
-ethnicity, race, age, or ability. Keep in mind that what you write in public
-forums is read by many people who don't know you personally, so please refrain
-from making prejudiced or sexual jokes and comments—even ones that you might
-consider acceptable in private. Ask yourself if a comment or statement might
-make someone feel unwelcomed or like an outsider.
+### The short version
 
-## Give credit
+NumFOCUS is dedicated to providing a harassment-free community for everyone,
+regardless of gender, sexual orientation, gender identity and expression,
+disability, physical appearance, body size, race, or religion. We do not
+tolerate harassment of community members in any form.
 
-All participants in the JuMP community are expected to respect copyright laws
-and ethical attribution standards. This applies to both code and written
-materials, such as documentation or blog posts. Materials that violate the law,
-are plagiaristic, or ethically dubious in some way will be removed from
-officially maintained lists of resources.
+Be kind to others. Do not insult or put down others. Behave professionally.
+Remember that harassment and sexist, racist, or exclusionary jokes are not
+appropriate for NumFOCUS.
 
-## Get involved
+All communication should be appropriate for a professional audience including
+people of many different backgrounds. Sexual language and imagery is not
+appropriate.
 
-The JuMP community is built on a foundation of reciprocity and collaboration. Be
-aware that most community members contribute on a voluntary basis, so ideas and
-bug reports are ok, but demands are not. Along these lines, it's important to
-keep in mind that, unless stated otherwise, JuMP's interfaces to commercial
-solvers are maintained by volunteers who find them useful. Pull requests are
-always welcomed. Please check out our [contributing guide](https://github.com/jump-dev/JuMP.jl/blob/master/CONTRIBUTING.md).
-You can also reach out in the [developer chatroom](https://jump.dev/chatroom)
-with questions about how to get started.
+Thank you for helping make this a welcoming, friendly community for all.
 
-## Any concerns?
+### The long version
 
-If you have a conflict or concern that requires resolution, please contact the
-[Julia Community Stewards](https://julialang.org/community/stewards/).
+You can find the long version of the Code of Conduct on the NumFOCUS website
+[https://numfocus.org/code-of-conduct](https://numfocus.org/code-of-conduct).
+
+### How to report
+
+If you feel that the Code of Conduct has been violated, feel free to submit a
+report, by using the form: [NumFOCUS Code of Conduct Reporting Form](https://numfocus.typeform.com/to/ynjGdT?typeform-source=numfocus.org)
+
+### Who will receive your report
+
+Your report will be received and handled by NumFOCUS Code of Conduct Working
+Group; trained, and experienced contributors with diverse backgrounds. The group
+is making decisions independently from the project, PyData, NumFOCUS or any
+other organization.
+
+You can learn more about the current group members, as well as the reporting
+procedure [HERE](https://numfocus.org/code-of-conduct).
+
+## Julia Community Standards
+
+JuMP community interactions often take place in spaces moderated by the Julia
+Community, such as our [community forum](/forum) and [chatroom](/chatroom). In
+these spaces, the Julia Community Standards apply.
+
+You can find the whole document here [https://julialang.org/community/standards/](https://julialang.org/community/standards/).
