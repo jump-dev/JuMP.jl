@@ -35,7 +35,7 @@
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
-    rev = "v1.3.0"
+    rev = "v1.4.0"
 [BARON]
     rev = "v0.8.6"
 [Cbc]
@@ -49,7 +49,7 @@
 [cuOpt]
     rev = "v0.1.2"
 [DiffOpt]
-    rev = "v0.5.5"
+    rev = "v0.5.6"
     extension = true
 # There are number of known issues with DSDP
 # [DSDP]
@@ -63,24 +63,24 @@
 [Gurobi]
     rev = "v1.9.2"
 [HiGHS]
-    rev = "v1.21.1"
+    rev = "v1.22.2"
 [Hypatia]
     rev = "v0.9.1"
     has_html = true
 [Ipopt]
     rev = "v1.14.1"
 [KNITRO]
-    rev = "v1.2.0"
+    rev = "v1.2.1"
 [MathOptAnalyzer]
     rev = "v0.1.1"
 [MathOptIIS]
-    rev = "v0.1.2"
+    rev = "v0.2.0"
 [MiniZinc]
     rev = "v0.3.14"
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.9.0"
+    rev = "v1.10.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
@@ -89,7 +89,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "v0.15.0"
+    rev = "v0.15.2"
     extension = true
 [Pavito]
     rev = "v0.3.9"
@@ -103,7 +103,7 @@
     rev = "v0.7.6"
     extension = true
 [SCS]
-    rev = "v2.6.2"
+    rev = "v2.6.3"
 [SDPA]
     rev = "v0.6.1"
 [SDPLR]
@@ -127,7 +127,7 @@
     rev = "v0.5.8"
 [BilevelJuMP]
     user = "joaquimg"
-    rev = "v0.6.2"
+    rev = "v0.6.3"
     extension = true
 [CATrustRegionMethod]
     user = "fadihamad94"
@@ -144,17 +144,17 @@
     has_html = true
 [CoolPDLP]
     user = "JuliaDecisionFocusedLearning"
-    rev = "v0.1.0"
+    rev = "v0.1.1"
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.32"
+    rev = "v1.1.33"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.9"
     has_html = true
 [CuPDLPx]
     user = "MIT-Lu-Lab"
-    rev = "v0.2.5"
+    rev = "v0.2.7"
 [DAQP]
     user = "darnstrom"
     rev = "v0.7.1"
@@ -165,7 +165,7 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "v0.9.0"
+    rev = "v0.9.1"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
@@ -190,11 +190,11 @@
     rev  = "v0.2.2"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.5.33"
+    rev = "v0.5.34"
     filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.2.2"
+    rev = "v0.2.4"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
