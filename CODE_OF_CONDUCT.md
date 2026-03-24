@@ -2,7 +2,7 @@
 
 ## NumFOCUS Code of Conduct
 
-The NumFOCUS Code of Conduct applies in all spaces managed by JuMP, such as 
+The NumFOCUS Code of Conduct applies in all spaces managed by JuMP, such as
 JuMP GitHub repositories and JuMP-organized events.
 
 You can find the whole document here [https://numfocus.org/code-of-conduct](https://numfocus.org/code-of-conduct).
@@ -38,7 +38,7 @@ report, by using the form: [NumFOCUS Code of Conduct Reporting Form](https://num
 
 Your report will be received and handled by NumFOCUS Code of Conduct Working
 Group; trained, and experienced contributors with diverse backgrounds. The group
-is making decisions independently from the project, PyData, NumFOCUS or any
+is making decisions independently from the project, PyData, NumFOCUS, or any
 other organization.
 
 You can learn more about the current group members, as well as the reporting

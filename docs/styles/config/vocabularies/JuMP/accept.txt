@@ -112,7 +112,7 @@ POVM
 [Pp]resolve
 refactorization
 Relatedly
-rhs
+(rhs|RHS)
 satisfiability
 scalarization(?s)
 SDP(?s)
