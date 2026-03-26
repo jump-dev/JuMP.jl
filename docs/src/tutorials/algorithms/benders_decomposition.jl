@@ -102,8 +102,7 @@ nothing             #hide
 # dual variable ``\pi`` is a subgradient of ``V_2(x)`` with respect to ``x``.
 # Therefore, if we have a candidate solution ``x_k``, then we can solve
 # ``V_2(x_k)`` and obtain a feasible dual vector ``\pi_k``. Using these values,
-# we can construct a first-order Taylor-series approximation of ``V_2`` about
-# the point ``x_k``:
+# we can construct a first-order under-approximation of ``V_2`` at the point ``x_k``:
 # ```math
 # V_2(x) \ge V_2(x_k) + \pi_k^\top (x - x_k).
 # ```
@@ -121,7 +120,7 @@ nothing             #hide
 #         &                     & \theta \ge V_2(x_k) + \pi_k^\top(x - x_k) & \quad \forall k = 1,\ldots,K.
 # \end{aligned}
 # ```
-# This integer program is called the _first-stage_ subproblem.
+# This integer program is called the _first-stage_ or _master_ problem.
 
 # To generate cuts, we solve ``V_1^K`` to obtain a candidate first-stage
 # solution ``x_k``, then we use that solution to solve ``V_2(x_k)``. Then, using
