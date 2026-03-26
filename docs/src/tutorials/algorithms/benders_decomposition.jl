@@ -387,8 +387,8 @@ second_stage_model = Model(HiGHS.Optimizer)
 set_silent(second_stage_model)
 @variable(second_stage_model, x_copy[i in 1:n, j in 1:n])
 @variable(second_stage_model, y[1:n, 1:n] >= 0)
-@constraint(second_stage_model, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
-@constraint(second_stage_model, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
+@constraint(second_stage_model, y .<= G .* x_copy)
+@constraint(second_stage_model, [i in 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
 @objective(second_stage_model, Min, -sum(y[1, :]))
 second_stage_model
 
