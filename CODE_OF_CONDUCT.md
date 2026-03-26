@@ -47,7 +47,8 @@ procedure [HERE](https://numfocus.org/code-of-conduct).
 ## Julia Community Standards
 
 JuMP community interactions often take place in spaces moderated by the Julia
-Community, such as our [community forum](/forum) and [chatroom](/chatroom). In
-these spaces, the Julia Community Standards apply.
+Community, such as our [community forum](https://jump.dev/forum) and
+[chatroom](https://jump.dev/chatroom). In these spaces, the Julia Community
+Standards apply.
 
 You can find the whole document here [https://julialang.org/community/standards/](https://julialang.org/community/standards/).
