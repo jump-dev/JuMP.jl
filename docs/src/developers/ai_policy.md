@@ -8,8 +8,8 @@ and [SciPy](https://scipy.github.io/devdocs/dev/conduct/ai_policy.html).
 
 ## Communication
 
-This part of the policy applies to all communication in our [community forum](/forum),
-[developer chatroom](/chatroom), and [GitHub repositories](https://github.com/jump-dev).
+This part of the policy applies to all communication in our[community forum](https://jump.dev/forum),
+[developer chatroom](https://jump.dev/chatroom), and [GitHub repositories](https://github.com/jump-dev).
 
 Do not use AI to speak for you by copy-pasting a conversation in-and-out of a
 chatbot.
@@ -34,7 +34,7 @@ When authoring new code in JuMP, keep in mind that the JuMP developers' two
 biggest bottlenecks are:
 
 1. capacity for code review of new pull requests
-2. on-going support and maintenance of existing features
+2. on-going support and maintenance of existing features.
 
 For these reasons, please open an issue to discuss what you want to change
 _before_ opening a pull request. In the issue, describe what you want to change
@@ -67,9 +67,10 @@ The best ways you can get involved are:
    trying to do something in JuMP, it means we didn't document things well
    enough. If you have suggestions for new tutorials we could add or how we
    could improve the documentation please leave a comment at
-   ["Suggestions for documentation improvements"](https://github.com/jump-dev/JuMP.jl/issues/2348)
+   ["Suggestions for documentation improvements"](https://github.com/jump-dev/JuMP.jl/issues/2348).
 
 3. **Make your own packages**: write your own solver or JuMP extension under
    your personal account. There are no rules here. Vibe code as much as you
    like. Tell us about the things you have created by posting on the
-   [community forum](/forum), or give a talk at a [JuMP-dev workshop](https://jump.dev/categories/#jump-dev).
+   [community forum](https://jump.dev/forum), or give a talk at a
+   [JuMP-dev workshop](https://jump.dev/categories/#jump-dev).
