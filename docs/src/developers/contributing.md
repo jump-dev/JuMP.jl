@@ -23,8 +23,8 @@ help answer questions on the forum.
 ## Join the developer chatroom
 
 If you're interested in contributing code to JuMP, the next place to join is the
-[developer chatroom](https://jump.dev/chatroom). Let us know what you
-have in mind, and we can point you in the right direction.
+[developer chatroom](https://jump.dev/chatroom). Let us know what you have in
+mind, and we can point you in the right direction.
 
 ## The best ways to contribute
 
@@ -75,12 +75,11 @@ on how to do this.)
 
 If your change is larger, or touches multiple files, you will need to make the
 change locally and then use Git to submit a pull request. (See
-[Contribute code to JuMP](@ref) below for more on this.)
+[How to contribute code to JuMP](@ref) below for more on this.)
 
 !!! tip
-    If you need any help, come join the
-    [developer chatroom](https://jump.dev/chatroom) and we will walk
-    you through the process.
+    If you need any help, come join the [developer chatroom](https://jump.dev/chatroom)
+    and we will walk you through the process.
 
 ## How to file a bug report
 
@@ -92,8 +91,7 @@ before posting. You can also find a copy of that info
 [here](https://github.com/jump-dev/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).
 
 !!! tip
-    If you're unsure whether you have a real bug, post on the
-    [community forum](https://jump.dev/forum)
+    If you're unsure whether you have a real bug, post on the [community forum](https://jump.dev/forum)
     first. Someone will either help you fix the problem, or let you know the
     most appropriate place to open a bug report.
 
@@ -120,14 +118,14 @@ JuMP is similar to the following:
 The first step is to find an [open issue](https://github.com/jump-dev/JuMP.jl/issues)
 (or open a new one) for the problem you want to solve. Then, _before_ spending
 too much time on it, discuss what you are planning to do in the issue to see if
-other contributors are fine with your proposed changes. Getting feedback early can
-improve code quality, and avoid time spent writing code that does not get merged into
-JuMP.
+other contributors are fine with your proposed changes. Getting feedback early
+can improve code quality and avoid time spent writing code that does not get
+merged into JuMP.
 
 !!! tip
     At this point, remember to be patient and polite; you may get a _lot_ of
-    comments on your issue. However, do not be afraid. Comments mean that people are
-    willing to help you improve the code that you are contributing to JuMP.
+    comments on your issue. However, do not be afraid. Comments mean that people
+    are willing to help you improve the code that you are contributing to JuMP.
 
 **Step 2: fork JuMP**
 
