@@ -42,35 +42,3 @@ and why it matters to you.
 
 Large pull requests that add new features not previously discussed in an issue
 may be closed without review, even if they are correct and demonstrably useful.
-
-## New Contributors
-
-The JuMP developers welcome and encourage new contributors.
-
-The best ways you can get involved are:
-
-1. **Find and report bugs**: we can't fix things that we don't know about. There
-   are always new bugs (or inconsistencies that we should better document) to
-   find. Report a bug by [opening a GitHub issue](https://github.com/jump-dev/JuMP.jl/issues).
-
-   Using AI tools to find bugs is acceptable, but you are responsible for
-   understanding and explaining _why_ the issue is a bug (see our
-   [Communication](@ref) policy). Rather than copy-pasting only the content of
-   the AI analysis into the issue, first explain what you did to find and
-   verify the bug, and then copy-paste the AI tool's output.
-
-   Also note that there are many repositories in the JuMP ecosystem. Don't worry
-   if you open an issue in the "wrong" one; we can easily transfer it to the
-   correct repository.
-
-2. **Tell us about confusing parts of the documentation**: if you get stuck
-   trying to do something in JuMP, it means we didn't document things well
-   enough. If you have suggestions for new tutorials we could add or how we
-   could improve the documentation please leave a comment at
-   ["Suggestions for documentation improvements"](https://github.com/jump-dev/JuMP.jl/issues/2348).
-
-3. **Make your own packages**: write your own solver or JuMP extension under
-   your personal account. There are no rules here. Vibe code as much as you
-   like. Tell us about the things you have created by posting on the
-   [community forum](https://jump.dev/forum), or give a talk at a
-   [JuMP-dev workshop](https://jump.dev/categories/#jump-dev).
