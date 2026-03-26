@@ -1,20 +1,20 @@
 # AI Policy
 
 This document describes how the JuMP developers will manage and respond to
-AI-assisted contributions to the JuMP ecosystem.
+AI-assisted contributions to the JuMP ecosystem. The intent of the policy is to
+balance the benefits of AI-assisted contributions against the long-term
+maintenance requirement of the JuMP ecosystem.
 
 It was inspired by similar policies in [SymPy](https://docs.sympy.org/dev/contributing/ai-generated-code-policy.html)
 and [SciPy](https://scipy.github.io/devdocs/dev/conduct/ai_policy.html).
 
 ## Communication
 
-This part of the policy applies to all communication in our[community forum](https://jump.dev/forum),
+This part of the policy applies to all communication in our [community forum](https://jump.dev/forum),
 [developer chatroom](https://jump.dev/chatroom), and [GitHub repositories](https://github.com/jump-dev).
 
-Do not use AI to speak for you by copy-pasting a conversation in-and-out of a
-chatbot.
-
-We would rather speak to you directly, errors and grammatical mistakes included.
+Do not use AI to generate written communication. Write in your own words.
+Human-to-human communication is essential for an open source community to thrive.
 
 If English is not your first language, consider providing both a machine
 generated translation into English and the original text in your preferred
