@@ -652,6 +652,7 @@ function documentation_structure()
         ],
         "Developer Docs" => [
             "Contributing" => "developers/contributing.md",
+            "AI Policy" => "developers/ai_policy.md",
             "Extensions" => "developers/extensions.md",
             "Custom binaries" => "developers/custom_solver_binaries.md",
             "Style Guide" => "developers/style.md",
