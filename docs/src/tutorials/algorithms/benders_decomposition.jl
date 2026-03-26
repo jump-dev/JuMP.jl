@@ -102,8 +102,8 @@ nothing             #hide
 # dual variable ``\pi`` is a subgradient of ``V_2(x)`` with respect to ``x``.
 # Therefore, if we have a candidate solution ``x_k``, then we can solve
 # ``V_2(x_k)`` and obtain a feasible dual vector ``\pi_k``. Using these values,
-# we can construct a first-order Taylor-series approximation of ``V_2`` about
-# the point ``x_k``:
+# we can construct a first-order under-approximation of ``V_2`` about the point
+# ``x_k``:
 # ```math
 # V_2(x) \ge V_2(x_k) + \pi_k^\top (x - x_k).
 # ```
@@ -121,7 +121,7 @@ nothing             #hide
 #         &                     & \theta \ge V_2(x_k) + \pi_k^\top(x - x_k) & \quad \forall k = 1,\ldots,K.
 # \end{aligned}
 # ```
-# This integer program is called the _first-stage_ subproblem.
+# This integer program is called the _first-stage_ problem.
 
 # To generate cuts, we solve ``V_1^K`` to obtain a candidate first-stage
 # solution ``x_k``, then we use that solution to solve ``V_2(x_k)``. Then, using
@@ -162,8 +162,8 @@ set_silent(model)
 @variable(model, x[1:n, 1:n], Bin)
 @variable(model, y[1:n, 1:n] >= 0)
 @constraint(model, sum(x) <= 11)
-@constraint(model, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x[i, j])
-@constraint(model, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
+@constraint(model, y .<= G .* x)
+@constraint(model, [i in 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
 @objective(model, Min, 0.1 * sum(x) - sum(y[1, :]))
 optimize!(model)
 assert_is_solved_and_feasible(model)
@@ -190,39 +190,39 @@ monolithic_solution = optimal_flows(value.(y))
 #     performant implementation for large-scale problems. See [In-place iterative method](@ref)
 #     for one improvement that helps computation time.
 
-# We start by formulating the first-stage subproblem. It includes the `x`
+# We start by formulating the first-stage problem. It includes the `x`
 # variables, and the constraints involving only `x`, and the terms in the
 # objective containing only `x`. We also need an initial lower bound on the
 # cost-to-go variable `θ`. One valid lower bound is to assume that we do not pay
 # for opening arcs, and there is flow all the arcs.
 
 M = -sum(G)
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x[1:n, 1:n], Bin)
-@variable(model, θ >= M)
-@constraint(model, sum(x) <= 11)
-@objective(model, Min, 0.1 * sum(x) + θ)
-model
+first_stage_model = Model(HiGHS.Optimizer)
+set_silent(first_stage_model)
+@variable(first_stage_model, x[1:n, 1:n], Bin)
+@variable(first_stage_model, θ >= M)
+@constraint(first_stage_model, sum(x) <= 11)
+@objective(first_stage_model, Min, 0.1 * sum(x) + θ)
+first_stage_model
 
 # For the next step, we need a function that takes a first-stage candidate
 # solution `x` and returns the optimal solution from the second-stage
-# subproblem:
+# problem:
 
-function solve_subproblem(x_bar)
+function solve_second_stage(x_bar)
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     @variable(model, x[i in 1:n, j in 1:n] == x_bar[i, j])
     @variable(model, y[1:n, 1:n] >= 0)
-    @constraint(model, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x[i, j])
-    @constraint(model, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
+    @constraint(model, y .<= G .* x)
+    @constraint(model, [i in 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
     @objective(model, Min, -sum(y[1, :]))
     optimize!(model)
     assert_is_solved_and_feasible(model; dual = true)
     return (obj = objective_value(model), y = value.(y), π = reduced_cost.(x))
 end
 
-# Note that `solve_subproblem` returns a `NamedTuple` of the objective value,
+# Note that `solve_second_stage` returns a `NamedTuple` of the objective value,
 # the optimal primal solution for `y`, and the optimal dual solution for `π`,
 # which we obtained from the [`reduced_cost`](@ref) of the `x` variables.
 
@@ -248,28 +248,29 @@ ABSOLUTE_OPTIMALITY_GAP = 1e-6
 
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
-    optimize!(model)
-    assert_is_solved_and_feasible(model; allow_local = false)
-    lower_bound = objective_value(model)
+    optimize!(first_stage_model)
+    assert_is_solved_and_feasible(first_stage_model; allow_local = false)
+    lower_bound = objective_value(first_stage_model)
     x_k = value.(x)
-    ret = solve_subproblem(x_k)
-    upper_bound = (objective_value(model) - value(θ)) + ret.obj
+    ret = solve_second_stage(x_k)
+    upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
     gap = abs(upper_bound - lower_bound) / abs(upper_bound)
     print_iteration(k, lower_bound, upper_bound, gap)
     if gap < ABSOLUTE_OPTIMALITY_GAP
         println("Terminating with the optimal solution")
         break
     end
-    cut = @constraint(model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
+    cut =
+        @constraint(first_stage_model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
     @info "Adding the cut $(cut)"
 end
 
 # Finally, we can obtain the optimal solution:
 
-optimize!(model)
-assert_is_solved_and_feasible(model)
+optimize!(first_stage_model)
+assert_is_solved_and_feasible(first_stage_model)
 x_optimal = value.(x)
-optimal_ret = solve_subproblem(x_optimal)
+optimal_ret = solve_second_stage(x_optimal)
 iterative_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
@@ -278,13 +279,13 @@ iterative_solution == monolithic_solution
 
 # and it has the same objective value:
 
-objective_value(model)
+objective_value(first_stage_model)
 
 # ## Callback method
 
 # The [Iterative method](@ref benders_iterative) section implemented Benders
 # decomposition using a loop. In each iteration, we re-solved the first-stage
-# subproblem to generate a candidate solution. However, modern MILP solvers such
+# problem to generate a candidate solution. However, modern MILP solvers such
 # as CPLEX, Gurobi, and GLPK provide lazy constraint callbacks which allow us to
 # add new cuts _while the solver is running_. This can be more efficient than an
 # iterative method because we can avoid repeating work such as solving the root
@@ -295,54 +296,55 @@ objective_value(model)
 #     constraints. For more information on callbacks, read the page
 #     [Solver-independent callbacks](@ref callbacks_manual).
 
-# As before, we construct the same first-stage subproblem:
+# As before, we construct the same first-stage problem:
 
 optimizer = Gurobi.Optimizer
 if !HAS_GUROBI                   #hide
     optimizer = HiGHS.Optimizer  #hide
 end                              #hide
-lazy_model = Model(optimizer)
-set_silent(lazy_model)
-@variable(lazy_model, x[1:n, 1:n], Bin)
-@variable(lazy_model, θ >= M)
-@constraint(lazy_model, sum(x) <= 11)
-@objective(lazy_model, Min, 0.1 * sum(x) + θ)
-lazy_model
+lazy_first_stage_model = Model(optimizer)
+set_silent(lazy_first_stage_model)
+@variable(lazy_first_stage_model, x[1:n, 1:n], Bin)
+@variable(lazy_first_stage_model, θ >= M)
+@constraint(lazy_first_stage_model, sum(x) <= 11)
+@objective(lazy_first_stage_model, Min, 0.1 * sum(x) + θ)
+lazy_first_stage_model
 
 # What differs is that we write a callback function instead of a loop:
 
-number_of_subproblem_solves = 0
+number_of_second_stage_solves = 0
 function my_callback(cb_data)
-    status = callback_node_status(cb_data, lazy_model)
+    status = callback_node_status(cb_data, lazy_first_stage_model)
     if status != MOI.CALLBACK_NODE_STATUS_INTEGER
         ## Only add the constraint if `x` is an integer feasible solution
         return
     end
     x_k = callback_value.(cb_data, x)
     θ_k = callback_value(cb_data, θ)
-    global number_of_subproblem_solves += 1
-    ret = solve_subproblem(x_k)
+    global number_of_second_stage_solves += 1
+    ret = solve_second_stage(x_k)
     if θ_k < (ret.obj - 1e-6)
         ## Only add the constraint if θ_k violates the constraint
         cut = @build_constraint(θ >= ret.obj + sum(ret.π .* (x .- x_k)))
-        MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), cut)
+        MOI.submit(lazy_first_stage_model, MOI.LazyConstraint(cb_data), cut)
     end
     return
 end
 
-set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
+set_attribute(lazy_first_stage_model, MOI.LazyConstraintCallback(), my_callback)
 
 # Now when we optimize!, our callback is run:
 
 if !HAS_GUROBI                                                          #hide
-    set_attribute(lazy_model, MOI.LazyConstraintCallback(), nothing)    #hide
+    set_attribute(lazy_first_stage_model, MOI.LazyConstraintCallback(), nothing)    #hide
 end                                                                     #hide
-optimize!(lazy_model)
-assert_is_solved_and_feasible(lazy_model)
+optimize!(lazy_first_stage_model)
+assert_is_solved_and_feasible(lazy_first_stage_model)
 
-# For this model, the callback algorithm required more solves of the subproblem:
+# For this model, the callback algorithm required more solves of the second-stage
+# problem:
 
-number_of_subproblem_solves
+number_of_second_stage_solves
 
 # But for larger problems, you can expect the callback algorithm to be more
 # efficient than the iterative algorithm.
@@ -350,7 +352,7 @@ number_of_subproblem_solves
 # Finally, we can obtain the optimal solution:
 
 x_optimal = value.(x)
-optimal_ret = solve_subproblem(x_optimal)
+optimal_ret = solve_second_stage(x_optimal)
 callback_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
@@ -364,36 +366,37 @@ callback_solution == monolithic_solution
 # ## In-place iterative method
 
 # Our implementation of the iterative method has a problem: every time we need
-# to solve the subproblem, we must rebuild it from scratch. This is expensive,
+# to solve the second-stage, we must rebuild it from scratch. This is expensive,
 # and it can be the bottleneck in the solution process. We can improve our
-# implementation by using re-using the subproblem between solves.
+# implementation by using re-using the second-stage problem between solves.
 
 # First, we create our first-stage problem as usual:
 
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x[1:n, 1:n], Bin)
-@variable(model, θ >= M)
-@constraint(model, sum(x) <= 11)
-@objective(model, Min, 0.1 * sum(x) + θ)
-model
+first_stage_model = Model(HiGHS.Optimizer)
+set_silent(first_stage_model)
+@variable(first_stage_model, x[1:n, 1:n], Bin)
+@variable(first_stage_model, θ >= M)
+@constraint(first_stage_model, sum(x) <= 11)
+@objective(first_stage_model, Min, 0.1 * sum(x) + θ)
+first_stage_model
 
-# Then, instead of building the subproblem in a function, we build it once here:
+# Then, instead of building the second-stage problem in a function, we build it
+# once here:
 
-subproblem = Model(HiGHS.Optimizer)
-set_silent(subproblem)
-@variable(subproblem, x_copy[i in 1:n, j in 1:n])
-@variable(subproblem, y[1:n, 1:n] >= 0)
-@constraint(subproblem, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
-@constraint(subproblem, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
-@objective(subproblem, Min, -sum(y[1, :]))
-subproblem
+second_stage_model = Model(HiGHS.Optimizer)
+set_silent(second_stage_model)
+@variable(second_stage_model, x_copy[i in 1:n, j in 1:n])
+@variable(second_stage_model, y[1:n, 1:n] >= 0)
+@constraint(second_stage_model, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
+@constraint(second_stage_model, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
+@objective(second_stage_model, Min, -sum(y[1, :]))
+second_stage_model
 
-# Our function to solve the subproblem is also slightly different because we
-# need to fix the value of the `x_copy` variables to the value of `x` from the
-# first-stage problem:
+# Our function to solve the second-stage problem is also slightly different
+# because we need to fix the value of the `x_copy` variables to the value of `x`
+# from the first-stage problem:
 
-function solve_subproblem(model, x)
+function solve_second_stage(model, x)
     fix.(model[:x_copy], x)
     optimize!(model)
     assert_is_solved_and_feasible(model; dual = true)
@@ -408,28 +411,29 @@ end
 
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
-    optimize!(model)
-    assert_is_solved_and_feasible(model; allow_local = false)
-    lower_bound = objective_value(model)
+    optimize!(first_stage_model)
+    assert_is_solved_and_feasible(first_stage_model; allow_local = false)
+    lower_bound = objective_value(first_stage_model)
     x_k = value.(x)
-    ret = solve_subproblem(subproblem, x_k)
-    upper_bound = (objective_value(model) - value(θ)) + ret.obj
+    ret = solve_second_stage(second_stage_model, x_k)
+    upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
     gap = abs(upper_bound - lower_bound) / abs(upper_bound)
     print_iteration(k, lower_bound, upper_bound, gap)
     if gap < ABSOLUTE_OPTIMALITY_GAP
         println("Terminating with the optimal solution")
         break
     end
-    cut = @constraint(model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
+    cut =
+        @constraint(first_stage_model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
     @info "Adding the cut $(cut)"
 end
 
 # Finally, we can obtain the optimal solution:
 
-optimize!(model)
-assert_is_solved_and_feasible(model)
+optimize!(first_stage_model)
+assert_is_solved_and_feasible(first_stage_model)
 x_optimal = value.(x)
-optimal_ret = solve_subproblem(subproblem, x_optimal)
+optimal_ret = solve_second_stage(second_stage_model, x_optimal)
 inplace_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution:
@@ -439,13 +443,13 @@ Test.@test inplace_solution == monolithic_solution
 # ## Feasibility cuts
 
 # So far, we have discussed only Benders optimality cuts. However, for some
-# first-stage values of `x`, the subproblem might be infeasible. The solution is
-# to add a Benders feasibility cut:
+# first-stage values of `x`, the second-stage problem might be infeasible. The
+# solution is to add a Benders feasibility cut:
 # ```math
 # v_k + u_k^\top (x - x_k) \le 0
 # ```
-# where $u_k$ is a dual unbounded ray of the subproblem and $v_k$ is the
-# intercept of the unbounded ray.
+# where $u_k$ is a dual unbounded ray of the second-stage problem and $v_k$ is
+# the intercept of the unbounded ray.
 
 # As a variation of our example which leads to infeasibilities, we add a
 # constraint that `sum(y) >= 1`. This means we need a choice of first-stage `x`
@@ -453,34 +457,31 @@ Test.@test inplace_solution == monolithic_solution
 
 # The first-stage problem remains the same:
 
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x[1:n, 1:n], Bin)
-@variable(model, θ >= M)
-@constraint(model, sum(x) <= 11)
-@objective(model, Min, 0.1 * sum(x) + θ)
-model
+first_stage_model = Model(HiGHS.Optimizer)
+set_silent(first_stage_model)
+@variable(first_stage_model, x[1:n, 1:n], Bin)
+@variable(first_stage_model, θ >= M)
+@constraint(first_stage_model, sum(x) <= 11)
+@objective(first_stage_model, Min, 0.1 * sum(x) + θ)
+first_stage_model
 
-# But the subproblem has a new constraint that `sum(y) >= 1`:
+# But the second-stage problem has a new constraint that `sum(y) >= 1`:
 
-subproblem = Model(HiGHS.Optimizer)
-set_silent(subproblem)
-## We need to turn presolve off so that HiGHS will return an infeasibility
-## certificate.
-set_attribute(subproblem, "presolve", "off")
-@variable(subproblem, x_copy[i in 1:n, j in 1:n])
-@variable(subproblem, y[1:n, 1:n] >= 0)
-@constraint(subproblem, sum(y) >= 1)  # <--- THIS IS NEW
-@constraint(subproblem, [i = 1:n, j = 1:n], y[i, j] <= G[i, j] * x_copy[i, j])
-@constraint(subproblem, [i = 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
-@objective(subproblem, Min, -sum(y[1, :]))
-subproblem
+second_stage_model = Model(HiGHS.Optimizer)
+set_silent(second_stage_model)
+@variable(second_stage_model, x_copy[1:n, 1:n])
+@variable(second_stage_model, y[1:n, 1:n] >= 0)
+@constraint(second_stage_model, sum(y) >= 1)  # <--- THIS IS NEW
+@constraint(second_stage_model, y .<= G .* x_copy)
+@constraint(second_stage_model, [i in 2:(n-1)], sum(y[i, :]) == sum(y[:, i]))
+@objective(second_stage_model, Min, -sum(y[1, :]))
+second_stage_model
 
-# The function to solve the subproblem now checks for feasibility, and returns
-# the dual objective value and a [dual unbounded ray](@ref dual_unbounded_ray)
-# if the subproblem is infeasible:
+# The function to solve the second-stage problem now checks for feasibility, and
+# returns the dual objective value and a [dual unbounded ray](@ref dual_unbounded_ray)
+# if the problem is infeasible:
 
-function solve_subproblem_with_feasibility(model, x)
+function solve_second_stage_with_feasibility(model, x)
     fix.(model[:x_copy], x)
     optimize!(model)
     if is_solved_and_feasible(model; dual = true)
@@ -507,34 +508,37 @@ end
 
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
-    optimize!(model)
-    assert_is_solved_and_feasible(model; allow_local = false)
-    lower_bound = objective_value(model)
+    optimize!(first_stage_model)
+    assert_is_solved_and_feasible(first_stage_model; allow_local = false)
+    lower_bound = objective_value(first_stage_model)
     x_k = value.(x)
-    ret = solve_subproblem_with_feasibility(subproblem, x_k)
+    ret = solve_second_stage_with_feasibility(second_stage_model, x_k)
     if ret.is_feasible
         ## Benders Optimality Cuts
-        upper_bound = (objective_value(model) - value(θ)) + ret.obj
+        upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
         gap = abs(upper_bound - lower_bound) / abs(upper_bound)
         print_iteration(k, lower_bound, upper_bound, gap)
         if gap < ABSOLUTE_OPTIMALITY_GAP
             println("Terminating with the optimal solution")
             break
         end
-        @constraint(model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
+        @constraint(first_stage_model, θ >= ret.obj + sum(ret.π .* (x .- x_k)))
     else
         ## Benders Feasibility Cuts
-        cut = @constraint(model, ret.v + sum(ret.u .* (x .- x_k)) <= 0)
+        cut = @constraint(
+            first_stage_model,
+            ret.v + sum(ret.u .* (x .- x_k)) <= 0,
+        )
         @info "Adding the feasibility cut $(cut)"
     end
 end
 
 # Finally, we can obtain the optimal solution:
 
-optimize!(model)
-assert_is_solved_and_feasible(model)
+optimize!(first_stage_model)
+assert_is_solved_and_feasible(first_stage_model)
 x_optimal = value.(x)
-optimal_ret = solve_subproblem(subproblem, x_optimal)
+optimal_ret = solve_second_stage(second_stage_model, x_optimal)
 feasible_inplace_solution = optimal_flows(optimal_ret.y)
 
 # which is the same as the monolithic solution (because `sum(y) >= 1` in the
