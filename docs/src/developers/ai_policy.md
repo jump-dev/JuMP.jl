@@ -25,15 +25,30 @@ If English is not your first language, consider providing both a machine
 generated translation into English and the original text in your preferred
 language.
 
-## Code contributions
+## Responsibility
 
-This part of the policy applies to all pull requests and issues in our
-[GitHub repositories](https://github.com/jump-dev).
+You are responsible for any code you submit to JuMP's repositories. You must
+understand and be able to explain the code you submit as well as the existing
+related code. It is not acceptable to submit a patch that you cannot understand
+and explain in your own words. In explaining your contribution, do not use AI to
+automatically generate descriptions; see our [Communication](@ref) policy.
 
-We expect and encourage users to use AI assistance when developing. You do not
-need to disclose what parts you used AI assistance for, but you are responsible
-for all code that you submit to JuMP. However, do not use AI to author the text
-descriptions of pull requests and issues; see our [Communication](@ref) policy.
+## Copyright
+
+All code in JuMP-related repositories is released under an open source license
+(the exact license depends on the repository). Contributors license their code
+under the same license. That means contributors must own the copyright of any
+code you submit. It is your responsibility to not infringe on others copyright.
+We will reject any pull requests where the copyright is in question.
+
+## Disclosure
+
+You must disclose whether AI has been used to assist in the development of your
+pull request. If so, you must document which tools have been used, how they
+were used, and specify what code or text is AI generated. We will reject any
+pull request that does not include the disclosure.
+
+## Code Quality
 
 When authoring new code in JuMP, keep in mind that the JuMP developers' two
 biggest bottlenecks are:
@@ -47,3 +62,9 @@ and why it matters to you.
 
 Large pull requests that add new features not previously discussed in an issue
 may be closed without review, even if they are correct and demonstrably useful.
+
+## AI Agents
+
+The use of an AI agent that writes code and then submits a pull request
+autonomously is not permitted. A human must check any generated code and submit
+a pull request according to the [Responsibility](@ref) section above.
