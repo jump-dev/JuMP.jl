@@ -1,9 +1,14 @@
 # AI Policy
 
 This document describes how the JuMP developers will manage and respond to
-AI-assisted contributions to the JuMP ecosystem. The intent of the policy is to
-balance the benefits of AI-assisted contributions against the long-term
-maintenance requirement of the JuMP ecosystem.
+AI-assisted contributions to the JuMP ecosystem.
+
+“AI” herein refers to generative AI tools like large language models (LLMs) that
+can generate, edit, and review software code, create and manipulate images, or
+generate human-like communication.
+
+The intent of the policy is to balance the benefits of AI-assisted contributions
+against the long-term maintenance requirement of the JuMP ecosystem.
 
 It was inspired by similar policies in [SymPy](https://docs.sympy.org/dev/contributing/ai-generated-code-policy.html)
 and [SciPy](https://scipy.github.io/devdocs/dev/conduct/ai_policy.html).
