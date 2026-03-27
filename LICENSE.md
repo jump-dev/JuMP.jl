@@ -1,8 +1,6 @@
 Copyright (c) 2017: Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 
-The JuMP Julia module is licensed under the **[MPL]** version 2.0:
-
-[MPL]: https://www.mozilla.org/MPL/2.0/
+The JuMP Julia module is licensed under the **[MPL](https://www.mozilla.org/MPL/2.0/)** version 2.0:
 
     Mozilla Public License Version 2.0
     ==================================
@@ -41,7 +39,7 @@ The JuMP Julia module is licensed under the **[MPL]** version 2.0:
         means any form of the work other than Source Code Form.
 
     1.7. "Larger Work"
-        means a work that combines Covered Software with other material, in 
+        means a work that combines Covered Software with other material, in
         a separate file or files, that is not Covered Software.
 
     1.8. "License"
@@ -377,5 +375,3 @@ The JuMP Julia module is licensed under the **[MPL]** version 2.0:
 
       This Source Code Form is "Incompatible With Secondary Licenses", as
       defined by the Mozilla Public License, v. 2.0.
-
-This distribution of JuMP also contains data files that are *not* MPL licensed. See examples/data/README.md for more information. These are solely used as examples and may be removed from the distribution without affecting any functionality.
