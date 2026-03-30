@@ -264,7 +264,7 @@ There are no new features.
 ### Other
 
  - Various minor improvements to the documentation (#3855) (#3860)
- - Added [MathOptAI.jl](@ref) and [MathOptSymbolicAD.jl](@ref) to the list of extensions in the documentation (#3858)
+ - Added [MathOptAI.jl](@ref) and `MathOptSymbolicAD.jl` to the list of extensions in the documentation (#3858)
  - Clarified [`add_to_expression!`](@ref) can add two expressions (#3859)
  - Added `SHOT` to the installation table (#3853)
  - Improvements to test coverage (#3867) (#3868) (#3869) (#3870) (#3871) (#3872)
