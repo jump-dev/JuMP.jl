@@ -199,10 +199,6 @@
 [MathOptChordalDecomposition]
     user = "samuelsonric"
     rev = "v0.2.0"
-[MathOptSymbolicAD]
-    user = "lanl-ansi"
-    rev = "v0.2.2"
-    extension = true
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v2.0.1"
