@@ -30,8 +30,11 @@ language.
 You are responsible for any code you submit to JuMP's repositories. You must
 understand and be able to explain the code you submit as well as the existing
 related code. It is not acceptable to submit a patch that you cannot understand
-and explain in your own words. In explaining your contribution, do not use AI to
-automatically generate descriptions; see our [Communication](@ref) policy.
+and explain in your own words.
+
+If you use AI to automatically generate descriptions, please first start with a
+human-written description of your changes, and then provide a properly
+identified (see [Disclosure](@ref)) and polished AI summary.
 
 ## Copyright
 
