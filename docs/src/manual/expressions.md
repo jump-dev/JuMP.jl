@@ -485,7 +485,7 @@ julia> prod(2 for i in 2:0; init = 1)
 1
 ```
 
-Because summing over empty sets is a relatively common occurence in mathematical
+Because summing over empty sets is relatively common in mathematical
 programming, JuMP special cases `sum` inside a macro so that you do not need to
 use the `init` keyword inside a JuMP macro, even if the index set is empty:
 ```jldoctest
