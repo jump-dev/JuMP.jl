@@ -51,7 +51,7 @@ pull request. If so, you must document which tools have been used, how they
 were used, and specify what code or text is AI generated. We will reject any
 pull request that does not include the disclosure.
 
-## Code Quality
+## Pull Requests
 
 When authoring new code in JuMP, keep in mind that the JuMP developers' two
 biggest bottlenecks are:
