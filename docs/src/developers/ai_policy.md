@@ -56,9 +56,10 @@ biggest bottlenecks are:
 1. capacity for code review of new pull requests
 2. on-going support and maintenance of existing features.
 
-For these reasons, please open an issue to discuss what you want to change
-_before_ opening a pull request. In the issue, describe what you want to change
-and why it matters to you.
+For these reasons, if you want to add a new feature or undertake a large
+refactor, please open an issue to discuss what you want to change _before_
+opening a pull request. In the issue, describe what you want to change and why
+it matters to you.
 
 Large pull requests that add new features not previously discussed in an issue
 may be closed without review, even if they are correct and demonstrably useful.
