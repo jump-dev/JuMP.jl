@@ -1,6 +1,7 @@
 # How to contribute to JuMP
 
-Welcome, this document explains some ways you can contribute to JuMP.
+The JuMP developers welcome and encourage new contributors. This document
+explains some ways you can contribute to JuMP.
 
 ## Code of Conduct
 
@@ -22,10 +23,40 @@ help answer questions on the forum.
 ## Join the developer chatroom
 
 If you're interested in contributing code to JuMP, the next place to join is the
-[developer chatroom](https://jump.dev/chatroom). Let us know what you
-have in mind, and we can point you in the right direction.
+[developer chatroom](https://jump.dev/chatroom). Let us know what you have in
+mind, and we can point you in the right direction.
 
-## Improve the documentation
+## The best ways to contribute
+
+The best ways you can get involved are:
+
+1. **Find and report bugs**: we can't fix things that we don't know about. There
+   are always new bugs (or inconsistencies that we should better document) to
+   find. Report a bug by [opening a GitHub issue](https://github.com/jump-dev/JuMP.jl/issues).
+
+   Using AI tools to find bugs is acceptable, but you are responsible for
+   understanding and explaining _why_ the issue is a bug in your own words.
+   Rather than copy-pasting only the content of the AI analysis into the issue,
+   first explain what you did to find and verify the bug, and then copy-paste
+   the AI tool's output.
+
+   Also note that there are many repositories in the JuMP ecosystem. Don't worry
+   if you open an issue in the "wrong" one; we can easily transfer it to the
+   correct repository.
+
+2. **Tell us about confusing parts of the documentation**: if you get stuck
+   trying to do something in JuMP, it means we didn't document things well
+   enough. If you have suggestions for new tutorials we could add or how we
+   could improve the documentation please leave a comment at
+   ["Suggestions for documentation improvements"](https://github.com/jump-dev/JuMP.jl/issues/2348).
+
+3. **Make your own packages**: write your own solver or JuMP extension under
+   your personal account. There are no rules here. Vibe code as much as you
+   like. Tell us about the things you have created by posting on the
+   [community forum](https://jump.dev/forum), or give a talk at a
+   [JuMP-dev workshop](https://jump.dev/categories/#jump-dev).
+
+## How to improve the documentation
 
 Chances are, if you asked (or answered) a question on the community forum, then
 it is a sign that the [documentation](https://jump.dev/JuMP.jl/dev/) could be
@@ -44,14 +75,13 @@ on how to do this.)
 
 If your change is larger, or touches multiple files, you will need to make the
 change locally and then use Git to submit a pull request. (See
-[Contribute code to JuMP](@ref) below for more on this.)
+[How to contribute code to JuMP](@ref) below for more on this.)
 
 !!! tip
-    If you need any help, come join the
-    [developer chatroom](https://jump.dev/chatroom) and we will walk
-    you through the process.
+    If you need any help, come join the [developer chatroom](https://jump.dev/chatroom)
+    and we will walk you through the process.
 
-## File a bug report
+## How to file a bug report
 
 Another way to contribute to JuMP is to file
 [bug reports](https://github.com/jump-dev/JuMP.jl/issues/new?template=bug_report.md).
@@ -61,12 +91,11 @@ before posting. You can also find a copy of that info
 [here](https://github.com/jump-dev/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).
 
 !!! tip
-    If you're unsure whether you have a real bug, post on the
-    [community forum](https://jump.dev/forum)
+    If you're unsure whether you have a real bug, post on the [community forum](https://jump.dev/forum)
     first. Someone will either help you fix the problem, or let you know the
     most appropriate place to open a bug report.
 
-## Contribute code to JuMP
+## How to contribute code to JuMP
 
 Finally, you can also contribute code to JuMP.
 
@@ -89,14 +118,14 @@ JuMP is similar to the following:
 The first step is to find an [open issue](https://github.com/jump-dev/JuMP.jl/issues)
 (or open a new one) for the problem you want to solve. Then, _before_ spending
 too much time on it, discuss what you are planning to do in the issue to see if
-other contributors are fine with your proposed changes. Getting feedback early can
-improve code quality, and avoid time spent writing code that does not get merged into
-JuMP.
+other contributors are fine with your proposed changes. Getting feedback early
+can improve code quality and avoid time spent writing code that does not get
+merged into JuMP.
 
 !!! tip
     At this point, remember to be patient and polite; you may get a _lot_ of
-    comments on your issue. However, do not be afraid. Comments mean that people are
-    willing to help you improve the code that you are contributing to JuMP.
+    comments on your issue. However, do not be afraid. Comments mean that people
+    are willing to help you improve the code that you are contributing to JuMP.
 
 **Step 2: fork JuMP**
 
