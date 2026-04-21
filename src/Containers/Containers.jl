@@ -40,7 +40,8 @@ function Base.collect_to_with_first!(
 )
     indices = eachindex(iterator)
     dest[first(indices)] = first_value
-    for (index, element) in zip(Iterators.drop(indices, 1), Iterators.rest(iterator, state))
+    for (index, element) in
+        zip(Iterators.drop(indices, 1), Iterators.rest(iterator, state))
         dest[index] = element
     end
     return dest
