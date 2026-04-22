@@ -124,7 +124,7 @@ function lp_matrix_data(model::GenericModel{T}) where {T}
     cache = (;
         x_l = fill(typemin(T), n),
         x_u = fill(typemax(T), n),
-        c = zeros(T, n),
+        c = zeros(T, n)::Vector{T},
         c_offset = Ref{T}(zero(T)),
         b_l = T[],
         b_u = T[],
@@ -149,7 +149,7 @@ function lp_matrix_data(model::GenericModel{T}) where {T}
         cache.x_u,
         cache.c,
         cache.c_offset[],
-        MOI.get(model, MOI.ObjectiveSense()),
+        objective_sense(model),
         sort!(cache.integers),
         sort!(cache.binaries),
         variables,
