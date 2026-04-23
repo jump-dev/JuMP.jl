@@ -194,6 +194,65 @@ each iteration of the for-loop. In addition, you must avoid race conditions in
 the rest of your Julia code, for example, by using a lock when pushing elements
 to a shared vector.
 
+### An example
+Here is an example that use multiple threads to build and solve MILP models.
+```
+import JuMP, Gurobi
+const CONFIG = Dict{String,Any}("OutputFlag"=>0,"Threads"=>1);
+Env() = Gurobi.Env(CONFIG);
+function Env(N::Int)
+    v = Vector{Gurobi.Env}(undef, N)
+    Threads.@threads for i=eachindex(v)
+        v[i] = Env()
+    end
+    v
+end;
+function Model!(mv::Vector{JuMP.Model}, i, ev::Vector{Gurobi.Env})
+    m = JuMP.direct_model(Gurobi.Optimizer(ev[i]))
+    JuMP.set_string_names_on_creation(m, false)
+    mv[i] = m
+end
+Model!(mv::Vector{JuMP.Model}, ev::Vector{Gurobi.Env}) = Threads.@threads for i=eachindex(mv)
+    Model!(mv, i, ev)
+end
+show_thread_config() = (th = map(Threads.nthreads, (:default, :interactive)); println("my_config> Threads=$th"))
+function build!(m; N = 80)
+    x = JuMP.@variable(m, [1:N], binary=true)
+    y = JuMP.@variable(m, [1:N], binary=true)
+    z = JuMP.@variable(m, [1:N, 1:N], lower_bound=0)
+    JuMP.@constraint(m, [i=1:N, j=1:N], z[i, j] <= x[i])
+    JuMP.@constraint(m, [i=1:N, j=1:N], z[i, j] <= y[j])
+    JuMP.@constraint(m, [i=1:N, j=1:N], z[i, j] >= x[i] + y[j] - 1)
+    JuMP.@objective(m, Min, sum(rand(-1:.0017:1)i for i=z))
+end;
+function _compute_bound_fn(ch, s, m)
+    JuMP.optimize!(m)
+    put!(ch, s)
+end;
+function wait_1_by_1(S::Int)
+    show_thread_config()
+    envs = Env(S)
+    models = similar(envs, JuMP.Model)
+    Model!(models, envs)
+    @time "build models in parallel, by JuMP" Threads.@threads for s = eachindex(models)
+        m = models[s]
+        build!(m)
+        JuMP.set_attribute(m, "TimeLimit", s)
+    end
+    ch = Channel{Int}()
+    for (s, m)=enumerate(models)
+        Threads.@spawn(_compute_bound_fn(ch, s, m))
+    end
+    i = 0
+    @time "solving MILPs" while i !== S
+        s = take!(ch)
+        i += 1
+        println("s=$s, solved $i/$S.")
+    end
+end;
+wait_1_by_1(15)
+```
+
 ### Thread safety and the closure capture bug
 
 !!! danger
