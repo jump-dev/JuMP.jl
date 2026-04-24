@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Documentation updates (#4130), (#4137), (#4141), (#4143), (#4146), (#4152)
+ - Documentation updates (#4130), (#4137), (#4141), (#4143), (#4146), (#4152), (#4155)
  - Updated versions for GitHub actions (#4131), (#4145)
  - Added a CI test for PackageCompiler.jl (#4135)
  - Updated `CODE_OF_CONDUCT` to the NumFOCUS CoC (#4136), (#4140)
