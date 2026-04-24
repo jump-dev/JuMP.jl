@@ -71,7 +71,7 @@ ids
 #     The `Threads.threadid()` that a task runs on may change during execution.
 #     Therefore, it is not safe to use `Threads.threadid()` to index into, say,
 #     a vector of buffer or stateful objects. As an example, do not do:
-#     ```julia
+#     ```julia-repl
 #     x = rand(Threads.nthreads())
 #     Threads.@threads for i in 1:Threads.nthreads()
 #         x[Threads.threadid()] *= 2  # Danger! This use of threadid is not safe
@@ -171,7 +171,7 @@ function an_incorrect_way_to_use_threading()
     return
 end
 
-# ```julia
+# ```julia-repl
 # julia> an_incorrect_way_to_use_threading()
 # julia(76918,0x16c92f000) malloc: *** error for object 0x600003e52220: pointer being freed was not allocated
 # zsh: abort      julia -t 4
@@ -214,7 +214,7 @@ function dont_run_segfault_likely()
 end
 
 # And indeed, running this code results in:
-# ```julia
+# ```julia-repl
 # julia> dont_run_segfault_likely()
 # julia(67421,0x170d83000) malloc: *** error for object 0x600003192870: pointer being freed was not allocated
 # julia(67421,0x170d83000) malloc: *** set a breakpoint in malloc_error_break to debug
@@ -231,7 +231,7 @@ end
 
 # To diagnose this issue, use `@code_warntype`. If your code is problematic, you
 # will see a local variable with the type `::Core.Box`:
-# ```julia
+# ```julia-repl
 # julia> @code_warntype dont_run_segfault_likely()
 # MethodInstance for dont_run_segfault_likely()
 #   from dont_run_segfault_likely() @ Main REPL[3]:1
@@ -250,6 +250,7 @@ end
 
 function _create_model(j)
     model = Model(HiGHS.Optimizer)
+    set_silent(model)
     @variable(model, x[1:j])
     return model
 end
@@ -316,7 +317,7 @@ end
 
 # This code errors (although on same Julia versions it may just return a model
 # that is missing some constraints):
-# ```julia
+# ```julia-repl
 # julia> an_incorrect_way_to_build_with_multithreading()
 # ERROR: TaskFailedException
 #
@@ -406,7 +407,7 @@ run_channel_example(15)
 
 # To use distributed computing with Julia, use the `Distributed` package:
 
-# ```julia
+# ```julia-repl
 # julia> import Distributed
 # ```
 
@@ -414,7 +415,7 @@ run_channel_example(15)
 # do this either by starting Julia with the `-p N` command line argument, or by
 # using `Distributed.addprocs`:
 
-# ````julia
+# ````julia-repl
 # julia> import Pkg
 
 # julia> project = Pkg.project();
@@ -434,10 +435,10 @@ run_channel_example(15)
 # with. They are orchestrated by the process with the id `1`. You can check
 # what process the code is currently running on using `Distributed.myid()`
 
-# ```julia
+# ````julia-repl
 # julia> Distributed.myid()
 # 1
-# ```
+# ````
 
 # As a general rule, to get maximum performance you should add as many processes
 # as you have logical cores available.
@@ -448,7 +449,7 @@ run_channel_example(15)
 # Julia will copy the element to an idle worker process and evaluate the
 # function, passing the element as an input argument.
 
-# ````julia
+# ````julia-repl
 # julia> function hard_work(i::Int)
 #            sleep(1.0)
 #            return Distributed.myid()
@@ -470,19 +471,19 @@ run_channel_example(15)
 # To fix the error, we need to use `Distributed.@everywhere`, which evaluates
 # the code on every process:
 
-# ```julia
+# ````julia-repl
 # julia> Distributed.@everywhere begin
 #            function hard_work(i::Int)
 #                sleep(1.0)
 #                return Distributed.myid()
 #            end
 #        end
-# ```
+# ````
 
 # Now if we run `pmap`, we see that it took only 1 second instead of 4, and that
 # it executed on each of the worker processes:
 
-# ````julia
+# ````julia-repl
 # julia> @time ids = Distributed.pmap(hard_work, 1:4)
 #   1.202006 seconds (216.39 k allocations: 13.301 MiB, 4.07% compilation time)
 # 4-element Vector{Int64}:
@@ -502,7 +503,7 @@ run_channel_example(15)
 # processes using `Distributed.@everywhere`, and then write a function which
 # creates a new instance of the model on every evaluation:
 
-# ```julia
+# ````julia-repl
 # julia> Distributed.@everywhere begin
 #            using JuMP
 #            import HiGHS
@@ -533,7 +534,7 @@ run_channel_example(15)
 #   8.0
 #   9.0
 #  10.0
-# 
+# ````
 
 # ## Parallelism within the solver
 
@@ -545,11 +546,14 @@ run_channel_example(15)
 # [`MOI.NumberOfThreads`](@ref) attribute, which you can set using
 # [`set_attribute`](@ref):
 
-# ```julia
-# using JuMP
-# import Gurobi
-# model = Model(Gurobi.Optimizer)
-# set_attribute(model, MOI.NumberOfThreads(), 4)
+# ```julia-repl
+# julia> using JuMP
+#
+# julia> import Gurobi
+#
+# julia> model = Model(Gurobi.Optimizer);
+#
+# julia> set_attribute(model, MOI.NumberOfThreads(), 4)
 # ```
 
 # ## GPU parallelism
@@ -559,10 +563,14 @@ run_channel_example(15)
 
 # One example is [SCS.jl](@ref), which supports using a GPU to internally solve
 # a system of linear equations. If you are on `x86_64` Linux machine, do:
-# ```julia
-# using JuMP
-# import SCS
-# import SCS_GPU_jll
-# model = Model(SCS.Optimizer)
-# set_attribute(model, "linear_solver", SCS.GpuIndirectSolver)
+# ```julia-repl
+# julia> using JuMP
+#
+# julia> import SCS
+#
+# julia> import SCS_GPU_jll
+#
+# julia> model = Model(SCS.Optimizer);
+#
+# julia> set_attribute(model, "linear_solver", SCS.GpuIndirectSolver)
 # ```
