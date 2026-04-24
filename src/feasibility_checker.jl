@@ -158,10 +158,13 @@ function _add_infeasible_constraints(
 ) where {T,F<:GenericNonlinearExpr,S}
     for con in all_constraints(model, F, S)
         obj = constraint_object(con)
+        ret = value(point_f, obj.func)
+        if ismissing(ret)
+            continue
+        end
         # value(::GenericNonlinearExpr) returns `Float64`. Convert it to `T` for
         # the case where the model is a different number type.
-        fn_value = convert(T, value(point_f, obj.func))
-        d = _distance_to_set(fn_value, obj.set, T)
+        d = _distance_to_set(convert(T, ret), obj.set, T)
         if d > atol
             violated_constraints[con] = d
         end
