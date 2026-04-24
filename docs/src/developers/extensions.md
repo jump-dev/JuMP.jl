@@ -475,8 +475,8 @@ Integer infeasibilities      0            0            0
 Row     infeasibilities      0            0            0
 Row     residuals            0            0            0
 Presolving model
-0 rows, 0 cols, 0 nonzeros  0s
-0 rows, 0 cols, 0 nonzeros  0s
+0 rows, 0 cols, 0 nonzeros 0s
+0 rows, 0 cols, 0 nonzeros 0s
 Presolve reductions: rows 0(-0); columns 0(-1); nonzeros 0(-0) - Reduced to empty
 Presolve: Optimal
 
