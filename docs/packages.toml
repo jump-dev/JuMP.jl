@@ -188,10 +188,6 @@
 [MAiNGO]
     user = "MAiNGO-github"
     rev  = "v0.2.2"
-[Manopt]
-    user = "JuliaManifolds"
-    rev = "v0.5.34"
-    filename = "Readme.md"
 [MathOptAI]
     user = "lanl-ansi"
     rev = "v0.2.4"
