@@ -520,6 +520,7 @@ run_channel_example(15)
 #                return objective_value(model)
 #            end
 #        end
+#
 # julia> solutions = Distributed.pmap(solve_model_with_right_hand_side, 1:10)
 # 10-element Vector{Float64}:
 #   1.0
@@ -532,7 +533,7 @@ run_channel_example(15)
 #   8.0
 #   9.0
 #  10.0
-# ````
+# 
 
 # ## Parallelism within the solver
 
