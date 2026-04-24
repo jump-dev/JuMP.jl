@@ -53,6 +53,7 @@ Threads.nthreads()
         global ids, my_lock
         Threads.lock(my_lock) do
             push!(ids, Threads.threadid())
+            return
         end
         sleep(1.0)
     end
@@ -127,6 +128,7 @@ begin
         for i in 1:1_000
             lock(l) do
                 x[] += 1
+                return
             end
         end
     end
@@ -208,6 +210,7 @@ function dont_run_segfault_likely()
         optimize!(model)
     end
     model = models[1]      # `model` is used outside the loop
+    return
 end
 
 # And indeed, running this code results in:
@@ -282,6 +285,7 @@ function a_good_way_to_use_threading()
         assert_is_solved_and_feasible(model)
         Threads.lock(my_lock) do
             push!(solutions, i => objective_value(model))
+            return
         end
     end
     return solutions
@@ -335,6 +339,7 @@ function a_correct_way_to_build_with_multithreading()
         con = @build_constraint(x[i] <= i)
         Threads.lock(my_lock) do
             add_constraint(model, con)
+            return
         end
     end
     return model
