@@ -399,6 +399,80 @@ A JuMP Model
     for help on the [community forum](https://jump.dev/forum). Make sure to
     include a reproducible example of your code.
 
+## Example: using Channels
+
+Here's an example where we split the model building from the model solution.
+Instead of using an explicit `ReentrantLock`, we use a `Channel` to store the
+solutions.
+
+```julia
+julia> using JuMP
+
+julia> import HiGHS
+
+julia> function build_model(s::Int; N::Int = 80)
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x[1:N], Bin)
+           @variable(model, y[1:N], Bin)
+           @variable(model, z[1:N, 1:N] >= 0)
+           @constraint(model, [i in 1:N, j in 1:N], z[i, j] <= x[i])
+           @constraint(model, [i in 1:N, j in 1:N], z[i, j] <= y[j])
+           @constraint(model, [i in 1:N, j in 1:N], z[i, j] >= x[i] + y[j] - 1)
+           @objective(model, Min, sum(rand(-10:10) * i for i in z))
+           set_time_limit_sec(model, s)
+           return model
+       end
+build_model (generic function with 1 method)
+
+julia> struct Solution
+           scenario::Int
+           objective_value::Float64
+       end
+
+julia> function solve_model(ch::Channel{Solution}, s::Int, model::Model)
+           optimize!(model)
+           @assert has_values(model) # There is always the trivial solution
+           put!(ch, Solution(s, objective_value(model)))
+           return
+       end
+solve_model (generic function with 1 method)
+
+julia> function run_channel_example(S::Int)
+           models = Vector{Model}(undef, S)
+           Threads.@threads for s in 1:S
+               models[s] = build_model(s)
+           end
+           ch = Channel{Solution}()
+           for (s, model) in enumerate(models)
+               Threads.@spawn solve_model(ch, s, model)
+           end
+           for i in 1:S
+               solution = take!(ch)
+               println("s=$(solution) [solved $i/$S]")
+           end
+           return
+       end
+run_channel_example (generic function with 1 method)
+
+julia> run_channel_example(15)
+s=Solution(1, -380.0) [solved 1/15]
+s=Solution(3, -73.0) [solved 2/15]
+s=Solution(4, -229.0) [solved 3/15]
+s=Solution(10, -195.0) [solved 4/15]
+s=Solution(8, 0.0) [solved 5/15]
+s=Solution(14, -434.0) [solved 6/15]
+s=Solution(12, -483.0) [solved 7/15]
+s=Solution(7, -315.0) [solved 8/15]
+s=Solution(2, -696.0) [solved 9/15]
+s=Solution(9, -116.0) [solved 10/15]
+s=Solution(15, -471.0) [solved 11/15]
+s=Solution(11, -518.0) [solved 12/15]
+s=Solution(6, -37.0) [solved 13/15]
+s=Solution(5, 0.0) [solved 14/15]
+s=Solution(13, -390.0) [solved 15/15]
+```
+
 ## Distributed computing
 
 To use distributed computing with Julia, use the `Distributed` package:
