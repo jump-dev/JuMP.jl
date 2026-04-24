@@ -406,7 +406,9 @@ run_channel_example(15)
 
 # To use distributed computing with Julia, use the `Distributed` package:
 
-import Distributed
+# ```julia
+# julia> import Distributed
+# ```
 
 # Like multi-threading, we need to tell Julia how many processes to add. We can
 # do this either by starting Julia with the `-p N` command line argument, or by
@@ -432,7 +434,10 @@ import Distributed
 # with. They are orchestrated by the process with the id `1`. You can check
 # what process the code is currently running on using `Distributed.myid()`
 
-Distributed.myid()
+# ```julia
+# julia> Distributed.myid()
+# 1
+# ```
 
 # As a general rule, to get maximum performance you should add as many processes
 # as you have logical cores available.
@@ -465,12 +470,14 @@ Distributed.myid()
 # To fix the error, we need to use `Distributed.@everywhere`, which evaluates
 # the code on every process:
 
-Distributed.@everywhere begin
-    function hard_work(i::Int)
-        sleep(1.0)
-        return Distributed.myid()
-    end
-end
+# ```julia
+# julia> Distributed.@everywhere begin
+#            function hard_work(i::Int)
+#                sleep(1.0)
+#                return Distributed.myid()
+#            end
+#        end
+# ```
 
 # Now if we run `pmap`, we see that it took only 1 second instead of 4, and that
 # it executed on each of the worker processes:
@@ -495,25 +502,24 @@ end
 # processes using `Distributed.@everywhere`, and then write a function which
 # creates a new instance of the model on every evaluation:
 
-Distributed.@everywhere begin
-    using JuMP
-    import HiGHS
-end
-
-Distributed.@everywhere begin
-    function solve_model_with_right_hand_side(i)
-        model = Model(HiGHS.Optimizer)
-        set_silent(model)
-        @variable(model, x)
-        @objective(model, Min, x)
-        set_lower_bound(x, i)
-        optimize!(model)
-        assert_is_solved_and_feasible(sudoku)
-        return objective_value(model)
-    end
-end
-
 # ```julia
+# julia> Distributed.@everywhere begin
+#            using JuMP
+#            import HiGHS
+#        end
+#
+# julia> Distributed.@everywhere begin
+#            function solve_model_with_right_hand_side(i)
+#                model = Model(HiGHS.Optimizer)
+#                set_silent(model)
+#                @variable(model, x)
+#                @objective(model, Min, x)
+#                set_lower_bound(x, i)
+#                optimize!(model)
+#                assert_is_solved_and_feasible(sudoku)
+#                return objective_value(model)
+#            end
+#        end
 # julia> solutions = Distributed.pmap(solve_model_with_right_hand_side, 1:10)
 # 10-element Vector{Float64}:
 #   1.0
