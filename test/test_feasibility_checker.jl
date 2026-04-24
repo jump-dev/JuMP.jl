@@ -215,4 +215,26 @@ function test_nonlinear_Float32()
     return
 end
 
+function test_nonlinear_expr_missing()
+    model = Model()
+    @variable(model, x[1:3] >= 0)
+    @constraint(model, c1, sin(x[1]) == 0.0)
+    @constraint(model, c2, sin(x[2]) == 0.0)
+    @constraint(model, c3, log(1 + x[2]) == 0.0)
+    @constraint(model, c4, log(1 + x[3]) == 0.0)
+    solution = Dict(x[1] => 1.0, x[3] => 1.0)
+    report = primal_feasibility_report(model, solution; skip_missing = true)
+    @test haskey(report, c1)
+    @test !haskey(report, c2)
+    @test !haskey(report, c3)
+    @test haskey(report, c4)
+    @test_throws(
+        ErrorException(
+            "point does not contain a value for variable x[2]. Provide a value, or pass `skip_missing = true`.",
+        ),
+        primal_feasibility_report(model, solution),
+    )
+    return
+end
+
 end  # module

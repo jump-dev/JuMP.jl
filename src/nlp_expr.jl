@@ -741,7 +741,11 @@ function _evaluate_expr(
             end
             push!(result_stack, result)
         else
-            push!(result_stack, _evaluate_expr(registry, f, arg))
+            ret = _evaluate_expr(registry, f, arg)
+            if ismissing(ret)
+                return missing
+            end
+            push!(result_stack, ret)
         end
     end
     return only(result_stack)
