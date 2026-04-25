@@ -36,6 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           DOCUMENTER_LATEX_DEBUG: ${{ github.workspace }}/latex-debug-logs
+          JULIA_NUM_THREADS: 4
         run: julia --color=yes --project=docs -p 2 docs/make.jl
       - uses: actions/upload-artifact@v7
         if: ${{ always() }}

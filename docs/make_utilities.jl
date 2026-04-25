@@ -111,6 +111,7 @@ function literate_tutorials()
         joinpath("getting_started", "performance_tips.md"),
         joinpath("linear", "tips_and_tricks.md"),
         joinpath("linear", "typed_indices.md"),
+        joinpath("algorithms", "parallelism.md"),
     ]
         filename = joinpath(@__DIR__, "src", "tutorials", file)
         content = read(filename, String)
