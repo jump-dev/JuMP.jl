@@ -345,15 +345,6 @@ function add_moi_pages()
             r"^# Infeasibility certificates$"m => "# [Infeasibility certificates](@id moi_infeasibility_certificates)",
         ],
         "reference/models.md" => ["# ResultStatusCode" => "# Result Status"],
-        # This can be removed once we support JSON@1 in the documentation
-        "submodules/FileFormats/overview.md" => ["JSON.Object" => "Dict"],
-        # These can be removed once we support MOI@1.48.1 or later
-        "reference/models.md" => ["# ResultStatusCode" => "# Result Status"],
-        "submodules/Nonlinear/SymbolicAD.md" => [
-            "# `simplify`" => "# [`simplify`](@id symbolic_ad_manual_simplify)",
-            "# `variables`" => "# [`variables`](@id symbolic_ad_manual_variables)",
-            "# `derivative`" => "# [`derivative`](@id symbolic_ad_manual_derivative)",
-        ],
     ]
         filename = joinpath(moi_dir, filename)
         write(filename, replace(read(filename, String), replacements...))

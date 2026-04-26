@@ -1,6 +1,6 @@
 name = "JuMP"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
-version = "1.30.0"
+version = "1.30.1"
 repo = "https://github.com/jump-dev/JuMP.jl.git"
 
 [deps]

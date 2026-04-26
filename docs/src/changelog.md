@@ -7,6 +7,24 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.30.1 (April 24, 2026)
+
+### Fixed
+
+ - Fixed [`primal_feasibility_report`](@ref) with [`NonlinearExpr`](@ref) and
+   `skip_missing=true` (#4153)
+
+### Other
+
+ - Documentation updates (#4130), (#4137), (#4141), (#4143), (#4146), (#4152),
+   (#4155), (#4156)
+ - Updated versions for GitHub actions (#4131), (#4145)
+ - Added a CI test for PackageCompiler.jl (#4135)
+ - Updated `CODE_OF_CONDUCT` to the NumFOCUS CoC (#4136), (#4140)
+ - Remove outdated sentence from LICENSE.md (#4142)
+ - Added [AI Policy](@ref), a policy for AI assisted contributions (#4138)
+ - Fixed various issues identified by JET (#4148), (#4149)
+
 ## Version 1.30.0 (March 4, 2026)
 
 This release is a minor release because we are changing the Julia compat bounds.

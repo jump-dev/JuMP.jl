@@ -79,7 +79,8 @@ endpoint_solve(Dict{String,Any}())
 function wrap_endpoint(endpoint::Function)
     function serve_request(request::HTTP.Request)::HTTP.Response
         task = Threads.@spawn try
-            ret = request.body |> String |> JSON.parse |> endpoint |> JSON.json
+            input = request.body |> String |> JSON.parse
+            ret = convert(Dict{String,Any}, input) |> endpoint |> JSON.json
             HTTP.Response(200, ret)
         catch err
             HTTP.Response(500, "internal error: $err")
