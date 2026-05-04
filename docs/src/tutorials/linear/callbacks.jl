@@ -12,6 +12,7 @@
 
 using JuMP
 import Gurobi
+import Ipopt
 import Random
 import Test
 
@@ -26,7 +27,9 @@ import Test
 
 # ## Lazy constraints
 
-# An example using a lazy constraint callback.
+# Here is an example of using a lazy constraint callback with Gurobi. For more
+# information about lazy constraints, see the [Lazy constraints](@ref manual_lazy_constraints)
+# section of the manual.
 
 function example_lazy_constraint()
     model = Model(Gurobi.Optimizer)
@@ -74,7 +77,9 @@ example_lazy_constraint()
 
 # ## User-cuts
 
-# An example using a user-cut callback.
+# Here is an example of using a user cut callback with Gurobi. For more
+# information about user cuts, see the [User cuts](@ref manual_user_cuts)
+# section of the manual.
 
 function example_user_cut_constraint()
     Random.seed!(1)
@@ -115,7 +120,9 @@ example_user_cut_constraint()
 
 # ## Heuristic solutions
 
-# An example using a heuristic solution callback.
+# Here is an example of using a heuristic solution callback with Gurobi. For
+# more information about heuristic solutions, see the
+# [Heuristic solutions](@ref manual_heuristic_solutions) section of the manual.
 
 function example_heuristic_solution()
     Random.seed!(1)
@@ -150,11 +157,16 @@ end
 
 example_heuristic_solution()
 
-# ## Gurobi solver-dependent callback
+# ## Solver-dependent callback
 
-# An example using Gurobi's solver-dependent callback.
+# Some solvers expose solver-dependent callbacks. The syntax of the callback
+# depends on the solver. Typically, this requires you to interact with the
+# low-level C API of the solver. If a solver supports a solver-dependent
+# callback this will be documented in the README of the solver wrapper.
 
-function example_solver_dependent_callback()
+# Here's an example of Gurobi's:
+
+function example_solver_dependent_callback_gurobi()
     model = direct_model(Gurobi.Optimizer())
     @variable(model, 0 <= x <= 2.5, Int)
     @variable(model, 0 <= y <= 2.5, Int)
@@ -204,4 +216,122 @@ function example_solver_dependent_callback()
     return
 end
 
-example_solver_dependent_callback()
+example_solver_dependent_callback_gurobi()
+
+# And here is an example of Ipopt's:
+
+function example_solver_dependent_callback_ipopt()
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
+    @variable(model, x >= 1)
+    @objective(model, Min, x + 0.5)
+    x_vals = Float64[]
+    function my_callback(
+        alg_mod::Cint,
+        iter_count::Cint,
+        obj_value::Float64,
+        inf_pr::Float64,
+        inf_du::Float64,
+        mu::Float64,
+        d_norm::Float64,
+        regularization_size::Float64,
+        alpha_du::Float64,
+        alpha_pr::Float64,
+        ls_trials::Cint,
+    )
+        push!(x_vals, callback_value(model, x))
+        @test isapprox(obj_value, 1.0 * x_vals[end] + 0.5, atol = 1e-1)
+        # return `true` to keep going, or `false` to terminate the optimization.
+        return iter_count < 1
+    end
+    set_attribute(model, Ipopt.CallbackFunction(), my_callback)
+    optimize!(model)
+    termination_status(model)
+    Test.@test length(x_vals) == 2
+    return x_vals
+end
+
+example_solver_dependent_callback_ipopt()
+
+# ### Using solver-dependent callbacks
+
+# If you want to write a package that is solver-independent, but you also want
+# to use a solver-dependent callback, write a [package extension](https://pkgdocs.julialang.org/v1/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions)).
+
+# To proceed, assume that we have a package named `MyPackage`:
+
+module MyPackage
+import JuMP
+add_callback(model) = add_callback(model, typeof(JuMP.unsafe_backend(model)))
+add_callback(model, ::Type{T}) where {T} = error("Unsupported optimizer: $T")
+function build_model(optimizer)
+    model = JuMP.Model(optimizer)
+    add_callback(model)
+    return model
+end
+end  # MyPackage
+
+# This package defines a public `build_model` function. Inside the function it
+# calls `add_callback`, which defaults to throwing an error.
+
+# Now, assume we want to add callbacks for Gurobi and Ipopt.
+
+# In `/ext/MyPackageGurobiExt.jl` define:
+
+module MyPackageGurobiExt
+## In a real example, change `..MyPackage` to `MyPackage`. The dots are needed
+## only because of how we've structured this documentation.
+import ..MyPackage
+import Gurobi
+import JuMP
+function MyPackage.add_callback(model::JuMP.Model, ::Type{Gurobi.Optimizer})
+    function callback(cb_data, cb_where)
+        if rand() < 0.5
+            Gurobi.GRBterminate(JuMP.backend(model))
+        end
+        return
+    end
+    JuMP.set_attribute(model, Gurobi.CallbackFunction(), callback)
+    return
+end
+end  # MyPackageGurobiExt
+
+# and in `/ext/MyPackageIpoptExt.jl` define:
+
+module MyPackageIpoptExt
+## In a real example, change `..MyPackage` to `MyPackage`. The dots are needed
+## only because of how we've structured this documentation.
+import ..MyPackage
+import Ipopt
+import JuMP
+function MyPackage.add_callback(model::JuMP.Model, ::Type{Ipopt.Optimizer})
+    function callback(args...)
+        return rand() < 0.5
+    end
+    JuMP.set_attribute(model, Ipopt.CallbackFunction(), callback)
+    return
+end
+end  # MyPackageIpoptExt
+
+# Finally, change the `Project.toml` of `MyPackage` to include an `[extensions]`
+# section:
+#
+# ```toml
+# [weakdeps]
+# Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
+# Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
+#
+# [extensions]
+# MyPackageGurobiExt = "Gurobi"
+# MyPackageIpoptExt = "Ipopt"
+# ```
+
+# Now, `build_model` can be called with `Gurobi.Optimizer`:
+
+MyPackage.build_model(Gurobi.Optimizer)
+
+# and with `Ipopt.Optimizer`:
+
+MyPackage.build_model(Ipopt.Optimizer)
+
+# And you didn't need to add Gurobi or Ipopt as dependencies to MyPackage.
