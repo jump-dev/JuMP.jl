@@ -241,7 +241,7 @@ function example_solver_dependent_callback_ipopt()
     )
         push!(x_vals, callback_value(model, x))
         @test isapprox(obj_value, 1.0 * x_vals[end] + 0.5, atol = 1e-1)
-        # return `true` to keep going, or `false` to terminate the optimization.
+        ## return `true` to keep going, or `false` to terminate the optimization.
         return iter_count < 1
     end
     set_attribute(model, Ipopt.CallbackFunction(), my_callback)
