@@ -71,7 +71,7 @@ You can only set each callback once. Calling [`set_attribute`](@ref) twice will
 over-write the earlier callback. In addition, if you use a solver-independent
 callback, you cannot set a solver-dependent callback.
 
-## Lazy constraints
+## [Lazy constraints](@id manual_lazy_constraints)
 
 Lazy constraints are useful when the full set of constraints is too large to
 explicitly include in the initial formulation. When a MIP solver reaches a new
@@ -154,7 +154,7 @@ julia> set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
    set_attribute(model, MOI.LazyConstraintCallback(), good_callback_function)
    ```
 
-## User cuts
+## [User cuts](@id manual_user_cuts)
 
 User cuts, or simply cuts, provide a way for the user to tighten the LP
 relaxation using problem-specific knowledge that the solver cannot or is
@@ -198,7 +198,7 @@ julia> set_attribute(model, MOI.UserCutCallback(), my_callback_function)
    branch-and-bound tree. There is no guarantee that the callback is called at
    _every_ fractional primal solution.
 
-## Heuristic solutions
+## [Heuristic solutions](@id manual_heuristic_solutions)
 
 Integer programming solvers frequently include heuristics that run at the
 nodes of the branch-and-bound tree. They aim to find integer solutions quicker
