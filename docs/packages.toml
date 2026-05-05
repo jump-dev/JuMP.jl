@@ -175,6 +175,9 @@
     rev = "v0.6.1"
     filename = "docs/jump/README.md"
     extension = true
+[JaCoP]
+    user = "JuliaConstraints"
+    rev = "v0.1.0"
 [Juniper]
     user = "lanl-ansi"
     rev = "v0.9.4"
