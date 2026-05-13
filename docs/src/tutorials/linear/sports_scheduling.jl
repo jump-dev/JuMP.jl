@@ -49,6 +49,7 @@ M = [
 
 # For each team to play each other exactly once, we need the number of teams - 1
 # weeks:
+
 T = length(M) - 1
 
 # Now we create a JuMP model to build our optimzation problem:
@@ -80,9 +81,8 @@ model = Model(HiGHS.Optimizer)
 
 @constraint(
     model,
-    # [(i, m) in enumerate(M), n in M[i+1:end]],
     [m in M, n in M; m != n],
-    sum(x[m, n, :]) + sum(x[n, m, :]) == 1
+    sum(x[m, n, :]) + sum(x[n, m, :]) == 1,
 )
 
 # Now we can solve our model:
