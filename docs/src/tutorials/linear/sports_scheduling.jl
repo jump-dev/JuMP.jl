@@ -129,7 +129,7 @@ number_of_back_to_back_away_games =
 
 @variable(model, y[M, 2:T], Bin);
 
-# Objective: minimze the number of back-to-back away games
+# Objective: minimize the number of back-to-back away games
 
 @objective(model, Min, sum(y));
 
