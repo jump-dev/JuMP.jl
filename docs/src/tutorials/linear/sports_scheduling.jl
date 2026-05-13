@@ -118,7 +118,7 @@ print_schedule(M, T, x)
 number_of_back_to_back_away_games =
     sum(round(Int, value(sum(x[:, m, (t-1):t]))) == 2 for m in M, t in 2:T)
 
-# A bette schedule would minimize this quantity.
+# A better schedule would minimize this quantity.
 
 # ## Minimizing the number of back-to-back away games
 
