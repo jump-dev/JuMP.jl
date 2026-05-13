@@ -40,42 +40,42 @@ import HiGHS
 
 # Here are the teams in our tournament:
 
-#!format:off
 M = [
+    #!format:off
     "Ind", "UMD", "UMich", "MSU", "OSU", "Penn", "Rtgrs", "Ill", "Iowa", "UMN",
     "UNL", "NU", "Purd", "UW",
-]
-#!format: on
+    #!format: on
+];
 
 # For each team to play each other exactly once, we need the number of teams - 1
 # weeks:
 
-T = length(M) - 1
+T = length(M) - 1;
 
 # Now we create a JuMP model to build our optimzation problem:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 
 # Variable: a binary which is true for `x[m,n,t]` if team `m` is playing `n` at
 # home in week `t`.
 
-@variable(model, x[M, M, 1:T], Bin)
+@variable(model, x[M, M, 1:T], Bin);
 
 # Constraint: each team `m` can never play themselves.
 
-@constraint(model, [m in M, t in 1:T], x[m, m, t] == 0)
+@constraint(model, [m in M, t in 1:T], x[m, m, t] == 0);
 
 # Constraint: each team `m` can play at most once per day
 
-@constraint(model, [m in M, t in 1:T], sum(x[m, :, t]) + sum(x[:, m, t]) <= 1)
+@constraint(model, [m in M, t in 1:T], sum(x[m, :, t]) + sum(x[:, m, t]) <= 1);
 
 # Constraint: every team `m` plays at least half home games
 
-@constraint(model, [m in M], div(T, 2) <= sum(x[m, :, :]) <= div(T, 2) + 1)
+@constraint(model, [m in M], div(T, 2) <= sum(x[m, :, :]) <= div(T, 2) + 1);
 
 # Constraint: no more than two away games in any three-game window
 
-@constraint(model, [m in M, t in 1:(T-2)], sum(x[:, m, t:(t+2)]) <= 2)
+@constraint(model, [m in M, t in 1:(T-2)], sum(x[:, m, t:(t+2)]) <= 2);
 
 # Constraint: every team must play every other team exactly once
 
@@ -83,7 +83,7 @@ model = Model(HiGHS.Optimizer)
     model,
     [m in M, n in M; m != n],
     sum(x[m, n, :]) + sum(x[n, m, :]) == 1,
-)
+);
 
 # Now we can solve our model:
 
@@ -127,15 +127,15 @@ number_of_back_to_back_away_games =
 # Variable: a binary which is true for `y[m,t]` if team `m` is playing
 # back-to-back away games in week `t`.
 
-@variable(model, y[M, 2:T], Bin)
+@variable(model, y[M, 2:T], Bin);
 
 # Objective: minimze the number of back-to-back away games
 
-@objective(model, Min, sum(y))
+@objective(model, Min, sum(y));
 
 # Constraint: count back-to-back away games
 
-@constraint(model, [m in M, t in 2:T], y[m, t] >= sum(x[:, m, (t-1):t]) - 1)
+@constraint(model, [m in M, t in 2:T], y[m, t] >= sum(x[:, m, (t-1):t]) - 1);
 
 # Now we can solve our model. However, this problem is actually very difficult
 # to solve to optimality. Rather than wait a very long time, we set a time limit
