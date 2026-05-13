@@ -571,6 +571,7 @@ function documentation_structure()
                 "tutorials/linear/multi_objective_project_planning.md",
                 "tutorials/linear/sudoku.md",
                 "tutorials/linear/n-queens.md",
+                "tutorials/linear/sports_scheduling.md",
                 "tutorials/linear/constraint_programming.md",
                 "tutorials/linear/callbacks.md",
                 "tutorials/linear/lp_sensitivity.md",
