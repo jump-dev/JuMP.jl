@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Arpit Bhatia and contributors                               #src
+# Copyright (c) 2026 Oscar Dowson and contributors                               #src
 #                                                                                #src
 # Permission is hereby granted, free of charge, to any person obtaining a copy   #src
 # of this software and associated documentation files (the "Software"), to deal  #src
@@ -40,7 +40,12 @@ import HiGHS
 
 # Here are the teams in our tournament:
 
-M = ["Ind", "UMD", "UMich", "MSU", "OSU", "Penn", "Rtgrs", "Ill", "Iowa", "UMN", "UNL", "NU", "Purd", "UW"]
+#!format:off
+M = [
+    "Ind", "UMD", "UMich", "MSU", "OSU", "Penn", "Rtgrs", "Ill", "Iowa", "UMN",
+    "UNL", "NU", "Purd", "UW",
+]
+#!format: on
 
 # For each team to play each other exactly once, we need the number of teams - 1
 # weeks:
@@ -57,19 +62,19 @@ model = Model(HiGHS.Optimizer)
 
 # Constraint: each team `m` can never play themselves.
 
-@constraint(model, [m in M, t in 1:T], x[m,m,t] == 0)
+@constraint(model, [m in M, t in 1:T], x[m, m, t] == 0)
 
 # Constraint: each team `m` can play at most once per day
 
-@constraint(model, [m in M, t in 1:T], sum(x[m,:,t]) + sum(x[:,m,t]) <= 1)
+@constraint(model, [m in M, t in 1:T], sum(x[m, :, t]) + sum(x[:, m, t]) <= 1)
 
 # Constraint: every team `m` plays at least half home games
 
-@constraint(model, [m in M], div(T, 2) <= sum(x[m,:,:]) <= div(T, 2) + 1)
+@constraint(model, [m in M], div(T, 2) <= sum(x[m, :, :]) <= div(T, 2) + 1)
 
 # Constraint: no more than two away games in any three-game window
 
-@constraint(model, [m in M, t in 1:T-2], sum(x[:,m,t:t+2]) <= 2)
+@constraint(model, [m in M, t in 1:(T-2)], sum(x[:, m, t:(t+2)]) <= 2)
 
 # Constraint: every team must play every other team exactly once
 
@@ -77,7 +82,7 @@ model = Model(HiGHS.Optimizer)
     model,
     # [(i, m) in enumerate(M), n in M[i+1:end]],
     [m in M, n in M; m != n],
-    sum(x[m,n,:]) + sum(x[n,m,:]) == 1
+    sum(x[m, n, :]) + sum(x[n, m, :]) == 1
 )
 
 # Now we can solve our model:
@@ -94,9 +99,9 @@ function print_schedule(M, T, x)
     for t in 1:T
         print(rpad(t, 5))
         for m in M, n in M
-            if Y[m,n,t]
+            if Y[m, n, t]
                 print(rpad(n, 7))
-            elseif Y[n,m,t]
+            elseif Y[n, m, t]
                 print("@", rpad(n, 6))
             end
         end
@@ -110,10 +115,8 @@ print_schedule(M, T, x)
 # This schedule is okay, but it features a large number of back-to-back away
 # games. Let's count them:
 
-number_of_back_to_back_away_games = sum(
-    round(Int, value(sum(x[:,m,t-1:t]))) == 2
-    for m in M, t in 2:T
-)
+number_of_back_to_back_away_games =
+    sum(round(Int, value(sum(x[:, m, (t-1):t]))) == 2 for m in M, t in 2:T)
 
 # A bette schedule would minimize this quantity.
 
@@ -132,7 +135,7 @@ number_of_back_to_back_away_games = sum(
 
 # Constraint: count back-to-back away games
 
-@constraint(model, [m in M, t in 2:T], y[m,t] >= sum(x[:,m,t-1:t]) - 1)
+@constraint(model, [m in M, t in 2:T], y[m, t] >= sum(x[:, m, (t-1):t]) - 1)
 
 # Now we can solve our model. However, this problem is actually very difficult
 # to solve to optimality. Rather than wait a very long time, we set a time limit
@@ -149,10 +152,8 @@ optimize!(model)
 
 # This solution has fewer back-to-back away games:
 
-number_of_back_to_back_away_games = sum(
-    round(Int, value(sum(x[:,m,t-1:t]))) == 2
-    for m in M, t in 2:T
-)
+number_of_back_to_back_away_games =
+    sum(round(Int, value(sum(x[:, m, (t-1):t]))) == 2 for m in M, t in 2:T)
 
 # And the final schedule is:
 
