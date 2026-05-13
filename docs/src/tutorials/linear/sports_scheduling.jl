@@ -87,14 +87,13 @@ model = Model(HiGHS.Optimizer);
 
 # Now we can solve our model:
 
-set_silent(model)
+# set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 
 # and print the schedule:
 
-function print_schedule(M, T, x)
-    Y = round.(Bool, value.(x))
+function print_schedule(M::Vector{String}, T::Int, Y::AbstractArray{Bool})
     println("Week ", join(rpad.(M, 6), ' '))
     for t in 1:T
         print(rpad(t, 5))
@@ -110,7 +109,8 @@ function print_schedule(M, T, x)
     return
 end
 
-print_schedule(M, T, x)
+Y = round.(Bool, value.(x))
+print_schedule(M, T, Y)
 
 # This schedule is okay, but it features a large number of back-to-back away
 # games. Let's count them:
@@ -141,7 +141,17 @@ number_of_back_to_back_away_games =
 # to solve to optimality. Rather than wait a very long time, we set a time limit
 # so that this documentation doesn't take too long to build:
 
-set_time_limit_sec(model, 20.0)
+set_time_limit_sec(model, 30.0)
+
+# We're also going to set a start value based on the previous solution:
+
+set_start_value.(x, Y)
+for m in M, t in 2:T
+    set_start_value(y[m, t], sum(Y[:, m, (t-1):t]) - 1)
+end
+
+# Now we can optimize:
+
 optimize!(model)
 
 # Because we hit a time limit, we can't use [`assert_is_solved_and_feasible`](@ref),
