@@ -87,7 +87,7 @@ model = Model(HiGHS.Optimizer);
 
 # Now we can solve our model:
 
-# set_silent(model)
+set_silent(model)
 optimize!(model)
 assert_is_solved_and_feasible(model)
 
