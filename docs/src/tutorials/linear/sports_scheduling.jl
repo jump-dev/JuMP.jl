@@ -167,7 +167,8 @@ number_of_back_to_back_away_games =
 
 # And the final schedule is:
 
-print_schedule(M, T, x)
+Y = round.(Bool, value.(x))
+print_schedule(M, T, Y)
 
 # Try running the model for longer. What is the smallest number of back-to-back
 # away games you can find?
