@@ -25,7 +25,10 @@
 # Wisconsin-Madison.**
 
 # The purpose of this tutorial is to demonstrate a simple model for scheduling
-# round-robin tournaments. As teams, it uses the [Big 10](https://en.wikipedia.org/wiki/Big_Ten_Conference).
+# round-robin (or all-play-all) tournaments, that is competitions in which each
+# contestant meets every other participant. As teams, this example uses the 
+# [Big 10](https://en.wikipedia.org/wiki/Big_Ten_Conference) competition between US
+# colleges.
 # (You might notice that there are more than 10 teams. Our example was also
 # written before the expansion of the Conference in 2024.)
 
@@ -41,10 +44,10 @@ import HiGHS
 # Here are the teams in our tournament:
 
 M = [
-    #!format:off
+    #! format: off                                                               #src
     "Ind", "UMD", "UMich", "MSU", "OSU", "Penn", "Rtgrs", "Ill", "Iowa", "UMN",
     "UNL", "NU", "Purd", "UW",
-    #!format: on
+    #! format: on                                                                #src
 ];
 
 # For each team to play each other exactly once, we need the number of teams - 1
@@ -122,7 +125,9 @@ number_of_back_to_back_away_games =
 
 # ## Minimizing the number of back-to-back away games
 
-# To minimize the number of back-to-back away games, we modify our model.
+# To minimize the number of back-to-back away games, where a team plays two (or
+# more) away games in a row without an intervening home game, we modify our
+# model.
 
 # Variable: a binary which is true for `y[m,t]` if team `m` is playing
 # back-to-back away games in week `t`.
