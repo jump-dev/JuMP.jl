@@ -24,8 +24,9 @@
 # in 2016 as part of an operations research course at the University of
 # Wisconsin-Madison.**
 
-# The purpose of this tutorial is to demonstrate a simple model for scheduling
-# round-robin tournaments. As teams, it uses the [Big 10](https://en.wikipedia.org/wiki/Big_Ten_Conference).
+# The purpose of this tutorial is to demonstrate a simple mixed-integer linear
+# program for scheduling round-robin tournaments. As teams, it uses University
+# teams from the [Big Ten Conference](https://en.wikipedia.org/wiki/Big_Ten_Conference).
 # (You might notice that there are more than 10 teams. Our example was also
 # written before the expansion of the Conference in 2024.)
 
@@ -41,10 +42,20 @@ import HiGHS
 # Here are the teams in our tournament:
 
 M = [
-    #!format:off
-    "Ind", "UMD", "UMich", "MSU", "OSU", "Penn", "Rtgrs", "Ill", "Iowa", "UMN",
-    "UNL", "NU", "Purd", "UW",
-    #!format: on
+    "Ill",      # U. Illinois Urbana-Champaign
+    "Ind",      # Indiana University Bloomington
+    "Iowa",     # University of Iowa
+    "MSU",      # Michigan State University
+    "NU",       # Northwestern University
+    "OSU",      # The Ohio State Univesity
+    "Penn",     # Pennsylvania State University
+    "Purd",     # Purdue University
+    "Rtgrs",    # Rutgers University
+    "UMD",      # University of Maryland, College Park
+    "UMich",    # University of Michigan
+    "UMN",      # University of Minnesota Twin Cities
+    "UNL",      # University of Nebraska-Lincoln
+    "UW",       # University of Wisconsin-Madison
 ];
 
 # For each team to play each other exactly once, we need the number of teams - 1
@@ -85,6 +96,19 @@ model = Model(HiGHS.Optimizer);
     sum(x[m, n, :]) + sum(x[n, m, :]) == 1,
 );
 
+# One problem with out model is that there is a lot of symmetry. To make the
+# problem easier to solve, we fix the schedule of a random team to play every
+# team in order, alternating between home and away:
+
+m = rand(M)
+for (t, n) in enumerate(filter(!=(m), M))
+    if isodd(t)
+        fix(x[m, n, t], 1)
+    else
+        fix(x[n, m, t], 1)
+    end
+end
+
 # Now we can solve our model:
 
 set_silent(model)
@@ -113,7 +137,8 @@ Y = round.(Bool, value.(x))
 print_schedule(M, T, Y)
 
 # This schedule is okay, but it features a large number of back-to-back away
-# games. Let's count them:
+# games (in which a team plays away from home two weeks in a row). Let's count
+# them:
 
 number_of_back_to_back_away_games =
     sum(round(Int, value(sum(x[:, m, (t-1):t]))) == 2 for m in M, t in 2:T)
