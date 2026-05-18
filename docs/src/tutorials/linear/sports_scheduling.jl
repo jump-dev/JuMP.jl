@@ -96,6 +96,19 @@ model = Model(HiGHS.Optimizer);
     sum(x[m, n, :]) + sum(x[n, m, :]) == 1,
 );
 
+# One problem with out model is that there is a lot of symmetry. To make the
+# problem easier to solve, we fix the schedule of a random team to play every
+# team in order, alternating between home and away:
+
+m = rand(M)
+for (t, n) in enumerate(filter(!=(m), M))
+    if isodd(t)
+        fix(x[m, n, t], 1)
+    else
+        fix(x[n, m, t], 1)
+    end
+end
+
 # Now we can solve our model:
 
 set_silent(model)
