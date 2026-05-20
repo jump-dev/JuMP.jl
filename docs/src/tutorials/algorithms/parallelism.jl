@@ -357,7 +357,7 @@ a_correct_way_to_build_with_multithreading()
 #     for help on the [community forum](https://jump.dev/forum). Make sure to
 #     include a reproducible example of your code.
 
-# ## Example: using Channels
+# ### Example: using Channels
 
 # Here's an example where, instead of using an explicit `ReentrantLock`, we use
 # `Channel`s to communicate between threads.
