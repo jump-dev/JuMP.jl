@@ -359,11 +359,14 @@ a_correct_way_to_build_with_multithreading()
 
 # ## Example: using Channels
 
-# Here's an example where we split the model building from the model solution.
-# Instead of using an explicit `ReentrantLock`, we use a `Channel` to store the
-# solutions.
+# Here's an example where, instead of using an explicit `ReentrantLock`, we use
+# `Channel`s to communicate between threads.
 
-function build_model(s::Int; N::Int = 80)
+struct Solution
+    scenario::Int
+    objective_value::Float64
+end
+function runner(in_ch::Channel{Int}, out_ch::Channel{Solution}; N::Int = 80)
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     @variable(model, x[1:N], Bin)
@@ -373,32 +376,33 @@ function build_model(s::Int; N::Int = 80)
     @constraint(model, [i in 1:N, j in 1:N], z[i, j] <= y[j])
     @constraint(model, [i in 1:N, j in 1:N], z[i, j] >= x[i] + y[j] - 1)
     @objective(model, Min, sum(rand(-10:10) * i for i in z))
-    set_time_limit_sec(model, s)
-    return model
-end
-struct Solution
-    scenario::Int
-    objective_value::Float64
-end
-function solve_model(ch::Channel{Solution}, s::Int, model::Model)
-    optimize!(model)
-    @assert has_values(model) # There is always the trivial solution
-    put!(ch, Solution(s, objective_value(model)))
+    while true
+        s = take!(in_ch)
+        set_time_limit_sec(model, s)
+        optimize!(model)
+        @assert has_values(model) # There is always the trivial solution
+        put!(out_ch, Solution(s, objective_value(model)))
+    end
     return
 end
 function run_channel_example(S::Int)
-    models = Vector{Model}(undef, S)
-    Threads.@threads for s in 1:S
-        models[s] = build_model(s)
+    tasks, solutions = Channel{Int}(S), Channel{Solution}(S)
+    ## Start by filling up the set of tasks
+    for s in 1:S
+        put!(tasks, s)
     end
-    ch = Channel{Solution}()
-    for (s, model) in enumerate(models)
-        Threads.@spawn solve_model(ch, s, model)
+    ## Now start the worker threads. Hopefully nthreads() << S. You should, in
+    ## general, not `@spawn` more tasks than there are threads.
+    for _ in 1:Threads.nthreads()
+        Threads.@spawn runner(tasks, solutions)
     end
+    ## Now we can consume the solutions:
     for i in 1:S
-        solution = take!(ch)
+        solution = take!(solutions)
         println("s=$(solution) [solved $i/$S]")
     end
+    ## Finally, close the `tasks` channel.
+    close(tasks)
     return
 end
 run_channel_example(15)
