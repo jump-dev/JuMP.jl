@@ -576,7 +576,7 @@ moi_function(x::Number) = x
 # We use `Array` and not `AbstractArray` for now because ArrayDiff
 # and Convex.jl currently only support `Array` anyway and we can expand
 # the signature in a non-breaking way later anyway.
-moi_function(x::Array{<:Number}) = x
+moi_function(x::Array) = moi_function.(x)
 
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
