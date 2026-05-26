@@ -68,13 +68,15 @@
     rev = "v0.9.2"
     has_html = true
 [Ipopt]
-    rev = "v1.14.1"
+    rev = "v1.14.3"
 [KNITRO]
     rev = "v1.2.1"
 [MathOptAnalyzer]
     rev = "v0.1.2"
 [MathOptIIS]
     rev = "v0.2.0"
+[MathOptLazy]
+    rev = "v0.1.0"
 [MiniZinc]
     rev = "v0.3.14"
 [MosekTools]
@@ -150,7 +152,7 @@
     rev = "v1.1.33"
 [COSMO]
     user = "oxfordcontrol"
-    rev = "v0.8.9"
+    rev = "v0.8.10"
     has_html = true
 [CuPDLPx]
     user = "MIT-Lu-Lab"
@@ -165,14 +167,14 @@
     extension = true
 [EAGO]
     user = "PSORLab"
-    rev = "v0.9.1"
+    rev = "v0.9.2"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
     rev = "dc2bcebb58b1bbeae69453084ff437905eb2463d"
 [InfiniteOpt]
     user = "infiniteopt"
-    rev = "v0.6.1"
+    rev = "v0.6.3"
     filename = "docs/jump/README.md"
     extension = true
 [JaCoP]
@@ -186,7 +188,7 @@
     rev = "v0.2.5"
 [MadNLP]
     user = "MadNLP"
-    rev = "v0.9.1"
+    rev = "v0.9.2"
     has_html = true
 [MAiNGO]
     user = "MAiNGO-github"
