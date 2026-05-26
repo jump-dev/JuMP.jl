@@ -112,6 +112,13 @@ function variable_ref_type(::Type{GenericNonlinearExpr}, x::AbstractJuMPScalar)
     return variable_ref_type(x)
 end
 
+function variable_ref_type(
+    ::Type{GenericNonlinearExpr},
+    ::AbstractArray{T},
+) where {T<:AbstractJuMPScalar}
+    return variable_ref_type(T)
+end
+
 value_type(::Type{GenericNonlinearExpr{V}}) where {V} = value_type(V)
 
 function _has_variable_ref_type(a)
@@ -571,12 +578,9 @@ end
 
 moi_function(x::Number) = x
 
-# MOI.Nonlinear.ReverseAD does not support arrays but ArrayDiff.jl and
-# Convex.jl do.
-# We use `Array` and not `AbstractArray` for now because ArrayDiff
-# and Convex.jl currently only support `Array` anyway and we can expand
-# the signature in a non-breaking way later anyway.
-moi_function(x::Array) = moi_function.(x)
+# `moi_function(::Array)` would be ambiguous with
+# `moi_function(AbstractArray{<:AbstractVariableRef})`
+moi_function(x::AbstractArray) = moi_function.(x)
 
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))

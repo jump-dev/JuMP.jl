@@ -1236,11 +1236,11 @@ end
 function test_array()
     model = Model()
     @variable(model, x)
-    op_norm = NonlinearOperator(:det, det)
-    @objective(model, Min, op_norm([x]))
+    op_det = NonlinearOperator(det, :det)
+    @objective(model, Min, op_det([x]))
     f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
-    @test f.head == :norm
-    @test f.args == [[index(x)]]
+    @test f.head == :det
+    @test f.args == [MOI.VectorOfVariables([index(x)])]
 end
 
 end  # module
