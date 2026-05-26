@@ -571,14 +571,19 @@ end
 
 moi_function(x::Number) = x
 
+# MOI.Nonlinear.ReverseAD does not support arrays but ArrayDiff.jl and
+# Convex.jl do.
+# We use `Array` and not `AbstractArray` for now because ArrayDiff
+# and Convex.jl currently only support `Array` anyway and we can expand
+# the signature in a non-breaking way later anyway.
+moi_function(x::Array{<:Number}) = x
+
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
-        elseif f.args[i] isa AbstractArray
-            ret.args[i] = moi_function.(f.args[i])
         else
             ret.args[i] = moi_function(f.args[i])
         end
@@ -590,8 +595,6 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         for j in length(arg.args):-1:1
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
-            elseif arg.args[j] isa AbstractArray
-                child.args[j] = moi_function.(arg.args[j])
             else
                 child.args[j] = moi_function(arg.args[j])
             end
@@ -617,8 +620,6 @@ function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
             end
-        elseif arg isa AbstractArray
-            push!(parent.args, jump_function.(model, arg))
         else
             push!(parent.args, jump_function(model, arg))
         end
