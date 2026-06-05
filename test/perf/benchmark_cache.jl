@@ -202,7 +202,7 @@ end
 # the master walk only iterates 2^K times instead of doing 2^K *recursive*
 # descents through K levels — which would mask the worst case the PR is
 # meant to fix.
-function scenario_aliased_tree(; K::Int = 14)
+function scenario_aliased_tree(; K::Int)
     V = JuMP.VariableRef
     return function ()
         model = Model()
@@ -278,54 +278,62 @@ end
 # Runner
 # ---------------------------------------------------------------------------
 
-const SCENARIOS = [
-    ("A: aliased tree (one big DAG, K=14)",      scenario_aliased_tree(K = 14)),
-    ("B: many independent constraints (N=5000)", scenario_many_independent(N = 5_000)),
-    ("C: shared big subexpr (N=200, M=200)",     scenario_shared_big(N = 200, M = 200)),
-    ("D: many aliased trees (M=200, K=8)",       scenario_many_aliased(M = 200, K = 8)),
-]
 
 const MODES = [:none, :per_call_oid, :model_struct, :model_oid]
 
-function run_all()
-    println("Benchmarking PR #4032 cache strategies\n")
-    for (label, build) in SCENARIOS
-        println("="^72)
-        println(label)
-        println("="^72)
-        # Warm up each mode (compile its method specializations) before
-        # timing, so the first sample isn't biased by JIT.
-        for m in MODES
-            BENCH_MODE[] = m
-            try
-                build()
-            catch err
-                @warn "warm-up failed for mode $m" exception = err
-            end
-        end
-        results = Dict{Symbol,Any}()
-        for m in MODES
-            BENCH_MODE[] = m
-            b = @benchmark $build() samples = 5 evals = 1 seconds = 30
-            results[m] = b
-            t_ms = minimum(b).time / 1e6
-            mem_mb = minimum(b).memory / 1024^2
-            allocs = minimum(b).allocs
-            @printf("  %-13s  %10.2f ms   %9.2f MiB   %12d allocs\n",
-                    string(m), t_ms, mem_mb, allocs)
-        end
-        # Ratios versus the branch's model_struct baseline so we can see
-        # where each strategy wins, ties, or loses.
-        base = minimum(results[:model_struct]).time
-        println()
-        for m in MODES
-            r = minimum(results[m]).time / base
-            @printf("  ratio(%-13s / model_struct) = %.2f\n", string(m), r)
-        end
-        println()
+function run_bench(label, build)
+    println("="^72)
+    println(label)
+    println("="^72)
+    # Warm up each mode (compile its method specializations) before
+    # timing, so the first sample isn't biased by JIT.
+    for m in MODES
+        BENCH_MODE[] = m
+        build()
     end
+    results = Dict{Symbol,Any}()
+    for m in MODES
+        BENCH_MODE[] = m
+        b = @benchmark $build() samples = 5 evals = 1 seconds = 30
+        results[m] = b
+        t_ms = minimum(b).time / 1e6
+        mem_mb = minimum(b).memory / 1024^2
+        allocs = minimum(b).allocs
+        @printf("  %-13s  %10.2f ms   %9.2f MiB   %12d allocs\n",
+                string(m), t_ms, mem_mb, allocs)
+    end
+    # Ratios versus the branch's model_struct baseline so we can see
+    # where each strategy wins, ties, or loses.
+    base = minimum(results[:model_struct]).time
+    println()
+    for m in MODES
+        r = minimum(results[m]).time / base
+        @printf("  ratio(%-13s / model_struct) = %.2f\n", string(m), r)
+    end
+    println()
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    run_all()
+function one_aliased_tree(; K = 16)
+    run_bench("A: aliased tree (one big DAG, K=$K)",      scenario_aliased_tree(; K))
 end
+
+function independent()
+    run_bench("B: many independent constraints (N=5000)", scenario_many_independent(N = 5_000))
+end
+
+function shared_subexpr()
+    run_bench("C: shared big subexpr (N=200, M=200)",     scenario_shared_big(N = 200, M = 200))
+end
+
+function many_aliased_tree()
+    run_bench("D: many aliased trees (M=200, K=8)",       scenario_many_aliased(M = 200, K = 8))
+end
+
+function run_all()
+    one_aliased_tree()
+    independent()
+    shared_subexpr()
+    many_aliased_tree()
+end
+
+#run_all()
