@@ -1202,6 +1202,7 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
 end
 
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
+    model = owner_model(first(f))
     return MOI.VectorNonlinearFunction(moi_function.(f, model))
 end
 
@@ -1248,7 +1249,7 @@ x
 ```
 """
 function simplify(model::GenericModel, f::AbstractJuMPScalar)
-    g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(f))
+    g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(f, model))
     return jump_function(model, g)
 end
 
@@ -1345,7 +1346,7 @@ julia> ∇f[y]
 ```
 """
 function gradient(model::GenericModel{T}, f::AbstractJuMPScalar) where {T}
-    g = moi_function(f)
+    g = moi_function(f, model)
     ∇f = Dict{GenericVariableRef{T},Any}()
     for xi in MOI.Nonlinear.SymbolicAD.variables(g)
         df_dx = MOI.Nonlinear.SymbolicAD.simplify!(
