@@ -158,11 +158,12 @@ const BENCH_MODE = Ref(:model_struct)
 # branch's `Dict{Any,...}`. We store them on the model as a side table so
 # they survive across constraints inside one build but are cleared between
 # builds (because each scenario builds a fresh `Model()`).
-const _OID_CACHE = IdDict{JuMP.GenericModel,Dict{UInt64,MOI.ScalarNonlinearFunction}}()
+const _OID_CACHE =
+    IdDict{JuMP.GenericModel,Dict{UInt64,MOI.ScalarNonlinearFunction}}()
 
 function _oid_cache(model)
     get!(_OID_CACHE, model) do
-        Dict{UInt64,MOI.ScalarNonlinearFunction}()
+        return Dict{UInt64,MOI.ScalarNonlinearFunction}()
     end
 end
 
@@ -271,7 +272,6 @@ end
 # Runner
 # ---------------------------------------------------------------------------
 
-
 const MODES = [:none, :per_call_oid, :model_struct, :model_oid]
 
 function run_bench(label, build)
@@ -285,26 +285,38 @@ function run_bench(label, build)
 end
 
 function one_aliased_tree(; K = 16)
-    run_bench("A: aliased tree (one big DAG, K=$K)",      scenario_aliased_tree(; K))
+    return run_bench(
+        "A: aliased tree (one big DAG, K=$K)",
+        scenario_aliased_tree(; K),
+    )
 end
 
 function independent()
-    run_bench("B: many independent constraints (N=5000)", scenario_many_independent(N = 5_000))
+    return run_bench(
+        "B: many independent constraints (N=5000)",
+        scenario_many_independent(; N = 5_000),
+    )
 end
 
 function shared_subexpr()
-    run_bench("C: shared big subexpr (N=200, M=200)",     scenario_shared_big(N = 200, M = 200))
+    return run_bench(
+        "C: shared big subexpr (N=200, M=200)",
+        scenario_shared_big(; N = 200, M = 200),
+    )
 end
 
 function many_aliased_tree()
-    run_bench("D: many aliased trees (M=200, K=8)",       scenario_many_aliased(M = 200, K = 8))
+    return run_bench(
+        "D: many aliased trees (M=200, K=8)",
+        scenario_many_aliased(; M = 200, K = 8),
+    )
 end
 
 function run_all()
     one_aliased_tree()
     independent()
     shared_subexpr()
-    many_aliased_tree()
+    return many_aliased_tree()
 end
 
 run_all()
