@@ -1338,7 +1338,8 @@ function derivative(
     f::AbstractJuMPScalar,
     x::GenericVariableRef{T},
 ) where {T}
-    df_dx = MOI.Nonlinear.SymbolicAD.derivative(moi_function(f), index(x))
+    df_dx =
+        MOI.Nonlinear.SymbolicAD.derivative(moi_function(f, model), index(x))
     return jump_function(model, MOI.Nonlinear.SymbolicAD.simplify!(df_dx))
 end
 
