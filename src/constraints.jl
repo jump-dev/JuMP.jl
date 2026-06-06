@@ -760,8 +760,8 @@ function moi_function(constraint::AbstractConstraint)
     return moi_function(jump_function(constraint))
 end
 
-function moi_function(constraint::AbstractConstraint, model)
-    return moi_function(jump_function(constraint), model)
+function moi_function(model, constraint::AbstractConstraint)
+    return moi_function(model, jump_function(constraint))
 end
 
 """
@@ -1026,7 +1026,7 @@ function check_belongs_to_model(f::Vector, model)
     end
 end
 
-function moi_function(f, model)
+function moi_function(model, f)
     check_belongs_to_model(f, model)
     return moi_function(f)
 end
@@ -1047,7 +1047,7 @@ function add_constraint(
     name::String = "",
 )
     con = model_convert(model, con)
-    func, set = moi_function(con, model), moi_set(con)
+    func, set = moi_function(model, con), moi_set(con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     cindex = _moi_add_constraint(
