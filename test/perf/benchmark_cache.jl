@@ -196,20 +196,14 @@ end
 # `e_k = e_{k-1} + e_{k-1}`. With no cache this expands to 2^K leaves; with
 # either cache it stays linear in K.
 #
-# We build the `+` node directly via the GenericNonlinearExpr constructor so
-# JuMP's `+` operator overload does NOT flatten the n-ary sum. Without this,
-# `e + e` returns a flat `:+(args...)` of 2^K identical leaf references and
-# the master walk only iterates 2^K times instead of doing 2^K *recursive*
-# descents through K levels — which would mask the worst case the PR is
-# meant to fix.
+# We build use `atan` as with `+`, it gets flattened.
 function scenario_aliased_tree(; K::Int)
-    V = JuMP.VariableRef
     return function ()
         model = Model()
         @variable(model, x)
         e = sin(x)
         for _ in 1:K
-            e = JuMP.GenericNonlinearExpr{V}(:+, e, e)
+            e = atan(e, e)
         end
         @constraint(model, e <= 1)
         return model
@@ -259,14 +253,13 @@ end
 # across constraints there is nothing to share. This is the natural
 # territory of odow's per-call dict.
 function scenario_many_aliased(; M::Int = 200, K::Int = 8)
-    V = JuMP.VariableRef
     return function ()
         model = Model()
         @variable(model, x[1:M])
         for i in 1:M
             e = sin(x[i])
             for _ in 1:K
-                e = JuMP.GenericNonlinearExpr{V}(:+, e, e)
+                e = atan(e, e)
             end
             @constraint(model, e <= 1)
         end
@@ -285,32 +278,10 @@ function run_bench(label, build)
     println("="^72)
     println(label)
     println("="^72)
-    # Warm up each mode (compile its method specializations) before
-    # timing, so the first sample isn't biased by JIT.
     for m in MODES
         BENCH_MODE[] = m
-        build()
+        display(@benchmark $build())
     end
-    results = Dict{Symbol,Any}()
-    for m in MODES
-        BENCH_MODE[] = m
-        b = @benchmark $build() samples = 5 evals = 1 seconds = 30
-        results[m] = b
-        t_ms = minimum(b).time / 1e6
-        mem_mb = minimum(b).memory / 1024^2
-        allocs = minimum(b).allocs
-        @printf("  %-13s  %10.2f ms   %9.2f MiB   %12d allocs\n",
-                string(m), t_ms, mem_mb, allocs)
-    end
-    # Ratios versus the branch's model_struct baseline so we can see
-    # where each strategy wins, ties, or loses.
-    base = minimum(results[:model_struct]).time
-    println()
-    for m in MODES
-        r = minimum(results[m]).time / base
-        @printf("  ratio(%-13s / model_struct) = %.2f\n", string(m), r)
-    end
-    println()
 end
 
 function one_aliased_tree(; K = 16)
@@ -336,4 +307,4 @@ function run_all()
     many_aliased_tree()
 end
 
-#run_all()
+run_all()

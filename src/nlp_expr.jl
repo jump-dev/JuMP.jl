@@ -1202,7 +1202,7 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
 end
 
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
-    return MOI.VectorNonlinearFunction(map(moi_function, f))
+    return MOI.VectorNonlinearFunction(moi_function.(f, model))
 end
 
 """
