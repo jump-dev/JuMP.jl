@@ -588,8 +588,9 @@ function moi_function(
     model::JuMP.GenericModel,
 ) where {V}
     cache = model.subexpressions
-    if haskey(cache, f)
-        return cache[f]
+    key = objectid(f)
+    if haskey(cache, key)
+        return cache[key]
     end
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
@@ -604,8 +605,9 @@ function moi_function(
     end
     while !isempty(stack)
         parent, i, arg = pop!(stack)
-        if haskey(cache, arg)
-            parent.args[i] = cache[arg]
+        arg_key = objectid(arg)
+        if haskey(cache, arg_key)
+            parent.args[i] = cache[arg_key]
             continue
         end
         child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
@@ -617,9 +619,9 @@ function moi_function(
                 child.args[j] = moi_function(arg.args[j])
             end
         end
-        cache[arg] = child
+        cache[arg_key] = child
     end
-    cache[f] = ret
+    cache[key] = ret
     return ret
 end
 
