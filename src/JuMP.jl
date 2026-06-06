@@ -139,7 +139,7 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     enable_macro_timing::Bool
     macro_times::Dict{Tuple{LineNumberNode,String},Float64}
     # We use `Any` as key because we haven't defined `GenericNonlinearExpr` yet
-    subexpressions::Dict{Any,MOI.ScalarNonlinearFunction}
+    subexpressions::Dict{UInt64,MOI.ScalarNonlinearFunction}
 end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
@@ -253,7 +253,7 @@ function direct_generic_model(
         Dict{Any,MOI.ConstraintIndex}(),
         false,
         Dict{Tuple{LineNumberNode,String},Float64}(),
-        Dict{Any,MOI.ScalarNonlinearFunction}(),
+        Dict{UInt64,MOI.ScalarNonlinearFunction}(),
     )
 end
 
