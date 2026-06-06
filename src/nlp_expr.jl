@@ -584,8 +584,8 @@ end
 moi_function(x::Number) = x
 
 function moi_function(
-    f::GenericNonlinearExpr{V},
     model::JuMP.GenericModel,
+    f::GenericNonlinearExpr{V},
 ) where {V}
     cache = model.subexpressions
     key = objectid(f)
@@ -598,7 +598,7 @@ function moi_function(
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         elseif f.args[i] isa AbstractJuMPScalar
-            ret.args[i] = moi_function(f.args[i], model)
+            ret.args[i] = moi_function(model, f.args[i])
         else
             ret.args[i] = moi_function(f.args[i])
         end
@@ -1244,7 +1244,7 @@ end
 
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
     model = owner_model(first(f))
-    return MOI.VectorNonlinearFunction(moi_function.(f, model))
+    return MOI.VectorNonlinearFunction(moi_function.(model, f))
 end
 
 """
@@ -1290,7 +1290,7 @@ x
 ```
 """
 function simplify(model::GenericModel, f::AbstractJuMPScalar)
-    g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(f, model))
+    g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(model, f))
     return jump_function(model, g)
 end
 
@@ -1342,7 +1342,7 @@ function derivative(
     x::GenericVariableRef{T},
 ) where {T}
     df_dx =
-        MOI.Nonlinear.SymbolicAD.derivative(moi_function(f, model), index(x))
+        MOI.Nonlinear.SymbolicAD.derivative(moi_function(model, f), index(x))
     return jump_function(model, MOI.Nonlinear.SymbolicAD.simplify!(df_dx))
 end
 
@@ -1387,7 +1387,7 @@ julia> ∇f[y]
 ```
 """
 function gradient(model::GenericModel{T}, f::AbstractJuMPScalar) where {T}
-    g = moi_function(f, model)
+    g = moi_function(model, f)
     ∇f = Dict{GenericVariableRef{T},Any}()
     for xi in MOI.Nonlinear.SymbolicAD.variables(g)
         df_dx = MOI.Nonlinear.SymbolicAD.simplify!(
