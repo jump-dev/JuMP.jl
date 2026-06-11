@@ -1151,7 +1151,7 @@ function test_keyword_getindex()
     # Vector{VariableRef}
     @test_throws err x[i=1]
     @test_throws err x[i=2]
-    @test_throws err x[i = :]
+    @test_throws err x[i=:]
     @test_throws err x[i=1:2]
     @test_throws BoundsError x[]
     # Matrix{VariableRef}
@@ -1168,7 +1168,7 @@ function test_keyword_getindex()
     @constraint(model, c[i=1:2], x[i] + i <= 1)
     @test_throws err c[i=1]
     @test_throws err c[i=1:2]
-    @test_throws err c[i = :]
+    @test_throws err c[i=:]
     @test_throws BoundsError c[]
     return
 end
