@@ -409,8 +409,9 @@ import MathOptInterface as MOI
             Inf,
             Inf,
         ]
-        start =
-            [0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650 0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650]
+        start = [
+            0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650 0.5 2 0.8 3 0.9 4 0.1 5 0.14 6 0.5 7 489 8 80 9 650
+        ]
 
         m = Model(Ipopt.Optimizer)
         @variable(m, lower[i] <= x[i=1:N] <= upper[i], start = start[i])
