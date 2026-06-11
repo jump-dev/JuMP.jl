@@ -6,6 +6,7 @@
 module TestNLPExpr
 
 using JuMP
+using LinearAlgebra
 using Test
 
 import LinearAlgebra
@@ -1230,6 +1231,65 @@ function test_extension_euler_to_exp(
     @test isequal_canonical(sum(ℯ^xᵢ for xᵢ in xy), exp(x) + exp(y))
     @test isequal_canonical(ℯ^prod(xy), exp(x*y))
     return
+end
+
+function test_array()
+    model = Model()
+    @variable(model, x)
+    vov = MOI.VectorOfVariables([index(x)])
+    op_det = NonlinearOperator(det, :det)
+    @objective(model, Min, op_det([x]))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    @test f.head == :det
+    @test f.args == [vov]
+
+    op_dot = NonlinearOperator(dot, :dot)
+    a = [2.0]
+    @objective(model, Min, op_dot([x], a))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    @test f.head == :dot
+    @test length(f.args) == 2
+    @test f.args[1] == vov
+    @test f.args[2] == a
+end
+
+# Inspired from contiguous arrays in ArrayDiff and GenOpt
+struct ContiguousVectorOfVariableRefs <: AbstractVector{JuMP.VariableRef}
+    offset::Int
+    length::Int
+end
+
+struct Contiguous end
+
+function JuMP.Containers.container(
+    _,
+    axe::JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int}}},
+    ::Contiguous,
+)
+    # Correctness don't matter, it's not for the sake of this test
+    return ContiguousVectorOfVariableRefs(0, length(axe))
+end
+
+struct ContiguousVectorOfVariableIndices <: MOI.AbstractVectorFunction
+    offset::Int
+    length::Int
+end
+
+Base.copy(x::ContiguousVectorOfVariableIndices) = x
+
+function JuMP.moi_function(x::ContiguousVectorOfVariableRefs)
+    return ContiguousVectorOfVariableIndices(x.offset, x.length)
+end
+
+function test_custom_array()
+    model = Model()
+    @variable(model, x[1:2], container = Contiguous())
+    @test x === ContiguousVectorOfVariableRefs(0, 2)
+    op_norm = NonlinearOperator(LinearAlgebra.norm, :norm)
+    @objective(model, Min, op_norm(x))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    @test f.head == :norm
+    @test f.args[] == ContiguousVectorOfVariableIndices(0, 2)
 end
 
 end  # module
