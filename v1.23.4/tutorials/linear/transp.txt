@@ -1,0 +1,5 @@
+     . FRA  DET LAN WIN  STL  FRE  LAF SUPPLY
+  GARY  39   14  11  14   16   82    8   1400
+  CLEV  27    .  12   .   26   95   17   2600
+  PITT  24   14  17  13   28   99   20   2900
+DEMAND 900 1200 600 400 1700 1100 1000      0
