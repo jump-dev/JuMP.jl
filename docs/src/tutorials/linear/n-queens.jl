@@ -43,7 +43,7 @@ using JuMP
 import HiGHS
 import LinearAlgebra
 
-# ## N-Queens
+# ## Formulation
 
 # Here is an example of an N-Queens problem with four queens.
 
