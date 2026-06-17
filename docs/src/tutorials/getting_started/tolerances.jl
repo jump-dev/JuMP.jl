@@ -22,15 +22,15 @@
 
 # Optimization solvers use tolerances to check feasibility and optimality, and
 # understanding them is essential for interpreting solutions correctly. This
-# tutorial explains the main types of tolerances — primal, dual, integrality,
-# and optimality — and what you can reasonably expect from a solver.
+# tutorial explains the main types of tolerances—primal, dual, integrality,
+# and optimality—and what you can reasonably expect from a solver.
 #
 # **Learning intentions:**
 # * Distinguish between primal feasibility, dual feasibility, integrality, and
 #   optimality tolerances and know which solver setting controls each
-# * Recognise when a solution is "wrong" due to loose tolerances and adjust
+# * Recognize when a solution is "wrong" due to loose tolerances and adjust
 #   solver settings to tighten them
-# * Use JuMP's `primal_feasibility_report` to check whether a solution
+# * Use JuMP's [`primal_feasibility_report`](@ref) to check whether a solution
 #   satisfies the original constraints within a given tolerance
 #
 # There are a few sources of additional information:

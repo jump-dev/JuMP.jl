@@ -12,7 +12,7 @@
 # **Learning intentions:**
 # * Create a `GenericModel{BigFloat}()` and add variables and constraints whose
 #   bounds and coefficients are automatically converted to `BigFloat`
-# * Recognise that solution values — primal, dual, and bounds — are returned in
+# * Recognize that solution values—primal, dual, and bounds—are returned in
 #   the corresponding number type throughout the model
 # * Use `CDDLib.Optimizer{BigFloat}` and `Clarabel.Optimizer{BigFloat}` as
 #   solvers that support arithmetic in exact or extended precision

@@ -6,13 +6,13 @@
 # # Sensitivity analysis of a linear program
 
 # This tutorial explains how to perform sensitivity analysis on a linear program
-# using JuMP's `lp_sensitivity_report`, producing tables similar to those in
+# using JuMP's [`lp_sensitivity_report`](@ref), producing tables similar to those in
 # Excel Solver. Sensitivity analysis answers how much problem data can change
-# before the current optimal basis — and therefore the current solution —
+# before the current optimal basis—and therefore the current solution—
 # changes.
 #
 # **Learning intentions:**
-# * Call `lp_sensitivity_report` to obtain allowable ranges for objective
+# * Call [`lp_sensitivity_report`](@ref) to obtain allowable ranges for objective
 #   coefficients and constraint right-hand sides
 # * Build informative DataFrames summarising variable and constraint reports,
 #   including reduced costs, shadow prices, and slack values

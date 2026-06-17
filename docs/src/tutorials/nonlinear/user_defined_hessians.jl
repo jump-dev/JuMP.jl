@@ -20,10 +20,10 @@
 
 # # User-defined Hessians
 
-# This tutorial explains how to write a [user-defined operator](@ref
-# jump_user_defined_operators) in JuMP with an explicit Hessian matrix, using
-# the Rosenbrock function as a worked example. Providing an analytic Hessian
-# can improve solver performance compared to relying on automatic differentiation.
+# This tutorial explains how to write a [user-defined operator](@ref jump_user_defined_operators)
+# in JuMP with an explicit Hessian matrix, using the Rosenbrock function as a
+# worked example. Providing an analytic Hessian can improve solver performance
+# compared to relying on automatic differentiation.
 #
 # **Learning intentions:**
 # * Write a user-defined operator with an analytic gradient vector function

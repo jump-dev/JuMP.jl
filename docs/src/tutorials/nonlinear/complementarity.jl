@@ -12,8 +12,8 @@
 # **Learning intentions:**
 # * Formulate a mixed complementarity problem using the `⟂` operator,
 #   `complements(F, x)` syntax, and `MOI.Complements` set
-# * Model economic equilibrium problems — including a transportation model and
-#   an insurance coverage problem — as complementarity programs
+# * Model economic equilibrium problems—including a transportation model and
+#   an insurance coverage problem—as complementarity programs
 # * Solve a competitive electricity market equilibrium model as a mixed
 #   complementarity problem with capacity, production, and price variables
 

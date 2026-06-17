@@ -5,8 +5,8 @@
 
 # # Strategies for dealing with many indices
 
-# This tutorial demonstrates two techniques — keyword indexing and typed indices
-# — for avoiding common index-ordering bugs in JuMP models with many sets. Such
+# This tutorial demonstrates two techniques—keyword indexing and typed indices
+# —for avoiding common index-ordering bugs in JuMP models with many sets. Such
 # bugs are easy to introduce in models with variables like `x[p, f, m, t]` and
 # hard to diagnose because the wrong ordering is syntactically valid.
 #
@@ -16,7 +16,7 @@
 #   catching wrong-order access at runtime
 # * Define Julia structs (`Factory`, `Market`) as typed index sets so that
 #   passing `x[Market(2), Factory(1)]` throws an error at the point of misuse
-# * Recognise both approaches as lightweight patterns that scale to models with
+# * Recognize both approaches as lightweight patterns that scale to models with
 #   many index sets and prevent subtle correctness bugs
 
 # ## Required packages

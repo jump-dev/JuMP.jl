@@ -5,16 +5,16 @@
 
 # # Example: ellipsoid approximation
 
-# This tutorial computes _extremal ellipsoids_ — the smallest ellipse enclosing
-# a set of points and the largest ellipse inscribed in a polytope — using
+# This tutorial computes _extremal ellipsoids_—the smallest ellipse enclosing
+# a set of points and the largest ellipse inscribed in a polytope—using
 # semidefinite programs from Section 4.9 of [BenTal2001](@cite). For a related
 # example, see also the [Example: minimal ellipses](@ref) tutorial.
 #
 # **Learning intentions:**
 # * Formulate the minimum-volume enclosing ellipsoid and maximum-volume
 #   inscribed ellipsoid problems as semidefinite programs in JuMP
-# * Use `print_active_bridges` to inspect which JuMP bridges were applied to
-#   reformulate the problem for the solver
+# * Use [`print_active_bridges`](@ref) to inspect which JuMP bridges were
+#   applied to reformulate the problem for the solver
 # * Explore alternative formulations using different cone types and compare
 #   their bridge chains and solve times
 

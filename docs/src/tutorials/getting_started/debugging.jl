@@ -21,8 +21,8 @@
 # # [Debugging](@id tutorial_debugging)
 
 # Dealing with bugs is an unavoidable part of coding optimization models, and
-# JuMP is no exception. This tutorial explains common sources of errors —
-# from coding mistakes and formulation bugs to solver misuse — and demonstrates
+# JuMP is no exception. This tutorial explains common sources of errors—
+# from coding mistakes and formulation bugs to solver misuse—and demonstrates
 # strategies for diagnosing and fixing them.
 #
 # **Learning intentions:**
@@ -30,7 +30,7 @@
 #   solver misuse, and apply appropriate debugging strategies to each
 # * Use JuMP's `print` and inspection tools to verify that a model is
 #   formulated as intended
-# * Interpret infeasibility and unboundedness messages and determine whether
+# * Interpret infeasibility and unboundedness statuses and determine whether
 #   the issue is in the data, formulation, or solver settings
 
 # !!! tip
@@ -429,7 +429,7 @@ begin
     print_macro_timing_summary(model)
 end
 
-# In this case, you can see that the `@constraint` call dominates the runtime.
+# In this case, you can see that the [`@constraint`](@ref) call dominates the runtime.
 # If it isn't obvious why that is, read the [Performance problems with sum-if formulations](@ref)
 # tutorial.
 

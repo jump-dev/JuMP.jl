@@ -30,8 +30,8 @@
 # **Learning intentions:**
 # * Formulate the Markowitz portfolio problem as a quadratic program minimising
 #   portfolio variance subject to a minimum expected return constraint
-# * Extend the single-objective model to a bi-objective program — minimising
-#   variance and maximising return — using MultiObjectiveAlgorithms.jl to
+# * Extend the single-objective model to a bi-objective program—minimising
+#   variance and maximising return—using MultiObjectiveAlgorithms.jl to
 #   approximate the efficient frontier
 # * Visualise the objective and decision spaces to interpret the trade-off
 #   between risk and return across the Pareto-optimal portfolio allocations

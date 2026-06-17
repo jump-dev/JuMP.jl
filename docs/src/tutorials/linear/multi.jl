@@ -16,7 +16,7 @@
 #   `DBInterface.execute`, and load results into DataFrames or row tables
 # * Build a JuMP model by iterating over query results with `Tables.rows`,
 #   avoiding the need to materialise all data upfront
-# * Construct more complex SQL queries — including inner joins — to generate
+# * Construct more complex SQL queries—including inner joins—to generate
 #   constraint sets directly from the database schema
 
 # ## Required packages

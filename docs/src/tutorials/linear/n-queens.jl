@@ -22,8 +22,8 @@
 
 # **This tutorial was originally contributed by Matthew Helm and Mathieu Tanneau.**
 
-# This tutorial solves the N-Queens problem — placing N non-attacking queens on
-# an N×N chessboard — as a binary integer program in JuMP. It is a compact
+# This tutorial solves the N-Queens problem—placing N non-attacking queens on
+# an N×N chessboard—as a binary integer program in JuMP. It is a compact
 # example of how combinatorial feasibility problems can be modelled with row,
 # column, and diagonal constraints.
 #
@@ -32,7 +32,7 @@
 #   as equality constraints
 # * Use `LinearAlgebra.diag` with both the original and row-reversed matrix to
 #   enforce at-most-one-queen constraints on every diagonal
-# * Recognise this as a pure feasibility problem (no objective) and extract the
+# * Recognize this as a pure feasibility problem (no objective) and extract the
 #   integer solution by rounding the continuous values returned by the solver
 
 # ## Required packages

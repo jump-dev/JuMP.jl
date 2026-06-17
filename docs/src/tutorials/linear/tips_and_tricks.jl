@@ -31,8 +31,8 @@
 # reference guide rather than a single worked example.
 #
 # **Learning intentions:**
-# * Reformulate non-linear or combinatorial expressions — absolute value, max,
-#   min, modulo, and Boolean operators — as linear constraints using auxiliary
+# * Reformulate non-linear or combinatorial expressions—absolute value, max,
+#   min, modulo, and Boolean operators—as linear constraints using auxiliary
 #   variables and binary variables
 # * Apply indicator constraints and big-M reformulations to model conditional
 #   linear inequalities that activate depending on the value of a binary variable

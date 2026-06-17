@@ -11,8 +11,8 @@
 # evaluation and shared Jacobian.
 #
 # **Learning intentions:**
-# * Define the component functions of a `VectorNonlinearOracle` — the primal
-#   evaluator, Jacobian structure, and Jacobian evaluator — with the correct
+# * Define the component functions of a `VectorNonlinearOracle`—the primal
+#   evaluator, Jacobian structure, and Jacobian evaluator—with the correct
 #   signatures
 # * Construct a `MOI.VectorNonlinearOracle` set and add it as a single
 #   constraint covering multiple nonlinear inequalities

@@ -23,7 +23,7 @@
 # JuMP makes it easy to build and solve optimization models, but larger models
 # that interact with external data or have customizable structure can quickly
 # become unwieldy. This tutorial demonstrates a progression of design patterns
-# — from simple scripts to reusable functions and data-driven formulations —
+# —from simple scripts to reusable functions and data-driven formulations—
 # for structuring larger JuMP models.
 #
 # **Learning intentions:**

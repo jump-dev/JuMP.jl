@@ -35,8 +35,8 @@
 #   differences and express the equations of motion as nonlinear constraints
 # * Interpolate tabular aerodynamic data (lift and drag coefficients) using
 #   `Interpolations.jl` and embed the resulting functions in the JuMP model
-# * Visualise the optimal trajectory profiles — altitude, velocity, angle of
-#   attack, and bank angle — using `Plots`
+# * Visualise the optimal trajectory profiles—altitude, velocity, angle of
+#   attack, and bank angle—using `Plots`
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be

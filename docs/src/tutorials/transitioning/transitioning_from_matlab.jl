@@ -27,8 +27,8 @@
 # contrasts the syntax and workflows of all three tools side by side.
 #
 # **Learning intentions:**
-# * Map common YALMIP and CVX modelling idioms — decision variables,
-#   constraints, objectives, and solver calls — to their JuMP equivalents
+# * Map common YALMIP and CVX modelling idioms—decision variables,
+#   constraints, objectives, and solver calls—to their JuMP equivalents
 # * Understand Julia's namespace and package system and how it differs from
 #   MATLAB's global workspace
 # * Translate a complete optimization model from YALMIP or CVX into JuMP

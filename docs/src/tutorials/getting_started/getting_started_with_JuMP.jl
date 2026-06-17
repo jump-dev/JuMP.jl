@@ -26,7 +26,7 @@
 #
 # **Learning intentions:**
 # * Build and solve a linear program in JuMP by declaring variables,
-#   constraints, and an objective, then calling `optimize!`
+#   constraints, and an objective, then calling [`optimize!`](@ref)
 # * Query the solution status and optimal variable values after solving
 # * Solve a mixed-integer program and interpret the difference in behavior
 #   compared to a continuous relaxation
@@ -483,7 +483,7 @@ for i in 1:3
     @constraint(model, 6x + 4y >= 5i)
 end
 
-# or use for each loops inside the `@constraint` macro:
+# or use for each loops inside the [`@constraint`](@ref) macro:
 
 @constraint(model, [i in 1:3], 6x + 4y >= 5i)
 

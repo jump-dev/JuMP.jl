@@ -13,14 +13,10 @@
 # * Cache all variable and constraint solution values before modifying the
 #   model, to comply with JuMP's restriction against interleaving queries and
 #   model modifications
-# * Set primal warm-starts via `set_start_value` and dual warm-starts via
-#   `MOI.set` with `MOI.ConstraintDualStart` for each constraint type
-# * Recognise that [`set_start_values`](@ref) is now available directly in JuMP,
+# * Set primal warm-starts via [`set_start_value`](@ref) and dual warm-starts via
+#   [`set_dual_start_value`](@ref) for each constraint type
+# * Recognize that [`set_start_values`](@ref) is now available directly in JuMP,
 #   making this pattern most useful as a template for custom warm-start logic
-
-# !!! tip
-#     See [`set_start_values`](@ref) for a generic implementation of this
-#     function that was added to JuMP after this tutorial was written.
 
 # ## Required packages
 

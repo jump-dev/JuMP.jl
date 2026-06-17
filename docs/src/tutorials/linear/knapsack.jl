@@ -11,8 +11,8 @@
 # **Learning intentions:**
 # * Formulate a binary integer linear program by translating a real-world
 #   selection problem into decision variables, an objective, and a constraint
-# * Build and solve a model in JuMP using `@variable`, `@constraint`, and
-#   `@objective`, then extract the solution via a solver
+# * Build and solve a model in JuMP using [`@variable`](@ref), [`@constraint`](@ref), and
+#   [`@objective`](@ref), then extract the solution via a solver
 # * Encapsulate a model in a reusable, validated Julia function
 
 # ## Required packages

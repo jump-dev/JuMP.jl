@@ -32,8 +32,6 @@
 #   subtour elimination to a callback rather than including it in the formulation
 # * Implement a subtour-detection routine and a lazy constraint callback that
 #   adds violated subtour-elimination cuts when an integer solution is found
-# * Compare a solver-specific callback (using Gurobi) with a solver-independent
-#   callback using the `MOI.LazyConstraint` interface
 
 # ## Required packages
 

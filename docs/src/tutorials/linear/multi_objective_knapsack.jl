@@ -5,17 +5,17 @@
 
 # # Multi-objective knapsack
 
-# This tutorial extends the classic knapsack problem to two objectives —
-# maximising both profit and desirability — and solves it using
+# This tutorial extends the classic knapsack problem to two objectives—
+# maximising both profit and desirability—and solves it using
 # MultiObjectiveAlgorithms.jl. It demonstrates how to visualise and navigate
 # the Pareto frontier to support decision-making.
 #
 # **Learning intentions:**
 # * Formulate a bi-objective binary integer program by supplying a vector of two
-#   objective expressions to `@objective`
+#   objective expressions to [`@objective`](@ref)
 # * Solve the problem with `MOA.EpsilonConstraint` and access multiple
-#   Pareto-optimal solutions via `result_count`, `objective_value`, and `value`
-#   with the `result` keyword
+#   Pareto-optimal solutions via [`result_count`](@ref), [`objective_value`](@ref),
+#   and [`value`](@ref) with the `result` keyword
 # * Plot the objective space to visualise trade-offs between profit and
 #   desirability, and select a preferred solution from the Pareto frontier
 

@@ -26,8 +26,8 @@
 #
 # **Learning intentions:**
 # * Install Julia and an IDE, and navigate the Julia REPL and package manager
-# * Use Julia's core data types — numbers, strings, vectors, matrices, and
-#   dictionaries — to represent problem data
+# * Use Julia's core data types—numbers, strings, vectors, matrices, and
+#   dictionaries—to represent problem data
 # * Write Julia functions, control flow, and comprehensions to build concise
 #   optimization models
 

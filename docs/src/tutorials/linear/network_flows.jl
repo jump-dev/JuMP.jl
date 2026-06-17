@@ -22,8 +22,8 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# This tutorial formulates three classical network flow problems — shortest path,
-# assignment, and maximum flow — as binary or continuous linear programs in JuMP.
+# This tutorial formulates three classical network flow problems—shortest path,
+# assignment, and maximum flow—as binary or continuous linear programs in JuMP.
 # Flow networks model many real-world systems such as transport, communications,
 # and electrical circuits.
 #
@@ -33,7 +33,7 @@
 #   balance values
 # * Model the assignment problem as a bipartite matching, and the max-flow
 #   problem using capacity and conservation constraints on a multi-node network
-# * Recognise how each network problem maps to a standard LP or IP structure and
+# * Recognize how each network problem maps to a standard LP or IP structure and
 #   how the same JuMP modelling patterns apply across all three variants
 
 # ## Required packages

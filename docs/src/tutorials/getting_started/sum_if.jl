@@ -107,7 +107,7 @@ model = Model()
 # mathematical formulation of a network flow problem.
 
 # The downside to this formulation is subtle. Behind the scenes, the JuMP
-# `@constraint` macro expands to something like:
+# [`@constraint`](@ref) macro expands to something like:
 
 model = Model()
 @variable(model, flows[e in edges] >= 0)

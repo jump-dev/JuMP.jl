@@ -16,7 +16,7 @@
 #   constraints, and understand when this is valid (minimising a convex function
 #   or maximising a concave one)
 # * Build an inner (convex combination) approximation using auxiliary weights
-#   `λ`, and recognise its limitation for non-convex functions due to interior
+#   `λ`, and recognize its limitation for non-convex functions due to interior
 #   feasible regions
 # * Add an `SOS2` constraint on the weight vector to enforce a true piecewise
 #   linear approximation for non-convex functions such as `sin(x)`

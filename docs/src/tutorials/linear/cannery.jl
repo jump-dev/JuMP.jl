@@ -7,8 +7,8 @@
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
-# This tutorial solves the cannery problem — a classic transshipment problem
-# from Dantzig's _Linear Programming and Extensions_ — using JSON data to supply
+# This tutorial solves the cannery problem—a classic transshipment problem
+# from Dantzig's _Linear Programming and Extensions_—using JSON data to supply
 # the model parameters. It demonstrates how to build a JuMP model from
 # structured external data.
 #

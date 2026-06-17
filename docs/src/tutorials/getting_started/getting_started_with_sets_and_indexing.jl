@@ -11,6 +11,10 @@
 # * Use nested indexing to model multi-dimensional decision variables and
 #   constraints
 
+# ## Required packages
+
+# This tutorial uses the following packages:
+
 using JuMP
 
 # ## Unordered sets

@@ -12,7 +12,7 @@
 #
 # **Learning intentions:**
 # * Formulate the quantum state discrimination problem as a semidefinite program
-#   with complex Hermitian decision matrices using `@variable` with
+#   with complex Hermitian decision matrices using [`@variable`](@ref) with
 #   [`HermitianPSDCone`](@ref); see [Complex number support](@ref) for background
 # * Express the POVM completeness constraint `ΣEᵢ = I` and the linear objective
 #   over complex Hermitian matrices using JuMP's complex number support

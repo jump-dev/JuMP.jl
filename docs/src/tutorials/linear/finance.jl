@@ -22,8 +22,8 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# This tutorial solves two classical computational finance problems — short-term
-# cash-flow financing and a combinatorial auction — using linear and integer
+# This tutorial solves two classical computational finance problems—short-term
+# cash-flow financing and a combinatorial auction—using linear and integer
 # programming in JuMP. Both examples are drawn from [Cornuejols2018](@cite) and
 # illustrate how optimisation models arise naturally in financial decisions.
 #

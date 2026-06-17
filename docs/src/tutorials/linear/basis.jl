@@ -10,12 +10,11 @@
 # identify degenerate solutions.
 #
 # **Learning intentions:**
-# * Query variable and constraint basis statuses using `MOI.VariableBasisStatus`
-#   and `MOI.ConstraintBasisStatus`, and understand basic vs non-basic variables
+# * Query variable and constraint basis statuses using [`MOI.VariableBasisStatus`](@ref)
+#   and [`MOI.ConstraintBasisStatus`](@ref), and understand basic vs non-basic variables
 # * Construct the basis matrix from an LP solution and verify it by solving the
 #   system `B \\ b`
-# * Identify degenerate basic variables — those at a bound despite being in the
-#   basis — which signal potential numerical instability
+# * Identify degenerate basic variables
 
 # ## Required packages
 

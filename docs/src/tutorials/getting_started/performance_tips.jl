@@ -26,8 +26,9 @@
 # [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
 #
 # **Learning intentions:**
-# * Use JuMP's macros (e.g., `@expression`, `@constraint`) to build expressions
-#   efficiently and avoid unnecessary intermediate allocations
+# * Use JuMP's macros (for example, [`@expression`](@ref), [`@constraint`](@ref))
+#   to build expressions efficiently and avoid unnecessary intermediate
+#   allocations
 # * Avoid global variables and type instability when calling JuMP from functions
 # * Re-use model structure between solves by modifying right-hand sides instead
 #   of rebuilding the model from scratch
@@ -177,7 +178,7 @@ complicated_expression(x, i) = x[i]^2
 
 # Although the final expression consists of  a single element, the sum is over
 # 100,000 elements, all but one of which are then multiplied by `0.0`. The
-# `@expression` line is equivalent to:
+# [`@expression`](@ref) line is equivalent to:
 
 expr = zero(QuadExpr)
 for i in 1:d

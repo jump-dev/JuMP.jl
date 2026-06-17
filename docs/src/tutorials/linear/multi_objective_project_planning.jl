@@ -12,15 +12,15 @@
 # 17-28, 2014 in Madrid.**
 
 # This tutorial solves a project-planning problem with three competing objectives
-# — minimising makespan, cost, and labour — as a multi-objective integer program.
+# —minimising makespan, cost, and labour—as a multi-objective integer program.
 # It shows how to visualise the Pareto frontier and individual Gantt-chart
 # schedules to support decision-making.
 #
 # **Learning intentions:**
 # * Model a project schedule with task-start-time variables, acceleration
 #   decisions, and precedence constraints in a multi-objective integer program
-# * Formulate three simultaneous objectives — makespan, acceleration cost, and
-#   extra staff — and solve with `MOA.KirlikSayin` to enumerate non-dominated
+# * Formulate three simultaneous objectives—makespan, acceleration cost, and
+#   extra staff—and solve with `MOA.KirlikSayin` to enumerate non-dominated
 #   solutions
 # * Plot the objective space and individual Gantt-chart schedules to communicate
 #   trade-offs to a decision maker
