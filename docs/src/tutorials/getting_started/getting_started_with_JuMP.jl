@@ -20,10 +20,16 @@
 
 # # Getting started with JuMP
 
-# This tutorial is aimed at providing a quick introduction to writing and
-# solving optimization models with JuMP.
-
-# If you're new to Julia, start by reading [Getting started with Julia](@ref).
+# This tutorial provides a quick introduction to writing and solving
+# optimization models with JuMP. If you're new to Julia, start by reading
+# [Getting started with Julia](@ref).
+#
+# **Learning intentions:**
+# * Build and solve a linear program in JuMP by declaring variables,
+#   constraints, and an objective, then calling `optimize!`
+# * Query the solution status and optimal variable values after solving
+# * Solve a mixed-integer program and interpret the difference in behavior
+#   compared to a continuous relaxation
 
 # ## What is JuMP?
 

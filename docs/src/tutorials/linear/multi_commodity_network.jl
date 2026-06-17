@@ -5,11 +5,19 @@
 
 # # The network multi-commodity flow problem
 
-# This tutorial is a variation of [The multi-commodity flow problem](@ref) where
-# the graph is a network instead of a bipartite graph.
-
-# The purpose of this tutorial is to demonstrate a style of modeling that
-# uses relational algebra.
+# This tutorial solves a multi-commodity network flow problem in which supply,
+# demand, and flow costs are stored in a SQLite database. It is a variation of
+# [The multi-commodity flow problem](@ref) with a general network graph, and
+# demonstrates a relational algebra style of JuMP modelling using DataFrames
+# joins instead of explicit index loops.
+#
+# **Learning intentions:**
+# * Load network data from a SQLite database using `DBInterface.execute` and
+#   convert the results into DataFrames for use in the model
+# * Assign decision variables directly as columns of a DataFrame and use
+#   `DataFrames.groupby` to build aggregated constraint expressions
+# * Construct mass-balance constraints using `DataFrames.outerjoin` and
+#   `coalesce` to handle nodes that appear only as origins or destinations
 
 # ## Required packages
 

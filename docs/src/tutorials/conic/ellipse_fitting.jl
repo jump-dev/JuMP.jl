@@ -5,9 +5,17 @@
 
 # # Example: fitting of circles and ellipses
 
-# Ellipse fitting is a common task in data analysis and computer vision and is
-# of key importance in many application areas. In this tutorial we show how to
-# fit an ellipse to a set of points using a conic optimization approach.
+# This tutorial demonstrates how to fit an ellipse to a set of 2D data points
+# using a conic optimization approach. It covers the algebraic ellipse
+# parameterisation and applies the method to edge detection in an image.
+#
+# **Learning intentions:**
+# * Formulate the ellipse fitting problem as a semidefinite program using the
+#   algebraic conic-section representation in homogeneous coordinates
+# * Cluster image edge-detection data and fit a separate ellipse to each
+#   cluster by solving the SDP formulation
+# * Visualise the fitted ellipses overlaid on the original image to assess
+#   the quality of the fit
 
 # ## Required packages
 

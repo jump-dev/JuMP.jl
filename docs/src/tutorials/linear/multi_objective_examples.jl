@@ -5,12 +5,23 @@
 
 # # Simple multi-objective examples
 
-# This tutorial contains a number of examples of multi-objective programs from
-# the literature.
+# This tutorial presents three worked examples of multi-objective linear programs
+# — a bi-objective LP, a bi-objective assignment problem, and a bi-objective
+# shortest path problem — drawn from the operations research literature. It
+# introduces the core JuMP and MultiObjectiveAlgorithms.jl workflow for
+# enumerating Pareto-optimal solutions.
+#
+# **Learning intentions:**
+# * Formulate multi-objective programs in JuMP by passing a vector of scalar
+#   objective expressions to `@objective`
+# * Select a multi-objective algorithm (`Lexicographic` or `EpsilonConstraint`)
+#   via `MultiObjectiveAlgorithms.jl` and enumerate the Pareto-optimal solutions
+# * Iterate over multiple results using `result_count` and `objective_value`
+#   with the `result` keyword to inspect each Pareto-optimal solution
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS

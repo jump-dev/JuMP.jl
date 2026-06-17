@@ -20,13 +20,17 @@
 
 # # Performance tips
 
-# By now you should have read the other "getting started" tutorials. You're
-# almost ready to write your own models, but before you do so there are some
-# important things to be aware of.
-
-# The Julia manual has an excellent section on [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
-# The purpose of this tutorial is to highlight a number of performance issues
-# that are specific to JuMP.
+# Good performance in JuMP requires understanding a handful of patterns that
+# differ from general Julia advice. This tutorial highlights the most important
+# performance issues specific to JuMP, complementing the Julia manual's
+# [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
+#
+# **Learning intentions:**
+# * Use JuMP's macros (e.g., `@expression`, `@constraint`) to build expressions
+#   efficiently and avoid unnecessary intermediate allocations
+# * Avoid global variables and type instability when calling JuMP from functions
+# * Re-use model structure between solves by modifying right-hand sides instead
+#   of rebuilding the model from scratch
 
 # ## Required packages
 

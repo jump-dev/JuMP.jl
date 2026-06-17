@@ -24,10 +24,19 @@
 
 # **This tutorial was originally contributed by Henrique Ferrolho.**
 
-# This tutorial demonstrates how to compute a reentry trajectory for the
-# [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle), by formulating
-# and solving a nonlinear programming problem. The problem was drawn from
-# Chapter 6 of [Betts2010](@cite).
+# This tutorial demonstrates how to compute a [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle)
+# reentry trajectory by formulating and solving a nonlinear optimal control
+# problem in JuMP. It is
+# a more complex version of the rocket control tutorial and uses data from
+# [Betts2010](@cite).
+#
+# **Learning intentions:**
+# * Discretise a six-state atmospheric reentry trajectory model using finite
+#   differences and express the equations of motion as nonlinear constraints
+# * Interpolate tabular aerodynamic data (lift and drag coefficients) using
+#   `Interpolations.jl` and embed the resulting functions in the JuMP model
+# * Visualise the optimal trajectory profiles — altitude, velocity, angle of
+#   attack, and bank angle — using `Plots`
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be

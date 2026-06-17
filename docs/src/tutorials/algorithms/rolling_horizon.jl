@@ -22,15 +22,18 @@
 #
 # **This tutorial was originally contributed by Diego Tejada.**
 #
-# The purpose of this tutorial is to demonstrate how to use [ParametricOptInterface.jl](@ref)
-# to solve a rolling horizon optimization problem.
+# This tutorial demonstrates how to use [ParametricOptInterface.jl](@ref) to
+# solve a rolling horizon optimisation problem — repeatedly solving a
+# time-dependent LP while advancing the planning window forward by one step. It
+# uses a power system with solar generation and a battery as the worked example.
 #
-# The term "rolling horizon" refers to solving a time-dependent model
-# repeatedly, where the planning interval is shifted forward in time during each
-# solution step.
-#
-# As a motivating example, this tutorial models the operations of a power system
-# with solar generation and a battery.
+# **Learning intentions:**
+# * Parameterise data in a JuMP model using `POI.ParameterValue` so that the
+#   model structure is built once and only parameter values change each solve
+# * Implement the rolling horizon loop — update forecast parameters, re-solve,
+#   record the first-period decision, and advance the time window
+# * Visualise multi-period battery and generation decisions using `Plots` and
+#   compare the rolling solution against a full-horizon reference solve
 
 # ## Required packages
 #

@@ -7,16 +7,22 @@
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
-# This tutorial solves the cannery problem from Dantzig,
-# _Linear Programming and Extensions_, Princeton University Press, Princeton,
-# NJ, 1963. This class of problem is known as a transshipment problem.
-
-# The purpose of this tutorial is to demonstrate how to use JSON data in the
-# formulation of a JuMP model.
+# This tutorial solves the cannery problem — a classic transshipment problem
+# from Dantzig's _Linear Programming and Extensions_ — using JSON data to supply
+# the model parameters. It demonstrates how to build a JuMP model from
+# structured external data.
+#
+# **Learning intentions:**
+# * Formulate a linear transportation problem with supply and demand constraints
+#   and a cost-minimising objective
+# * Load structured data from a JSON string using the `JSON` package and extract
+#   sets and parameters for use in a JuMP model
+# * Build and solve a JuMP model indexed over string-keyed sets derived from
+#   external data
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS

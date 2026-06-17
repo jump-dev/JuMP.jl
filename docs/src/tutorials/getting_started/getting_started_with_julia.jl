@@ -20,8 +20,16 @@
 
 # # Getting started with Julia
 
-# Because JuMP is embedded in Julia, knowing some basic Julia is important
-# before you start learning JuMP.
+# JuMP is embedded in Julia, so knowing some basic Julia is essential before
+# learning JuMP. This tutorial provides a minimalist crash course in the Julia
+# concepts most relevant to writing optimization models.
+#
+# **Learning intentions:**
+# * Install Julia and an IDE, and navigate the Julia REPL and package manager
+# * Use Julia's core data types — numbers, strings, vectors, matrices, and
+#   dictionaries — to represent problem data
+# * Write Julia functions, control flow, and comprehensions to build concise
+#   optimization models
 
 # !!! tip
 #     This tutorial is designed to provide a minimalist crash course in the

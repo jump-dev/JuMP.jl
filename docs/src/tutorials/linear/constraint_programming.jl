@@ -5,14 +5,20 @@
 
 # # Constraint programming
 
-# JuMP supports a range of constraint-programming type constraints via the
-# corresponding sets in MathOptInterface. For most constraints, there are
-# reformulations built-in that convert the constraint programming constraint
-# into a mixed-integer programming equivalent.
+# This tutorial demonstrates the constraint-programming sets available in JuMP
+# via MathOptInterface. Most of these constraints are automatically reformulated
+# into equivalent mixed-integer programs, so they can be solved with standard
+# MIP solvers such as HiGHS.
+#
+# **Learning intentions:**
+# * Use constraint-programming sets such as `MOI.AllDifferent`, `MOI.Circuit`,
+#   and `MOI.Table` to express combinatorial structure concisely
+# * Understand that JuMP automatically reformulates CP constraints into MIP
+#   equivalents, requiring integer variables with finite bounds
+# * Apply counting constraints — `MOI.CountBelongs`, `MOI.CountDistinct`,
+#   `MOI.CountGreaterThan` — to model cardinality-based requirements
 
-# Because of this reformulation, all variables must be integer, and they must
-# typically have finite bounds. An error will be thrown if the reformulation
-# requires finiteness and you have a variable with non-finite bounds.
+# ## Required packages
 
 # This tutorial uses the following packages:
 

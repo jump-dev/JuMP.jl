@@ -22,8 +22,17 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia and Chris Coey.**
 
-# This tutorial covers experiment design examples (D-optimal, A-optimal, and
-# E-optimal) from section 7.5 of [Boyd2004](@cite).
+# This tutorial covers three classical optimal experiment design problems —
+# D-optimal, A-optimal, and E-optimal — from Section 7.5 of [Boyd2004](@cite),
+# formulated and solved as conic programs in JuMP.
+#
+# **Learning intentions:**
+# * Formulate D-optimal design as a semidefinite program that maximises the
+#   log-determinant of the Fisher information matrix using `MOI.LogDetConeTriangle`
+# * Formulate A-optimal design as a second-order cone program that minimises
+#   the trace of the inverse Fisher information matrix
+# * Formulate E-optimal design as a semidefinite program that maximises the
+#   minimum eigenvalue of the Fisher information matrix
 
 # ## Required packages
 

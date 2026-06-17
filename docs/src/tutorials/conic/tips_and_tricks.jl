@@ -22,8 +22,17 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# The purpose of this tutorial is to show how you can model various common
-# problems using conic optimization.
+# This tutorial shows how to model a variety of common problems using conic
+# optimization in JuMP, covering second-order, rotated second-order, exponential,
+# power, and semidefinite cones.
+#
+# **Learning intentions:**
+# * Use `SecondOrderCone` and `RotatedSecondOrderCone` to express L2-norm and
+#   sum-of-squares objectives as conic constraints
+# * Apply `MOI.ExponentialCone` and `MOI.PowerCone` to model log, entropy, and
+#   geometric mean terms within a linear conic program
+# * Express matrix inequalities and positive semidefiniteness using
+#   `@variable(model, X[1:n, 1:n], PSD)` and `MOI.PositiveSemidefiniteConeTriangle`
 
 # !!! tip
 #     A good resource for learning more about functions which can be modeled

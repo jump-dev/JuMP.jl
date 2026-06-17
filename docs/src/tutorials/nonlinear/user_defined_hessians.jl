@@ -20,9 +20,18 @@
 
 # # User-defined Hessians
 
-# In this tutorial, we explain how to write a user-defined operator (see
-# [User-defined operators](@ref jump_user_defined_operators)) with a Hessian
-# matrix explicitly provided by the user.
+# This tutorial explains how to write a [user-defined operator](@ref
+# jump_user_defined_operators) in JuMP with an explicit Hessian matrix, using
+# the Rosenbrock function as a worked example. Providing an analytic Hessian
+# can improve solver performance compared to relying on automatic differentiation.
+#
+# **Learning intentions:**
+# * Write a user-defined operator with an analytic gradient vector function
+#   matching the `(g::AbstractVector, x...)` signature expected by JuMP
+# * Write the corresponding Hessian function, filling only the lower triangle
+#   of the matrix `H` as required by JuMP
+# * Register the operator with `@operator` passing the function, gradient, and
+#   Hessian, and verify the solution against the known Rosenbrock minimum
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
 

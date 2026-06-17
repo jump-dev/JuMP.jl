@@ -5,8 +5,18 @@
 
 # # User-defined operators with vector outputs
 
-# The purpose of this tutorial is to demonstrate how to write a user-defined
-# operator with a vector-valued output.
+# This tutorial demonstrates how to write user-defined operators with
+# vector-valued outputs in JuMP, avoiding redundant computation when multiple
+# model components share an expensive function evaluation.
+#
+# **Learning intentions:**
+# * Understand why JuMP requires user-defined operators to return a single
+#   scalar, and how splitting a vector-valued function into separate operators
+#   can lead to redundant evaluations
+# * Use a mutable cache struct to share computed results between separate
+#   operator calls at the same point, eliminating duplicated work
+# * Register multiple cached operators using `@operator` and verify that the
+#   cache reduces the number of function evaluations during a solve
 
 # !!! info
 #     As an alternative, see [The `VectorNonlinearOracle` set](@ref) tutorial.

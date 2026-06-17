@@ -24,11 +24,17 @@
 
 # **This tutorial was originally contributed by François Pacaud.**
 
-# This tutorial shows how to solve a logistic regression problem with JuMP.
-# Logistic regression is a well known method in machine learning, useful when we
-# want to classify binary variables with the help of a given set of features. To
-# this goal, we find the optimal combination of features maximizing the
-# (log)-likelihood onto a training set.
+# This tutorial shows how to solve a logistic regression problem in JuMP by
+# reformulating the log-likelihood maximisation as a conic program using the
+# exponential cone, rather than relying on a general nonlinear solver.
+#
+# **Learning intentions:**
+# * Reformulate the logistic log-likelihood using `MOI.ExponentialCone` to
+#   express the log-sigmoid terms in a conic-compatible form
+# * Train a binary classifier by solving the resulting conic program and
+#   compare the fitted coefficients with a reference implementation
+# * Visualise the fitted decision boundary overlaid on the training data to
+#   assess classification performance
 
 # ## Required packages
 

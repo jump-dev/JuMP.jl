@@ -20,9 +20,18 @@
 
 # # Performance problems with sum-if formulations
 
-# The purpose of this tutorial is to explain a common performance issue that can
-# arise with summations like `sum(x[a] for a in list if condition(a))`. This
-# issue is particularly common in models with graph or network structures.
+# A common performance issue in JuMP arises with filtered summations like
+# `sum(x[a] for a in list if condition(a))`, which can be surprisingly slow in
+# large models with graph or network structures. This tutorial explains why this
+# happens and shows how to restructure data to avoid the bottleneck.
+#
+# **Learning intentions:**
+# * Identify when `sum(... if condition)` generators are the performance
+#   bottleneck in a JuMP model
+# * Restructure graph or network data into adjacency lists so that constraint
+#   generation loops over only the relevant elements
+# * Measure and compare model build times to quantify the improvement from the
+#   restructured formulation
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.

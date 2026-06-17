@@ -33,7 +33,7 @@
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import Clarabel

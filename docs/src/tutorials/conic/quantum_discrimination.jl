@@ -5,11 +5,19 @@
 
 # # Example: quantum state discrimination
 
-# This tutorial solves the problem of [quantum state discrimination](https://en.wikipedia.org/wiki/Quantum_state_discrimination).
-
-# The purpose of this tutorial to demonstrate how to solve problems involving
-# complex-valued decision variables and the [`HermitianPSDCone`](@ref). See
-# [Complex number support](@ref) for more details.
+# This tutorial solves the [quantum state discrimination](https://en.wikipedia.org/wiki/Quantum_state_discrimination)
+# problem to find the optimal measurement strategy for distinguishing between
+# quantum states, demonstrating how to model problems with complex-valued
+# decision variables using [`HermitianPSDCone`](@ref) in JuMP.
+#
+# **Learning intentions:**
+# * Formulate the quantum state discrimination problem as a semidefinite program
+#   with complex Hermitian decision matrices using `@variable` with
+#   [`HermitianPSDCone`](@ref); see [Complex number support](@ref) for background
+# * Express the POVM completeness constraint `ΣEᵢ = I` and the linear objective
+#   over complex Hermitian matrices using JuMP's complex number support
+# * Verify the optimal measurement operators satisfy the POVM conditions and
+#   compute the maximum probability of correctly discriminating the quantum states
 
 # ## Required packages
 

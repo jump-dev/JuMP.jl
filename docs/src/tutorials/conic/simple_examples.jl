@@ -5,8 +5,19 @@
 
 # # Simple semidefinite programming examples
 
-# The purpose of this tutorial is to provide a collection of examples of small
-# conic programs from the field of [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming) (SDP).
+# This tutorial is a collection of small conic programs from the field of
+# [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming),
+# including the max-cut relaxation, max-satisfiability, and the Lovász theta
+# number of a graph.
+#
+# **Learning intentions:**
+# * Formulate the SDP relaxation of the [maximum cut problem](https://en.wikipedia.org/wiki/Maximum_cut)
+#   using the graph Laplacian, and round the SDP solution to a feasible cut
+#   via random hyperplane rounding
+# * Model the max-satisfiability problem as an SDP relaxation and compare the
+#   resulting bound against exact integer solutions
+# * Compute the Lovász theta number of a graph as a semidefinite program and
+#   use it to bound the clique number and chromatic number
 
 # ## Required packages
 

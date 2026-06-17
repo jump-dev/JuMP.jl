@@ -5,8 +5,23 @@
 
 # # Approximating nonlinear functions
 
-# The purpose of this tutorial is to explain how to approximate nonlinear functions
-# with a mixed-integer linear program.
+# This tutorial explains how to approximate nonlinear functions within a
+# mixed-integer linear program using outer approximation, inner (convex
+# combination) approximation, and SOS2-enforced piecewise linear approximation.
+# Each approach applies under different convexity assumptions and optimisation
+# directions.
+#
+# **Learning intentions:**
+# * Construct an outer approximation of a convex function using tangent-plane
+#   constraints, and understand when this is valid (minimising a convex function
+#   or maximising a concave one)
+# * Build an inner (convex combination) approximation using auxiliary weights
+#   `λ`, and recognise its limitation for non-convex functions due to interior
+#   feasible regions
+# * Add an `SOS2` constraint on the weight vector to enforce a true piecewise
+#   linear approximation for non-convex functions such as `sin(x)`
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

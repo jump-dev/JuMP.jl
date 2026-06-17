@@ -5,8 +5,17 @@
 
 # # Example: minimal ellipses
 
-# This example comes from section 8.4.1 of the book *Convex Optimization* by
+# This tutorial finds the minimum-area ellipse enclosing a given set of
+# ellipses as a semidefinite program, following Section 8.4.1 of
 # [Boyd and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).
+#
+# **Learning intentions:**
+# * Parameterise the enclosing ellipse as `{x : ||Px + q|| ≤ 1}` and
+#   formulate the minimum-volume SDP with linear matrix inequality constraints
+# * Maximise `log(det(P))` as a proxy for ellipse area using the
+#   `MOI.LogDetConeTriangle` cone
+# * Verify the result by checking that all input ellipses lie within the
+#   computed minimum enclosing ellipse
 
 # ## Formulation
 

@@ -22,31 +22,36 @@
 
 # **This tutorial was originally contributed by Iain Dunning.**
 
-# [Sudoku](http://en.wikipedia.org/wiki/Sudoku) is a popular number puzzle. The
-# goal is to place the digits 1 to 9 on a nine-by-nine grid, with some of the
-# digits already filled in. Your solution must satisfy the following rules:
+# This tutorial models [Sudoku](http://en.wikipedia.org/wiki/Sudoku) as both a
+# binary integer program and a constraint programming problem in JuMP, and solves
+# both formulations with HiGHS. Sudoku is a pure feasibility problem: the goal
+# is to place the digits 1–9 on a 9×9 grid such that each digit appears exactly
+# once in every row, column, and 3×3 sub-grid.
 #
-# * The numbers 1 to 9 must appear in each 3x3 square
-# * The numbers 1 to 9 must appear in each row
-# * The numbers 1 to 9 must appear in each column
+# **Learning intentions:**
+# * Formulate a 9×9×9 binary variable model with cell, row, column, and
+#   sub-grid uniqueness constraints, and fix the given digits using `fix`
+# * Recognise Sudoku as a feasibility problem (no objective) and extract the
+#   integer solution by rounding the continuous values returned by the solver
+# * Re-formulate the same puzzle using the `MOI.AllDifferent` constraint
+#   programming set and verify that both formulations produce the same solution
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import HiGHS
+
+# ## Mixed-integer linear programming formulation
 
 # Here is a partially solved Sudoku problem:
 
 # ![Partially solved Sudoku](../../assets/partial_sudoku.png)
 
-# Solving a Sudoku isn't an optimization problem with an objective; its actually
-# a *feasibility* problem: we wish to find a feasible solution that satisfies
-# these rules. You can think of it as an optimization problem with an objective
-# of 0.
-
-# ## Mixed-integer linear programming formulation
-
 # We can model this problem using 0-1 integer programming: a problem where all
 # the decision variables are binary. We'll use JuMP to create the model, and
 # then we can solve it with any integer programming solver.
-
-using JuMP
-import HiGHS
 
 # We will define a binary variable (a variable that is either 0 or 1) for each
 # possible number in each possible cell. The meaning of each variable is as

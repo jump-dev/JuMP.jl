@@ -7,12 +7,18 @@
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
-# This tutorial is an adaptation of the transportation problem described in
-# [_AMPL: A Modeling Language for Mathematical Programming_](https://ampl.com/resources/the-ampl-book/),
-# by R. Fourer, D.M. Gay and B.W. Kernighan.
-
-# The purpose of this tutorial is to demonstrate how to create a JuMP model from
-# an ad-hoc structured text file.
+# This tutorial solves the classic transportation problem from the AMPL book,
+# reading shipment cost data from a delimited text file. It demonstrates how to
+# parse ad-hoc structured text into a JuMP-ready data structure and encapsulate
+# the model in a reusable function.
+#
+# **Learning intentions:**
+# * Parse a delimited text file using `DelimitedFiles.readdlm` and store the
+#   result in a `Containers.DenseAxisArray` indexed by string row and column names
+# * Fix arc variables to zero for non-existent routes (indicated by `"."` in
+#   the data) rather than removing them from the model formulation
+# * Encapsulate the model in a function that accepts validated input data and
+#   prints the solution in the same format as the input
 
 # ## Required packages
 

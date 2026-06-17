@@ -5,13 +5,22 @@
 
 # # Progressive Hedging
 
-# The purpose of this tutorial is to demonstrate the Progressive Hedging
-# algorithm. It may be helpful to read [Two-stage stochastic programs](@ref)
-# first.
+# This tutorial demonstrates the Progressive Hedging (PH) algorithm, a
+# decomposition method for stochastic programming that solves scenario
+# subproblems iteratively. It may be helpful to read [Two-stage stochastic
+# programs](@ref) first.
+#
+# **Learning intentions:**
+# * Build individual scenario subproblems with quadratic penalty terms that
+#   penalise deviation from the current consensus solution
+# * Implement the PH outer loop: solve all penalised subproblems, update the
+#   consensus average, and update the dual prices
+# * Use JuMP parameters via `set_parameter_value` to efficiently modify penalty
+#   and dual terms between iterations without rebuilding the model
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import Distributions

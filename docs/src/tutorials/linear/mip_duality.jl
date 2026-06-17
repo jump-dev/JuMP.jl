@@ -5,9 +5,20 @@
 
 # # Computing the duals of a mixed-integer program
 
-# This tutorial explains how to compute the duals of a mixed-integer linear
-# program by fixing the discrete variables to their optimal solution and
-# resolving as a linear program.
+# This tutorial explains how to compute dual variables (shadow prices) for a
+# mixed-integer linear program by fixing the discrete variables to their optimal
+# values and resolving as a linear program. Dual information is not available
+# directly from MIP solvers.
+#
+# **Learning intentions:**
+# * Understand why MIP solvers cannot return dual values and how fixing integer
+#   variables and relaxing integrality produces a solvable LP
+# * Use `fix` and `unset_binary` to manually relax integer variables, then
+#   recover duals from the resulting LP
+# * Use JuMP's `fix_discrete_variables` helper to automate this process, and
+#   its returned `undo` function to revert the model to its original form
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

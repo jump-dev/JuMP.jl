@@ -20,8 +20,18 @@
 
 # # Automatic differentiation of user-defined operators
 
-# The purpose of this tutorial is to demonstrate how to apply automatic
-# differentiation to [User-defined operators](@ref jump_user_defined_operators).
+# This tutorial demonstrates how to apply automatic differentiation (AD) to
+# [user-defined operators](@ref jump_user_defined_operators) in JuMP, covering
+# analytic derivatives, ForwardDiff, Enzyme, and DifferentiationInterface as
+# alternative approaches.
+#
+# **Learning intentions:**
+# * Write analytic gradient and Hessian functions for a user-defined operator
+#   and register them using `@operator` with explicit derivative callbacks
+# * Use ForwardDiff.jl and Enzyme.jl to compute gradients and Hessians
+#   automatically, and encapsulate the logic in reusable helper functions
+# * Use DifferentiationInterface.jl as a backend-agnostic abstraction layer,
+#   choosing the underlying AD library via a backend object
 
 # !!! tip
 #     This tutorial is for advanced users. As an alternative, consider using

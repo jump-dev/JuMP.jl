@@ -25,8 +25,23 @@
 # !!! tip
 #     A good source of tips is the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/mio.html).
 
-# This tutorial collates some tips and tricks you can use when formulating
-# mixed-integer programs. It uses the following packages:
+# This tutorial collates modelling tips and tricks for mixed-integer programs in
+# JuMP, including reformulations for absolute value, norms, logical operators,
+# disjunctions, indicator constraints, and special variable types. It is a
+# reference guide rather than a single worked example.
+#
+# **Learning intentions:**
+# * Reformulate non-linear or combinatorial expressions — absolute value, max,
+#   min, modulo, and Boolean operators — as linear constraints using auxiliary
+#   variables and binary variables
+# * Apply indicator constraints and big-M reformulations to model conditional
+#   linear inequalities that activate depending on the value of a binary variable
+# * Use JuMP's `Semicontinuous`, `Semiinteger`, `SOS1`, and `SOS2` variable
+#   types to express special structure that solvers can exploit
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 

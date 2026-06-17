@@ -22,13 +22,22 @@
 
 # **This tutorial was originally contributed by Daniel Schermer.**
 
-# This tutorial describes how to implement the
-# [Traveling Salesperson Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
-# in JuMP using solver-independent lazy constraints that dynamically separate
-# subtours. To be more precise, we use lazy constraints to cut off infeasible
-# subtours only when necessary and not before needed.
+# This tutorial demonstrates how to solve the [Traveling Salesperson Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
+# in JuMP using lazy constraints that dynamically separate subtours during
+# branch-and-bound, avoiding the need to enumerate all subtour-elimination
+# constraints upfront.
+#
+# **Learning intentions:**
+# * Model the TSP as a binary integer program with degree constraints, deferring
+#   subtour elimination to a callback rather than including it in the formulation
+# * Implement a subtour-detection routine and a lazy constraint callback that
+#   adds violated subtour-elimination cuts when an integer solution is found
+# * Compare a solver-specific callback (using Gurobi) with a solver-independent
+#   callback using the `MOI.LazyConstraint` interface
 
-# It uses the following packages:
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS  #hide

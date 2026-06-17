@@ -5,15 +5,18 @@
 
 # # Example: classification problems
 
-# The purpose of this tutorial is to show how JuMP can be used to formulate
-# classification problems.
-
-# Classification problems deal with constructing functions, called *classifiers*,
-# that can efficiently classify data into two or more distinct sets. A common
-# application is classifying previously unseen data points after training a
-# classifier on known data.
-
-# The theory and models in this tutorial come from Section 9.4 of [Ferris2007](@cite).
+# This tutorial shows how JuMP can be used to formulate and solve classification
+# problems using support vector machines (SVMs). It covers linear SVMs, their
+# dual formulations, and the kernel method for nonlinear classifiers, following
+# Section 9.4 of [Ferris2007](@cite).
+#
+# **Learning intentions:**
+# * Formulate a linearly constrained quadratic program for a linear SVM and
+#   solve it to find a separating hyperplane from labelled training data
+# * Derive and solve the dual SVM program, and use the dual variables to
+#   recover the classifier parameters with fewer variables and constraints
+# * Apply the kernel method to perform nonlinear classification by replacing the
+#   Gram matrix with a pairwise kernel function such as the Gaussian kernel
 
 # ## Required packages
 

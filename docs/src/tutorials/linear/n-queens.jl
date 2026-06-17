@@ -22,19 +22,35 @@
 
 # **This tutorial was originally contributed by Matthew Helm and Mathieu Tanneau.**
 
-# The N-Queens problem involves placing N queens on an N x N chessboard such
-# that none of the queens attacks another. In chess, a queen can move
-# vertically, horizontally, and diagonally so there cannot be more than one
-# queen on any given row, column, or diagonal.
+# This tutorial solves the N-Queens problem — placing N non-attacking queens on
+# an N×N chessboard — as a binary integer program in JuMP. It is a compact
+# example of how combinatorial feasibility problems can be modelled with row,
+# column, and diagonal constraints.
+#
+# **Learning intentions:**
+# * Model an N×N binary decision grid and encode row and column exclusivity
+#   as equality constraints
+# * Use `LinearAlgebra.diag` with both the original and row-reversed matrix to
+#   enforce at-most-one-queen constraints on every diagonal
+# * Recognise this as a pure feasibility problem (no objective) and extract the
+#   integer solution by rounding the continuous values returned by the solver
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import HiGHS
+import LinearAlgebra
+
+# ## N-Queens
+
+# Here is an example of an N-Queens problem with four queens.
 
 # ![Four Queens](../../assets/n_queens4.png)
 
 # *Note that none of the queens above are able to attack any other as a result
 # of their careful placement.*
-
-using JuMP
-import HiGHS
-import LinearAlgebra
 
 # N-Queens
 N = 8

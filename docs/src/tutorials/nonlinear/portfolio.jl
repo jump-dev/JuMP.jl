@@ -22,12 +22,19 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# Optimization models play an increasingly important role in financial
-# decisions. Many computational finance problems can be solved efficiently using
-# modern optimization techniques.
+# This tutorial solves the Markowitz mean-variance portfolio optimization problem
+# using quadratic programming in JuMP, then extends it to a bi-objective problem
+# to compute the efficient frontier. Data is from [lecture notes by Shabbir Ahmed
+# at Georgia Tech](https://www2.isye.gatech.edu/~sahmed/isye6669/).
 #
-# This tutorial solves the famous Markowitz Portfolio Optimization problem with
-# data from [lecture notes from a course taught at Georgia Tech by Shabbir Ahmed](https://www2.isye.gatech.edu/~sahmed/isye6669/).
+# **Learning intentions:**
+# * Formulate the Markowitz portfolio problem as a quadratic program minimising
+#   portfolio variance subject to a minimum expected return constraint
+# * Extend the single-objective model to a bi-objective program — minimising
+#   variance and maximising return — using MultiObjectiveAlgorithms.jl to
+#   approximate the efficient frontier
+# * Visualise the objective and decision spaces to interpret the trade-off
+#   between risk and return across the Pareto-optimal portfolio allocations
 
 # ## Required packages
 

@@ -7,17 +7,21 @@
 
 # **This tutorial was originally contributed by Louis Luangkesorn.**
 
-# This tutorial is a JuMP implementation of the multi-commodity transportation
-# model described in
-# [_AMPL: A Modeling Language for Mathematical Programming_](https://ampl.com/resources/the-ampl-book/),
-# by R. Fourer, D.M. Gay and B.W. Kernighan.
-
-# The purpose of this tutorial is to demonstrate creating a JuMP model from an
-# SQLite database.
+# This tutorial solves the multi-commodity flow problem from the AMPL book by
+# reading data from a SQLite database. It demonstrates how to build a JuMP model
+# by executing SQL queries and piping results to Julia data structures.
+#
+# **Learning intentions:**
+# * Connect to a SQLite database with `SQLite.DB`, execute queries via
+#   `DBInterface.execute`, and load results into DataFrames or row tables
+# * Build a JuMP model by iterating over query results with `Tables.rows`,
+#   avoiding the need to materialise all data upfront
+# * Construct more complex SQL queries — including inner joins — to generate
+#   constraint sets directly from the database schema
 
 # ## Required packages
 
-# This tutorial uses the following packages
+# This tutorial uses the following packages:
 
 using JuMP
 import DataFrames

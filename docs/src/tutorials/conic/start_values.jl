@@ -5,14 +5,18 @@
 
 # # Primal and dual warm-starts
 
-# Some conic solvers have the ability to set warm-starts for the primal and dual
-# solution. This can improve performance, particularly if you are repeatedly
-# solving a sequence of related problems.
-
-# The purpose of this tutorial is to demonstrate how to write a function that
-# sets the primal and dual starts as the optimal solution stored in a model. It
-# is intended to be a starting point for which you can modify if you want to do
-# something similar in your own code.
+# This tutorial demonstrates how to write a helper function that sets primal
+# and dual warm-starts from the current optimal solution of a conic model,
+# which can improve solver performance when repeatedly solving related problems.
+#
+# **Learning intentions:**
+# * Cache all variable and constraint solution values before modifying the
+#   model, to comply with JuMP's restriction against interleaving queries and
+#   model modifications
+# * Set primal warm-starts via `set_start_value` and dual warm-starts via
+#   `MOI.set` with `MOI.ConstraintDualStart` for each constraint type
+# * Recognise that [`set_start_values`](@ref) is now available directly in JuMP,
+#   making this pattern most useful as a template for custom warm-start logic
 
 # !!! tip
 #     See [`set_start_values`](@ref) for a generic implementation of this

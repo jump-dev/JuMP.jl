@@ -5,9 +5,19 @@
 
 # # Basis matrices
 
-# This tutorial explains how to query the basis of a linear program.
+# This tutorial explains how to query the basis of a linear program using JuMP.
+# It covers how to interpret basis status codes, construct basis matrices, and
+# identify degenerate solutions.
+#
+# **Learning intentions:**
+# * Query variable and constraint basis statuses using `MOI.VariableBasisStatus`
+#   and `MOI.ConstraintBasisStatus`, and understand basic vs non-basic variables
+# * Construct the basis matrix from an LP solution and verify it by solving the
+#   system `B \\ b`
+# * Identify degenerate basic variables — those at a bound despite being in the
+#   basis — which signal potential numerical instability
 
-# ## Setup
+# ## Required packages
 
 # This tutorial uses the following packages:
 

@@ -5,7 +5,17 @@
 
 # # Simple examples
 
-# This tutorial is a collection of examples of small nonlinear programs.
+# This tutorial is a collection of small nonlinear programs in JuMP, covering
+# the Rosenbrock function, a beam deflection problem, maximum likelihood
+# estimation, and quadratically constrained programs.
+#
+# **Learning intentions:**
+# * Solve the Rosenbrock function as an unconstrained nonlinear program and
+#   verify the known global minimum using Ipopt
+# * Formulate and solve a discretised nonlinear beam problem with trapezoidal
+#   integration constraints using the `@variables` and `@constraint` block macros
+# * Use nonlinear objectives to compute maximum likelihood estimates for the
+#   mean and variance of a normal distribution, including a constrained variant
 
 # ## Required packages
 

@@ -20,14 +20,20 @@
 
 # # Nested optimization problems
 
-# The purpose of this tutorial is to show how to solve a *nested* optimization
-# problem, where an *upper* problem uses the results from the optimization of a
-# *lower* subproblem.
+# This tutorial shows how to solve a nested (bilevel) optimization problem in
+# which the upper-level problem uses the optimal value of a lower-level
+# subproblem as an objective term. It also demonstrates how to use a cache to
+# avoid redundant subproblem solves.
 #
-# To model the problem, we define a user-defined operator to handle the
-# decomposition of the lower problem inside the upper one. Finally, we show how
-# to improve the performance by using a cache that avoids resolving the lower
-# problem.
+# **Learning intentions:**
+# * Decompose a bilevel program into upper and lower levels, and express the
+#   lower-level value function as a user-defined operator using `@operator`
+# * Provide analytic gradient and Hessian callbacks for the value function
+#   operator, derived by differentiating the lower-level objective with respect
+#   to the upper-level parameters
+# * Use a `Cache` struct and an `_update_if_needed` guard to share lower-level
+#   solutions between function, gradient, and Hessian evaluations at the same
+#   point
 #
 # For a simpler example of writing a user-defined operator, see the
 # [User-defined Hessians](@ref) tutorial.

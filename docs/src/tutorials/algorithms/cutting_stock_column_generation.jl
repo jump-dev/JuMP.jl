@@ -5,8 +5,20 @@
 
 # # Column generation
 
-# The purpose of this tutorial is to demonstrate the column generation
-# algorithm. As an example, it solves the [Cutting stock problem](https://en.wikipedia.org/wiki/Cutting_stock_problem).
+# This tutorial demonstrates the column generation algorithm by solving the
+# [cutting stock problem](https://en.wikipedia.org/wiki/Cutting_stock_problem),
+# which minimises the number of large rolls needed to satisfy demand for a set
+# of smaller piece widths.
+#
+# **Learning intentions:**
+# * Set up the restricted master LP over an initial set of cutting patterns and
+#   interpret the dual variables as column pricing signals
+# * Solve the pricing subproblem (a knapsack integer program) to find the most
+#   profitable new pattern and add it as a column to the master problem
+# * Implement the full column generation loop and convert the final LP relaxation
+#   to an integer solution by solving a restricted MIP over the generated columns
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

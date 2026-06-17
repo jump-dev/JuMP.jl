@@ -22,8 +22,22 @@
 
 # **This tutorial was originally contributed by Shuvomoy Das Gupta.**
 
-# This tutorial describes how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
-# in JuMP. It uses the following packages:
+# This tutorial demonstrates how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
+# in JuMP using a mixed-integer linear program as a worked example. It covers
+# both a classical iterative implementation and a modern callback-based variant.
+#
+# **Learning intentions:**
+# * Decompose a MILP into a master problem and a subproblem, and derive Benders
+#   optimality and feasibility cuts from the dual solution of the subproblem
+# * Implement the classical iterative Benders algorithm with an explicit
+#   outer-approximation loop, tracking upper and lower bounds to detect
+#   convergence
+# * Implement the callback-based variant that adds Benders cuts inside the
+#   branch-and-bound tree using a lazy constraint callback
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Gurobi

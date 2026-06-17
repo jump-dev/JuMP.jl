@@ -5,12 +5,21 @@
 
 # # The diet problem
 
-# The purpose of this tutorial is to demonstrate how to incorporate DataFrames
-# into a JuMP model. As an example, we use classic [Stigler diet problem](https://en.wikipedia.org/wiki/Stigler_diet).
+# This tutorial demonstrates how to use DataFrames to supply data to a JuMP
+# model, using the classic diet problem as an example. It also shows how to
+# modify a solved model by adding new constraints and re-solving.
+#
+# **Learning intentions:**
+# * Build a JuMP linear program whose variables and constraints are driven
+#   directly by rows of a `DataFrames.DataFrame`
+# * Convert decision variable containers to arrays so they can be stored as
+#   DataFrame columns and used in vectorised expressions
+# * Modify a solved model by adding a new constraint and re-solving, and
+#   interpret an infeasible result
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import CSV

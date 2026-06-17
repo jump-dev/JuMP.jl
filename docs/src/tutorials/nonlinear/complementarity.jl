@@ -5,8 +5,17 @@
 
 # # Example: mixed complementarity problems
 
-# The purpose of this tutorial is to provide a collection of mixed
-# complementarity programs.
+# This tutorial provides a collection of mixed complementarity programs solved
+# using PATHSolver. It covers the complementarity constraint syntax in JuMP and
+# demonstrates applications from transport economics and energy markets.
+#
+# **Learning intentions:**
+# * Formulate a mixed complementarity problem using the `⟂` operator,
+#   `complements(F, x)` syntax, and `MOI.Complements` set
+# * Model economic equilibrium problems — including a transportation model and
+#   an insurance coverage problem — as complementarity programs
+# * Solve a competitive electricity market equilibrium model as a mixed
+#   complementarity problem with capacity, production, and price variables
 
 # ## Required packages
 

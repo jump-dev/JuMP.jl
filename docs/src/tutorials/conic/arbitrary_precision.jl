@@ -5,8 +5,17 @@
 
 # # Arbitrary precision arithmetic
 
-# The purpose of this tutorial is to explain how to use a solver which supports
-# arithmetic using a number type other than `Float64`.
+# This tutorial explains how to create a JuMP model that uses arithmetic with
+# a number type other than `Float64`, using `BigFloat` as a worked example with
+# the CDDLib and Clarabel solvers.
+#
+# **Learning intentions:**
+# * Create a `GenericModel{BigFloat}()` and add variables and constraints whose
+#   bounds and coefficients are automatically converted to `BigFloat`
+# * Recognise that solution values — primal, dual, and bounds — are returned in
+#   the corresponding number type throughout the model
+# * Use `CDDLib.Optimizer{BigFloat}` and `Clarabel.Optimizer{BigFloat}` as
+#   solvers that support arithmetic in exact or extended precision
 
 # ## Required packages
 
