@@ -15,7 +15,7 @@
 # * Connect to a SQLite database and execute queries to retrieve the sets and
 #   parameters needed to build a JuMP model
 # * Consume query results in three ways: loading into a DataFrame, converting to
-#   a row table, or streaming rows directly — and understand when each is appropriate
+#   a row table, or streaming rows directly—and understand when each is appropriate
 # * Write SQL joins to generate constraint index sets directly from the database
 #   schema, rather than constructing them in Julia
 

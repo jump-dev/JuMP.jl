@@ -14,7 +14,7 @@
 #   `complements` syntax, and [`MOI.Complements`](@ref) set
 # * Model economic equilibrium problems—such as a transportation network and an
 #   insurance market—as mixed complementarity programs
-# * Recognise when a competitive market equilibrium can be stated as a
+# * Recognize when a competitive market equilibrium can be stated as a
 #   complementarity problem and solve it with PATHSolver
 
 # ## Required packages

@@ -27,8 +27,8 @@
 # formulated and solved as conic programs in JuMP.
 #
 # **Learning intentions:**
-# * Understand the three classical criteria for optimal experiment design —
-#   A, E, and D — and what each one measures about the error covariance
+# * Understand the three classical criteria for optimal experiment design—
+#   A, E, and D—and what each one measures about the error covariance
 # * Formulate A-optimal and E-optimal design as semidefinite programs using
 #   block PSD constraints and eigenvalue constraints respectively
 # * Formulate D-optimal design using [`MOI.LogDetConeTriangle`](@ref) to

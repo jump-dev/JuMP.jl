@@ -14,7 +14,7 @@
 # * Parallelise independent JuMP solves with `Threads.@threads` by building a
 #   separate model per thread and protecting shared results with a `ReentrantLock`,
 #   because JuMP models are not thread-safe
-# * Recognise the closure-capture pitfall: reusing a variable name inside and
+# * Recognize the closure-capture pitfall: reusing a variable name inside and
 #   outside a `Threads.@threads` loop silently introduces a race condition via
 #   `Core.Box`; annotate the inner variable with `local` to fix it
 # * Run independent solves across separate Julia processes using

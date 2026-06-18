@@ -36,8 +36,8 @@
 #   variables
 # * Model conditional logic using indicator constraints and big-M
 #   reformulations, and understand the trade-offs between the two approaches
-# * Use JuMP's special variable types — [`Semicontinuous`](@ref),
-#   [`Semiinteger`](@ref), [`SOS1`](@ref), and [`SOS2`](@ref) — to express
+# * Use JuMP's special variable types—[`Semicontinuous`](@ref),
+#   [`Semiinteger`](@ref), [`SOS1`](@ref), and [`SOS2`](@ref)—to express
 #   structure that solvers can exploit directly
 
 # ## Required packages

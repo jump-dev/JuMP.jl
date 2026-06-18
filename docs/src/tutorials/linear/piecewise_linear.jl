@@ -13,7 +13,7 @@
 #
 # **Learning intentions:**
 # * Approximate a nonlinear function within an LP using tangent-plane (outer)
-#   constraints, and recognise when this is valid based on convexity and
+#   constraints, and recognize when this is valid based on convexity and
 #   optimisation direction
 # * Build an inner (convex combination) approximation using auxiliary weight
 #   variables, and understand why it fails for non-convex functions

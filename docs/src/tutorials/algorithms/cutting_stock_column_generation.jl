@@ -15,7 +15,7 @@
 #   starting from a small set and iteratively adding only the most profitable one,
 #   guided by LP dual variables
 # * Formulate the pricing subproblem as a knapsack integer program whose objective
-#   uses the current dual prices, and recognise a positive reduced cost as the
+#   uses the current dual prices, and recognize a positive reduced cost as the
 #   signal that a new column is worth adding
 # * Convert the final LP relaxation to a practical integer solution by
 #   re-imposing integrality and re-solving

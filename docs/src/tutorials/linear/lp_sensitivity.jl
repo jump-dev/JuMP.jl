@@ -16,7 +16,7 @@
 #   coefficient or constraint right-hand side can move before the optimal basis
 #   changes
 # * Use [`lp_sensitivity_report`](@ref) to retrieve allowable ranges, and
-#   organise them alongside reduced costs, shadow prices, and slacks into
+#   organize them alongside reduced costs, shadow prices, and slacks into
 #   readable DataFrames
 # * Read the resulting tables to identify which variables are basic or
 #   non-basic and which constraints are binding

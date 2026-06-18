@@ -29,7 +29,7 @@
 #
 # **Learning intentions:**
 # * Formulate the shortest path, assignment, and maximum flow problems as linear
-#   programs, and recognise their shared flow-conservation structure
+#   programs, and recognize their shared flow-conservation structure
 # * Distinguish source and sink nodes by their balance values in a
 #   flow-conservation constraint, and use this pattern across all three problems
 # * Choose binary arc variables when a path or matching must be discrete, and

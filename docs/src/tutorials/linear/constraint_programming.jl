@@ -11,8 +11,8 @@
 # MIP solvers such as HiGHS.
 #
 # **Learning intentions:**
-# * Express combinatorial requirements — all-different assignments, Hamiltonian
-#   circuits, bin packing, table lookups — concisely using constraint-programming
+# * Express combinatorial requirements—all-different assignments, Hamiltonian
+#   circuits, bin packing, table lookups—concisely using constraint-programming
 #   sets, rather than writing explicit integer-programming reformulations by hand
 # * Understand that JuMP automatically reformulates these CP sets into MIP
 #   equivalents, so any standard MIP solver can solve them without extra work

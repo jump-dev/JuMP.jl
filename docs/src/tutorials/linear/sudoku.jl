@@ -31,7 +31,7 @@
 # **Learning intentions:**
 # * Formulate Sudoku as a binary integer program with a 9×9×9 variable grid,
 #   and encode cell, row, column, and sub-grid uniqueness as linear constraints
-# * Recognise Sudoku as a feasibility problem with no objective, fix the given
+# * Recognize Sudoku as a feasibility problem with no objective, fix the given
 #   digits using [`fix`](@ref), and extract the solution by rounding
 # * Re-formulate the same puzzle using the [`MOI.AllDifferent`](@ref) constraint
 #   programming set and verify that both formulations give the same answer

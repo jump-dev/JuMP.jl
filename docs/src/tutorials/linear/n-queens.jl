@@ -32,7 +32,7 @@
 #   as equality constraints
 # * Enforce at-most-one-queen constraints on every diagonal by iterating over
 #   the diagonals of both the original and row-reversed matrix
-# * Recognise this as a pure feasibility problem with no objective, and extract
+# * Recognize this as a pure feasibility problem with no objective, and extract
 #   the integer solution by rounding the continuous values returned by the solver
 
 # ## Required packages

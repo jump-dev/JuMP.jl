@@ -12,7 +12,7 @@
 # * Translate a real-world selection problem into a binary integer linear
 #   program with decision variables, a capacity constraint, and a
 #   value-maximising objective
-# * Follow the complete JuMP workflow — build, solve, and extract a solution —
+# * Follow the complete JuMP workflow—build, solve, and extract a solution—
 #   and encapsulate it in a reusable, validated function
 
 # ## Required packages

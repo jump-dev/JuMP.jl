@@ -14,8 +14,8 @@
 #   basis status after solving an LP
 # * Construct the basis matrix from a solved model, accounting for the slack
 #   variables that solvers introduce for inequality constraints
-# * Identify degenerate basic variables — those that are basic but sit at a
-#   bound — and understand why degeneracy matters
+# * Identify degenerate basic variables—those that are basic but sit at a
+#   bound—and understand why degeneracy matters
 
 # ## Required packages
 

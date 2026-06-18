@@ -14,7 +14,7 @@
 #   objective coefficients, and constraints, so the model automatically adapts
 #   when the data changes
 # * Modify a solved model by adding a new constraint and re-solving without
-#   rebuilding from scratch, and recognise what an infeasible result means
+#   rebuilding from scratch, and recognize what an infeasible result means
 
 # ## Required packages
 

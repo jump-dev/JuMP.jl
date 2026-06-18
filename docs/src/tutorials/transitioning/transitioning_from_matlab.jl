@@ -27,7 +27,7 @@
 # contrasts the syntax and workflows of all three tools side by side.
 #
 # **Learning intentions:**
-# * Recognise the key differences between JuMP and YALMIP/CVX—explicit models,
+# * Recognize the key differences between JuMP and YALMIP/CVX—explicit models,
 #   Julia namespaces, and the need to choose a solver—before writing any code
 # * Map common modelling idioms side by side: declaring variables, adding
 #   constraints, setting objectives, and calling the solver

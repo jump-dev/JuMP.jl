@@ -12,8 +12,8 @@
 # **Learning intentions:**
 # * Represent an ellipse as a quadratic form in homogeneous coordinates and
 #   formulate the fitting problem as a semidefinite program
-# * Fit ellipses under two different criteria — minimise total squared
-#   residual and minimise maximum residual — and compare their results visually
+# * Fit ellipses under two different criteria—minimise total squared
+#   residual and minimise maximum residual—and compare their results visually
 # * Apply the full pipeline to real image data: denoise, detect edges, cluster
 #   detected points, then fit one ellipse per cluster
 
