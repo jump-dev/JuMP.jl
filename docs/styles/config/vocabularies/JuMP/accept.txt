@@ -63,6 +63,7 @@ subexpression(?s)
 subgraph(?s)
 sublicense
 subtyping
+SVM(?s)
 sysimage
 threadsafe
 [Tt]hresholding

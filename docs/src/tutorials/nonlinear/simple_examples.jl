@@ -12,7 +12,7 @@
 # **Learning intentions:**
 # * Solve the Rosenbrock function as an unconstrained nonlinear program and
 #   verify the known global minimum using Ipopt
-# * Formulate and solve a discretised nonlinear beam problem with trapezoidal
+# * Formulate and solve a discretized nonlinear beam problem with trapezoidal
 #   integration constraints using the `@variables` and [`@constraint`](@ref) block macros
 # * Use nonlinear objectives to compute maximum likelihood estimates for the
 #   mean and variance of a normal distribution, including a constrained variant

@@ -7,7 +7,7 @@
 
 # This tutorial demonstrates how to fit an ellipse to a set of 2D data points
 # using a conic optimization approach. It covers the algebraic ellipse
-# parameterisation and applies the method to edge detection in an image.
+# parameterization and applies the method to edge detection in an image.
 #
 # **Learning intentions:**
 # * Formulate the ellipse fitting problem as a semidefinite program using the

@@ -25,7 +25,7 @@
 # This tutorial models [Sudoku](http://en.wikipedia.org/wiki/Sudoku) as both a
 # binary integer program and a constraint programming problem in JuMP, and solves
 # both formulations with HiGHS. Sudoku is a pure feasibility problem: the goal
-# is to place the digits 1–9 on a 9×9 grid such that each digit appears exactly
+# is to place the digits 1-9 on a 9×9 grid such that each digit appears exactly
 # once in every row, column, and 3×3 sub-grid.
 #
 # **Learning intentions:**

@@ -31,7 +31,7 @@
 # [Betts2010](@cite).
 #
 # **Learning intentions:**
-# * Discretise a six-state atmospheric reentry trajectory model using finite
+# * Discretize a six-state atmospheric reentry trajectory model using finite
 #   differences and express the equations of motion as nonlinear constraints
 # * Interpolate tabular aerodynamic data (lift and drag coefficients) using
 #   `Interpolations.jl` and embed the resulting functions in the JuMP model

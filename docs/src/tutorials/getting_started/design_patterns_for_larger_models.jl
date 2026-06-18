@@ -31,8 +31,8 @@
 #   external data
 # * Separate model construction from data input to improve readability and
 #   maintainability
-# * Use Julia structs and multiple dispatch to build modular, composable
-#   optimization workflows
+# * Use Julia structs and multiple dispatch to build modular optimization
+#   workflows
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.

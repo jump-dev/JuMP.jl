@@ -30,7 +30,7 @@
 # **Learning intentions:**
 # * Compute pairwise Haversine distances between geographic coordinates and
 #   use them as cost coefficients in a binary integer program
-# * Introduce auxiliary binary variables to linearise the "same group" condition
+# * Introduce auxiliary binary variables to linearize the "same group" condition
 #   for pairs of cities, enabling the distance objective to be expressed linearly
 # * Control symmetry by fixing one city's group assignment, and use
 #   population-balance constraints to trade off geographic proximity against
