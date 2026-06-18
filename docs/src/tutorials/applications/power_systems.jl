@@ -19,9 +19,9 @@
 #   objective in-place rather than rebuilding the model at each iteration
 # * Extend economic dispatch to unit commitment by adding binary on/off
 #   variables and coupling them to generator output bounds with big-M constraints
-# * Embed a piecewise-linear thermal cost function as a user-defined operator
-#   using [`@operator`](@ref) and add a nonlinear constraint on wind power to
-#   formulate a nonlinear economic dispatch problem
+# * Embed a user-defined nonlinear thermal cost function using [`@operator`](@ref)
+#   and add a nonlinear `sqrt(w)` constraint on wind power to formulate a
+#   nonlinear economic dispatch problem
 
 # ## Required packages
 
