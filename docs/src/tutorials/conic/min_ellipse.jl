@@ -13,7 +13,7 @@
 # * Parameterise the enclosing ellipse as `{x : ||Px + q|| ≤ 1}` and
 #   formulate the minimum-volume SDP with linear matrix inequality constraints
 # * Maximise `log(det(P))` as a proxy for ellipse area using the
-#   [`MOI.LogDetConeTriangle`](@ref) cone
+#   [`MOI.LogDetConeSquare`](@ref) cone
 # * Verify the result by checking that all input ellipses lie within the
 #   computed minimum enclosing ellipse
 

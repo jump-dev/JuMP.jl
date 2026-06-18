@@ -28,11 +28,13 @@
 #
 # **Learning intentions:**
 # * Implement the core PDHG iteration in Julia and verify it finds the correct
-#   solution on a small LP
-# * Create a `MOI.AbstractOptimizer` subtype that wraps the PDHG implementation
-#   and exposes the required attribute, variable, and constraint interfaces
-# * Use the custom optimizer as a JuMP solver and confirm it matches a
-#   reference solution from HiGHS on a test problem
+#   primal and dual solutions on a small LP
+# * Subtype [`MOI.AbstractOptimizer`](@ref) and implement the required
+#   [`MOI.supports_constraint`](@ref), [`MOI.is_empty`](@ref), and
+#   [`MOI.empty!`](@ref) methods to define what the solver supports
+# * Use [`MOI.Utilities.GenericModel`](@ref) to extract standard-form matrices
+#   inside [`MOI.optimize!`](@ref), and implement solution attributes such as
+#   [`MOI.TerminationStatus`](@ref) and [`MOI.VariablePrimal`](@ref)
 
 # ## Required packages
 

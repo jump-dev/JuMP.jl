@@ -29,9 +29,10 @@
 # * Use JuMP's macros (for example, [`@expression`](@ref), [`@constraint`](@ref))
 #   to build expressions efficiently and avoid unnecessary intermediate
 #   allocations
-# * Avoid global variables and type instability when calling JuMP from functions
-# * Re-use model structure between solves by modifying right-hand sides instead
-#   of rebuilding the model from scratch
+# * Use `add_to_expression!` to accumulate summations in-place rather than via
+#   operator overloading, which creates unnecessary intermediate allocations
+# * Disable string name creation with `set_string_names_on_creation` for large
+#   models, and pre-compute non-zero index sets to skip zero-coefficient terms
 
 # ## Required packages
 

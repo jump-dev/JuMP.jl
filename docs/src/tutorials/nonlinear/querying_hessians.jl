@@ -29,8 +29,10 @@
 #   using `SparseReverseMode` automatic differentiation
 # * Use `MOI.hessian_lagrangian_structure` and `MOI.eval_hessian_lagrangian`
 #   to obtain the sparsity pattern and values of the Hessian at a given point
-# * Symmetrise the sparse Hessian and verify the result against an analytic
-#   solution, then use the eigenvalues to confirm the solution is a local minimum
+# * Symmetrise the upper-triangular sparse Hessian, verify it against the
+#   analytic solution, and confirm local optimality via positive eigenvalues;
+#   also query the constraint Jacobian using [`MOI.jacobian_structure`](@ref)
+#   and [`MOI.eval_constraint_jacobian`](@ref)
 
 # ## Required packages
 

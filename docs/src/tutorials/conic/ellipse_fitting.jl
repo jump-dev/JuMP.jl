@@ -13,9 +13,11 @@
 # * Formulate the ellipse fitting problem as a semidefinite program using the
 #   algebraic conic-section representation in homogeneous coordinates
 # * Cluster image edge-detection data and fit a separate ellipse to each
-#   cluster by solving the SDP formulation
-# * Visualise the fitted ellipses overlaid on the original image to assess
-#   the quality of the fit
+#   cluster using two objectives: minimise total squared residual with
+#   [`MOI.RotatedSecondOrderCone`](@ref) and minimise maximum residual with
+#   [`MOI.NormInfinityCone`](@ref)
+# * Visualise both sets of fitted ellipses overlaid on the original image to
+#   compare the two fitting criteria
 
 # ## Required packages
 

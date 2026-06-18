@@ -11,12 +11,14 @@
 # example, see also the [Example: minimal ellipses](@ref) tutorial.
 #
 # **Learning intentions:**
-# * Formulate the minimum-volume enclosing ellipsoid and maximum-volume
-#   inscribed ellipsoid problems as semidefinite programs in JuMP
+# * Formulate the minimum-volume enclosing ellipsoid as a semidefinite program
+#   using [`MOI.RootDetConeSquare`](@ref) to represent the `det(Z)^(1/n)`
+#   objective, and recover the ellipse parameters from the optimal matrix
 # * Use [`print_active_bridges`](@ref) to inspect which JuMP bridges were
 #   applied to reformulate the problem for the solver
-# * Explore alternative formulations using different cone types and compare
-#   their bridge chains and solve times
+# * Manually reformulate the model to use [`MOI.RootDetConeTriangle`](@ref)
+#   and use [`remove_bridge`](@ref) to compare alternative bridge paths and
+#   their effect on solve time
 
 # ## Required packages
 

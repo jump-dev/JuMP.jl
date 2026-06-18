@@ -29,8 +29,8 @@
 # **Learning intentions:**
 # * Use [`SecondOrderCone`](@ref) and [`RotatedSecondOrderCone`](@ref) to
 #   express L2-norm and sum-of-squares objectives as conic constraints
-# * Apply [`MOI.ExponentialCone`](@ref) and [`MOI.PowerCone`](@ref) to model
-#   log, entropy, and geometric mean terms within a conic program
+# * Apply [`MOI.ExponentialCone`](@ref) to model log, entropy, and log-sum-exp
+#   terms, and [`MOI.PowerCone`](@ref) to model power functions and p-norms
 # * Express matrix inequalities and positive semidefiniteness using
 #   `@variable(model, X[1:n, 1:n], PSD)` and [`PSDCone`](@ref)
 

@@ -28,10 +28,13 @@
 # constraints upfront.
 #
 # **Learning intentions:**
-# * Model the TSP as a binary integer program with degree constraints, deferring
-#   subtour elimination to a callback rather than including it in the formulation
-# * Implement a subtour-detection routine and a lazy constraint callback that
-#   adds violated subtour-elimination cuts when an integer solution is found
+# * Model the TSP as a binary integer program with degree constraints, using a
+#   `Symmetric` variable matrix to enforce edge symmetry without explicit constraints
+# * Implement an iterative subtour-elimination loop that adds violated cuts to
+#   the model between successive re-solves
+# * Implement the same cuts as lazy constraints via
+#   [`MOI.LazyConstraintCallback`](@ref), and verify that the lazy approach is
+#   faster than the iterative approach
 
 # ## Required packages
 

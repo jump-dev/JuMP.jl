@@ -16,8 +16,9 @@
 #   [`HermitianPSDCone`](@ref); see [Complex number support](@ref) for background
 # * Express the POVM completeness constraint `ΣEᵢ = I` and the linear objective
 #   over complex Hermitian matrices using JuMP's complex number support
-# * Verify the optimal measurement operators satisfy the POVM conditions and
-#   compute the maximum probability of correctly discriminating the quantum states
+# * Compare the computed maximum discrimination probability against the known
+#   analytic formula for N = 2, and simplify the model by substituting
+#   `E_N = I - ΣEᵢ` to eliminate the POVM completeness constraint
 
 # ## Required packages
 

@@ -28,7 +28,8 @@
 # **Learning intentions:**
 # * Read tabular data from CSV and other file formats into Julia using
 #   DataFrames.jl
-# * Join and manipulate DataFrames to prepare data for use in a JuMP model
+# * Group, aggregate, and manipulate DataFrames to prepare data for use in a
+#   JuMP model
 # * Plot results using Plots.jl to visualize optimization outputs
 
 # !!! note

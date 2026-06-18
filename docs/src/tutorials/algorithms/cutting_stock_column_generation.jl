@@ -14,9 +14,10 @@
 # * Set up the restricted master LP over an initial set of cutting patterns and
 #   interpret the dual variables as column pricing signals
 # * Solve the pricing subproblem (a knapsack integer program) to find the most
-#   profitable new pattern and add it as a column to the master problem
+#   profitable new pattern, then add it as a column using
+#   [`set_normalized_coefficient`](@ref) and [`set_objective_coefficient`](@ref)
 # * Implement the full column generation loop and convert the final LP relaxation
-#   to an integer solution by solving a restricted MIP over the generated columns
+#   to an integer solution by applying [`set_integer`](@ref) and re-solving
 
 # ## Required packages
 

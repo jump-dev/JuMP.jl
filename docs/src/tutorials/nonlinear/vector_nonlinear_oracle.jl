@@ -16,8 +16,9 @@
 #   signatures
 # * Construct a `MOI.VectorNonlinearOracle` set and add it as a single
 #   constraint covering multiple nonlinear inequalities
-# * Verify that the `VectorNonlinearOracle` formulation produces the same
-#   solution as the equivalent scalar constraint formulation
+# * Improve solver performance by providing `hessian_lagrangian_structure` and
+#   `eval_hessian_lagrangian` callbacks that supply the sparse upper-triangular
+#   Hessian of the Lagrangian with respect to the [`MOI.VectorNonlinearOracle`](@ref) multipliers
 
 # ## Required packages
 

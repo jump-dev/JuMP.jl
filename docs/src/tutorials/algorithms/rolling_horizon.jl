@@ -30,8 +30,9 @@
 # **Learning intentions:**
 # * Parameterise data in a JuMP model using [`Parameter`](@ref) so that the
 #   model structure is built once and only parameter values change each solve
-# * Implement the rolling horizon loop—update forecast parameters, re-solve,
-#   record the first-period decision, and advance the time window
+# * Implement the rolling horizon loop—update forecast parameters with
+#   [`set_parameter_value`](@ref), re-solve, record the first `move_forward`
+#   decisions, and advance the planning window
 # * Visualise multi-period battery and generation decisions using `Plots.jl`
 
 # ## Required packages

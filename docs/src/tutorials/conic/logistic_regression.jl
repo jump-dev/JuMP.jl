@@ -31,10 +31,11 @@
 # **Learning intentions:**
 # * Reformulate the logistic log-likelihood using [`MOI.ExponentialCone`](@ref)
 #   to express the log-sigmoid terms in a conic-compatible form
-# * Train a binary classifier by solving the resulting conic program and
-#   compare the fitted coefficients with a reference implementation
-# * Visualise the fitted decision boundary overlaid on the training data to
-#   assess classification performance
+# * Formulate ℓ2 regularized logistic regression using `SecondOrderCone` and
+#   ℓ1 regularized logistic regression using `MOI.NormOneCone`, reusing the
+#   same `softplus` helper for both
+# * Observe that ℓ1 regularization produces a sparse coefficient vector while
+#   ℓ2 regularization does not
 
 # ## Required packages
 

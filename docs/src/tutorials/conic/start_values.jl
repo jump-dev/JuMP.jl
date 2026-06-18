@@ -15,8 +15,10 @@
 #   model modifications
 # * Set primal warm-starts via [`set_start_value`](@ref) and dual warm-starts via
 #   [`set_dual_start_value`](@ref) for each constraint type
-# * Recognize that [`set_start_values`](@ref) is now available directly in JuMP,
-#   making this pattern most useful as a template for custom warm-start logic
+# * Recognize that some solvers do not support all start-value attributes
+#   ([`MOI.VariablePrimalStart`](@ref), [`MOI.ConstraintPrimalStart`](@ref),
+#   [`MOI.ConstraintDualStart`](@ref)) and handle errors by omitting the
+#   unsupported parts
 
 # ## Required packages
 

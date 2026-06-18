@@ -14,8 +14,10 @@
 #   verify the known global minimum using Ipopt
 # * Formulate and solve a discretized nonlinear beam problem with trapezoidal
 #   integration constraints using the `@variables` and [`@constraint`](@ref) block macros
-# * Use nonlinear objectives to compute maximum likelihood estimates for the
-#   mean and variance of a normal distribution, including a constrained variant
+# * Write a nonlinear log-likelihood objective to compute maximum likelihood
+#   estimates for the mean and variance of a normal distribution, then add a
+#   nonlinear constraint to the solved model and re-optimize; also formulate a
+#   quadratically constrained program (QCP) using JuMP's standard syntax
 
 # ## Required packages
 

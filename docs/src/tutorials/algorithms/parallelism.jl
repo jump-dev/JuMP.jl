@@ -11,12 +11,14 @@
 # models.
 #
 # **Learning intentions:**
-# * Use `Threads.@threads` to parallelise independent solves across available
-#   threads, and use a `ReentrantLock` to safely accumulate shared results
-# * Use `Distributed.@everywhere` to define functions on all workers and `pmap`
-#   to distribute independent solves across multiple Julia processes
-# * Understand why each thread or process must build its own JuMP model and why
-#   models and solver objects cannot be shared across threads or processes
+# * Use `Threads.@threads` to parallelise independent JuMP solves and a
+#   `ReentrantLock` to safely accumulate shared results; each thread must build
+#   its own model as JuMP models are not thread-safe
+# * Watch for the closure capture bug: when a variable name is reused inside and
+#   outside a `Threads.@threads` loop, Julia wraps it in a `Core.Box` introducing
+#   a silent race condition; diagnose it with `@code_warntype`
+# * Use `Distributed.@everywhere` and `Distributed.pmap` to distribute independent
+#   solves across multiple Julia processes, each of which must build its own model
 
 # ## Required packages
 

@@ -14,9 +14,11 @@
 # * Build individual scenario subproblems with quadratic penalty terms that
 #   penalise deviation from the current consensus solution
 # * Implement the PH outer loop: solve all penalised subproblems, update the
-#   consensus average, and update the dual prices
-# * Use JuMP parameters via `set_parameter_value` to efficiently modify penalty
-#   and dual terms between iterations without rebuilding the model
+#   consensus average, and update dual prices; extend with an adaptive ρ update
+#   rule that balances primal and dual residuals
+# * Use JuMP [`Parameter`](@ref) variables and [`set_parameter_value`](@ref) to
+#   efficiently modify penalty and dual terms between iterations without
+#   rebuilding the model
 
 # ## Required packages
 
