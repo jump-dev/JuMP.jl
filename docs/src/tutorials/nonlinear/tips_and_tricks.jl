@@ -15,8 +15,8 @@
 #   can lead to redundant evaluations
 # * Use a mutable cache struct to share computed results between separate
 #   operator calls at the same point, eliminating duplicated work
-# * Register multiple cached operators using `@operator` and verify that the
-#   cache reduces the number of function evaluations during a solve
+# * Register multiple cached operators using [`@operator`](@ref) and verify that
+#   the cache reduces the number of function evaluations during a solve
 
 # !!! info
 #     As an alternative, see [The `VectorNonlinearOracle` set](@ref) tutorial.

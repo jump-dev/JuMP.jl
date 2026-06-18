@@ -30,7 +30,7 @@
 #   DataFrames.jl
 # * Group, aggregate, and manipulate DataFrames to prepare data for use in a
 #   JuMP model
-# * Plot results using Plots.jl to visualize optimization outputs
+# * Plot results using Plots.jl to visualize data and explore DataFrames
 
 # !!! note
 #     There are multiple ways to read the same kind of data into Julia. This

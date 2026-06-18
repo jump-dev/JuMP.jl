@@ -16,7 +16,7 @@
 # * Parse a delimited text file using `DelimitedFiles.readdlm` and store the
 #   result in a `Containers.DenseAxisArray` indexed by string row and column names
 # * Fix arc variables to zero for non-existent routes (indicated by `"."` in
-#   the data) rather than removing them from the model formulation
+#   the data) using [`fix`](@ref) rather than removing them from the model formulation
 # * Encapsulate the model in a function that accepts validated input data and
 #   prints the solution in the same format as the input
 

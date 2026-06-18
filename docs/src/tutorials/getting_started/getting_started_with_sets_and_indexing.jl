@@ -8,8 +8,8 @@
 # * Index JuMP variables and constraints over unordered sets, ranges, and
 #   dictionary keys using Julia's native data structures
 # * Filter and subset index sets using comprehensions and conditional expressions
-# * Use nested indexing to model multi-dimensional decision variables and
-#   constraints
+# * Use multi-dimensional and compound sets to model decision variables over
+#   structured index spaces such as origin-destination pairs
 
 # ## Required packages
 

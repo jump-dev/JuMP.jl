@@ -27,7 +27,7 @@
 #
 # **Learning intentions:**
 # * Write analytic gradient and Hessian functions for a user-defined operator
-#   and register them using `@operator` with explicit derivative callbacks
+#   and register them using [`@operator`](@ref) with explicit derivative callbacks
 # * Use ForwardDiff.jl and Enzyme.jl to compute gradients and Hessians
 #   automatically, and encapsulate the logic in reusable helper functions
 # * Use DifferentiationInterface.jl as a backend-agnostic abstraction layer,

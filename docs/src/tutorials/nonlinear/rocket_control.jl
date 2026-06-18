@@ -14,8 +14,8 @@
 # **Learning intentions:**
 # * Discretize a continuous-time optimal control problem using finite differences
 #   and express the dynamics as nonlinear equality constraints in JuMP
-# * Use `fix` to enforce boundary conditions on state variables and set a good
-#   starting point for the nonlinear solver
+# * Use [`fix`](@ref) to enforce boundary conditions on state variables and set a
+#   good starting point for the nonlinear solver
 # * Visualise the state and control trajectories using `Plots` and experiment
 #   with different discretization choices
 

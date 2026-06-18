@@ -36,7 +36,7 @@
 #   variables and binary variables
 # * Apply indicator constraints and big-M reformulations to model conditional
 #   linear inequalities that activate depending on the value of a binary variable
-# * Use JuMP's `Semicontinuous`, `Semiinteger`, `SOS1`, and `SOS2` variable
+# * Use JuMP's [`Semicontinuous`](@ref), [`Semiinteger`](@ref), [`SOS1`](@ref), and [`SOS2`](@ref) variable
 #   types to express special structure that solvers can exploit
 
 # ## Required packages

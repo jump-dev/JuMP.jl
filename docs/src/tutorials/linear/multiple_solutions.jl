@@ -29,11 +29,11 @@
 #
 # **Learning intentions:**
 # * Model a combinatorial puzzle with binary variables, a symmetry-enforcing
-#   `Symmetric` variable matrix, and an `MOI.AllDifferent` constraint
+#   `Symmetric` variable matrix, and an [`MOI.AllDifferent`](@ref) constraint
 # * Configure Gurobi's solution pool via `PoolSearchMode` and `PoolSolutions`
 #   attributes to return all feasible integer solutions in one solve
-# * Access the multiple solutions returned by the solver using `result_count`
-#   and the `result` keyword in `value`
+# * Access the multiple solutions returned by the solver using [`result_count`](@ref)
+#   and the `result` keyword in [`value`](@ref)
 
 # ## Required packages
 

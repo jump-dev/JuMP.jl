@@ -29,10 +29,12 @@
 # * Use JuMP's macros (for example, [`@expression`](@ref), [`@constraint`](@ref))
 #   to build expressions efficiently and avoid unnecessary intermediate
 #   allocations
-# * Use `add_to_expression!` to accumulate summations in-place rather than via
-#   operator overloading, which creates unnecessary intermediate allocations
-# * Disable string name creation with `set_string_names_on_creation` for large
-#   models, and pre-compute non-zero index sets to skip zero-coefficient terms
+# * Use [`add_to_expression!`](@ref) to accumulate summations in-place rather
+#   than via operator overloading, which creates unnecessary intermediate
+#   allocations
+# * Disable string name creation with [`set_string_names_on_creation`](@ref)
+#   for large models, and pre-compute non-zero index sets to skip
+#   zero-coefficient terms
 
 # ## Required packages
 

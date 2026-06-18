@@ -33,8 +33,8 @@
 # **Learning intentions:**
 # * Discretize a six-state atmospheric reentry trajectory model using finite
 #   differences and express the equations of motion as nonlinear constraints
-# * Interpolate tabular aerodynamic data (lift and drag coefficients) using
-#   `Interpolations.jl` and embed the resulting functions in the JuMP model
+# * Use `Interpolations.jl` to construct a linear interpolant between boundary
+#   conditions and set warm-start values for all variables with [`set_start_value`](@ref)
 # * Visualise the optimal trajectory profiles—altitude, velocity, angle of
 #   attack, and bank angle—using `Plots`
 

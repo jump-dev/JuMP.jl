@@ -31,9 +31,9 @@
 # **Learning intentions:**
 # * Reformulate the logistic log-likelihood using [`MOI.ExponentialCone`](@ref)
 #   to express the log-sigmoid terms in a conic-compatible form
-# * Formulate ℓ2 regularized logistic regression using `SecondOrderCone` and
-#   ℓ1 regularized logistic regression using `MOI.NormOneCone`, reusing the
-#   same `softplus` helper for both
+# * Formulate ℓ2 regularized logistic regression using [`SecondOrderCone`](@ref)
+#   and ℓ1 regularized logistic regression using [`MOI.NormOneCone`](@ref),
+#   reusing the same `softplus` helper for both
 # * Observe that ℓ1 regularization produces a sparse coefficient vector while
 #   ℓ2 regularization does not
 

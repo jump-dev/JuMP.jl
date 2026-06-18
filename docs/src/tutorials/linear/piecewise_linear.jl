@@ -18,7 +18,7 @@
 # * Build an inner (convex combination) approximation using auxiliary weights
 #   `λ`, and recognize its limitation for non-convex functions due to interior
 #   feasible regions
-# * Add an `SOS2` constraint on the weight vector to enforce a true piecewise
+# * Add an [`SOS2`](@ref) constraint on the weight vector to enforce a true piecewise
 #   linear approximation for non-convex functions such as `sin(x)`
 
 # ## Required packages

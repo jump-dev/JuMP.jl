@@ -28,8 +28,8 @@
 # * Build and solve a linear program in JuMP by declaring variables,
 #   constraints, and an objective, then calling [`optimize!`](@ref)
 # * Query the solution status and optimal variable values after solving
-# * Solve a mixed-integer program and interpret the difference in behavior
-#   compared to a continuous relaxation
+# * Extend a linear program with variable bounds and vectorized constraints,
+#   and use solver attributes to configure the optimizer
 
 # ## What is JuMP?
 

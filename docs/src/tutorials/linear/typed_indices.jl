@@ -11,7 +11,7 @@
 # hard to diagnose because the wrong ordering is syntactically valid.
 #
 # **Learning intentions:**
-# * Use keyword indexing with `DenseAxisArray` to access variables as
+# * Use keyword indexing with [`DenseAxisArray`](@ref) to access variables as
 #   `x[f=1, m=2]` instead of `x[1, 2]`, making the index role explicit and
 #   catching wrong-order access at runtime
 # * Define Julia structs (`Factory`, `Market`) as typed index sets so that

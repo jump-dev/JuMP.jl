@@ -30,10 +30,10 @@
 #
 # **Learning intentions:**
 # * Formulate a 9×9×9 binary variable model with cell, row, column, and
-#   sub-grid uniqueness constraints, and fix the given digits using `fix`
+#   sub-grid uniqueness constraints, and fix the given digits using [`fix`](@ref)
 # * Recognize Sudoku as a feasibility problem (no objective) and extract the
 #   integer solution by rounding the continuous values returned by the solver
-# * Re-formulate the same puzzle using the `MOI.AllDifferent` constraint
+# * Re-formulate the same puzzle using the [`MOI.AllDifferent`](@ref) constraint
 #   programming set and verify that both formulations produce the same solution
 
 # ## Required packages

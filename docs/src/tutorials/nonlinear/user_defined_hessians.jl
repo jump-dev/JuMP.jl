@@ -30,8 +30,8 @@
 #   matching the `(g::AbstractVector, x...)` signature expected by JuMP
 # * Write the corresponding Hessian function, filling only the lower triangle
 #   of the matrix `H` as required by JuMP
-# * Register the operator with `@operator` passing the function, gradient, and
-#   Hessian, and verify the solution against the known Rosenbrock minimum
+# * Register the operator with [`@operator`](@ref) passing the function, gradient,
+#   and Hessian, and verify the solution against the known Rosenbrock minimum
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
 

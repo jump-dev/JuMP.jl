@@ -27,7 +27,7 @@
 #
 # **Learning intentions:**
 # * Decompose a bilevel program into upper and lower levels, and express the
-#   lower-level value function as a user-defined operator using `@operator`
+#   lower-level value function as a user-defined operator using [`@operator`](@ref)
 # * Provide analytic gradient and Hessian callbacks for the value function
 #   operator, derived by differentiating the lower-level objective with respect
 #   to the upper-level parameters
