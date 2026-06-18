@@ -11,7 +11,7 @@
 #
 # **Learning intentions:**
 # * Formulate a mixed complementarity problem using the `⟂` operator,
-#   [`complements`](@ref) syntax, and [`MOI.Complements`](@ref) set
+#   `complements` syntax, and [`MOI.Complements`](@ref) set
 # * Model economic equilibrium problems—including a transportation model and
 #   an insurance coverage problem—as complementarity programs
 # * Solve a competitive electricity market equilibrium model as a mixed
