@@ -12,15 +12,12 @@
 # globally optimal objective.
 #
 # **Learning intentions:**
-# * Formulate the nonlinear AC-OPF with complex-valued decision variables using
-#   [`ComplexPlane()`](@ref) and express power flow balance as the complex
-#   matrix equation `S_G - S_Demand .== V .* conj(Y * V)`
-# * Derive a semidefinite relaxation by substituting `W = VV*` to linearise the
-#   power flow constraints and model the resulting Hermitian PSD constraint with
-#   [`HermitianPSDCone`](@ref)
-# * Tighten the SDP relaxation with implied second-order cone constraints from
-#   the 2×2 Schur-complement minors of `[1 V'; V W] ⪰ 0` using
-#   [`RotatedSecondOrderCone`](@ref)
+# * Formulate the AC-OPF with complex-valued decision variables using
+#   [`ComplexPlane`](@ref) and express power flow balance as `S_G - S_Demand .== V .* conj(Y * V)`
+# * Derive a semidefinite relaxation by substituting `W = VV*` and model the
+#   Hermitian PSD constraint with [`HermitianPSDCone`](@ref)
+# * Tighten the SDP relaxation with second-order cone constraints derived from
+#   2×2 minors of `[1 V'; V W] ⪰ 0` using [`RotatedSecondOrderCone`](@ref)
 
 # For another example of modeling with complex decision variables, see the
 # [Example: quantum state discrimination](@ref) tutorial, and see the

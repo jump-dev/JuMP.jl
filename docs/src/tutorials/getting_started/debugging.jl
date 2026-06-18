@@ -28,10 +28,10 @@
 # **Learning intentions:**
 # * Identify the difference between coding errors, formulation mistakes, and
 #   solver misuse, and apply appropriate debugging strategies to each
-# * Use JuMP's `print` and inspection tools to verify that a model is
-#   formulated as intended
-# * Interpret infeasibility and unboundedness statuses and determine whether
-#   the issue is in the data, formulation, or solver settings
+# * Use `print`, [`compute_conflict!`](@ref), [`copy_conflict`](@ref), and
+#   [`relax_with_penalty!`](@ref) to locate model errors
+# * Interpret infeasibility and unboundedness statuses and use
+#   [`set_macro_timing`](@ref) to diagnose slow model construction
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.

@@ -26,11 +26,12 @@
 # and optimality—and what you can reasonably expect from a solver.
 #
 # **Learning intentions:**
-# * Distinguish between primal feasibility, dual feasibility, integrality, and
-#   optimality tolerances and know which solver setting controls each
-# * Recognize when a solution is "wrong" due to loose tolerances and adjust
+# * Understand the four main solver tolerance types—primal feasibility, dual
+#   feasibility, integrality, and optimality—and why this tutorial focuses on
+#   the first two
+# * Recognize when a solution is wrong due to loose tolerances and adjust
 #   solver settings to tighten them
-# * Use JuMP's [`primal_feasibility_report`](@ref) to check whether a solution
+# * Use [`primal_feasibility_report`](@ref) to check whether a solution
 #   satisfies the original constraints within a given tolerance
 #
 # There are a few sources of additional information:

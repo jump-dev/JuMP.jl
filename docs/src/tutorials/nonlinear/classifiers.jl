@@ -16,7 +16,7 @@
 # * Derive and solve the dual SVM program, and use the dual variables to
 #   recover the classifier parameters with fewer variables and constraints
 # * Apply the kernel method to perform nonlinear classification by replacing the
-#   Gram matrix with a pairwise kernel function such as the Gaussian kernel
+#   Gram matrix with a kernel function, demonstrated using the Gaussian kernel
 
 # ## Required packages
 

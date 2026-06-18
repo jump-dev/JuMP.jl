@@ -15,7 +15,7 @@
 #   [`MOI.Circuit`](@ref), and [`MOI.Table`](@ref) to express combinatorial
 #   structure concisely
 # * Understand that JuMP automatically reformulates CP constraints into MIP
-#   equivalents, requiring integer variables with finite bounds
+#   equivalents, so they can be solved with standard MIP solvers
 # * Apply counting constraints—[`MOI.CountBelongs`](@ref),
 #   [`MOI.CountDistinct`](@ref), [`MOI.CountGreaterThan`](@ref)—to model
 #   cardinality-based requirements

@@ -32,8 +32,8 @@
 #   balance constraints linking monthly cash inflows and outflows
 # * Model a combinatorial auction as a binary integer program, maximising
 #   revenue while ensuring each item is sold at most once
-# * Construct and solve both models in JuMP using the `@variables` and
-#   `@constraints` macros for concise multi-variable and multi-constraint blocks
+# * Use the `@variables` and `@constraints` macros to declare multiple variables
+#   and constraints in a single block in the financing model
 
 # ## Required packages
 

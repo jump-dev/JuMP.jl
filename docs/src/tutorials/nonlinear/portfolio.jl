@@ -34,7 +34,7 @@
 #   variance and maximising return—using MultiObjectiveAlgorithms.jl to
 #   approximate the efficient frontier
 # * Visualise the objective and decision spaces to interpret the trade-off
-#   between risk and return across the Pareto-optimal portfolio allocations
+#   between risk and return across the efficient frontier solutions
 
 # ## Required packages
 

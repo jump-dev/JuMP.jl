@@ -26,11 +26,11 @@
 # first.
 #
 # **Learning intentions:**
-# * Read tabular data from CSV and other file formats into Julia using
+# * Read tabular data from CSV and other delimited formats into Julia using
 #   DataFrames.jl
 # * Group, aggregate, and manipulate DataFrames to prepare data for use in a
 #   JuMP model
-# * Plot results using Plots.jl to visualize data and explore DataFrames
+# * Visualize data and model inputs using Plots.jl
 
 # !!! note
 #     There are multiple ways to read the same kind of data into Julia. This

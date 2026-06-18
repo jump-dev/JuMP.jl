@@ -16,7 +16,8 @@
 # * Recognize when the dual of a conic program is smaller than the primal,
 #   making it faster to solve
 # * Apply [Dualization.jl](@ref) with a one-line change—wrapping the solver
-#   in `dual_optimizer`—to transparently solve the dual instead of the primal
+#   in [`Dualization.dual_optimizer`](@ref)—to transparently solve the dual
+#   instead of the primal
 
 # ## Required packages
 

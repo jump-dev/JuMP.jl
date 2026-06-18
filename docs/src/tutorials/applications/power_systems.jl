@@ -14,14 +14,13 @@
 # nonlinear economic dispatch problem.
 #
 # **Learning intentions:**
-# * Formulate economic dispatch as a linear program with generator output and
-#   wind injection variables, then run a parametric study by modifying the
-#   objective in-place rather than rebuilding the model at each iteration
+# * Formulate economic dispatch as a linear program, then run a parametric
+#   study by modifying the objective in-place rather than rebuilding the model
 # * Extend economic dispatch to unit commitment by adding binary on/off
-#   variables and coupling them to generator output bounds with big-M constraints
-# * Embed a user-defined nonlinear thermal cost function using [`@operator`](@ref)
-#   and add a nonlinear `sqrt(w)` constraint on wind power to formulate a
-#   nonlinear economic dispatch problem
+#   variables and big-M constraints that couple them to generator output bounds
+# * Register a user-defined nonlinear cost function with [`@operator`](@ref)
+#   and add a nonlinear `sqrt(w)` wind constraint to formulate a nonlinear
+#   economic dispatch problem
 
 # ## Required packages
 

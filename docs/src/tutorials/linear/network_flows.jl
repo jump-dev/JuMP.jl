@@ -33,8 +33,9 @@
 #   balance values
 # * Model the assignment problem as a bipartite matching, and the max-flow
 #   problem using capacity and conservation constraints on a multi-node network
-# * Recognize how each network problem maps to a standard LP or IP structure and
-#   how the same JuMP modelling patterns apply across all three variants
+# * Identify when binary arc variables are needed (shortest path, assignment)
+#   versus continuous flow variables (max-flow) and apply the appropriate JuMP
+#   variable declaration
 
 # ## Required packages
 

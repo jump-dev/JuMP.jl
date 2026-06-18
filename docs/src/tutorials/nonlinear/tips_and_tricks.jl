@@ -13,8 +13,8 @@
 # * Understand why JuMP requires user-defined operators to return a single
 #   scalar, and how splitting a vector-valued function into separate operators
 #   can lead to redundant evaluations
-# * Use a mutable cache struct to share computed results between separate
-#   operator calls at the same point, eliminating duplicated work
+# * Use a `memoize` closure to cache the most-recent result and share it
+#   between separate operator calls at the same point, eliminating duplicated work
 # * Register multiple cached operators using [`@operator`](@ref) and verify that
 #   the cache reduces the number of function evaluations during a solve
 

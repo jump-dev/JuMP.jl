@@ -13,12 +13,12 @@
 # **Learning intentions:**
 # * Write a solver endpoint as a Julia function from `Dict{String,Any}` to
 #   `Dict{String,Any}` that validates input, builds and solves a JuMP model,
-#   and returns the solution as a dictionary
-# * Wrap the endpoint in a request handler that parses JSON input, dispatches
-#   to the endpoint in a separate thread via `Threads.@spawn`, catches errors,
-#   and returns an `HTTP.Response`
+#   and returns the solution
+# * Wrap the endpoint in a request handler that parses JSON, dispatches to the
+#   endpoint in a separate thread via `Threads.@spawn`, catches errors, and
+#   returns an `HTTP.Response`
 # * Register the endpoint on an `HTTP.Router`, start the server with
-#   `HTTP.serve!`, and test it from the client side using `HTTP.request`
+#   `HTTP.serve!`, and test it with `HTTP.request`
 
 # ## Required packages
 

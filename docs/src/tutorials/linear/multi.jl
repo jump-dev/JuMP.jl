@@ -14,8 +14,8 @@
 # **Learning intentions:**
 # * Connect to a SQLite database with `SQLite.DB`, execute queries via
 #   `DBInterface.execute`, and load results into DataFrames or row tables
-# * Build a JuMP model by iterating over query results with `Tables.rows`,
-#   avoiding the need to materialise all data upfront
+# * Build a JuMP model from query results using `Tables.rowtable`, a
+#   `DataFrames.DataFrame`, or a streaming `Tables.rows` cursor
 # * Construct more complex SQL queries—including inner joins—to generate
 #   constraint sets directly from the database schema
 

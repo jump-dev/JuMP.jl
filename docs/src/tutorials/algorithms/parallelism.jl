@@ -11,9 +11,9 @@
 # models.
 #
 # **Learning intentions:**
-# * Use `Threads.@threads` to parallelise independent JuMP solves and a
-#   `ReentrantLock` to safely accumulate shared results; each thread must build
-#   its own model as JuMP models are not thread-safe
+# * Use `Threads.@threads` to parallelise independent JuMP solves; protect
+#   shared results with a `ReentrantLock`; build a separate model per thread
+#   because JuMP models are not thread-safe
 # * Watch for the closure capture bug: when a variable name is reused inside and
 #   outside a `Threads.@threads` loop, Julia wraps it in a `Core.Box` introducing
 #   a silent race condition; diagnose it with `@code_warntype`

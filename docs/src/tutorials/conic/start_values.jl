@@ -15,10 +15,9 @@
 #   model modifications
 # * Set primal warm-starts via [`set_start_value`](@ref) and dual warm-starts via
 #   [`set_dual_start_value`](@ref) for each constraint type
-# * Recognize that some solvers do not support all start-value attributes
-#   ([`MOI.VariablePrimalStart`](@ref), [`MOI.ConstraintPrimalStart`](@ref),
-#   [`MOI.ConstraintDualStart`](@ref)) and handle errors by omitting the
-#   unsupported parts
+# * Recognize that some solvers do not support [`MOI.VariablePrimalStart`](@ref),
+#   [`MOI.ConstraintPrimalStart`](@ref), or [`MOI.ConstraintDualStart`](@ref),
+#   and use a `try`-`catch` to skip unsupported attributes gracefully
 
 # ## Required packages
 

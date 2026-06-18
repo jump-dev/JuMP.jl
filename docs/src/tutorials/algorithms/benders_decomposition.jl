@@ -27,13 +27,14 @@
 # both a classical iterative implementation and a modern callback-based variant.
 #
 # **Learning intentions:**
-# * Decompose a MILP into a master problem and a subproblem, and add Benders
-#   optimality cuts derived from the dual solution via [`reduced_cost`](@ref)
-# * Implement an iterative Benders loop, then improve it by reusing the
-#   second-stage model with [`fix`](@ref) rather than rebuilding it each iteration
-# * Implement the callback-based variant using [`MOI.LazyConstraintCallback`](@ref),
-#   and extend the in-place method to handle infeasible subproblems using
-#   Benders feasibility cuts derived from [`dual_objective_value`](@ref)
+# * Decompose a MILP into a first-stage and second-stage problem, and derive
+#   Benders optimality cuts using [`reduced_cost`](@ref) as the dual of the
+#   second-stage fixed-`x` constraints
+# * Reuse the second-stage model across iterations by calling [`fix`](@ref) to
+#   update the first-stage solution in place, rather than rebuilding the model
+# * Add cuts inside the solver's branch-and-bound tree via
+#   [`MOI.LazyConstraintCallback`](@ref), and handle infeasible subproblems with
+#   feasibility cuts built from [`dual_objective_value`](@ref)
 
 # ## Required packages
 

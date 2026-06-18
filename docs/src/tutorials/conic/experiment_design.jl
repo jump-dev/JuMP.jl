@@ -27,12 +27,12 @@
 # formulated and solved as conic programs in JuMP.
 #
 # **Learning intentions:**
-# * Formulate D-optimal design as a semidefinite program that maximises the
-#   log-determinant of the Fisher information matrix using [`MOI.LogDetConeTriangle`](@ref)
 # * Formulate A-optimal design as a semidefinite program that minimises the
 #   trace of the inverse Fisher information matrix using block PSD constraints
 # * Formulate E-optimal design as a semidefinite program that maximises the
 #   minimum eigenvalue of the Fisher information matrix
+# * Formulate D-optimal design as a semidefinite program that maximises the
+#   log-determinant of the Fisher information matrix using [`MOI.LogDetConeTriangle`](@ref)
 
 # ## Required packages
 

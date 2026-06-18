@@ -16,8 +16,8 @@
 #   catching wrong-order access at runtime
 # * Define Julia structs (`Factory`, `Market`) as typed index sets so that
 #   passing `x[Market(2), Factory(1)]` throws an error at the point of misuse
-# * Recognize both approaches as lightweight patterns that scale to models with
-#   many index sets and prevent subtle correctness bugs
+# * Choose between keyword indexing and typed indices based on whether you want
+#   runtime errors caught at the access site or by the type system
 
 # ## Required packages
 

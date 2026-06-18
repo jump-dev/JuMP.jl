@@ -27,9 +27,10 @@
 # **Learning intentions:**
 # * Build and solve a linear program in JuMP by declaring variables,
 #   constraints, and an objective, then calling [`optimize!`](@ref)
-# * Query the solution status and optimal variable values after solving
-# * Extend a linear program with variable bounds and vectorized constraints,
-#   and use solver attributes to configure the optimizer
+# * Query the solution using [`termination_status`](@ref),
+#   [`primal_status`](@ref), [`value`](@ref), and [`shadow_price`](@ref)
+# * Add variable bounds and vectorized constraints, and configure the solver
+#   with [`set_attribute`](@ref) and [`optimizer_with_attributes`](@ref)
 
 # ## What is JuMP?
 

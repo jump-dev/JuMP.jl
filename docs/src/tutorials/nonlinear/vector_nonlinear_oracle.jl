@@ -14,7 +14,7 @@
 # * Define the component functions of a `VectorNonlinearOracle`—the primal
 #   evaluator, Jacobian structure, and Jacobian evaluator—with the correct
 #   signatures
-# * Construct a `MOI.VectorNonlinearOracle` set and add it as a single
+# * Construct a [`MOI.VectorNonlinearOracle`](@ref) set and add it as a single
 #   constraint covering multiple nonlinear inequalities
 # * Improve solver performance by providing `hessian_lagrangian_structure` and
 #   `eval_hessian_lagrangian` callbacks that supply the sparse upper-triangular

@@ -10,14 +10,14 @@
 # the CDDLib and Clarabel solvers.
 #
 # **Learning intentions:**
-# * Create a [`GenericModel{BigFloat}`](@ref GenericModel) and add variables
-#   and constraints whose bounds and coefficients are automatically converted
-#   to `BigFloat`
-# * Recognize that solution values—primal, dual, and bounds—are returned in
-#   the corresponding number type throughout the model
-# * Use `Clarabel.Optimizer{BigFloat}` for extended-precision floating-point
+# * Create a [`GenericModel`](@ref) with a non-default number type such as
+#   `BigFloat`, where all bounds, coefficients, and solution values follow
+#   that type automatically
+# * Use `Clarabel.Optimizer{BigFloat}` for higher-precision floating-point
 #   arithmetic and `CDDLib.Optimizer{Rational{BigInt}}` for exact rational
 #   arithmetic
+# * Tighten solver tolerances to obtain a more accurate `BigFloat` solution,
+#   and verify exactness via [`primal_feasibility_report`](@ref)
 
 # ## Required packages
 

@@ -33,7 +33,8 @@
 # * Implement the rolling horizon loop—update forecast parameters with
 #   [`set_parameter_value`](@ref), re-solve, record the first `move_forward`
 #   decisions, and advance the planning window
-# * Visualise multi-period battery and generation decisions using `Plots.jl`
+# * Visualise the per-window and full-horizon battery and generation decisions
+#   to confirm that the piecewise solutions compose into a coherent trajectory
 
 # ## Required packages
 #

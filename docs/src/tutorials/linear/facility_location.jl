@@ -13,8 +13,8 @@
 #
 # **Learning intentions:**
 # * Formulate a binary mixed-integer program for facility location with
-#   two-index decision variables representing which facilities are open and which
-#   clients they serve
+#   one-index variables for facility open/close decisions and two-index variables
+#   for client-to-facility assignments
 # * Extend the base formulation with capacity constraints to produce the
 #   capacitated variant, where each facility has a finite service capacity
 # * Visualise both problem data and the optimal solution using `Plots.scatter`

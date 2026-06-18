@@ -11,11 +11,11 @@
 #
 # **Learning intentions:**
 # * Parameterise the enclosing ellipse as `{x : ||Px + q|| ≤ 1}` and
-#   formulate the minimum-volume SDP with linear matrix inequality constraints
+#   formulate the minimum-area SDP with linear matrix inequality constraints
 # * Maximise `log(det(P))` as a proxy for ellipse area using the
 #   [`MOI.LogDetConeSquare`](@ref) cone
-# * Verify the result by checking that all input ellipses lie within the
-#   computed minimum enclosing ellipse
+# * Recover `P` and `q` from the optimal solution and verify them against
+#   known values using `Test.@test`
 
 # ## Formulation
 
