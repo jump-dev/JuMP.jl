@@ -29,12 +29,12 @@
 # once in every row, column, and 3×3 sub-grid.
 #
 # **Learning intentions:**
-# * Formulate a 9×9×9 binary variable model with cell, row, column, and
-#   sub-grid uniqueness constraints, and fix the given digits using [`fix`](@ref)
-# * Recognize Sudoku as a feasibility problem (no objective) and extract the
-#   integer solution by rounding the continuous values returned by the solver
+# * Formulate Sudoku as a binary integer program with a 9×9×9 variable grid,
+#   and encode cell, row, column, and sub-grid uniqueness as linear constraints
+# * Recognise Sudoku as a feasibility problem with no objective, fix the given
+#   digits using [`fix`](@ref), and extract the solution by rounding
 # * Re-formulate the same puzzle using the [`MOI.AllDifferent`](@ref) constraint
-#   programming set and verify that both formulations produce the same solution
+#   programming set and verify that both formulations give the same answer
 
 # ## Required packages
 

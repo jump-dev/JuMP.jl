@@ -14,12 +14,13 @@
 # be fully met.
 #
 # **Learning intentions:**
-# * Read structured text files with CSV and DataFrames, validate the data before
-#   building a model, and encapsulate the model in a reusable function
-# * Add a penalty variable for unmet demand to ensure the model always has a
-#   feasible solution, avoiding infeasibility from data errors
-# * Run parametric experiments by re-solving the model with modified data and
-#   visualising how the objective changes across a grid of inputs
+# * Validate external data before building a model, and wrap the full
+#   build-solve-extract cycle in a reusable function that accepts data and
+#   returns structured results
+# * Keep a model always feasible by adding a penalty variable for unmet demand,
+#   so infeasibility signals a data error rather than a solver failure
+# * Run parametric experiments by re-solving the same model under a grid of
+#   input values and visualising how the optimal cost responds
 
 # ## Required packages
 

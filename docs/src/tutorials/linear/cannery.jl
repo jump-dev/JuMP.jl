@@ -13,12 +13,10 @@
 # structured external data.
 #
 # **Learning intentions:**
-# * Formulate a linear transportation problem with supply and demand constraints
-#   and a cost-minimising objective
-# * Load structured data from a JSON string using the `JSON` package and extract
-#   sets and parameters for use in a JuMP model
-# * Build and solve a JuMP model indexed over string-keyed sets derived from
-#   external data
+# * Formulate a classic transportation problem as a linear program with per-plant
+#   supply limits, per-market demand requirements, and a cost-minimising objective
+# * Load problem data from a JSON source and derive the index sets and parameters
+#   that drive the JuMP model, rather than hard-coding them
 
 # ## Required packages
 

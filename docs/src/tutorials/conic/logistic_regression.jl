@@ -29,11 +29,11 @@
 # exponential cone, rather than relying on a general nonlinear solver.
 #
 # **Learning intentions:**
-# * Reformulate the logistic log-likelihood using [`MOI.ExponentialCone`](@ref)
-#   to express the log-sigmoid terms in a conic-compatible form
-# * Formulate ℓ2 regularized logistic regression using [`SecondOrderCone`](@ref)
-#   and ℓ1 regularized logistic regression using [`MOI.NormOneCone`](@ref),
-#   reusing the same `softplus` helper for both
+# * Reformulate the logistic log-likelihood as a conic program using
+#   [`MOI.ExponentialCone`](@ref), so a conic solver can be used instead of
+#   a general nonlinear solver
+# * Add ℓ2 or ℓ1 regularization by switching the norm cone, reusing the same
+#   exponential-cone building block for the loss terms in both cases
 # * Observe that ℓ1 regularization produces a sparse coefficient vector while
 #   ℓ2 regularization does not
 

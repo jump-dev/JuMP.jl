@@ -10,12 +10,12 @@
 # demonstrates applications from transport economics and energy markets.
 #
 # **Learning intentions:**
-# * Formulate a mixed complementarity problem using the `⟂` operator,
+# * Write complementarity constraints in JuMP using the `⟂` operator,
 #   `complements` syntax, and [`MOI.Complements`](@ref) set
-# * Model economic equilibrium problems—including a transportation model and
-#   an insurance coverage problem—as complementarity programs
-# * Solve a competitive electricity market equilibrium model as a mixed
-#   complementarity problem with capacity, production, and price variables
+# * Model economic equilibrium problems—such as a transportation network and an
+#   insurance market—as mixed complementarity programs
+# * Recognise when a competitive market equilibrium can be stated as a
+#   complementarity problem and solve it with PATHSolver
 
 # ## Required packages
 

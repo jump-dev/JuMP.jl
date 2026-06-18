@@ -11,12 +11,12 @@
 # Section 9.4 of [Ferris2007](@cite).
 #
 # **Learning intentions:**
-# * Formulate a linearly constrained quadratic program for a linear SVM and
-#   solve it to find a separating hyperplane from labelled training data
-# * Derive and solve the dual SVM program, and use the dual variables to
-#   recover the classifier parameters with fewer variables and constraints
-# * Apply the kernel method to perform nonlinear classification by replacing the
-#   Gram matrix with a kernel function, demonstrated using the Gaussian kernel
+# * Formulate a linear support vector machine as a quadratic program and solve
+#   it to find a separating hyperplane from labelled training data
+# * Derive the dual SVM and use the resulting dual variables to recover the
+#   classifier without solving the primal problem directly
+# * Extend the SVM to nonlinear classification by replacing the inner-product
+#   Gram matrix with a kernel function
 
 # ## Required packages
 

@@ -28,11 +28,11 @@
 #
 # **Learning intentions:**
 # * Refactor a hard-coded JuMP script into a reusable function that accepts
-#   external data
-# * Separate model construction from data input to improve readability and
-#   maintainability
-# * Use Julia structs and multiple dispatch to build modular optimization
-#   workflows
+#   external data, improving correctness and reducing global state
+# * Separate data from model construction by reading input from JSON files
+#   and validating it with Julia structs
+# * Use abstract types and multiple dispatch to build modular optimization
+#   workflows that are easy to extend without modifying existing code
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.

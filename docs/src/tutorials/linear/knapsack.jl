@@ -9,11 +9,11 @@
 # problem using JuMP. It uses the classical knapsack problem as a worked example.
 #
 # **Learning intentions:**
-# * Formulate a binary integer linear program by translating a real-world
-#   selection problem into decision variables, an objective, and a constraint
-# * Build and solve a model in JuMP using [`@variable`](@ref), [`@constraint`](@ref), and
-#   [`@objective`](@ref), then extract the solution via a solver
-# * Encapsulate a model in a reusable, validated Julia function
+# * Translate a real-world selection problem into a binary integer linear
+#   program with decision variables, a capacity constraint, and a
+#   value-maximising objective
+# * Follow the complete JuMP workflow — build, solve, and extract a solution —
+#   and encapsulate it in a reusable, validated function
 
 # ## Required packages
 

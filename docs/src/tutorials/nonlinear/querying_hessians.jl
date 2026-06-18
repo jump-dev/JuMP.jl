@@ -25,16 +25,13 @@
 # shows how to query the constraint Jacobian.
 #
 # **Learning intentions:**
-# * Build a [`MOI.Nonlinear.Model`](@ref) and convert it to a
-#   [`MOI.Nonlinear.Evaluator`](@ref) using
-#   [`MOI.Nonlinear.SparseReverseMode`](@ref) automatic differentiation
-# * Use [`MOI.hessian_lagrangian_structure`](@ref) and
-#   [`MOI.eval_hessian_lagrangian`](@ref) to obtain the sparsity pattern and
-#   values of the Hessian at a given point
-# * Symmetrise the sparse Hessian, verify it against the analytic solution, and
-#   confirm local optimality via positive eigenvalues; also query the constraint
-#   Jacobian using [`MOI.jacobian_structure`](@ref) and
-#   [`MOI.eval_constraint_jacobian`](@ref)
+# * Access JuMP's low-level nonlinear interface by constructing a
+#   [`MOI.Nonlinear.Evaluator`](@ref) with sparse reverse-mode automatic
+#   differentiation
+# * Query the sparsity pattern and numerical values of the Hessian of the
+#   Lagrangian and the constraint Jacobian at a given primal point
+# * Verify the computed Hessian against an analytic solution and use its
+#   eigenvalues to confirm local optimality
 
 # ## Required packages
 

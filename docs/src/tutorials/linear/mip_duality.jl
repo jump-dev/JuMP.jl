@@ -11,12 +11,13 @@
 # directly from MIP solvers.
 #
 # **Learning intentions:**
-# * Understand why MIP solvers cannot return dual values and how fixing integer
-#   variables and relaxing integrality produces a solvable LP
-# * Use [`fix`](@ref) and [`unset_binary`](@ref) to manually relax integer
-#   variables, then recover duals from the resulting LP
-# * Use JuMP's [`fix_discrete_variables`](@ref) helper to automate this process, and
-#   its returned `undo` function to revert the model to its original form
+# * Understand why MIP solvers cannot return dual values, and why fixing integer
+#   variables to their optimal values and re-solving as an LP is a valid
+#   workaround
+# * Manually relax integer variables using [`fix`](@ref) and [`unset_binary`](@ref),
+#   re-solve the resulting LP, and recover the dual values
+# * Use [`fix_discrete_variables`](@ref) to automate the relaxation, and call the
+#   returned `undo` function to restore the original MIP formulation
 
 # ## Required packages
 

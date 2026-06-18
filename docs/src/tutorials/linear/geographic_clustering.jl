@@ -28,13 +28,13 @@
 # clustering model in JuMP.
 #
 # **Learning intentions:**
-# * Compute pairwise Haversine distances between geographic coordinates and
-#   use them as cost coefficients in a binary integer program
-# * Introduce auxiliary binary variables to linearize the "same group" condition
-#   for pairs of cities, enabling the distance objective to be expressed linearly
-# * Control symmetry by fixing one city's group assignment, and use
-#   population-balance constraints to trade off geographic proximity against
-#   evenness of group populations
+# * Introduce auxiliary binary variables to linearize a pairwise "same group"
+#   condition, turning a non-linear clustering objective into a standard MIP
+# * Break formulation symmetry by fixing one city's group, and add
+#   population-balance constraints to trade off geographic compactness against
+#   even group sizes
+# * Post-process binary solution variables to assign each item to a group and
+#   verify the result against the original data
 
 # ## Required packages
 

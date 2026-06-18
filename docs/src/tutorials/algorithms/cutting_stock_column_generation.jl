@@ -11,13 +11,14 @@
 # of smaller piece widths.
 #
 # **Learning intentions:**
-# * Set up the restricted master LP over an initial set of cutting patterns and
-#   interpret the dual variables as column pricing signals
-# * Solve the pricing subproblem (a knapsack integer program) to find the most
-#   profitable new pattern, then add it as a column using
-#   [`set_normalized_coefficient`](@ref) and [`set_objective_coefficient`](@ref)
-# * Implement the full column generation loop and convert the final LP relaxation
-#   to an integer solution by applying [`set_integer`](@ref) and re-solving
+# * Understand why column generation avoids enumerating all cutting patterns by
+#   starting from a small set and iteratively adding only the most profitable one,
+#   guided by LP dual variables
+# * Formulate the pricing subproblem as a knapsack integer program whose objective
+#   uses the current dual prices, and recognise a positive reduced cost as the
+#   signal that a new column is worth adding
+# * Convert the final LP relaxation to a practical integer solution by
+#   re-imposing integrality and re-solving
 
 # ## Required packages
 

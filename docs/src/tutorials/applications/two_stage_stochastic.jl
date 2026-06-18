@@ -12,12 +12,12 @@
 #
 # **Learning intentions:**
 # * Formulate a two-stage stochastic program using sample average approximation:
-#   draw scenarios from a triangular distribution, then build a single LP with
-#   second-stage variables indexed over all scenarios
-# * Compute the conditional value at risk (CVaR) at a given confidence level `γ`
-#   by formulating it as a linear program with auxiliary variables
-# * Combine the SAA objective and the CVaR constraints into a single LP to
-#   optimize the CVaR of profit directly
+#   draw scenarios from a distribution, then build a single LP with second-stage
+#   variables indexed over all scenarios
+# * Compute the conditional value at risk (CVaR) at a given confidence level by
+#   formulating it as a linear program with auxiliary variables
+# * Combine the expected-profit objective and CVaR constraints into one model to
+#   directly optimize the risk-adjusted profit
 
 # ## Required packages
 

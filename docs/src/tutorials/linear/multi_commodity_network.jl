@@ -12,12 +12,12 @@
 # joins instead of explicit index loops.
 #
 # **Learning intentions:**
-# * Load network data from a SQLite database using `DBInterface.execute` and
-#   convert the results into DataFrames for use in the model
-# * Assign decision variables directly as columns of a DataFrame and use
-#   `DataFrames.groupby` to build aggregated constraint expressions
-# * Construct mass-balance constraints using `DataFrames.outerjoin` and
-#   `coalesce` to handle nodes that appear only as origins or destinations
+# * Load network data from a SQLite database and store it in DataFrames that
+#   serve as both the data source and the container for decision variables
+# * Build aggregated constraint expressions by grouping rows of a DataFrame,
+#   avoiding explicit index loops
+# * Construct mass-balance constraints with outer joins so that nodes appearing
+#   only as origins or only as destinations are handled correctly
 
 # ## Required packages
 

@@ -33,11 +33,12 @@
 # **Learning intentions:**
 # * Reformulate non-linear or combinatorial expressions—absolute value, max,
 #   min, modulo, and Boolean operators—as linear constraints using auxiliary
-#   variables and binary variables
-# * Apply indicator constraints and big-M reformulations to model conditional
-#   linear inequalities that activate depending on the value of a binary variable
-# * Use JuMP's [`Semicontinuous`](@ref), [`Semiinteger`](@ref), [`SOS1`](@ref), and [`SOS2`](@ref) variable
-#   types to express special structure that solvers can exploit
+#   variables
+# * Model conditional logic using indicator constraints and big-M
+#   reformulations, and understand the trade-offs between the two approaches
+# * Use JuMP's special variable types — [`Semicontinuous`](@ref),
+#   [`Semiinteger`](@ref), [`SOS1`](@ref), and [`SOS2`](@ref) — to express
+#   structure that solvers can exploit directly
 
 # ## Required packages
 

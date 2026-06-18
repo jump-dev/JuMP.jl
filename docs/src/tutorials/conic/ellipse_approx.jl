@@ -12,13 +12,11 @@
 #
 # **Learning intentions:**
 # * Formulate the minimum-volume enclosing ellipsoid as a semidefinite program
-#   using [`MOI.RootDetConeSquare`](@ref) to represent the `det(Z)^(1/n)`
-#   objective, and recover the ellipse parameters from the optimal matrix
-# * Use [`print_active_bridges`](@ref) to inspect which JuMP bridges were
-#   applied to reformulate the problem for the solver
-# * Manually reformulate the model to use [`MOI.RootDetConeTriangle`](@ref)
-#   and use [`remove_bridge`](@ref) to compare alternative bridge paths and
-#   their effect on solve time
+#   and recover the ellipse parameters from the optimal matrix
+# * Use [`print_active_bridges`](@ref) to inspect which reformulations JuMP
+#   applied automatically to match the solver's supported constraints
+# * Reduce the bridge graph by hand-tuning the model, and use
+#   [`remove_bridge`](@ref) to compare alternative reformulation paths
 
 # ## Required packages
 

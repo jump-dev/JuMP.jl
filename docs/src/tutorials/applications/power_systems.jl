@@ -14,13 +14,12 @@
 # nonlinear economic dispatch problem.
 #
 # **Learning intentions:**
-# * Formulate economic dispatch as a linear program, then run a parametric
-#   study by modifying the objective in-place rather than rebuilding the model
+# * Formulate and solve economic dispatch as a linear program, then run a
+#   parametric study by modifying the objective in-place rather than rebuilding the model
 # * Extend economic dispatch to unit commitment by adding binary on/off
 #   variables and big-M constraints that couple them to generator output bounds
 # * Register a user-defined nonlinear cost function with [`@operator`](@ref)
-#   and add a nonlinear `sqrt(w)` wind constraint to formulate a nonlinear
-#   economic dispatch problem
+#   to formulate a nonlinear economic dispatch problem
 
 # ## Required packages
 

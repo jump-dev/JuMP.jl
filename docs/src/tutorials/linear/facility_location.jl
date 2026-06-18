@@ -12,13 +12,13 @@
 # demonstrates how to visualise the problem data and solution using Plots.
 #
 # **Learning intentions:**
-# * Formulate a binary mixed-integer program for facility location with
-#   one-index variables for facility open/close decisions and two-index variables
-#   for client-to-facility assignments
-# * Extend the base formulation with capacity constraints to produce the
-#   capacitated variant, where each facility has a finite service capacity
-# * Visualise both problem data and the optimal solution using `Plots.scatter`
-#   and `Plots.plot`
+# * Formulate a binary integer program for facility location, coupling
+#   open/close decisions with client-assignment decisions through linking
+#   constraints
+# * Extend the uncapacitated model with demand and capacity data to obtain the
+#   capacitated variant, and understand how the coupling constraints change
+# * Visualise problem data and the optimal solution to verify that the model
+#   behaves as expected
 
 # ## Required packages
 

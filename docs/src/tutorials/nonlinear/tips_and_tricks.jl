@@ -10,13 +10,12 @@
 # model components share an expensive function evaluation.
 #
 # **Learning intentions:**
-# * Understand why JuMP requires user-defined operators to return a single
-#   scalar, and how splitting a vector-valued function into separate operators
-#   can lead to redundant evaluations
-# * Use a `memoize` closure to cache the most-recent result and share it
-#   between separate operator calls at the same point, eliminating duplicated work
-# * Register multiple cached operators using [`@operator`](@ref) and verify that
-#   the cache reduces the number of function evaluations during a solve
+# * Understand why JuMP's scalar-output requirement causes redundant work when
+#   a vector-valued function is split into separate operators
+# * Implement a memoize helper that caches the most-recent result so that
+#   separate operators sharing common work each trigger only one evaluation
+# * Measure the reduction in function calls to confirm the memoized approach
+#   is more efficient than the naive split
 
 # !!! info
 #     As an alternative, see [The `VectorNonlinearOracle` set](@ref) tutorial.

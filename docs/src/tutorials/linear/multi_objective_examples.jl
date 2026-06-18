@@ -12,12 +12,13 @@
 # enumerating Pareto-optimal solutions.
 #
 # **Learning intentions:**
-# * Formulate multi-objective programs in JuMP by passing a vector of scalar
+# * Formulate a multi-objective program in JuMP by passing a vector of
 #   objective expressions to [`@objective`](@ref)
-# * Select a multi-objective algorithm (`Lexicographic` or `EpsilonConstraint`)
-#   via `MultiObjectiveAlgorithms.jl` and enumerate the Pareto-optimal solutions
-# * Iterate over multiple results using [`result_count`](@ref) and [`objective_value`](@ref)
-#   with the `result` keyword to inspect each Pareto-optimal solution
+# * Select a multi-objective algorithm from `MultiObjectiveAlgorithms.jl` and
+#   understand the trade-offs between the `Lexicographic` and `EpsilonConstraint`
+#   approaches
+# * Iterate over the Pareto-optimal solutions returned by the solver using
+#   [`result_count`](@ref) and the `result` keyword in [`objective_value`](@ref)
 
 # ## Required packages
 

@@ -10,15 +10,13 @@
 # estimation, and quadratically constrained programs.
 #
 # **Learning intentions:**
-# * Solve the Rosenbrock function as an unconstrained nonlinear program and
-#   verify the known global minimum using Ipopt
-# * Formulate and solve a discretized nonlinear beam problem with trapezoidal
-#   integration constraints using the [`@variables`](@ref) and
-#   [`@constraint`](@ref) block macros
-# * Write a nonlinear log-likelihood objective for maximum likelihood estimation,
-#   then re-optimize with an added nonlinear constraint; also formulate a
-#   quadratically constrained program (QCP) using JuMP's standard constraint
-#   syntax
+# * Formulate and solve a variety of small nonlinear programs—unconstrained,
+#   discretized ODEs, and log-likelihood objectives—to see JuMP's nonlinear
+#   syntax in action
+# * Use the block forms of [`@variables`](@ref) and [`@constraints`](@ref) to
+#   declare large arrays of variables and constraints concisely
+# * Add a nonlinear constraint to an already-solved model and re-optimize
+#   without rebuilding from scratch
 
 # ## Required packages
 

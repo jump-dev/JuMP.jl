@@ -28,14 +28,12 @@
 # and electrical circuits.
 #
 # **Learning intentions:**
-# * Formulate the shortest path problem using flow-conservation constraints and
-#   binary arc variables, with source and sink nodes distinguished by their
-#   balance values
-# * Model the assignment problem as a bipartite matching, and the max-flow
-#   problem using capacity and conservation constraints on a multi-node network
-# * Identify when binary arc variables are needed (shortest path, assignment)
-#   versus continuous flow variables (max-flow) and apply the appropriate JuMP
-#   variable declaration
+# * Formulate the shortest path, assignment, and maximum flow problems as linear
+#   programs, and recognise their shared flow-conservation structure
+# * Distinguish source and sink nodes by their balance values in a
+#   flow-conservation constraint, and use this pattern across all three problems
+# * Choose binary arc variables when a path or matching must be discrete, and
+#   continuous flow variables when fractional flow is permissible
 
 # ## Required packages
 

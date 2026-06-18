@@ -11,14 +11,12 @@
 # returns the solution as JSON.
 #
 # **Learning intentions:**
-# * Write a solver endpoint as a Julia function from `Dict{String,Any}` to
-#   `Dict{String,Any}` that validates input, builds and solves a JuMP model,
-#   and returns the solution
-# * Wrap the endpoint in a request handler that parses JSON, dispatches to the
-#   endpoint in a separate thread via `Threads.@spawn`, catches errors, and
-#   returns an `HTTP.Response`
-# * Register the endpoint on an `HTTP.Router`, start the server with
-#   `HTTP.serve!`, and test it with `HTTP.request`
+# * Structure a JuMP solver as a self-contained endpoint function that validates
+#   JSON input, builds and solves a model, and returns results as a dictionary
+# * Wrap the endpoint in an HTTP request handler that parses JSON, runs the
+#   solver in a separate thread, and returns an HTTP response
+# * Register the endpoint on an HTTP router, start the server, and send test
+#   requests to verify the full round-trip
 
 # ## Required packages
 

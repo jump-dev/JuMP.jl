@@ -10,12 +10,11 @@
 # modify a solved model by adding new constraints and re-solving.
 #
 # **Learning intentions:**
-# * Build a JuMP linear program whose variables and constraints are driven
-#   directly by rows of a `DataFrames.DataFrame`
-# * Convert decision variable containers to arrays so they can be stored as
-#   DataFrame columns and used in vectorised expressions
-# * Modify a solved model by adding a new constraint and re-solving, and
-#   interpret an infeasible result
+# * Use a `DataFrames.DataFrame` as the sole source of truth for variables,
+#   objective coefficients, and constraints, so the model automatically adapts
+#   when the data changes
+# * Modify a solved model by adding a new constraint and re-solving without
+#   rebuilding from scratch, and recognise what an infeasible result means
 
 # ## Required packages
 

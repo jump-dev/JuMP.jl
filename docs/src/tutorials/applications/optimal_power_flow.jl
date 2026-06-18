@@ -12,12 +12,12 @@
 # globally optimal objective.
 #
 # **Learning intentions:**
-# * Formulate the AC-OPF with complex-valued decision variables using
-#   [`ComplexPlane`](@ref) and express power flow balance as `S_G - S_Demand .== V .* conj(Y * V)`
-# * Derive a semidefinite relaxation by substituting `W = VV*` and model the
-#   Hermitian PSD constraint with [`HermitianPSDCone`](@ref)
+# * Formulate AC optimal power flow using complex-valued decision variables
+#   and express power balance as a linear constraint over the bus admittance matrix
+# * Derive a semidefinite relaxation of the nonlinear problem by lifting voltages
+#   into a Hermitian PSD matrix with [`HermitianPSDCone`](@ref)
 # * Tighten the SDP relaxation with second-order cone constraints derived from
-#   2×2 minors of `[1 V'; V W] ⪰ 0` using [`RotatedSecondOrderCone`](@ref)
+#   2×2 minors of the lifted matrix using [`RotatedSecondOrderCone`](@ref)
 
 # For another example of modeling with complex decision variables, see the
 # [Example: quantum state discrimination](@ref) tutorial, and see the

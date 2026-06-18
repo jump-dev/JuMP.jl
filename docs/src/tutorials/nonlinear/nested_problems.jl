@@ -26,14 +26,12 @@
 # avoid redundant subproblem solves.
 #
 # **Learning intentions:**
-# * Decompose a bilevel program into upper and lower levels, and express the
-#   lower-level value function as a user-defined operator using [`@operator`](@ref)
-# * Provide analytic gradient and Hessian callbacks for the value function
-#   operator, derived by differentiating the lower-level objective with respect
-#   to the upper-level parameters
-# * Use a `Cache` struct and an `_update_if_needed` guard to share lower-level
-#   solutions between function, gradient, and Hessian evaluations at the same
-#   point
+# * Decompose a bilevel program and expose the lower-level value function to the
+#   upper level as a user-defined operator via [`@operator`](@ref)
+# * Derive analytic gradient and Hessian callbacks by differentiating the
+#   lower-level objective with respect to the upper-level parameters
+# * Cache the lower-level solution so that the function, gradient, and Hessian
+#   at the same point all share a single subproblem solve
 #
 # For a simpler example of writing a user-defined operator, see the
 # [User-defined Hessians](@ref) tutorial.

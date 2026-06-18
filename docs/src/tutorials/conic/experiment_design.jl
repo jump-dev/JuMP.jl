@@ -27,12 +27,12 @@
 # formulated and solved as conic programs in JuMP.
 #
 # **Learning intentions:**
-# * Formulate A-optimal design as a semidefinite program that minimises the
-#   trace of the inverse Fisher information matrix using block PSD constraints
-# * Formulate E-optimal design as a semidefinite program that maximises the
-#   minimum eigenvalue of the Fisher information matrix
-# * Formulate D-optimal design as a semidefinite program that maximises the
-#   log-determinant of the Fisher information matrix using [`MOI.LogDetConeTriangle`](@ref)
+# * Understand the three classical criteria for optimal experiment design —
+#   A, E, and D — and what each one measures about the error covariance
+# * Formulate A-optimal and E-optimal design as semidefinite programs using
+#   block PSD constraints and eigenvalue constraints respectively
+# * Formulate D-optimal design using [`MOI.LogDetConeTriangle`](@ref) to
+#   maximise the log-determinant of the Fisher information matrix
 
 # ## Required packages
 

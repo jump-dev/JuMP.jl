@@ -12,14 +12,13 @@
 # directions.
 #
 # **Learning intentions:**
-# * Construct an outer approximation of a convex function using tangent-plane
-#   constraints, and understand when this is valid (minimising a convex function
-#   or maximising a concave one)
-# * Build an inner (convex combination) approximation using auxiliary weights
-#   `λ`, and recognize its limitation for non-convex functions due to interior
-#   feasible regions
-# * Add an [`SOS2`](@ref) constraint on the weight vector to enforce a true piecewise
-#   linear approximation for non-convex functions such as `sin(x)`
+# * Approximate a nonlinear function within an LP using tangent-plane (outer)
+#   constraints, and recognise when this is valid based on convexity and
+#   optimisation direction
+# * Build an inner (convex combination) approximation using auxiliary weight
+#   variables, and understand why it fails for non-convex functions
+# * Add an [`SOS2`](@ref) constraint on the weight vector to enforce a true
+#   piecewise linear approximation for non-convex functions
 
 # ## Required packages
 

@@ -31,12 +31,12 @@
 # [Betts2010](@cite).
 #
 # **Learning intentions:**
-# * Discretize a six-state atmospheric reentry trajectory model using finite
-#   differences and express the equations of motion as nonlinear constraints
-# * Use `Interpolations.jl` to construct a linear interpolant between boundary
-#   conditions and set warm-start values for all variables with [`set_start_value`](@ref)
-# * Visualise the optimal trajectory profiles—altitude, velocity, angle of
-#   attack, and bank angle—using `Plots`
+# * Discretize a six-state continuous-time trajectory model and encode the
+#   equations of motion as nonlinear equality constraints in JuMP
+# * Interpolate between known boundary conditions and use [`set_start_value`](@ref)
+#   to give the solver a good initial guess for every variable
+# * Visualise the optimal state and control profiles to interpret the physical
+#   behaviour of the reentry trajectory
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be

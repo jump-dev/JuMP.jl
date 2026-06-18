@@ -10,12 +10,12 @@
 # constraints by decomposing them into smaller PSD constraints.
 #
 # **Learning intentions:**
-# * Understand how chordal decomposition breaks a large sparse PSD constraint
-#   into smaller PSD constraints linked by linear equality constraints
-# * Wrap any PSD-capable solver (such as SCS) with
-#   `MathOptChordalDecomposition` using a one-line change to the optimizer
-# * Compare solve times with and without chordal decomposition to see when
-#   decomposition offers a performance benefit on sparse problems
+# * Understand why a large sparse PSD constraint is slow to solve directly,
+#   and how chordal decomposition trades one big constraint for many small ones
+# * Apply chordal decomposition with a one-line change by wrapping any
+#   PSD-capable solver in `MathOptChordalDecomposition.Optimizer`
+# * Measure the speed-up on a sparse benchmark problem and inspect the
+#   structure of the decomposed model
 
 # ## Required packages
 

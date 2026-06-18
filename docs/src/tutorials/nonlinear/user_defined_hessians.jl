@@ -26,12 +26,13 @@
 # compared to relying on automatic differentiation.
 #
 # **Learning intentions:**
-# * Write a user-defined operator with an analytic gradient vector function
-#   matching the `(g::AbstractVector, x...)` signature expected by JuMP
-# * Write the corresponding Hessian function, filling only the lower triangle
-#   of the matrix `H` as required by JuMP
-# * Register the operator with [`@operator`](@ref) passing the function, gradient,
-#   and Hessian, and verify the solution against the known Rosenbrock minimum
+# * Write an analytic gradient function with the `(g::AbstractVector, x...)`
+#   signature that JuMP expects, and understand why only the lower triangle of
+#   the Hessian matrix needs to be filled
+# * Register a function, its gradient, and its Hessian together using
+#   [`@operator`](@ref) to give the solver exact second-order information
+# * Verify that providing an analytic Hessian leads the solver to the correct
+#   minimum without relying on automatic differentiation
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
 

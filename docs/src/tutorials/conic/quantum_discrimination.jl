@@ -11,14 +11,12 @@
 # decision variables using [`HermitianPSDCone`](@ref) in JuMP.
 #
 # **Learning intentions:**
-# * Formulate the quantum state discrimination problem as a semidefinite program
-#   with complex Hermitian decision matrices using [`@variable`](@ref) with
-#   [`HermitianPSDCone`](@ref); see [Complex number support](@ref) for background
-# * Express the POVM completeness constraint `ΣEᵢ = I` and the linear objective
-#   over complex Hermitian matrices using JuMP's complex number support
-# * Compare the computed maximum discrimination probability against the known
-#   analytic formula for N = 2, and simplify the model by substituting
-#   `E_N = I - ΣEᵢ` to eliminate the POVM completeness constraint
+# * Model complex Hermitian positive-semidefinite decision matrices using
+#   [`HermitianPSDCone`](@ref) and JuMP's complex number support
+# * Formulate the quantum state discrimination SDP, including a complex
+#   matrix equality constraint and a linear objective over Hermitian matrices
+# * Simplify the model by substituting one matrix variable out to eliminate
+#   the completeness constraint, and verify against the known analytic answer
 
 # ## Required packages
 

@@ -11,13 +11,12 @@
 # during reformulation.
 #
 # **Learning intentions:**
-# * Understand why JuMP's standard-form reformulation adds slack variables and
-#   constraints, increasing the problem size beyond what the user specified
-# * Recognize when the dual of a conic program is smaller than the primal,
-#   making it faster to solve
-# * Apply [Dualization.jl](@ref) with a one-line change—wrapping the solver
-#   in `Dualization.dual_optimizer`—to transparently solve the dual
-#   instead of the primal
+# * Understand that JuMP's standard-form reformulation adds slack variables
+#   and constraints, making the problem larger than what you wrote
+# * Recognize that the dual of a conic program may be smaller than the
+#   primal, and that solving the dual can therefore be much faster
+# * Use `Dualization.dual_optimizer` to solve the dual transparently
+#   with a one-line change to the optimizer
 
 # ## Required packages
 

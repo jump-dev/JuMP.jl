@@ -10,12 +10,12 @@
 # [Boyd and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).
 #
 # **Learning intentions:**
-# * Parameterise the enclosing ellipse as `{x : ||Px + q|| ≤ 1}` and
-#   formulate the minimum-area SDP with linear matrix inequality constraints
-# * Maximise `log(det(P))` as a proxy for ellipse area using the
-#   [`MOI.LogDetConeSquare`](@ref) cone
-# * Recover `P` and `q` from the optimal solution and verify them against
-#   known values using `Test.@test`
+# * Parameterise the enclosing ellipse and derive the minimum-area SDP with
+#   linear matrix inequality constraints from first principles
+# * Represent the log-determinant objective using [`MOI.LogDetConeSquare`](@ref)
+#   as a conic constraint, and maximise it as a proxy for ellipse area
+# * Recover the ellipse parameters from the optimal PSD matrix solution and
+#   verify them against the known analytic answer
 
 # ## Formulation
 

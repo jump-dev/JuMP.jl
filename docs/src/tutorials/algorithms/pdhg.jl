@@ -27,14 +27,13 @@
 # variant of PDHG specialised for linear programs.
 #
 # **Learning intentions:**
-# * Implement the core PDHG iteration in Julia and verify it finds the correct
-#   primal and dual solutions on a small LP
-# * Subtype [`MOI.AbstractOptimizer`](@ref) and implement the required
-#   [`MOI.supports_constraint`](@ref), [`MOI.is_empty`](@ref), and
-#   [`MOI.empty!`](@ref) methods to define what the solver supports
-# * Use [`MOI.Utilities.GenericModel`](@ref) to extract standard-form matrices
-#   inside [`MOI.optimize!`](@ref), and implement solution attributes such as
-#   [`MOI.TerminationStatus`](@ref) and [`MOI.VariablePrimal`](@ref)
+# * Implement a first-order LP solver (PDHG) from scratch in Julia and verify
+#   that it recovers correct primal and dual solutions
+# * Subtype [`MOI.AbstractOptimizer`](@ref) and implement the required support
+#   methods to declare which problem forms the solver accepts
+# * Use [`MOI.Utilities.GenericModel`](@ref) to automatically extract
+#   standard-form matrices from an arbitrary JuMP model, then expose solution
+#   attributes back to JuMP
 
 # ## Required packages
 

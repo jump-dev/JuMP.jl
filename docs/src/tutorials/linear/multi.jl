@@ -12,12 +12,12 @@
 # by executing SQL queries and piping results to Julia data structures.
 #
 # **Learning intentions:**
-# * Connect to a SQLite database with `SQLite.DB`, execute queries via
-#   `DBInterface.execute`, and load results into DataFrames or row tables
-# * Build a JuMP model from query results using `Tables.rowtable`, a
-#   `DataFrames.DataFrame`, or a streaming `Tables.rows` cursor
-# * Construct more complex SQL queries—including inner joins—to generate
-#   constraint sets directly from the database schema
+# * Connect to a SQLite database and execute queries to retrieve the sets and
+#   parameters needed to build a JuMP model
+# * Consume query results in three ways: loading into a DataFrame, converting to
+#   a row table, or streaming rows directly — and understand when each is appropriate
+# * Write SQL joins to generate constraint index sets directly from the database
+#   schema, rather than constructing them in Julia
 
 # ## Required packages
 

@@ -28,12 +28,11 @@
 # illustrate how optimisation models arise naturally in financial decisions.
 #
 # **Learning intentions:**
-# * Formulate a multi-period linear program for short-term financing with
-#   balance constraints linking monthly cash inflows and outflows
-# * Model a combinatorial auction as a binary integer program, maximising
-#   revenue while ensuring each item is sold at most once
-# * Use the `@variables` and `@constraints` macros to declare multiple variables
-#   and constraints in a single block in the financing model
+# * Formulate a multi-period LP for short-term financing where balance
+#   constraints link consecutive months' cash inflows, borrowings, and
+#   investments
+# * Model a combinatorial auction as a binary integer program that maximises
+#   revenue while ensuring no item is allocated to more than one winning bid
 
 # ## Required packages
 

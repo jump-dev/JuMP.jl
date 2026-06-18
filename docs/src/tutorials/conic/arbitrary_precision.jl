@@ -11,13 +11,12 @@
 #
 # **Learning intentions:**
 # * Create a [`GenericModel`](@ref) with a non-default number type such as
-#   `BigFloat`, where all bounds, coefficients, and solution values follow
-#   that type automatically
-# * Use `Clarabel.Optimizer{BigFloat}` for higher-precision floating-point
-#   arithmetic and `CDDLib.Optimizer{Rational{BigInt}}` for exact rational
-#   arithmetic
-# * Tighten solver tolerances to obtain a more accurate `BigFloat` solution,
-#   and verify exactness via [`primal_feasibility_report`](@ref)
+#   `BigFloat`, where all bounds, coefficients, and solution values
+#   automatically follow that type
+# * Tighten solver tolerances to squeeze more precision from a `BigFloat`
+#   solver, and use [`primal_feasibility_report`](@ref) to verify the result
+# * Solve with exact rational arithmetic using a `Rational{BigInt}`-capable
+#   solver, eliminating rounding error entirely
 
 # ## Required packages
 

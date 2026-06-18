@@ -11,13 +11,12 @@
 # the Pareto frontier to support decision-making.
 #
 # **Learning intentions:**
-# * Formulate a bi-objective binary integer program by supplying a vector of two
-#   objective expressions to [`@objective`](@ref)
-# * Solve the problem with `MOA.EpsilonConstraint` and access multiple
-#   Pareto-optimal solutions via [`result_count`](@ref), [`objective_value`](@ref),
-#   and [`value`](@ref) with the `result` keyword
-# * Plot the objective space to visualise trade-offs between profit and
-#   desirability, and select a preferred solution from the Pareto frontier
+# * Extend a single-objective binary integer program to two objectives by
+#   passing a vector of expressions to [`@objective`](@ref)
+# * Enumerate all Pareto-optimal solutions and access each one using
+#   [`result_count`](@ref) and the `result` keyword in [`objective_value`](@ref)
+# * Plot the objective space to visualise trade-offs and identify a preferred
+#   solution from the Pareto frontier
 
 # ## Required packages
 

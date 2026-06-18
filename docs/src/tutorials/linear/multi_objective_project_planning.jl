@@ -19,11 +19,10 @@
 # **Learning intentions:**
 # * Model a project schedule with task-start-time variables, acceleration
 #   decisions, and precedence constraints in a multi-objective integer program
-# * Formulate three simultaneous objectives—makespan, acceleration cost, and
-#   extra staff—and solve with `MOA.KirlikSayin` to enumerate non-dominated
-#   solutions
-# * Plot the objective space and individual Gantt-chart schedules to communicate
-#   trade-offs to a decision maker
+# * Enumerate non-dominated solutions across three competing objectives—
+#   makespan, cost, and labour—using `MultiObjectiveAlgorithms.jl`
+# * Plot the objective space and Gantt-chart schedules to communicate trade-offs
+#   and support a decision maker in choosing a preferred plan
 
 # ## Required packages
 

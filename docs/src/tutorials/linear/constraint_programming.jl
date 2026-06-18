@@ -11,14 +11,13 @@
 # MIP solvers such as HiGHS.
 #
 # **Learning intentions:**
-# * Use constraint-programming sets such as [`MOI.AllDifferent`](@ref),
-#   [`MOI.Circuit`](@ref), and [`MOI.Table`](@ref) to express combinatorial
-#   structure concisely
-# * Understand that JuMP automatically reformulates CP constraints into MIP
-#   equivalents, so they can be solved with standard MIP solvers
-# * Apply counting constraints—[`MOI.CountBelongs`](@ref),
-#   [`MOI.CountDistinct`](@ref), [`MOI.CountGreaterThan`](@ref)—to model
-#   cardinality-based requirements
+# * Express combinatorial requirements — all-different assignments, Hamiltonian
+#   circuits, bin packing, table lookups — concisely using constraint-programming
+#   sets, rather than writing explicit integer-programming reformulations by hand
+# * Understand that JuMP automatically reformulates these CP sets into MIP
+#   equivalents, so any standard MIP solver can solve them without extra work
+# * Use counting constraints to bound or measure how many variables in a
+#   collection take values from a specified set
 
 # ## Required packages
 

@@ -32,11 +32,11 @@
 # **Learning intentions:**
 # * Encode a round-robin schedule as a three-index binary variable and express
 #   home-game, matchup, and away-game-limit constraints in JuMP
-# * Break solution symmetry by fixing one team's schedule, making the problem
-#   significantly easier to solve
-# * Extend the model with an auxiliary objective variable and additional
-#   constraints to minimise back-to-back away games, using a warm start and
-#   time limit for a hard MIP
+# * Break solution symmetry by fixing one team's schedule, which makes the
+#   problem significantly easier to solve
+# * Extend the feasibility model with an objective to minimise back-to-back away
+#   games, and provide a warm start to help the solver find a good solution
+#   within a time limit
 
 # ## Required packages
 

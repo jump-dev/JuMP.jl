@@ -11,14 +11,14 @@
 # programs](@ref) first.
 #
 # **Learning intentions:**
-# * Build individual scenario subproblems with quadratic penalty terms that
-#   penalise deviation from the current consensus solution
-# * Implement the PH outer loop: solve all penalised subproblems, update the
-#   consensus average, and update dual prices; extend with an adaptive ρ rule
-#   that balances primal and dual residuals
-# * Use JuMP [`Parameter`](@ref) variables and [`set_parameter_value`](@ref) to
-#   efficiently modify penalty and dual terms between iterations without
+# * Understand how Progressive Hedging decomposes a stochastic program into
+#   per-scenario subproblems linked by a quadratic penalty toward the current
+#   consensus first-stage decision
+# * Use [`Parameter`](@ref) variables and [`set_parameter_value`](@ref) to
+#   update penalty coefficients and dual prices between iterations without
 #   rebuilding the model
+# * Extend the basic algorithm with an adaptive penalty rule that balances
+#   primal and dual residuals to speed convergence
 
 # ## Required packages
 

@@ -26,12 +26,12 @@
 # alternative approaches.
 #
 # **Learning intentions:**
-# * Write analytic gradient and Hessian functions for a user-defined operator
-#   and register them using [`@operator`](@ref) with explicit derivative callbacks
-# * Use ForwardDiff.jl and Enzyme.jl to compute gradients and Hessians
-#   automatically, and encapsulate the logic in reusable helper functions
-# * Use DifferentiationInterface.jl as a backend-agnostic abstraction layer,
-#   choosing the underlying AD library via a backend object
+# * Supply analytic gradient and Hessian functions to [`@operator`](@ref) when
+#   closed-form derivatives are available
+# * Compute gradients and Hessians automatically using ForwardDiff.jl or
+#   Enzyme.jl as drop-in alternatives to analytic derivatives
+# * Use DifferentiationInterface.jl to write AD-backend-agnostic helper code
+#   that can switch between ForwardDiff, Enzyme, and others
 
 # !!! tip
 #     This tutorial is for advanced users. As an alternative, consider using

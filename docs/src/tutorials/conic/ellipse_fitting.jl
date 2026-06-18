@@ -10,14 +10,12 @@
 # parameterization and applies the method to edge detection in an image.
 #
 # **Learning intentions:**
-# * Formulate the ellipse fitting problem as a semidefinite program using the
-#   algebraic conic-section representation in homogeneous coordinates
-# * Cluster image edge-detection data and fit a separate ellipse to each
-#   cluster using two objectives: minimise total squared residual with
-#   [`MOI.RotatedSecondOrderCone`](@ref) and minimise maximum residual with
-#   [`MOI.NormInfinityCone`](@ref)
-# * Visualise both sets of fitted ellipses overlaid on the original image to
-#   compare the two fitting criteria
+# * Represent an ellipse as a quadratic form in homogeneous coordinates and
+#   formulate the fitting problem as a semidefinite program
+# * Fit ellipses under two different criteria — minimise total squared
+#   residual and minimise maximum residual — and compare their results visually
+# * Apply the full pipeline to real image data: denoise, detect edges, cluster
+#   detected points, then fit one ellipse per cluster
 
 # ## Required packages
 

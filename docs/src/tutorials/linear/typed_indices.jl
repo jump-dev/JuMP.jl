@@ -11,13 +11,12 @@
 # hard to diagnose because the wrong ordering is syntactically valid.
 #
 # **Learning intentions:**
-# * Use keyword indexing with [`DenseAxisArray`](@ref) to access variables as
-#   `x[f=1, m=2]` instead of `x[1, 2]`, making the index role explicit and
-#   catching wrong-order access at runtime
-# * Define Julia structs (`Factory`, `Market`) as typed index sets so that
-#   passing `x[Market(2), Factory(1)]` throws an error at the point of misuse
-# * Choose between keyword indexing and typed indices based on whether you want
-#   runtime errors caught at the access site or by the type system
+# * Understand how index-ordering bugs arise in models with many sets, and why
+#   they are hard to detect when all orderings are syntactically valid
+# * Use keyword indexing with [`DenseAxisArray`](@ref) to make the role of each
+#   index explicit and catch wrong-order access at runtime
+# * Define Julia structs as typed index sets so that passing indices in the
+#   wrong order is caught by the type system at the point of misuse
 
 # ## Required packages
 

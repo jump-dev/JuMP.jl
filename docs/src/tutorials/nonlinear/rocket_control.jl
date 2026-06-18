@@ -12,12 +12,12 @@
 # the worked example.
 #
 # **Learning intentions:**
-# * Discretize a continuous-time optimal control problem using finite differences
-#   and express the dynamics as nonlinear equality constraints in JuMP
-# * Use [`fix`](@ref) to enforce boundary conditions on state variables and set a
-#   good starting point for the nonlinear solver
-# * Visualise the state and control trajectories using `Plots` and experiment
-#   with different discretization choices
+# * Transcribe a continuous-time optimal control problem into a finite
+#   nonlinear program by discretizing the dynamics as equality constraints
+# * Use [`fix`](@ref) to enforce boundary conditions and supply a good initial
+#   guess to help the nonlinear solver converge
+# * Visualise the state and control trajectories and see how changing the
+#   number of time steps affects accuracy and solve time
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be

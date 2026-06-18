@@ -10,12 +10,14 @@
 # solutions, and solver-agnostic callback code using package extensions.
 #
 # **Learning intentions:**
-# * Add lazy constraints and user cuts during branch-and-bound using
-#   [`MOI.LazyConstraint`](@ref) and [`MOI.UserCut`](@ref)
-# * Provide heuristic solutions to the solver via [`MOI.HeuristicSolution`](@ref)
-#   to speed up the search for integer-feasible points
-# * Write solver-independent callback code using Julia package extensions,
-#   allowing a single package to support multiple solvers transparently
+# * Intercept the branch-and-bound process to add lazy constraints, user cuts,
+#   and heuristic solutions that guide the solver toward the optimal integer
+#   solution
+# * Distinguish between solver-independent callbacks (lazy constraints, user
+#   cuts, heuristic solutions) and solver-dependent callbacks that call into a
+#   solver's native C API
+# * Write solver-agnostic callback code using Julia package extensions so that
+#   a single package transparently supports multiple solvers
 
 # ## Required packages
 

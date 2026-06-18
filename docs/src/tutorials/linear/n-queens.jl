@@ -28,12 +28,12 @@
 # column, and diagonal constraints.
 #
 # **Learning intentions:**
-# * Model an N×N binary decision grid and encode row and column exclusivity
+# * Model an N×N binary decision grid and enforce row and column exclusivity
 #   as equality constraints
-# * Use `LinearAlgebra.diag` with both the original and row-reversed matrix to
-#   enforce at-most-one-queen constraints on every diagonal
-# * Recognize this as a pure feasibility problem (no objective) and extract the
-#   integer solution by rounding the continuous values returned by the solver
+# * Enforce at-most-one-queen constraints on every diagonal by iterating over
+#   the diagonals of both the original and row-reversed matrix
+# * Recognise this as a pure feasibility problem with no objective, and extract
+#   the integer solution by rounding the continuous values returned by the solver
 
 # ## Required packages
 

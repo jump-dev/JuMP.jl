@@ -28,13 +28,12 @@
 # at Georgia Tech](https://www2.isye.gatech.edu/~sahmed/isye6669/).
 #
 # **Learning intentions:**
-# * Formulate the Markowitz portfolio problem as a quadratic program minimising
-#   portfolio variance subject to a minimum expected return constraint
-# * Extend the single-objective model to a bi-objective program—minimising
-#   variance and maximising return—using MultiObjectiveAlgorithms.jl to
-#   approximate the efficient frontier
-# * Visualise the objective and decision spaces to interpret the trade-off
-#   between risk and return across the efficient frontier solutions
+# * Formulate the Markowitz mean-variance model as a quadratic program that
+#   minimises portfolio variance for a given minimum expected return
+# * Turn the single-objective model into a bi-objective problem and use
+#   MultiObjectiveAlgorithms.jl to approximate the efficient frontier
+# * Interpret the resulting trade-off by plotting both the objective space
+#   (risk vs return) and the allocation space
 
 # ## Required packages
 

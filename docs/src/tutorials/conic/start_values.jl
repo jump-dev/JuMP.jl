@@ -10,14 +10,12 @@
 # which can improve solver performance when repeatedly solving related problems.
 #
 # **Learning intentions:**
-# * Cache all variable and constraint solution values before modifying the
-#   model, to comply with JuMP's restriction against interleaving queries and
-#   model modifications
-# * Set primal warm-starts via [`set_start_value`](@ref) and dual warm-starts via
-#   [`set_dual_start_value`](@ref) for each constraint type
-# * Recognize that some solvers do not support [`MOI.VariablePrimalStart`](@ref),
-#   [`MOI.ConstraintPrimalStart`](@ref), or [`MOI.ConstraintDualStart`](@ref),
-#   and use a `try`-`catch` to skip unsupported attributes gracefully
+# * Cache all solution values before modifying the model, because JuMP
+#   forbids interleaving solution queries with model modifications
+# * Set primal and dual warm-starts using [`set_start_value`](@ref) and
+#   [`set_dual_start_value`](@ref) to reduce iterations on repeated solves
+# * Handle solvers that do not support warm-starts gracefully using a
+#   `try`-`catch` around each constraint type
 
 # ## Required packages
 

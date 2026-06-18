@@ -13,12 +13,12 @@
 # the model in a reusable function.
 #
 # **Learning intentions:**
-# * Parse a delimited text file using `DelimitedFiles.readdlm` and store the
-#   result in a [`Containers.DenseAxisArray`](@ref) indexed by string row and column names
-# * Fix arc variables to zero for non-existent routes (indicated by `"."` in
-#   the data) using [`fix`](@ref) rather than removing them from the model formulation
-# * Encapsulate the model in a function that accepts validated input data and
-#   prints the solution in the same format as the input
+# * Parse a delimited text file and store the result in a
+#   [`Containers.DenseAxisArray`](@ref) indexed by string row and column names
+# * Handle missing arcs by fixing the corresponding variables to zero with
+#   [`fix`](@ref), rather than conditionally omitting them from the model
+# * Encapsulate the model in a reusable function that accepts validated input
+#   data and prints the solution in the same tabular format as the input
 
 # ## Required packages
 

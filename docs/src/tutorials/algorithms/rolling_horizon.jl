@@ -28,13 +28,15 @@
 # uses a power system with solar generation and a battery as the worked example.
 #
 # **Learning intentions:**
-# * Parameterise data in a JuMP model using [`Parameter`](@ref) so that the
-#   model structure is built once and only parameter values change each solve
-# * Implement the rolling horizon loop—update forecast parameters with
-#   [`set_parameter_value`](@ref), re-solve, record the first `move_forward`
-#   decisions, and advance the planning window
-# * Visualise the per-window and full-horizon battery and generation decisions
-#   to confirm that the piecewise solutions compose into a coherent trajectory
+# * Understand how rolling horizon trades global optimality for tractability by
+#   solving a short planning window repeatedly and keeping only the first
+#   `move_forward` decisions from each solve
+# * Use [`Parameter`](@ref) variables and [`set_parameter_value`](@ref) to
+#   update forecast data and initial conditions between windows without
+#   rebuilding the model
+# * Visualise each window's decisions alongside the stitched full-horizon
+#   solution to verify that the piecewise solves compose into a coherent
+#   trajectory
 
 # ## Required packages
 #

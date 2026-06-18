@@ -27,12 +27,13 @@
 # power, and semidefinite cones.
 #
 # **Learning intentions:**
-# * Use [`SecondOrderCone`](@ref) and [`RotatedSecondOrderCone`](@ref) to
-#   express L2-norm and sum-of-squares objectives as conic constraints
-# * Apply [`MOI.ExponentialCone`](@ref) to model log, entropy, and log-sum-exp
-#   terms, and [`MOI.PowerCone`](@ref) to model power functions and p-norms
-# * Express matrix inequalities and positive semidefiniteness using
-#   `@variable(model, X[1:n, 1:n], PSD)` and [`PSDCone`](@ref)
+# * Express norms and sum-of-squares objectives as conic constraints using
+#   [`SecondOrderCone`](@ref) and [`RotatedSecondOrderCone`](@ref)
+# * Model log, entropy, log-sum-exp, and power functions using
+#   [`MOI.ExponentialCone`](@ref) and [`MOI.PowerCone`](@ref)
+# * Express matrix inequalities, determinant objectives, and matrix norms
+#   using [`PSDCone`](@ref) and the log-det, root-det, nuclear, and spectral
+#   cone sets
 
 # !!! tip
 #     A good resource for learning more about functions which can be modeled

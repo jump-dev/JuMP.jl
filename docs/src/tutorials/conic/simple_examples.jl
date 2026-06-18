@@ -11,14 +11,13 @@
 # number of a graph.
 #
 # **Learning intentions:**
-# * Formulate the SDP relaxation of the [maximum cut problem](https://en.wikipedia.org/wiki/Maximum_cut)
-#   using the graph Laplacian, and round the SDP solution to a feasible cut
-#   via random hyperplane rounding
-# * Model low-rank matrix completion as a convex relaxation that minimises the
-#   nuclear norm using [`MOI.NormNuclearCone`](@ref), and solve the SDP
-#   relaxation of k-means clustering with a trace constraint
-# * Compute the Lovász theta number of a graph as a semidefinite program and
-#   use it to bound the clique number and chromatic number
+# * Formulate the SDP relaxation of the maximum cut problem using the graph
+#   Laplacian, and round the SDP solution to a feasible cut
+# * Model a variety of problems — low-rank matrix completion, k-means
+#   clustering, correlation bounds, and minimum metric distortion — as
+#   semidefinite programs
+# * Compute the Lovász theta number of a graph as an SDP and use it to bound
+#   the clique number and chromatic number
 
 # ## Required packages
 

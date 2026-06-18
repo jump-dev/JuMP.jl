@@ -11,14 +11,15 @@
 # models.
 #
 # **Learning intentions:**
-# * Use `Threads.@threads` to parallelise independent JuMP solves; protect
-#   shared results with a `ReentrantLock`; build a separate model per thread
+# * Parallelise independent JuMP solves with `Threads.@threads` by building a
+#   separate model per thread and protecting shared results with a `ReentrantLock`,
 #   because JuMP models are not thread-safe
-# * Watch for the closure capture bug: when a variable name is reused inside and
-#   outside a `Threads.@threads` loop, Julia wraps it in a `Core.Box` introducing
-#   a silent race condition; diagnose it with `@code_warntype`
-# * Use `Distributed.@everywhere` and `Distributed.pmap` to distribute independent
-#   solves across multiple Julia processes, each of which must build its own model
+# * Recognise the closure-capture pitfall: reusing a variable name inside and
+#   outside a `Threads.@threads` loop silently introduces a race condition via
+#   `Core.Box`; annotate the inner variable with `local` to fix it
+# * Run independent solves across separate Julia processes using
+#   `Distributed.pmap`, and use `Distributed.@everywhere` to make code available
+#   on all workers
 
 # ## Required packages
 
