@@ -672,11 +672,11 @@ function test_copy_direct_mode()
     @test_throws(
         ErrorException(
             """
-            Cannot copy a model in `DIRECT` mode because there is no cached
-            model representation to copy from.
+            Cannot copy a model in `DIRECT` mode because there is no cached model
+            representation to copy from.
 
-            Use the `Model` constructor instead of `direct_model` to build a
-            model that supports copying.
+            Use the `Model` constructor instead of `direct_model` to build a model that
+            supports copying.
             """,
         ),
         copy(model),
