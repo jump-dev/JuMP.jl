@@ -66,7 +66,7 @@ function primal_feasibility_report(
 end
 
 function primal_feasibility_report(model::GenericModel{T}; kwargs...) where {T}
-     if !has_values(model)
+    if !has_values(model)
         error(
             """
             Unable to call the single-argument version of `primal_feasibility_report`
