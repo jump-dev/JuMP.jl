@@ -1781,7 +1781,28 @@ function test_constraint_unsupported_operator()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, x ⊕ 1)`: unsupported operator ⊕",
+            """
+            In `@constraint(model, x ⊕ 1)`: unsupported operator `⊕`.
+
+            ## Explanation
+
+            JuMP was unable to create a constraint because the operator `⊕` cannot
+            be interpreted as a constraint.
+
+            Supported operators include `>=`, `<=`, `==`, and `⟂`. For example:
+            ```julia
+            @constraint(model, x >= 1)
+            @constraint(model, x <= 1)
+            @constraint(model, x == 1)
+            @constraint(model, 1 - x ⟂ 1)
+            @constraint(model, x in MOI.ZeroOne())
+            ```
+
+            ## Next steps
+
+            Double check your constraint to see if you missed an inequality, or, if
+            you want to define a custom set, implement `operator_to_set`.
+            """,
         ),
         @constraint(model, x ⊕ 1),
     )

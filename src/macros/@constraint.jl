@@ -543,7 +543,30 @@ sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
 function operator_to_set(error_fn::Function, ::Val{S}) where {S}
-    return error_fn("unsupported operator $S")
+    return error_fn(
+        """
+        unsupported operator `$S`.
+
+        ## Explanation
+
+        JuMP was unable to create a constraint because the operator `$S` cannot
+        be interpreted as a constraint.
+
+        Supported operators include `>=`, `<=`, `==`, and `⟂`. For example:
+        ```julia
+        @constraint(model, x >= 1)
+        @constraint(model, x <= 1)
+        @constraint(model, x == 1)
+        @constraint(model, 1 - x ⟂ 1)
+        @constraint(model, x in MOI.ZeroOne())
+        ```
+
+        ## Next steps
+
+        Double check your constraint to see if you missed an inequality, or, if
+        you want to define a custom set, implement `operator_to_set`.
+        """,
+    )
 end
 
 function operator_to_set(error_fn::Function, ::Val{:>})
