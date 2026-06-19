@@ -669,7 +669,19 @@ end
 function test_copy_direct_mode()
     mock = MOIU.MockOptimizer(MOIU.Model{Float64}())
     model = direct_model(mock)
-    @test_throws ErrorException copy(model)
+    @test_throws(
+        ErrorException(
+            """
+            Cannot copy a model in `DIRECT` mode because there is no cached
+            model representation to copy from.
+
+            Use the `Model` constructor instead of `direct_model` to build a
+            model that supports copying.
+            """,
+        ),
+        copy(model),
+    )
+    return
 end
 
 function test_direct_mode_using_OptimizerWithAttributes()
@@ -1420,8 +1432,14 @@ function test_copy_nonlinear()
     @NLconstraint(model, x <= 1)
     @test_throws(
         ErrorException(
-            "copy is not supported yet for models with nonlinear constraints" *
-            " and/or nonlinear objective function",
+            """
+            `copy_model` is not supported for models with legacy nonlinear
+            constraints or a nonlinear objective (added via `@NLconstraint` or
+            `@NLobjective`).
+
+            Rewrite the nonlinear terms using the standard `@constraint` and
+            `@objective` macros, which support copying.
+            """,
         ),
         copy_model(model),
     )
@@ -1432,7 +1450,12 @@ function test_deepcopy()
     model = Model()
     @test_throws(
         ErrorException(
-            "`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.",
+            """
+            `deepcopy` is not supported for `JuMP.GenericModel` because the underlying
+            solver cannot be deep copied.
+
+            Use `Base.copy` or `JuMP.copy_model` instead.
+            """,
         ),
         deepcopy(model),
     )
