@@ -11,6 +11,13 @@
 # before the current optimal basis—and therefore the current solution—
 # changes.
 #
+# In brief, sensitivity analysis of a linear program is about asking two
+# questions:
+#  1) Given an optimal solution, how much can the objective coefficients change
+#     by before a different solution becomes optimal?
+#  2) Given an optimal solution, how much can the right-hand side of a linear
+#     constraint change by before a different solution becomes optimal?
+#
 # **Learning intentions:**
 # * Understand what sensitivity analysis tells you: how far an objective
 #   coefficient or constraint right-hand side can move before the optimal basis
