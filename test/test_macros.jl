@@ -1646,7 +1646,9 @@ function test_set_string_name_PSDCone()
     model = Model()
     set_string_names_on_creation(model, false)
     x = @variable(model, [1:2, 1:2] in PSDCone())
-    @test name.(x) == fill("", 2, 2)
+    for xi in x
+        @test isempty(name(x))
+    end
     @test sprint.(show, x) == ["_[1]" "_[2]"; "_[2]" "_[3]"]
     return
 end
