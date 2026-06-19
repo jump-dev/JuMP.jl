@@ -10,6 +10,11 @@
 # dual formulations, and the kernel method for nonlinear classifiers, following
 # Section 9.4 of [Ferris2007](@cite).
 #
+# Classification problems deal with constructing functions, called *classifiers*,
+# that can efficiently classify data into two or more distinct sets. A common
+# application is classifying previously unseen data points after training a
+# classifier on known data.
+#
 # **Learning intentions:**
 # * Formulate a linear support vector machine as a quadratic program and solve
 #   it to find a separating hyperplane from labelled training data
