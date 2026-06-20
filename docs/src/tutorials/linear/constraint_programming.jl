@@ -8,7 +8,10 @@
 # This tutorial demonstrates the constraint-programming sets available in JuMP
 # via MathOptInterface. Most of these constraints are automatically reformulated
 # into equivalent mixed-integer programs, so they can be solved with standard
-# MIP solvers such as HiGHS.
+# MIP solvers such as HiGHS. Because of this reformulation, all variables must be integer, and they must
+# typically have finite bounds. An error will be thrown if the reformulation
+# requires finiteness and you have a variable with non-finite bounds.
+#
 #
 # **Learning intentions:**
 # * Express combinatorial requirements—all-different assignments, Hamiltonian
