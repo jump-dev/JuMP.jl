@@ -11,9 +11,29 @@
 """
     JuMP
 
-An algebraic modeling language for Julia.
+JuMP is an algebraic modeling language for Julia.
 
-For more information, go to https://jump.dev.
+## Documentation
+
+The documentation for JuMP is hosted at https://jump.dev/JuMP.jl
+
+There is also a copy of the documentation in the `/docs/src` directory of the
+source code. To find the directory on your local machine, run
+```julia
+julia> using JuMP; pkgdir(JuMP, "docs", "src")
+```
+
+## Getting help
+
+If you need help, please ask a question on the JuMP community forum at
+https://jump.dev/forum.
+
+If you have a reproducible example of a bug in JuMP, please open a GitHub issue
+by going to https://github.com/jump-dev/JuMP.jl/issues/new.
+
+## More information
+
+For more information on JuMP, go to https://jump.dev.
 """
 module JuMP
 
