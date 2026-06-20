@@ -710,13 +710,24 @@ const AffExpr = GenericAffExpr{Float64,VariableRef}
 function _assert_isfinite(a::GenericAffExpr)
     for (coef, var) in linear_terms(a)
         if !isfinite(coef)
-            error("Invalid coefficient $coef on variable $var.")
+            error(
+                """
+                Invalid coefficient `$coef` on variable `$var`.
+
+                The coefficients in an affine expression must be finite. They cannot
+                be values like `NaN`, `Inf`, or `-Inf`.
+                """,
+            )
         end
     end
     if isnan(a.constant)
         error(
-            "Expression contains an invalid NaN constant. This could be " *
-            "produced by `Inf - Inf`.",
+            """
+            The constant in the affine expression is `NaN`.
+
+            Expressions must have a finite constant. A constant like `NaN` could be
+            produced by an operation like `Inf - Inf` or `0 / 0`.
+            """,
         )
     end
     return
@@ -782,11 +793,15 @@ function moi_function end
 
 function moi_function(x::AbstractArray{AbstractJuMPScalar})
     return error(
-        "Unable to convert array of type `::$(typeof(x))` to an equivalent " *
-        "function in MathOptInterface because the array has the abstract " *
-        "element type `AbstractJuMPScalar`. To fix this error, convert every " *
-        "element in the array to the same concrete element type.\n\n" *
-        """For example, instead of:
+        """
+        Unable to convert an array of type `::$(typeof(x))` to an equivalent function
+        in MathOptInterface because the array has the abstract element type
+        `AbstractJuMPScalar`.
+
+        To fix this error, convert every element in the array to the same concrete
+        element type.
+
+        For example, instead of:
         ```julia
         model = Model();
         @variable(model, x);
@@ -986,15 +1001,23 @@ forward the method if and only if `x` is convertable to a `GenericVariableRef`.
 function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
     if length(x.terms) != 1
         error(
-            "Cannot call $f with $x because it is not an affine expression " *
-            "of one variable.",
+            """
+            Cannot call `$f` with the affine expression `$x` because the expression
+            does not have exactly one term.
+
+            `$f` can be called only with affine expressions of the form `1.0 * x`.
+            """,
         )
     end
     variable, coefficient = first(x.terms)
     if !isone(coefficient)
         error(
-            "Cannot call $f with $x because the variable has a coefficient " *
-            "that is different to `+1`.",
+            """
+            Cannot call `$f` with the affine expression `$x` because the coefficient
+            on the variable is `$coefficient`.
+
+            `$f` can be called only with affine expressions of the form `1.0 * x`.
+            """,
         )
     end
     return f(variable, args...)

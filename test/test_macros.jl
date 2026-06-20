@@ -865,18 +865,17 @@ end
 function test_NaN_in_constraints()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws(
-        ErrorException(
-            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
-        ),
-        @constraint(model, x >= NaN)
+    err = ErrorException(
+        """
+        The constant in the affine expression is `NaN`.
+
+        Expressions must have a finite constant. A constant like `NaN` could be
+        produced by an operation like `Inf - Inf` or `0 / 0`.
+        """,
     )
-    @test_throws ErrorException(
-        "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
-    ) @constraint(model, 1 <= x + NaN <= 2)
-    @test_throws ErrorException(
-        "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
-    ) @constraint(model, 1 <= x + Inf <= 2)
+    @test_throws err @constraint(model, x >= NaN)
+    @test_throws err @constraint(model, 1 <= x + NaN <= 2)
+    @test_throws err @constraint(model, 1 <= x + Inf <= 2)
     @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN].",
