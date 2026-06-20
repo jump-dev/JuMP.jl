@@ -33,6 +33,20 @@
 #   solver settings to tighten them
 # * Use [`primal_feasibility_report`](@ref) to check whether a solution
 #   satisfies the original constraints within a given tolerance
+# 
+# Optimization solvers can seem like magic black boxes that take in an algebraic
+# formulation of a problem and return a solution. It is tempting to treat their
+# solutions at face value, since we often have little ability to verify that the
+# solution is in fact optimal. However, like all numerical algorithms that use
+# floating point arithmetic, optimization solvers use tolerances to check
+# whether a solution satisfies the constraints. In the best case, the solution
+# satisfies the original constraints to
+# [machine precision](https://en.wikipedia.org/wiki/Machine_epsilon). In most
+# cases, the solution satisfies the constraints to some very small tolerance
+# that has no noticeable impact on the quality of the optimal solution. In the
+# worst case, the solver can return a "wrong" solution, or fail to find one even
+# if it exists. (The solution is "wrong" only in the sense of user expectation.
+# It will satisfy the solution to the tolerances that are provided.)
 #
 # There are a few sources of additional information:
 #  * Ambros Gleixner has an excellent YouTube talk
