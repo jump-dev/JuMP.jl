@@ -11,7 +11,19 @@ using Test
 function test_no_solution()
     model = Model()
     @variable(model, x, Bin)
-    @test_throws ErrorException primal_feasibility_report(model)
+    @test_throws(
+        ErrorException(
+            """
+            Unable to call the single-argument version of `primal_feasibility_report`
+            because the model does not have a primal solution available.
+
+            Either solve the model first, or pass a `point` dictionary as the
+            second argument to `primal_feasibility_report`.
+            """,
+        ),
+        primal_feasibility_report(model),
+    )
+    return
 end
 
 function test_primal_solution()
@@ -69,11 +81,18 @@ function test_missing_error()
     @variable(model, x, Bin)
     @variable(model, 0 <= y <= 2, Int)
     point = Dict(x => 0.1)
-    err = ErrorException(
-        "point does not contain a value for variable $(y). Provide a value, " *
-        "or pass `skip_missing = true`.",
+    @test_throws(
+        ErrorException(
+            """
+            The `point` dictionary does not contain a value for the variable `$y`.
+
+            Provide a value, or pass `; skip_missing = true` as a keyword
+            argument to `primal_feasibility_report`.
+            """,
+        ),
+        primal_feasibility_report(model, point),
     )
-    @test_throws err primal_feasibility_report(model, point)
+    return
 end
 
 function test_bounds()
@@ -190,11 +209,19 @@ function test_nonlinear_missing()
     @NLconstraint(model, c1, sin(x) <= 0.0)
     @test_throws(
         ErrorException(
-            "`skip_missing = true` is not allowed when nonlinear constraints " *
-            "are present.",
+            """
+            The keyword argument `; skip_missing = true` cannot be used when
+            legacy nonlinear constraints (added via `@NLconstraint`) are present,
+            because the legacy nonlinear evaluator requires all variables to
+            have a finite value.
+
+            Ensure all variables in `point` have values, or remove the nonlinear
+            constraints.
+            """,
         ),
         primal_feasibility_report(model, Dict(x => 0.5); skip_missing = true)
     )
+    return
 end
 
 function test_nonlinear_Float32()
@@ -230,7 +257,12 @@ function test_nonlinear_expr_missing()
     @test haskey(report, c4)
     @test_throws(
         ErrorException(
-            "point does not contain a value for variable x[2]. Provide a value, or pass `skip_missing = true`.",
+            """
+            The `point` dictionary does not contain a value for the variable `$(x[2])`.
+
+            Provide a value, or pass `; skip_missing = true` as a keyword
+            argument to `primal_feasibility_report`.
+            """,
         ),
         primal_feasibility_report(model, solution),
     )
