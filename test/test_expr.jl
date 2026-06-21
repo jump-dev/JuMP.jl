@@ -496,23 +496,35 @@ function test_aff_expr_complex_HermitianPSDCone()
     @test lower_bound(x[1, 1]) == 2.5
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $(x[2, 1]) because it is not an affine " *
-            "expression of one variable.",
+            """
+            Cannot call `$start_value` with the affine expression `$(x[2, 1])` because the expression
+            does not have exactly one term.
+
+            `$start_value` can be called only with affine expressions of the form `1.0 * x`.
+            """,
         ),
         start_value(x[2, 1]),
     )
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $(imag(x[2, 1])) because the " *
-            "variable has a coefficient that is different to `+1`.",
+            """
+            Cannot call `$start_value` with the affine expression `$(imag(x[2, 1]))` because the coefficient
+            on the variable is `-1.0`.
+
+            `$start_value` can be called only with affine expressions of the form `1.0 * x`.
+            """,
         ),
         start_value(imag(x[2, 1])),
     )
     y = AffExpr(0.0)
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $y because it is not an affine " *
-            "expression of one variable.",
+            """
+            Cannot call `$start_value` with the affine expression `$y` because the expression
+            does not have exactly one term.
+
+            `$start_value` can be called only with affine expressions of the form `1.0 * x`.
+            """,
         ),
         start_value(y),
     )
