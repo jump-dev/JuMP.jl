@@ -712,7 +712,7 @@ function _assert_isfinite(a::GenericAffExpr)
         if !isfinite(coef)
             error(
                 """
-                Invalid coefficient `$coef` on variable `$var`.
+                Affine expression contains an invalid term `$coef * $var`.
 
                 The coefficients in an affine expression must be finite. They cannot
                 be values like `NaN`, `Inf`, or `-Inf`.

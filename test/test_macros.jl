@@ -885,6 +885,25 @@ function test_NaN_in_constraints()
     return
 end
 
+function test_NaN_in_expression()
+    model = Model()
+    @variable(model, x >= 0)
+    for coef in (NaN, Inf, -Inf)
+        @test_throws(
+            ErrorException(
+                """
+                Affine expression contains an invalid term `$coef * $x`.
+
+                The coefficients in an affine expression must be finite. They cannot
+                be values like `NaN`, `Inf`, or `-Inf`.
+                """,
+            ),
+            @expression(model, coef * x) |> moi_function,
+        )
+    end
+    return
+end
+
 function test_unregister()
     model = Model()
     @variable(model, x)
