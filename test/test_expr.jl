@@ -501,7 +501,7 @@ function test_aff_expr_complex_HermitianPSDCone()
             does not have exactly one term.
 
             `$start_value` can be called only with affine expressions of the form `1.0 * x`.
-            """
+            """,
         ),
         start_value(x[2, 1]),
     )
@@ -524,7 +524,7 @@ function test_aff_expr_complex_HermitianPSDCone()
             does not have exactly one term.
 
             `$start_value` can be called only with affine expressions of the form `1.0 * x`.
-            """
+            """,
         ),
         start_value(y),
     )
