@@ -726,6 +726,7 @@ ERROR: Constraints of type MathOptInterface.ScalarQuadraticFunction{Float64}-in-
 If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
 
 The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
+
 Stacktrace:
 ```
 

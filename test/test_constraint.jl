@@ -785,13 +785,20 @@ function test_all_constraints_scalar()
     aff_constraints = all_constraints(model, AffExpr, MOI.GreaterThan{Float64})
     @test isempty(aff_constraints)
     err = ErrorException(
-        "`MathOptInterface.GreaterThan` is not a " *
-        "concrete type. Did you miss a type parameter?",
+        """
+        `MathOptInterface.GreaterThan` is not a concrete type. Did you miss a type parameter?
+
+        Provide a concrete type such as `AffExpr` instead of `GenericAffExpr`, or `MOI.GreaterThan{Float64}` instead of `MOI.GreaterThan`.
+        """,
     )
     @test_throws err num_constraints(model, AffExpr, MOI.GreaterThan)
     @test_throws err all_constraints(model, AffExpr, MOI.GreaterThan)
     err = ErrorException(
-        "`JuMP.GenericAffExpr` is not a concrete type. Did you miss a type parameter?",
+        """
+        `JuMP.GenericAffExpr` is not a concrete type. Did you miss a type parameter?
+
+        Provide a concrete type such as `AffExpr` instead of `GenericAffExpr`, or `MOI.GreaterThan{Float64}` instead of `MOI.GreaterThan`.
+        """,
     )
     @test_throws err try
         num_constraints(model, GenericAffExpr, MOI.ZeroOne)
@@ -852,8 +859,11 @@ function test_all_constraints_vector()
     @test isempty(aff_constraints)
     err = ErrorException(
         replace(
-            "`$(GenericAffExpr{Float64})` is not a concrete type. Did you " *
-            "miss a type parameter?",
+            """
+            `$(GenericAffExpr{Float64})` is not a concrete type. Did you miss a type parameter?
+
+            Provide a concrete type such as `AffExpr` instead of `GenericAffExpr`, or `MOI.GreaterThan{Float64}` instead of `MOI.GreaterThan`.
+            """,
             "" => "",
         ),
     )
@@ -876,8 +886,11 @@ function test_all_constraints_vector()
         error(replace(e.msg, "" => ""))
     end
     err = ErrorException(
-        "`MathOptInterface.SOS1` is not a " *
-        "concrete type. Did you miss a type parameter?",
+        """
+        `MathOptInterface.SOS1` is not a concrete type. Did you miss a type parameter?
+
+        Provide a concrete type such as `AffExpr` instead of `GenericAffExpr`, or `MOI.GreaterThan{Float64}` instead of `MOI.GreaterThan`.
+        """,
     )
     @test_throws err all_constraints(
         model,
@@ -2182,8 +2195,11 @@ function test_shadow_price_errors()
     @constraint(model, c4, x in MOI.Interval(0.0, 1.0))
     @test_throws(
         ErrorException(
-            "The shadow price is not available because no dual result is " *
-            "available.",
+            """
+            The shadow price is not available because no dual result is available.
+
+            Call `optimize!(model)` before querying the shadow price, and check `has_duals(model)` to verify that a dual solution exists.
+            """,
         ),
         shadow_price(c1),
     )
@@ -2198,7 +2214,11 @@ function test_shadow_price_errors()
     optimize!(model)
     @test_throws(
         ErrorException(
-            "The shadow price is not available because the objective sense $FEASIBILITY_SENSE is not minimization or maximization.",
+            """
+            The shadow price is not available because the objective sense $FEASIBILITY_SENSE is not minimization or maximization.
+
+            Set an objective using `@objective(model, Min, ...)` or `@objective(model, Max, ...)` before querying the shadow price.
+            """,
         ),
         shadow_price(c1),
     )
@@ -2208,7 +2228,11 @@ function test_shadow_price_errors()
     @test shadow_price(c3) == -1.0
     @test_throws(
         ErrorException(
-            "The shadow price is not defined or not implemented for this type of constraint.",
+            """
+            The shadow price is not defined or not implemented for constraints with set type $(MOI.Interval{Float64}).
+
+            Shadow prices are only supported for `LessThan`, `GreaterThan`, and `EqualTo` constraints.
+            """,
         ),
         shadow_price(c4),
     )
@@ -2218,7 +2242,11 @@ function test_shadow_price_errors()
     @test shadow_price(c3) == 1.0
     @test_throws(
         ErrorException(
-            "The shadow price is not defined or not implemented for this type of constraint.",
+            """
+            The shadow price is not defined or not implemented for constraints with set type $(MOI.Interval{Float64}).
+
+            Shadow prices are only supported for `LessThan`, `GreaterThan`, and `EqualTo` constraints.
+            """,
         ),
         shadow_price(c4),
     )
