@@ -6,16 +6,18 @@
 # # Optimal power flow
 
 # This tutorial formulates and solves an alternating current optimal power flow
-# (AC-OPF) problem, a much-studied nonlinear problem from the field of
-# electrical engineering.
-
-# Once we've formulated and solved the nonlinear problem, we will turn our focus
-# to obtaining a good estimate of the objective value at the global optimum
-# through the use of semidefinite programming.
-
-# One main purpose of this tutorial is to highlight JuMP's ability to directly
-# formulate problems involving complex-valued decision variables and complex
-# matrix cones such as the  [`HermitianPSDCone`](@ref) object.
+# (AC-OPF) problem using JuMP's support for complex-valued decision variables.
+# It then derives a semidefinite relaxation of the nonlinear problem and
+# tightens it with second-order cone constraints to obtain a lower bound on the
+# globally optimal objective.
+#
+# **Learning intentions:**
+# * Formulate AC optimal power flow using complex-valued decision variables
+#   and express power balance as a linear constraint over the bus admittance matrix
+# * Derive a semidefinite relaxation of the nonlinear problem by lifting voltages
+#   into a Hermitian PSD matrix with [`HermitianPSDCone`](@ref)
+# * Tighten the SDP relaxation with second-order cone constraints derived from
+#   2×2 minors of the lifted matrix using [`RotatedSecondOrderCone`](@ref)
 
 # For another example of modeling with complex decision variables, see the
 # [Example: quantum state discrimination](@ref) tutorial, and see the
@@ -33,7 +35,7 @@
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import Clarabel

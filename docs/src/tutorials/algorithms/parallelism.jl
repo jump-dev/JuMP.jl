@@ -5,9 +5,25 @@
 
 # # Parallelism
 
-# The purpose of this tutorial is to give a brief overview of parallelism in
-# Julia as it pertains to JuMP, and to explain some of the things to be aware of
-# when writing parallel algorithms involving JuMP models.
+# This tutorial gives a brief overview of parallelism in Julia as it pertains
+# to JuMP, covering both multi-threading and distributed computing, and explains
+# the key pitfalls when writing parallel algorithms that build or solve JuMP
+# models.
+#
+# **Learning intentions:**
+# * Parallelise independent JuMP solves with `Threads.@threads` by building a
+#   separate model per thread and protecting shared results with a `ReentrantLock`,
+#   because JuMP models are not thread-safe
+# * Recognize the closure-capture pitfall: reusing a variable name inside and
+#   outside a `Threads.@threads` loop silently introduces a race condition via
+#   `Core.Box`; annotate the inner variable with `local` to fix it
+# * Run independent solves across separate Julia processes using
+#   `Distributed.pmap`, and use `Distributed.@everywhere` to make code available
+#   on all workers
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS

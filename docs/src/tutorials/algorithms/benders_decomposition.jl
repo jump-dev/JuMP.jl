@@ -22,8 +22,23 @@
 
 # **This tutorial was originally contributed by Shuvomoy Das Gupta.**
 
-# This tutorial describes how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
-# in JuMP. It uses the following packages:
+# This tutorial demonstrates how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
+# in JuMP using a mixed-integer linear program as a worked example. It covers
+# both a classical iterative implementation and a modern callback-based variant.
+#
+# **Learning intentions:**
+# * Decompose a MILP into a first-stage integer problem and a second-stage LP,
+#   and build optimality cuts from the second-stage dual solution to iteratively
+#   tighten a lower bound on the optimal value
+# * Implement three increasingly efficient variants: a simple iterative loop, an
+#   in-place version that reuses the second-stage model with [`fix`](@ref), and
+#   a callback that adds cuts inside the solver's branch-and-bound tree
+# * Handle infeasible second-stage subproblems by checking for an infeasibility
+#   certificate and using the dual unbounded ray to construct feasibility cuts
+
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Gurobi

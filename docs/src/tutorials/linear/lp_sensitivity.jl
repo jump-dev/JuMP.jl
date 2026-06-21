@@ -5,22 +5,30 @@
 
 # # Sensitivity analysis of a linear program
 
-# This tutorial explains how to use the [`lp_sensitivity_report`](@ref) function
-# to create sensitivity reports like those that are produced by the Excel
-# Solver. This is most often used in introductory classes to linear programming.
-
+# This tutorial explains how to perform sensitivity analysis on a linear program
+# using JuMP's [`lp_sensitivity_report`](@ref), producing tables similar to those in
+# Excel Solver. Sensitivity analysis answers how much problem data can change
+# before the current optimal basis—and therefore the current solution—
+# changes.
+#
 # In brief, sensitivity analysis of a linear program is about asking two
 # questions:
 #  1) Given an optimal solution, how much can the objective coefficients change
 #     by before a different solution becomes optimal?
 #  2) Given an optimal solution, how much can the right-hand side of a linear
 #     constraint change by before a different solution becomes optimal?
+#
+# **Learning intentions:**
+# * Understand what sensitivity analysis tells you: how far an objective
+#   coefficient or constraint right-hand side can move before the optimal basis
+#   changes
+# * Use [`lp_sensitivity_report`](@ref) to retrieve allowable ranges, and
+#   organize them alongside reduced costs, shadow prices, and slacks into
+#   readable DataFrames
+# * Read the resulting tables to identify which variables are basic or
+#   non-basic and which constraints are binding
 
-# JuMP provides a function, [`lp_sensitivity_report`](@ref), to help us compute
-# these values, but this tutorial extends that to create more informative
-# tables in the form of a `DataFrame`.
-
-# ## Setup
+# ## Required packages
 
 # This tutorial uses the following packages:
 
@@ -28,7 +36,9 @@ using JuMP
 import HiGHS
 import DataFrames
 
-# as well as this small linear program:
+# ## Setup
+
+# As an example, we use this small linear program:
 
 model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)

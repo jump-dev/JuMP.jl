@@ -5,13 +5,18 @@
 
 # # Strategies for dealing with many indices
 
-# Common modeling patterns may lead to variables that are defined over many
-# indices. For example, a transshipment model may have `x[p, f, m, t]` to
-# represent the flow of product `p` from factory `f` to market `m` in time `t`.
-# If each set is represented by a range of integers, it can be easy to make
-# little errors like `x[t, p, f, m]` that are hard to catch and debug. The
-# purpose of this tutorial is to explain how to used typed indices to avoid such
-# bugs.
+# This tutorial demonstrates two techniques—keyword indexing and typed indices
+# —for avoiding common index-ordering bugs in JuMP models with many sets. Such
+# bugs are easy to introduce in models with variables like `x[p, f, m, t]` and
+# hard to diagnose because the wrong ordering is syntactically valid.
+#
+# **Learning intentions:**
+# * Understand how index-ordering bugs arise in models with many sets, and why
+#   they are hard to detect when all orderings are syntactically valid
+# * Use keyword indexing with [`DenseAxisArray`](@ref) to make the role of each
+#   index explicit and catch wrong-order access at runtime
+# * Define Julia structs as typed index sets so that passing indices in the
+#   wrong order is caught by the type system at the point of misuse
 
 # ## Required packages
 

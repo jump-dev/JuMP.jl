@@ -5,13 +5,18 @@
 
 # # The `VectorNonlinearOracle` set
 
-# Many nonlinear solvers support constraints of the form:
-# ```math
-# l \le f(x) \le u
-# ```
-# where $l$, $u$, and $f(x)$ are vectors. The purpose of this tutorial is to
-# explain how to add this constraint using the [`MOI.VectorNonlinearOracle`](@ref)
-# set.
+# This tutorial explains how to add vector-valued nonlinear constraints using
+# the [`MOI.VectorNonlinearOracle`](@ref) set, which allows multiple constraints of the
+# form $l \le f(x) \le u$ to be passed together with a single function
+# evaluation and shared Jacobian.
+#
+# **Learning intentions:**
+# * Bundle multiple nonlinear constraints into a single [`MOI.VectorNonlinearOracle`](@ref)
+#   to share one function evaluation across all of them
+# * Implement the required primal evaluator, sparse Jacobian structure, and
+#   Jacobian callback with the correct signatures
+# * Optionally supply a Hessian-of-Lagrangian callback to give the solver
+#   exact second-order information and improve convergence
 
 # ## Required packages
 

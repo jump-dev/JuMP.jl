@@ -22,14 +22,22 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# Optimization models play an increasingly important role in financial
-# decisions. Many computational finance problems can be solved efficiently using
-# modern optimization techniques.
+# This tutorial solves two classical computational finance problems—short-term
+# cash-flow financing and a combinatorial auction—using linear and integer
+# programming in JuMP. Both examples are drawn from [Cornuejols2018](@cite) and
+# illustrate how optimisation models arise naturally in financial decisions.
 #
-# In this tutorial we will discuss two such examples taken from
-# [Cornuejols2018](@cite).
+# **Learning intentions:**
+# * Formulate a multi-period LP for short-term financing where balance
+#   constraints link consecutive months' cash inflows, borrowings, and
+#   investments
+# * Model a combinatorial auction as a binary integer program that maximises
+#   revenue while ensuring no item is allocated to more than one winning bid
 
-# This tutorial uses the following packages
+# ## Required packages
+
+# This tutorial uses the following packages:
+
 using JuMP
 import HiGHS
 

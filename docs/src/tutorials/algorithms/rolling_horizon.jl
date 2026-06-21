@@ -22,15 +22,21 @@
 #
 # **This tutorial was originally contributed by Diego Tejada.**
 #
-# The purpose of this tutorial is to demonstrate how to use [ParametricOptInterface.jl](@ref)
-# to solve a rolling horizon optimization problem.
+# This tutorial demonstrates how to use [ParametricOptInterface.jl](@ref) to
+# solve a rolling horizon optimisation problem—repeatedly solving a
+# time-dependent LP while advancing the planning window forward by one step. It
+# uses a power system with solar generation and a battery as the worked example.
 #
-# The term "rolling horizon" refers to solving a time-dependent model
-# repeatedly, where the planning interval is shifted forward in time during each
-# solution step.
-#
-# As a motivating example, this tutorial models the operations of a power system
-# with solar generation and a battery.
+# **Learning intentions:**
+# * Understand how rolling horizon trades global optimality for tractability by
+#   solving a short planning window repeatedly and keeping only the first
+#   `move_forward` decisions from each solve
+# * Use [`Parameter`](@ref) variables and [`set_parameter_value`](@ref) to
+#   update forecast data and initial conditions between windows without
+#   rebuilding the model
+# * Visualise each window's decisions alongside the stitched full-horizon
+#   solution to verify that the piecewise solves compose into a coherent
+#   trajectory
 
 # ## Required packages
 #

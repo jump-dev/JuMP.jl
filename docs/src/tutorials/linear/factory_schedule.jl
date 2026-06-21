@@ -7,16 +7,24 @@
 
 # **This tutorial was originally contributed by `@Crghilardi`.**
 
-# This tutorial is a Julia translation of Part 5 from [Introduction to Linear
-# Programming with Python](https://github.com/benalexkeen/Introduction-to-linear-programming).
-
-# The purpose of this tutorial is to demonstrate how to use DataFrames and
-# delimited files, and to structure your code that is robust to infeasibilities
-# and permits running with different datasets.
+# This tutorial demonstrates a mixed-integer factory scheduling problem using
+# DataFrames and delimited file input. It is a Julia translation of Part 5 from
+# [Introduction to Linear Programming with Python](https://github.com/benalexkeen/Introduction-to-linear-programming)
+# and shows how to design a model that stays feasible even when demand cannot
+# be fully met.
+#
+# **Learning intentions:**
+# * Validate external data before building a model, and wrap the full
+#   build-solve-extract cycle in a reusable function that accepts data and
+#   returns structured results
+# * Keep a model always feasible by adding a penalty variable for unmet demand,
+#   so infeasibility signals a data error rather than a solver failure
+# * Run parametric experiments by re-solving the same model under a grid of
+#   input values and visualising how the optimal cost responds
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import CSV

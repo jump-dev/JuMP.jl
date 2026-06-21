@@ -20,12 +20,19 @@
 
 # # Transitioning from MATLAB
 
-# [YALMIP](https://yalmip.github.io/) and [CVX](https://cvxr.com/cvx/) are two
-# packages for mathematical optimization in [MATLAB®](https://mathworks.com/products/matlab.html).
-# They are independently developed and are in no way affiliated with JuMP.
-
-# The purpose of this tutorial is to help new users to JuMP who have previously
-# used YALMIP or CVX by comparing and contrasting their different features.
+# [YALMIP](https://yalmip.github.io/) and [CVX](https://cvxr.com/cvx/) are
+# popular mathematical optimization packages for
+# [MATLAB®](https://mathworks.com/products/matlab.html), and this tutorial
+# helps users familiar with them make the transition to JuMP. It compares and
+# contrasts the syntax and workflows of all three tools side by side.
+#
+# **Learning intentions:**
+# * Recognize the key differences between JuMP and YALMIP/CVX—explicit models,
+#   Julia namespaces, and the need to choose a solver—before writing any code
+# * Map common modelling idioms side by side: declaring variables, adding
+#   constraints, setting objectives, and calling the solver
+# * Translate a complete YALMIP or CVX model into idiomatic JuMP and
+#   understand where the two tools diverge
 
 # !!! tip
 #     If you have not used Julia before, read the [Getting started with Julia](@ref)

@@ -7,9 +7,22 @@
 
 # **This tutorial was originally contributed by Mathieu Tanneau and Alexis Montoison.**
 
+# This tutorial formulates and solves both the uncapacitated and capacitated
+# facility location problems using binary integer programming in JuMP. It also
+# demonstrates how to visualise the problem data and solution using Plots.
+#
+# **Learning intentions:**
+# * Formulate a binary integer program for facility location, coupling
+#   open/close decisions with client-assignment decisions through linking
+#   constraints
+# * Extend the uncapacitated model with demand and capacity data to obtain the
+#   capacitated variant, and understand how the coupling constraints change
+# * Visualise problem data and the optimal solution to verify that the model
+#   behaves as expected
+
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS

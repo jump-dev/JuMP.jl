@@ -5,15 +5,23 @@
 
 # # Example: classification problems
 
-# The purpose of this tutorial is to show how JuMP can be used to formulate
-# classification problems.
-
+# This tutorial shows how JuMP can be used to formulate and solve classification
+# problems using support vector machines (SVMs). It covers linear SVMs, their
+# dual formulations, and the kernel method for nonlinear classifiers, following
+# Section 9.4 of [Ferris2007](@cite).
+#
 # Classification problems deal with constructing functions, called *classifiers*,
 # that can efficiently classify data into two or more distinct sets. A common
 # application is classifying previously unseen data points after training a
 # classifier on known data.
-
-# The theory and models in this tutorial come from Section 9.4 of [Ferris2007](@cite).
+#
+# **Learning intentions:**
+# * Formulate a linear support vector machine as a quadratic program and solve
+#   it to find a separating hyperplane from labelled training data
+# * Derive the dual SVM and use the resulting dual variables to recover the
+#   classifier without solving the primal problem directly
+# * Extend the SVM to nonlinear classification by replacing the inner-product
+#   Gram matrix with a kernel function
 
 # ## Required packages
 

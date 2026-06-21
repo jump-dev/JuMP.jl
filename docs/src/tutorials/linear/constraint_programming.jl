@@ -5,14 +5,24 @@
 
 # # Constraint programming
 
-# JuMP supports a range of constraint-programming type constraints via the
-# corresponding sets in MathOptInterface. For most constraints, there are
-# reformulations built-in that convert the constraint programming constraint
-# into a mixed-integer programming equivalent.
-
-# Because of this reformulation, all variables must be integer, and they must
+# This tutorial demonstrates the constraint-programming sets available in JuMP
+# via MathOptInterface. Most of these constraints are automatically reformulated
+# into equivalent mixed-integer programs, so they can be solved with standard
+# MIP solvers such as HiGHS. Because of this reformulation, all variables must be integer, and they must
 # typically have finite bounds. An error will be thrown if the reformulation
 # requires finiteness and you have a variable with non-finite bounds.
+#
+#
+# **Learning intentions:**
+# * Express combinatorial requirements—all-different assignments, Hamiltonian
+#   circuits, bin packing, table lookups—concisely using constraint-programming
+#   sets, rather than writing explicit integer-programming reformulations by hand
+# * Understand that JuMP automatically reformulates these CP sets into MIP
+#   equivalents, so any standard MIP solver can solve them without extra work
+# * Use counting constraints to bound or measure how many variables in a
+#   collection take values from a specified set
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 

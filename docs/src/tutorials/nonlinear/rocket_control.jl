@@ -7,10 +7,17 @@
 
 # **This tutorial was originally contributed by Iain Dunning.**
 
-# The purpose of this tutorial is to demonstrate how to setup and solve a
-# nonlinear optimization problem.
-
-# The example is an optimal control problem of a nonlinear rocket.
+# This tutorial demonstrates how to formulate and solve a nonlinear optimal
+# control problem in JuMP using Ipopt, with a discretized rocket trajectory as
+# the worked example.
+#
+# **Learning intentions:**
+# * Transcribe a continuous-time optimal control problem into a finite
+#   nonlinear program by discretizing the dynamics as equality constraints
+# * Use [`fix`](@ref) to enforce boundary conditions and supply a good initial
+#   guess to help the nonlinear solver converge
+# * Visualise the state and control trajectories and see how changing the
+#   number of time steps affects accuracy and solve time
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be

@@ -20,17 +20,24 @@
 
 # # Writing a solver interface
 
-# The purpose of this tutorial is to demonstrate how to implement a basic solver
-# interface to MathOptInterface. As a motivating example, we implement the
-# Primal Dual Hybrid Gradient (PDHG) method. PDHG is a first-order method that
-# can solve convex optimization problems.
+# This tutorial demonstrates how to implement a basic solver interface to
+# MathOptInterface by writing the Primal Dual Hybrid Gradient (PDHG) method as
+# a first-order LP solver. Google has a [good introduction to the math behind
+# PDLP](https://developers.google.com/optimization/lp/pdlp_math), which is a
+# variant of PDHG specialised for linear programs.
 #
-# Google has a [good introduction to the math behind PDLP](https://developers.google.com/optimization/lp/pdlp_math),
-# which is a variant of PDHG specialized for linear programs.
+# **Learning intentions:**
+# * Implement a first-order LP solver (PDHG) from scratch in Julia and verify
+#   that it recovers correct primal and dual solutions
+# * Subtype [`MOI.AbstractOptimizer`](@ref) and implement the required support
+#   methods to declare which problem forms the solver accepts
+# * Use [`MOI.Utilities.GenericModel`](@ref) to automatically extract
+#   standard-form matrices from an arbitrary JuMP model, then expose solution
+#   attributes back to JuMP
 
 # ## Required packages
 
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import LinearAlgebra

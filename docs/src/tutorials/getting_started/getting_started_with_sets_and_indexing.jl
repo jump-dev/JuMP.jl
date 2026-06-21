@@ -1,26 +1,19 @@
 # # Getting started with sets and indexing
 
-# Most introductory courses to linear programming will teach you to identify
-# sets over which the decision variables and constraints are indexed. Therefore,
-# it is common to write variables such as ``x_i`` for all ``i \in I``.
+# This tutorial demonstrates how to construct and manipulate index sets for
+# optimization models using Julia's built-in data structures. If you haven't
+# already, you should first read [Getting started with JuMP](@ref).
+#
+# **Learning intentions:**
+# * Index JuMP variables and constraints over unordered sets, ranges, and
+#   dictionary keys using Julia's native data structures
+# * Filter and subset index sets using comprehensions and conditional expressions
+# * Use multi-dimensional sets and dictionaries to model variables over
+#   compound index spaces such as origin-destination pairs
 
-# A common stumbling block for new users to JuMP is that _JuMP does not provide
-# specialized syntax for constructing and manipulating these sets_.
+# ## Required packages
 
-# We made this decision because Julia already provides a wealth of data
-# structures for working with sets.
-
-# In contrast, because tools like AMPL are stand-alone software packages, they
-# had to define their own syntax for set construction and manipulation. Indeed,
-# the [AMPL Book](https://ampl.com/resources/the-ampl-book/chapter-downloads/)
-# has two entire chapters devoted to sets and indexing (Chapter 5, "Simple Sets
-# and Indexing," and Chapter 6, "Compound Sets and Indexing").
-
-# The purpose of this tutorial is to demonstrate a variety of ways in which you
-# can construct and manipulate sets for optimization models.
-
-# If you haven't already, you should first read
-# [Getting started with JuMP](@ref).
+# This tutorial uses the following packages:
 
 using JuMP
 

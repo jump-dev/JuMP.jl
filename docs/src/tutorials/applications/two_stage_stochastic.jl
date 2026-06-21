@@ -5,16 +5,23 @@
 
 # # Two-stage stochastic programs
 
-# The purpose of this tutorial is to demonstrate how to model and solve a
-# two-stage stochastic program.
+# This tutorial demonstrates how to model and solve a two-stage stochastic
+# program in JuMP using sample average approximation (SAA). It also shows how
+# to add risk aversion to the model using the conditional value at risk (CVaR)
+# measure.
+#
+# **Learning intentions:**
+# * Formulate a two-stage stochastic program using sample average approximation:
+#   draw scenarios from a distribution, then build a single LP with second-stage
+#   variables indexed over all scenarios
+# * Compute the conditional value at risk (CVaR) at a given confidence level by
+#   formulating it as a linear program with auxiliary variables
+# * Combine the expected-profit objective and CVaR constraints into one model to
+#   directly optimize the risk-adjusted profit
 
-# !!! info
-#     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
-#     used to model and solve two-stage stochastic programs.
-#     The JuMP extension [SDDP.jl](../../packages/SDDP.md) can be
-#     used to model and solve multi-stage stochastic programs.
+# ## Required packages
 
-# This tutorial uses the following packages
+# This tutorial uses the following packages:
 
 using JuMP
 import Distributions
@@ -22,6 +29,12 @@ import HiGHS
 import Plots
 import StatsPlots
 import Statistics
+
+# !!! info
+#     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
+#     used to model and solve two-stage stochastic programs.
+#     The JuMP extension [SDDP.jl](../../packages/SDDP.md) can be
+#     used to model and solve multi-stage stochastic programs.
 
 # ## Background
 

@@ -20,6 +20,20 @@
 
 # # Tolerances and numerical issues
 
+# Optimization solvers use tolerances to check feasibility and optimality, and
+# understanding them is essential for interpreting solutions correctly. This
+# tutorial explains the main types of tolerances—primal, dual, integrality,
+# and optimality—and what you can reasonably expect from a solver.
+#
+# **Learning intentions:**
+# * Understand the four main solver tolerance types—primal feasibility, dual
+#   feasibility, integrality, and optimality—and why this tutorial focuses on
+#   the first two
+# * Recognize when a solution is wrong due to loose tolerances and adjust
+#   solver settings to tighten them
+# * Use [`primal_feasibility_report`](@ref) to check whether a solution
+#   satisfies the original constraints within a given tolerance
+# 
 # Optimization solvers can seem like magic black boxes that take in an algebraic
 # formulation of a problem and return a solution. It is tempting to treat their
 # solutions at face value, since we often have little ability to verify that the
@@ -33,11 +47,7 @@
 # worst case, the solver can return a "wrong" solution, or fail to find one even
 # if it exists. (The solution is "wrong" only in the sense of user expectation.
 # It will satisfy the solution to the tolerances that are provided.)
-
-# The purpose of this tutorial is to explain the various types of tolerances
-# that are used in optimization solvers and what you can reasonably expect from
-# a solution.
-
+#
 # There are a few sources of additional information:
 #  * Ambros Gleixner has an excellent YouTube talk
 #    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared)

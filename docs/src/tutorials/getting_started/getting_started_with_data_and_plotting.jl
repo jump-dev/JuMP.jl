@@ -20,11 +20,17 @@
 
 # # Getting started with data and plotting
 
-# In this tutorial we will learn how to read tabular data into Julia, and some
-# of the basics of plotting.
-
-# If you're new to Julia, start by reading [Getting started with Julia](@ref)
-# and [Getting started with JuMP](@ref) first.
+# This tutorial introduces reading tabular data into Julia using DataFrames.jl
+# and covers the basics of plotting results. If you're new to Julia, start by
+# reading [Getting started with Julia](@ref) and [Getting started with JuMP](@ref)
+# first.
+#
+# **Learning intentions:**
+# * Read tabular data from CSV and other delimited formats into Julia using
+#   DataFrames.jl and handle missing values during parsing
+# * Group, filter, and aggregate a DataFrame to prepare data for use in a
+#   JuMP model
+# * Visualize data and optimization results using Plots.jl
 
 # !!! note
 #     There are multiple ways to read the same kind of data into Julia. This

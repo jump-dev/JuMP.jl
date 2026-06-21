@@ -5,10 +5,23 @@
 
 # # [Callbacks](@id callbacks_tutorial)
 
-# The purpose of the tutorial is to demonstrate the various solver-independent
-# and solver-dependent callbacks that are supported by JuMP.
+# This tutorial demonstrates the various solver-independent and solver-dependent
+# callbacks supported by JuMP, including lazy constraints, user cuts, heuristic
+# solutions, and solver-agnostic callback code using package extensions.
+#
+# **Learning intentions:**
+# * Intercept the branch-and-bound process to add lazy constraints, user cuts,
+#   and heuristic solutions that guide the solver toward the optimal integer
+#   solution
+# * Distinguish between solver-independent callbacks (lazy constraints, user
+#   cuts, heuristic solutions) and solver-dependent callbacks that call into a
+#   solver's native C API
+# * Write solver-agnostic callback code using Julia package extensions so that
+#   a single package transparently supports multiple solvers
 
-# The tutorial uses the following packages:
+# ## Required packages
+
+# This tutorial uses the following packages:
 
 using JuMP
 import Gurobi

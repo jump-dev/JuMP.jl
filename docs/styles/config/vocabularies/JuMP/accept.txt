@@ -21,7 +21,8 @@ denoise
 [Dd]ependabot
 destructuring
 dev
-discretize(d|s)
+[Dd]iscretize
+discretiz(ed|es|ing)
 docstring(?s)
 doctest(?s)
 doi|DOI
@@ -63,6 +64,7 @@ subexpression(?s)
 subgraph(?s)
 sublicense
 subtyping
+SVM(?s)
 sysimage
 threadsafe
 [Tt]hresholding

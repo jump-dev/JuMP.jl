@@ -5,22 +5,25 @@
 
 # # Serving web apps
 
-# This tutorial demonstrates how to setup and serve JuMP models via a REST API.
+# This tutorial demonstrates how to set up and serve JuMP models via a REST
+# API using HTTP.jl and JSON.jl. The example service accepts an HTTP POST
+# request with a JSON body, solves a parameterized mixed-integer program, and
+# returns the solution as JSON.
+#
+# **Learning intentions:**
+# * Structure a JuMP solver as a self-contained endpoint function that validates
+#   JSON input, builds and solves a model, and returns results as a dictionary
+# * Wrap the endpoint in an HTTP request handler that parses JSON, runs the
+#   solver in a separate thread, and returns an HTTP response
+# * Register the endpoint on an HTTP router, start the server, and send test
+#   requests to verify the full round-trip
 
-# In the example app we are building, we solve a trivial mixed-integer program,
-# which is parameterized by the lower bound of a variable. To call the service,
-# users send an HTTP POST request with JSON contents indicating the lower bound.
-# The returned value is the solution of the mixed-integer program as JSON.
+# ## Required packages
 
-# First, we need JuMP and a solver:
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS
-
-# We also need [HTTP.jl](https://github.com/JuliaWeb/HTTP.jl) to act as our
-# REST server, and [JSON.jl](https://github.com/JuliaIO/JSON.jl) to marshal
-# data.
-
 import HTTP
 import JSON
 

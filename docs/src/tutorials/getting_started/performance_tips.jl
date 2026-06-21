@@ -20,13 +20,19 @@
 
 # # Performance tips
 
-# By now you should have read the other "getting started" tutorials. You're
-# almost ready to write your own models, but before you do so there are some
-# important things to be aware of.
-
-# The Julia manual has an excellent section on [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
-# The purpose of this tutorial is to highlight a number of performance issues
-# that are specific to JuMP.
+# Good performance in JuMP requires understanding a handful of patterns that
+# differ from general Julia advice. This tutorial highlights the most important
+# performance issues specific to JuMP, complementing the Julia manual's
+# [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html).
+#
+# **Learning intentions:**
+# * Use JuMP's macros (for example, [`@expression`](@ref), [`@constraint`](@ref))
+#   to build expressions efficiently and avoid unnecessary intermediate allocations
+# * Use [`add_to_expression!`](@ref) to accumulate terms in-place instead of
+#   via operator overloading
+# * Disable string name creation with [`set_string_names_on_creation`](@ref)
+#   for large models, and pre-compute non-zero index sets to skip
+#   zero-coefficient terms
 
 # ## Required packages
 
@@ -173,7 +179,7 @@ complicated_expression(x, i) = x[i]^2
 
 # Although the final expression consists of  a single element, the sum is over
 # 100,000 elements, all but one of which are then multiplied by `0.0`. The
-# `@expression` line is equivalent to:
+# [`@expression`](@ref) line is equivalent to:
 
 expr = zero(QuadExpr)
 for i in 1:d

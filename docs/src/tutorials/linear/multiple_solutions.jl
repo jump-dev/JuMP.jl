@@ -22,10 +22,19 @@
 
 # **This tutorial was originally contributed by James Foster (@jd-foster).**
 
-# This tutorial demonstrates how to formulate and solve a combinatorial problem
-# with multiple feasible solutions. In fact, we will see how to find _all_
-# feasible solutions to our problem. We will also see how to enforce an
-# "all-different" constraint on a set of integer variables.
+# This tutorial formulates the symmetric number-square puzzle as a binary
+# integer program and uses Gurobi's solution pool to enumerate all feasible
+# solutions. It also demonstrates the `MOI.AllDifferent` constraint for
+# enforcing that a set of integer variables take distinct values.
+#
+# **Learning intentions:**
+# * Model a combinatorial puzzle with binary variables, a symmetric variable
+#   matrix, and an [`MOI.AllDifferent`](@ref) constraint to enforce that digits
+#   are distinct
+# * Configure a solver's solution pool to exhaustively enumerate all feasible
+#   integer solutions in a single solve call
+# * Access each solution in the pool using [`result_count`](@ref) and the
+#   `result` keyword in [`value`](@ref)
 
 # ## Required packages
 

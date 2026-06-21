@@ -5,14 +5,18 @@
 
 # # Example: ellipsoid approximation
 
-# This tutorial considers the problem of computing _extremal ellipsoids_:
-# finding ellipsoids that best approximate a given set. As an extension, we show
-# how to use JuMP to inspect the bridges that were used, and how to explore
-# alternative formulations.
-
-# The model comes from Section 4.9 of [BenTal2001](@cite).
-
-# For a related example, see also the [Example: minimal ellipses](@ref) tutorial.
+# This tutorial computes _extremal ellipsoids_—the smallest ellipse enclosing
+# a set of points and the largest ellipse inscribed in a polytope—using
+# semidefinite programs from Section 4.9 of [BenTal2001](@cite). For a related
+# example, see also the [Example: minimal ellipses](@ref) tutorial.
+#
+# **Learning intentions:**
+# * Formulate the minimum-volume enclosing ellipsoid as a semidefinite program
+#   and recover the ellipse parameters from the optimal matrix
+# * Use [`print_active_bridges`](@ref) to inspect which reformulations JuMP
+#   applied automatically to match the solver's supported constraints
+# * Reduce the bridge graph by hand-tuning the model, and use
+#   [`remove_bridge`](@ref) to compare alternative reformulation paths
 
 # ## Required packages
 

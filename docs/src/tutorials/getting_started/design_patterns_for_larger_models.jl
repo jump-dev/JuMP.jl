@@ -20,12 +20,19 @@
 
 # # Design patterns for larger models
 
-# JuMP makes it easy to build and solve optimization models. However, once you
-# start to construct larger models, and especially ones that interact with
-# external data sources or have customizable sets of variables and constraints
-# based on client choices, you may find that your scripts become unwieldy. This
-# tutorial demonstrates a variety of ways in which you can structure larger JuMP
-# models to improve their readability and maintainability.
+# JuMP makes it easy to build and solve optimization models, but larger models
+# that interact with external data or have customizable structure can quickly
+# become unwieldy. This tutorial demonstrates a progression of design patterns
+# —from simple scripts to reusable functions and data-driven formulations—
+# for structuring larger JuMP models.
+#
+# **Learning intentions:**
+# * Refactor a hard-coded JuMP script into a reusable function that accepts
+#   external data, improving correctness and reducing global state
+# * Separate data from model construction by reading input from JSON files
+#   and validating it with Julia structs
+# * Use abstract types and multiple dispatch to build modular optimization
+#   workflows that are easy to extend without modifying existing code
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.

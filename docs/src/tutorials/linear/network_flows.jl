@@ -22,22 +22,22 @@
 
 # **This tutorial was originally contributed by Arpit Bhatia.**
 
-# In graph theory, a flow network (also known as a transportation network) is a
-# directed graph where each edge has a capacity and each edge receives a flow.
-# The amount of flow on an edge cannot exceed the capacity of the edge.
+# This tutorial formulates three classical network flow problems—shortest path,
+# assignment, and maximum flow—as binary or continuous linear programs in JuMP.
+# Flow networks model many real-world systems such as transport, communications,
+# and electrical circuits.
+#
+# **Learning intentions:**
+# * Formulate the shortest path, assignment, and maximum flow problems as linear
+#   programs, and recognize their shared flow-conservation structure
+# * Distinguish source and sink nodes by their balance values in a
+#   flow-conservation constraint, and use this pattern across all three problems
+# * Choose binary arc variables when a path or matching must be discrete, and
+#   continuous flow variables when fractional flow is permissible
 
-# Often in operations research, a directed graph is called a network, the
-# vertices are called nodes and the edges are called arcs.
+# ## Required packages
 
-# A flow must satisfy the restriction that the amount of flow into a node equals
-# the amount of flow out of it,  unless it is a source, which has only outgoing
-# flow, or sink, which has only incoming flow.
-
-# A network can be used to model traffic in a computer network, circulation with
-# demands, fluids in pipes,  currents in an electrical circuit, or anything
-# similar in which something travels through a network of nodes.
-
-# This tutorial requires the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import HiGHS

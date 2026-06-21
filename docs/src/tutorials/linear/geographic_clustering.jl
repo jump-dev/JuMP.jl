@@ -22,17 +22,33 @@
 
 # **This tutorial was originally contributed by Matthew Helm and Mathieu Tanneau.**
 
-# The goal of this exercise is to cluster $n$ cities into $k$ groups, minimizing
-# the total pairwise distance between cities *and* ensuring that the variance in
-# the total populations of each group is relatively small.
+# This tutorial clusters US cities into groups by minimising total pairwise
+# Haversine distance while constraining population variance across groups. It
+# demonstrates how to formulate and solve a binary integer programming
+# clustering model in JuMP.
+#
+# **Learning intentions:**
+# * Introduce auxiliary binary variables to linearize a pairwise "same group"
+#   condition, turning a non-linear clustering objective into a standard MIP
+# * Break formulation symmetry by fixing one city's group, and add
+#   population-balance constraints to trade off geographic compactness against
+#   even group sizes
+# * Post-process binary solution variables to assign each item to a group and
+#   verify the result against the original data
+
+# ## Required packages
 
 # This tutorial uses the following packages:
+
 using JuMP
 import DataFrames
 import HiGHS
 import LinearAlgebra
 
+# ## Data
+
 # For this example, we'll use the 20 most populous cities in the United States.
+
 cities = DataFrames.DataFrame(
     Union{String,Float64}[
         "New York, NY" 8.405 40.7127 -74.0059

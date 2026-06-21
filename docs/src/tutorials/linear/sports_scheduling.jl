@@ -24,11 +24,19 @@
 # in 2016 as part of an operations research course at the University of
 # Wisconsin-Madison.**
 
-# The purpose of this tutorial is to demonstrate a simple mixed-integer linear
-# program for scheduling round-robin tournaments. As teams, it uses University
-# teams from the [Big Ten Conference](https://en.wikipedia.org/wiki/Big_Ten_Conference).
-# (You might notice that there are more than 10 teams. Our example was also
-# written before the expansion of the Conference in 2024.)
+# This tutorial formulates a round-robin sports scheduling problem as a binary
+# integer program that assigns home and away games to Big Ten Conference teams
+# across a season. It shows how to iteratively improve the schedule by
+# minimising back-to-back away games.
+#
+# **Learning intentions:**
+# * Encode a round-robin schedule as a three-index binary variable and express
+#   home-game, matchup, and away-game-limit constraints in JuMP
+# * Break solution symmetry by fixing one team's schedule, which makes the
+#   problem significantly easier to solve
+# * Extend the feasibility model with an objective to minimise back-to-back away
+#   games, and provide a warm start to help the solver find a good solution
+#   within a time limit
 
 # ## Required packages
 

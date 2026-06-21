@@ -20,8 +20,28 @@
 
 # # Computing Hessians
 
-# The purpose of this tutorial is to demonstrate how to compute the Hessian of
-# the Lagrangian of a nonlinear program.
+# This tutorial demonstrates how to compute the Hessian of the Lagrangian of a
+# nonlinear program using JuMP's low-level `MOI.Nonlinear` interface. It also
+# shows how to query the constraint Jacobian.
+#
+# **Learning intentions:**
+# * Access JuMP's low-level nonlinear interface by constructing a
+#   [`MOI.Nonlinear.Evaluator`](@ref) with sparse reverse-mode automatic
+#   differentiation
+# * Query the sparsity pattern and numerical values of the Hessian of the
+#   Lagrangian and the constraint Jacobian at a given primal point
+# * Verify the computed Hessian against an analytic solution and use its
+#   eigenvalues to confirm local optimality
+
+# ## Required packages
+
+# This tutorial uses the following packages:
+
+using JuMP
+import Ipopt
+import LinearAlgebra
+import Random
+import SparseArrays
 
 # !!! warning
 #     This is an advanced tutorial that interacts with the low-level nonlinear
@@ -33,6 +53,8 @@
 #     ```julia
 #     import MathOptInterface as MOI
 #     ```
+
+# ## The Hessian of the Lagrangian
 
 # Given a nonlinear program:
 # ```math
@@ -48,16 +70,6 @@
 # where ``x`` is a primal point, ``\sigma`` is a scalar (typically ``1``), and
 # ``\mu`` is a vector of weights corresponding to the Lagrangian dual of the
 # constraints.
-
-# ## Required packages
-
-# This tutorial uses the following packages:
-
-using JuMP
-import Ipopt
-import LinearAlgebra
-import Random
-import SparseArrays
 
 # ## The basic model
 

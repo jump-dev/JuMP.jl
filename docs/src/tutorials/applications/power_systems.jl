@@ -8,12 +8,22 @@
 # **This tutorial was originally contributed by Yury Dvorkin and Miles Lubin.**
 
 # This tutorial demonstrates how to formulate basic power systems engineering
-# models in JuMP.
+# models in JuMP, covering economic dispatch and unit commitment without taking
+# into account transmission constraints. It also shows how to embed
+# piecewise-linear cost functions as user-defined operators to formulate a
+# nonlinear economic dispatch problem.
+#
+# **Learning intentions:**
+# * Formulate and solve economic dispatch as a linear program, then run a
+#   parametric study by modifying the objective in-place rather than rebuilding the model
+# * Extend economic dispatch to unit commitment by adding binary on/off
+#   variables and big-M constraints that couple them to generator output bounds
+# * Register a user-defined nonlinear cost function with [`@operator`](@ref)
+#   to formulate a nonlinear economic dispatch problem
 
-# We will consider basic "economic dispatch" and "unit commitment" models
-# without taking into account transmission constraints.
+# ## Required packages
 
-# For this tutorial, we use the following packages:
+# This tutorial uses the following packages:
 
 using JuMP
 import DataFrames

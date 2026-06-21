@@ -5,8 +5,17 @@
 
 # # Chordal decomposition
 
-# The purpose of this tutorial is to show how to use [MathOptChordalDecomposition.jl](@ref)
-# to improve the performance of models with PSD constraints.
+# This tutorial shows how to use [MathOptChordalDecomposition.jl](@ref) to
+# improve the performance of models with sparse positive semidefinite (PSD)
+# constraints by decomposing them into smaller PSD constraints.
+#
+# **Learning intentions:**
+# * Understand why a large sparse PSD constraint is slow to solve directly,
+#   and how chordal decomposition trades one big constraint for many small ones
+# * Apply chordal decomposition with a one-line change by wrapping any
+#   PSD-capable solver in `MathOptChordalDecomposition.Optimizer`
+# * Measure the speed-up on a sparse benchmark problem and inspect the
+#   structure of the decomposed model
 
 # ## Required packages
 

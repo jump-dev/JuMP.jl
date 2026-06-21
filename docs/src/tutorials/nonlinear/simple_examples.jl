@@ -5,7 +5,18 @@
 
 # # Simple examples
 
-# This tutorial is a collection of examples of small nonlinear programs.
+# This tutorial is a collection of small nonlinear programs in JuMP, covering
+# the Rosenbrock function, a beam deflection problem, maximum likelihood
+# estimation, and quadratically constrained programs.
+#
+# **Learning intentions:**
+# * Formulate and solve a variety of small nonlinear programs—unconstrained,
+#   discretized ODEs, and log-likelihood objectives—to see JuMP's nonlinear
+#   syntax in action
+# * Use the block forms of [`@variables`](@ref) and [`@constraints`](@ref) to
+#   declare large arrays of variables and constraints concisely
+# * Add a nonlinear constraint to an already-solved model and re-optimize
+#   without rebuilding from scratch
 
 # ## Required packages
 
