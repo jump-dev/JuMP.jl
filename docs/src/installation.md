@@ -108,6 +108,7 @@ The link in the `Solver` column is the corresponding Julia package.
 
 | Solver                                                                         | Julia Package                                                                    | Installation | License | Supports             |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------ | ------- | ---------------------|
+| [ALGLIB Solver](https://www.alglib.net/)                                       | [ALGLIB.jl](https://github.com/alglib-project/ALGLIB.jl)                         | Manual |Free/Comm.| (MI)NLP                   |
 | [Alpine.jl](https://github.com/lanl-ansi/Alpine.jl)                            |                                                                                  |        | Triad NS | (MI)NLP                   |
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP, (MI)NLP |
 | [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Manual | Comm.    | (MI)NLP                   |
