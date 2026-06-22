@@ -562,8 +562,12 @@ Stacktrace:
 function delete(model::GenericModel, con_ref::ConstraintRef)
     if model !== con_ref.model
         error(
-            "The constraint reference you are trying to delete does not " *
-            "belong to the model.",
+            """
+            Cannot delete this constraint because it does not belong to this model.
+
+            Use `owner_model(con_ref)` to find which model owns the constraint, then \
+            delete it from that model.
+            """,
         )
     end
     model.is_model_dirty = true
@@ -614,8 +618,13 @@ function delete(
 )
     if any(c -> model !== c.model, con_refs)
         error(
-            "A constraint reference you are trying to delete does not " *
-            "belong to the model.",
+            """
+            One or more constraints in the vector cannot be deleted because they do not \
+            belong to this model.
+
+            Use `owner_model(con_ref)` to check which model owns each constraint, then \
+            delete it from that model.
+            """,
         )
     end
     model.is_model_dirty = true
@@ -1005,12 +1014,15 @@ function _moi_add_constraint(
 ) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
     if !MOI.supports_constraint(model, F, S)
         error(
-            "Constraints of type $(F)-in-$(S) are not supported by the " *
-            "solver.\n\nIf you expected the solver to support your problem, " *
-            "you may have an error in your formulation. Otherwise, consider " *
-            "using a different solver.\n\nThe list of available solvers, " *
-            "along with the problem types they support, is available at " *
-            "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
+            """
+            Constraints of type $(F)-in-$(S) are not supported by the solver.
+
+            If you expected the solver to support your problem, you may have an error in \
+            your formulation. Otherwise, consider using a different solver.
+
+            The list of available solvers, along with the problem types they support, is \
+            available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
+            """,
         )
     end
     return MOI.add_constraint(model, f, s)
@@ -1188,17 +1200,18 @@ end
 
 function _moi_add_to_function_constant(
     model::MOI.ModelLike,
-    ci::MOI.ConstraintIndex{
-        <:MOI.AbstractScalarFunction,
-        <:MOI.AbstractScalarSet,
-    },
+    ci::MOI.ConstraintIndex{F,S},
     value,
-)
+) where {F<:MOI.AbstractScalarFunction,S<:MOI.AbstractScalarSet}
     set = MOI.get(model, MOI.ConstraintSet(), ci)
-    if !MOI.Utilities.supports_shift_constant(typeof(set))
+    if !MOI.Utilities.supports_shift_constant(S)
         error(
-            "Unable to add to function constant for constraint type " *
-            "$(typeof(ci))",
+            """
+            Cannot add to the function constant for constraints of type $F-in-$S \
+            because the constraint set does not support shifting the constant term.
+
+            Use `set_normalized_rhs` to modify the right-hand side of scalar constraints.
+            """,
         )
     end
     new_set = MOIU.shift_constant(set, -value)
@@ -1484,15 +1497,24 @@ function shadow_price(
     model = owner_model(con_ref)
     if !has_duals(model)
         error(
-            "The shadow price is not available because no dual result is " *
-            "available.",
+            """
+            The shadow price is not available because no dual result is available.
+
+            Call `optimize!(model)` before querying the shadow price, and check \
+            `has_duals(model)` to verify that a dual solution exists.
+            """,
         )
     end
     sense = objective_sense(model)
     if sense == FEASIBILITY_SENSE
         error(
-            "The shadow price is not available because the objective sense " *
-            "$sense is not minimization or maximization.",
+            """
+            The shadow price is not available because the objective sense $sense is \
+            not minimization or maximization.
+
+            Set an objective using `@objective(model, Min, ...)` or \
+            `@objective(model, Max, ...)` before querying the shadow price.
+            """,
         )
     end
     return _shadow_price(S, dual(con_ref), sense)
@@ -1500,8 +1522,13 @@ end
 
 function _shadow_price(::Type{S}, ::Any, ::Any) where {S}
     return error(
-        "The shadow price is not defined or not implemented for this type " *
-        "of constraint.",
+        """
+        The shadow price is not defined or not implemented for constraints with \
+        set type $(S).
+
+        Shadow prices are only supported for `LessThan`, `GreaterThan`, and \
+        `EqualTo` constraints.
+        """,
     )
 end
 
@@ -1529,15 +1556,23 @@ function _shadow_price(::Type{MOI.EqualTo{T}}, dual, sense) where {T}
     end
 end
 
-function _error_if_not_concrete_type(t)
-    if !isconcretetype(t)
-        error("`$t` is not a concrete type. Did you miss a type parameter?")
+function _error_if_not_concrete_type(::Type{T}) where {T}
+    if !isconcretetype(T)
+        error(
+            """
+            `$T` is not a concrete type. Did you miss a type parameter?
+
+            Provide a concrete type such as `AffExpr` instead of `GenericAffExpr`, or \
+            `MOI.GreaterThan{Float64}` instead of `MOI.GreaterThan`.
+            """,
+        )
     end
     return
 end
+
 # `isconcretetype(Vector{Integer})` is `true`
-function _error_if_not_concrete_type(t::Type{Vector{ElT}}) where {ElT}
-    return _error_if_not_concrete_type(ElT)
+function _error_if_not_concrete_type(::Type{Vector{T}}) where {T}
+    return _error_if_not_concrete_type(T)
 end
 
 """

@@ -237,12 +237,13 @@ function test_bridges_automatic_disabled()
     F = MOI.ScalarAffineFunction{Float64}
     S = MOI.Interval{Float64}
     err = ErrorException(
-        "Constraints of type $(F)-in-$(S) are not supported by the " *
-        "solver.\n\nIf you expected the solver to support your problem, " *
-        "you may have an error in your formulation. Otherwise, consider " *
-        "using a different solver.\n\nThe list of available solvers, " *
-        "along with the problem types they support, is available at " *
-        "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
+        """
+        Constraints of type $(F)-in-$(S) are not supported by the solver.
+
+        If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
+
+        The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
+        """,
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
@@ -256,12 +257,13 @@ function test_bridges_direct()
     F = MOI.ScalarAffineFunction{Float64}
     S = MOI.Interval{Float64}
     err = ErrorException(
-        "Constraints of type $(F)-in-$(S) are not supported by the " *
-        "solver.\n\nIf you expected the solver to support your problem, " *
-        "you may have an error in your formulation. Otherwise, consider " *
-        "using a different solver.\n\nThe list of available solvers, " *
-        "along with the problem types they support, is available at " *
-        "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
+        """
+        Constraints of type $(F)-in-$(S) are not supported by the solver.
+
+        If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
+
+        The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
+        """,
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
