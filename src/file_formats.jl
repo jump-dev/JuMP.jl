@@ -7,8 +7,13 @@ function _throw_write_to_file_explanatory_message(
     ::MOI.UnsupportedConstraint{F,S},
 ) where {F,S}
     return error(
-        "Unable to write problem to file because the chosen file format " *
-        "doesn't support constraints of the type $F-in-$S.",
+        """
+        Unable to write the model to file because the chosen file format does not \
+        support constraints of type $F-in-$S.
+
+        Try a different file format that supports this constraint type, or reformulate \
+        the constraint using `add_bridge`.
+        """,
     )
 end
 
@@ -197,7 +202,12 @@ function Base.write(
     kwargs...,
 )
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
-        error("Unable to infer the file format from an IO stream.")
+        error("""
+              Unable to infer the file format from an IO stream.
+
+              Pass the `format` keyword argument explicitly, for example: \
+              `write(io, model; format = MOI.FileFormats.FORMAT_MPS)`.
+              """)
     end
     dest = _copy_to_bridged_model(model) do
         return MOI.FileFormats.Model(; format = format, kwargs...)
@@ -353,7 +363,12 @@ function Base.read(
     kwargs...,
 ) where {T}
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
-        error("Unable to infer the file format from an IO stream.")
+        error("""
+              Unable to infer the file format from an IO stream.
+
+              Pass the `format` keyword argument explicitly, for example: \
+              `read(io, Model; format = MOI.FileFormats.FORMAT_MPS)`.
+              """)
     end
     src = MOI.FileFormats.Model(; format = format, kwargs...)
     read!(io, src)

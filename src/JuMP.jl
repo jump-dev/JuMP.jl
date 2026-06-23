@@ -118,8 +118,12 @@ value_type(::Type{T}) where {T<:Number} = T
 
 function value_type(::Type{T}) where {T}
     return error(
-        "Unable to compute the `value_type($T)`. If you are developing a " *
-        "JuMP extension, define a new method for `JuMP.value_type(::Type{$T})`",
+        """
+        Unable to compute `value_type($T)`.
+
+        If you are developing a JuMP extension, define a new method for \
+        `JuMP.value_type(::Type{$T})` that returns the numeric type used in your model.
+        """,
     )
 end
 
@@ -165,15 +169,16 @@ value_type(::Type{GenericModel{T}}) where {T} = T
 function Base.getproperty(model::GenericModel, name::Symbol)
     if name == :nlp_data
         error(
-            "The internal field `.nlp_data` was removed from `Model` in JuMP " *
-            "v.1.2.0. If you encountered this message without going " *
-            "`model.nlp_data`, it means you are using a package that is " *
-            "incompatible with your installed version of JuMP. As a " *
-            "temporary fix, install a compatible version with " *
-            "`import Pkg; Pkg.pkg\"add JuMP@1.1\"`, then restart Julia for " *
-            "the changes to take effect. In addition, you should open a " *
-            "GitHub issue for the package you are using so that the issue " *
-            "can be fixed for future users.",
+            """
+            The internal field `.nlp_data` was removed from `Model` in JuMP v1.2.0.
+
+            If you encountered this message without accessing `model.nlp_data` directly, \
+            it means you are using a package that is incompatible with your installed \
+            version of JuMP. As a temporary fix, install a compatible version with \
+            `import Pkg; Pkg.pkg"add JuMP@1.1"`, then restart Julia for the changes to \
+            take effect. You should also open a GitHub issue for the package you are \
+            using so that it can be fixed for future users.
+            """,
         )
     end
     return getfield(model, name)
@@ -590,8 +595,13 @@ unsafe_backend(model::GenericModel) = unsafe_backend(backend(model))
 function unsafe_backend(model::MOIU.CachingOptimizer)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
         error(
-            "Unable to get backend optimizer because CachingOptimizer is " *
-            "in state `NO_OPTIMIZER`. Call [`set_optimizer`](@ref) first.",
+            """
+            Unable to get the backend optimizer because the `CachingOptimizer` is in \
+            state `NO_OPTIMIZER`.
+
+            Call `set_optimizer(model, optimizer)` to attach an optimizer before \
+            calling `unsafe_backend`.
+            """,
         )
     end
     return unsafe_backend(model.optimizer)
@@ -712,8 +722,13 @@ _moi_call_bridge_function(::Function, ::Nothing, args...) = nothing
 
 function _moi_call_bridge_function(::Function, ::MOI.ModelLike, args...)
     return error(
-        "Cannot use bridge if `add_bridges` was set to `false` in the `Model` ",
-        "constructor.",
+        """
+        Cannot use bridge functions because `add_bridges` was set to `false` in \
+        the `Model` constructor.
+
+        Recreate the model without setting `add_bridges = false`, or avoid calling \
+        functions that require bridges.
+        """,
     )
 end
 

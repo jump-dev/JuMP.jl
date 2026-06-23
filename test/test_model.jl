@@ -920,15 +920,11 @@ end
 function test_nlp_data_error()
     model = Model()
     err = ErrorException(
-        "The internal field `.nlp_data` was removed from `Model` in JuMP " *
-        "v.1.2.0. If you encountered this message without going " *
-        "`model.nlp_data`, it means you are using a package that is " *
-        "incompatible with your installed version of JuMP. As a " *
-        "temporary fix, install a compatible version with " *
-        "`import Pkg; Pkg.pkg\"add JuMP@1.1\"`, then restart Julia for " *
-        "the changes to take effect. In addition, you should open a " *
-        "GitHub issue for the package you are using so that the issue " *
-        "can be fixed for future users.",
+        """
+        The internal field `.nlp_data` was removed from `Model` in JuMP v1.2.0.
+
+        If you encountered this message without accessing `model.nlp_data` directly, it means you are using a package that is incompatible with your installed version of JuMP. As a temporary fix, install a compatible version with `import Pkg; Pkg.pkg"add JuMP@1.1"`, then restart Julia for the changes to take effect. You should also open a GitHub issue for the package you are using so that it can be fixed for future users.
+        """,
     )
     @test_throws(err, model.nlp_data)
     return

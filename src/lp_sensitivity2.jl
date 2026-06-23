@@ -82,13 +82,32 @@ function lp_sensitivity_report(
 ) where {T}
     if !_is_lp(model)
         error(
-            "Unable to compute LP sensitivity because model is not a linear " *
-            "program (or it contains interval constraints).",
+            """
+            Unable to compute LP sensitivity because the model is not a linear \
+            program, or it contains interval constraints.
+
+            Remove any nonlinear or integer components, and replace any interval \
+            constraints with separate upper and lower bound constraints.
+            """,
         )
     elseif !has_values(model)
-        error("Unable to compute LP sensitivity: no primal solution available.")
+        error(
+            """
+            Unable to compute LP sensitivity because no primal solution is available.
+
+            Call `optimize!(model)` and verify `has_values(model)` returns `true` \
+            before calling `lp_sensitivity_report`.
+            """,
+        )
     elseif !has_duals(model)
-        error("Unable to compute LP sensitivity: no dual solution available.")
+        error(
+            """
+            Unable to compute LP sensitivity because no dual solution is available.
+
+            Call `optimize!(model)` and verify `has_duals(model)` returns `true` \
+            before calling `lp_sensitivity_report`.
+            """,
+        )
     end
 
     std_form = _standard_form_matrix(model)
@@ -96,8 +115,12 @@ function lp_sensitivity_report(
     B = std_form.A[:, basis.basic_cols]
     if size(B, 1) != size(B, 2)
         error(
-            "Unable to compute LP sensitivity: problem is degenerate. Try " *
-            "adding variable bounds to free variables",
+            """
+            Unable to compute LP sensitivity because the basis matrix is not square, \
+            which indicates the problem is degenerate.
+
+            Try adding bounds to free variables to obtain a non-degenerate basis.
+            """,
         )
     end
 
@@ -349,9 +372,12 @@ function _try_get_constraint_basis_status(model::GenericModel, constraint)
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
     catch
         error(
-            "Unable to query LP sensitivity information because this solver " *
-            "does not support querying the status of constraints in the " *
-            "optimal basis.",
+            """
+            Unable to compute LP sensitivity because the solver does not support \
+            querying the basis status of constraints.
+
+            Try a different LP solver that supports `MOI.ConstraintBasisStatus`.
+            """,
         )
     end
 end
@@ -361,9 +387,12 @@ function _try_get_variable_basis_status(model::GenericModel, variable)
         return MOI.get(model, MOI.VariableBasisStatus(), variable)
     catch
         error(
-            "Unable to query LP sensitivity information because this solver " *
-            "does not support querying the status of variables in the " *
-            "optimal basis.",
+            """
+            Unable to compute LP sensitivity because the solver does not support \
+            querying the basis status of variables.
+
+            Try a different LP solver that supports `MOI.VariableBasisStatus`.
+            """,
         )
     end
 end
