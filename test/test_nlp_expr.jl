@@ -725,10 +725,15 @@ function test_error_both_nl_interfaces_constraint()
     @NLconstraint(model, log(x) <= 1)
     @test_throws(
         ErrorException(
-            "Cannot optimize a model which contains the features from " *
-            "both the legacy (macros beginning with `@NL`) and new " *
-            "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-            "the other.",
+            """
+            Cannot optimize a model that uses both the legacy \
+            (`@NL` macros) and the new (`NonlinearExpr`) nonlinear \
+            interfaces simultaneously.
+
+            Use one nonlinear interface throughout the model. Migrate \
+            legacy `@NL` macros to the new interface, or remove all \
+            `NonlinearExpr` expressions.
+            """,
         ),
         optimize!(model),
     )
@@ -742,10 +747,15 @@ function test_error_both_nl_interfaces_objective()
     @NLconstraint(model, log(x) <= 1)
     @test_throws(
         ErrorException(
-            "Cannot optimize a model which contains the features from " *
-            "both the legacy (macros beginning with `@NL`) and new " *
-            "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-            "the other.",
+            """
+            Cannot optimize a model that uses both the legacy \
+            (`@NL` macros) and the new (`NonlinearExpr`) nonlinear \
+            interfaces simultaneously.
+
+            Use one nonlinear interface throughout the model. Migrate \
+            legacy `@NL` macros to the new interface, or remove all \
+            `NonlinearExpr` expressions.
+            """,
         ),
         optimize!(model),
     )

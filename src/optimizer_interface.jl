@@ -383,14 +383,21 @@ julia> import HiGHS
 julia> model = direct_model(HiGHS.Optimizer());
 
 julia> error_if_direct_mode(model, :foo)
-ERROR: The `foo` function is not supported in DIRECT mode.
+ERROR: The `foo` function is not supported for models created with `direct_model`.
+
+Use `Model(optimizer)` instead of `direct_model(optimizer)`.
 Stacktrace:
 [...]
 ```
 """
 function error_if_direct_mode(model::GenericModel, func::Symbol)
     if mode(model) == DIRECT
-        error("The `$func` function is not supported in DIRECT mode.")
+        error("""
+              The `$func` function is not supported for models created with \
+              `direct_model`.
+
+              Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+              """)
     end
     return
 end
@@ -569,12 +576,15 @@ function optimize!(
     nlp = nonlinear_model(model)
     if nlp !== nothing
         if _uses_new_nonlinear_interface(model)
-            error(
-                "Cannot optimize a model which contains the features from " *
-                "both the legacy (macros beginning with `@NL`) and new " *
-                "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
-                "the other.",
-            )
+            error("""
+                  Cannot optimize a model that uses both the legacy \
+                  (`@NL` macros) and the new (`NonlinearExpr`) nonlinear \
+                  interfaces simultaneously.
+
+                  Use one nonlinear interface throughout the model. Migrate \
+                  legacy `@NL` macros to the new interface, or remove all \
+                  `NonlinearExpr` expressions.
+                  """)
         end
         evaluator = MOI.Nonlinear.Evaluator(
             nlp,
@@ -591,7 +601,13 @@ function optimize!(
     end
     if !isempty(kwargs)
         error(
-            "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
+            """
+            Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", ")).
+
+            Only keyword arguments accepted by the optimize hook are \
+            supported. To pass parameters to the solver, use \
+            `set_attribute(model, key, value)` before calling `optimize!`.
+            """,
         )
     end
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
@@ -599,12 +615,17 @@ function optimize!(
     end
     optimizer = unsafe_backend(model)
     if !(optimizer isa MOI.AbstractOptimizer)
-        error(
-            "Cannot call `optimize!` because the provided optimizer is not " *
-            "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
-            sprint(show, optimizer) *
-            "\n",
-        )
+        error("""
+              Cannot call `optimize!` because the provided optimizer is not a \
+              subtype of `MOI.AbstractOptimizer`.
+
+              The optimizer provided was:
+
+              $(sprint(show, optimizer))
+
+              Ensure the optimizer passed to `Model()` implements the MOI \
+              interface.
+              """)
     end
     try
         MOI.optimize!(backend(model))
@@ -622,8 +643,13 @@ _rethrow_moi_error(err) = rethrow(err)
 
 function _rethrow_moi_error(::MOI.UnsupportedAttribute{MOI.NLPBlock})
     return error(
-        "The solver does not support nonlinear problems " *
-        "(that is, NLobjective and NLconstraint).",
+        """
+        The solver does not support nonlinear problems (that is, \
+        `@NLobjective` and `@NLconstraint`).
+
+        Use a solver that supports nonlinear optimization, or reformulate \
+        the problem as a linear or quadratic model.
+        """,
     )
 end
 
@@ -1595,11 +1621,13 @@ function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     elseif MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
-        error(
-            "There is no `optimizer_index` as the optimizer is not ",
-            "synchronized with the cached model. Call ",
-            "`MOIU.attach_optimizer(model)` to synchronize it.",
-        )
+        error("""
+              There is no `optimizer_index` because the optimizer is not \
+              synchronized with the cached model.
+
+              Call `MOIU.attach_optimizer(model)` to synchronize, or use \
+              `optimize!(model)` which updates the optimizer automatically.
+              """)
     end
     @assert MOIU.state(model) == MOIU.ATTACHED_OPTIMIZER
     return _moi_optimizer_index(
@@ -1614,8 +1642,14 @@ function _moi_optimizer_index(
 )
     if index isa MOI.ConstraintIndex && MOI.Bridges.is_bridged(model, index)
         error(
-            "There is no `optimizer_index` for $(typeof(index)) constraints",
-            " because they are bridged.",
+            """
+            There is no `optimizer_index` for `$(typeof(index))` constraints \
+            because they are bridged.
+
+            Bridged constraints do not have a direct optimizer index. Use \
+            `add_bridges = false` in `Model()` to disable bridges if the \
+            solver supports the constraint type directly.
+            """,
         )
     end
     return _moi_optimizer_index(model.model, index)

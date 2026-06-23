@@ -539,30 +539,46 @@ function _throw_operator_error(
     ::Union{typeof(+),typeof(_MA.add_mul)},
     x::AbstractArray,
 )
-    msg =
-        "Addition between an array and a JuMP scalar is not supported: " *
-        "instead of `x + y`, do `x .+ y` for element-wise addition."
     if ndims(x) == 2 && size(x, 1) == size(x, 2)
-        msg *=
-            " If you are modifying the diagonal entries of a square matrix, " *
-            "do `x + y * LinearAlgebra.I(n)`, where `n` is the side length."
+        return error(
+            """
+            Addition between an array and a JuMP scalar is not supported.
+
+            Instead of `x + y`, use `x .+ y` for element-wise addition. For \
+            a square matrix, you can also modify the diagonal using \
+            `x + y * LinearAlgebra.I(n)`, where `n` is the side length.
+            """,
+        )
     end
-    return error(msg)
+    return error("""
+                 Addition between an array and a JuMP scalar is not supported.
+
+                 Instead of `x + y`, use `x .+ y` for element-wise addition.
+                 """)
 end
 
 function _throw_operator_error(
     ::Union{typeof(-),typeof(_MA.sub_mul)},
     x::AbstractArray,
 )
-    msg =
-        "Subtraction between an array and a JuMP scalar is not supported: " *
-        "instead of `x - y`, do `x .- y` for element-wise subtraction."
     if ndims(x) == 2 && size(x, 1) == size(x, 2)
-        msg *=
-            " If you are modifying the diagonal entries of a square matrix, " *
-            "do `x - y * LinearAlgebra.I(n)`, where `n` is the side length."
+        return error(
+            """
+            Subtraction between an array and a JuMP scalar is not supported.
+
+            Instead of `x - y`, use `x .- y` for element-wise subtraction. \
+            For a square matrix, you can also modify the diagonal using \
+            `x - y * LinearAlgebra.I(n)`, where `n` is the side length.
+            """,
+        )
     end
-    return error(msg)
+    return error(
+        """
+        Subtraction between an array and a JuMP scalar is not supported.
+
+        Instead of `x - y`, use `x .- y` for element-wise subtraction.
+        """,
+    )
 end
 
 Base.:+(::AbstractJuMPScalar, x::AbstractArray) = _throw_operator_error(+, x)

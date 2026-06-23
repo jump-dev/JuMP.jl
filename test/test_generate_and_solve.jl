@@ -424,8 +424,13 @@ function test_generate_solve_unsupported_nonlinear_problems()
     @constraint(model, 2 * x <= 1)
     @NLobjective(model, Min, sin(x))
     err = ErrorException(
-        "The solver does not support nonlinear problems " *
-        "(that is, NLobjective and NLconstraint).",
+        """
+        The solver does not support nonlinear problems (that is, \
+        `@NLobjective` and `@NLconstraint`).
+
+        Use a solver that supports nonlinear optimization, or reformulate \
+        the problem as a linear or quadratic model.
+        """,
     )
     @test_throws err optimize!(model)
     return

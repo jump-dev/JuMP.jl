@@ -192,7 +192,15 @@ function test_optimize_hook()
     @test called
 
     m = Model()
-    err = ErrorException("Unrecognized keyword arguments: unexpected_arg")
+    err = ErrorException(
+        """
+        Unrecognized keyword arguments: unexpected_arg.
+
+        Only keyword arguments accepted by the optimize hook are \
+        supported. To pass parameters to the solver, use \
+        `set_attribute(model, key, value)` before calling `optimize!`.
+        """,
+    )
     @test_throws err optimize!(m, unexpected_arg = 1)
     set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
     @test optimize!(m) === nothing
@@ -936,8 +944,12 @@ function test_reset_optimizer()
     )
     @test_throws(
         ErrorException(
-            "The `$(MOI.Utilities.reset_optimizer)` function is not " *
-            "supported in DIRECT mode.",
+            """
+            The `$(MOI.Utilities.reset_optimizer)` function is not \
+            supported for models created with `direct_model`.
+
+            Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+            """,
         ),
         MOI.Utilities.reset_optimizer(direct),
     )
@@ -959,8 +971,12 @@ function test_drop_optimizer()
     )
     @test_throws(
         ErrorException(
-            "The `$(MOI.Utilities.drop_optimizer)` function is not supported " *
-            "in DIRECT mode.",
+            """
+            The `$(MOI.Utilities.drop_optimizer)` function is not \
+            supported for models created with `direct_model`.
+
+            Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+            """,
         ),
         MOI.Utilities.drop_optimizer(direct),
     )
@@ -1417,7 +1433,13 @@ function test_optimizer_index()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "There is no `optimizer_index` as the optimizer is not synchronized with the cached model. Call `MOIU.attach_optimizer(model)` to synchronize it.",
+            """
+            There is no `optimizer_index` because the optimizer is not \
+            synchronized with the cached model.
+
+            Call `MOIU.attach_optimizer(model)` to synchronize, or use \
+            `optimize!(model)` which updates the optimizer automatically.
+            """,
         ),
         optimizer_index(x),
     )
@@ -1507,7 +1529,14 @@ function test_optimizer_index_bridged()
     CI = typeof(index(c))
     @test_throws(
         ErrorException(
-            "There is no `optimizer_index` for $CI constraints because they are bridged.",
+            """
+            There is no `optimizer_index` for `$CI` constraints because \
+            they are bridged.
+
+            Bridged constraints do not have a direct optimizer index. Use \
+            `add_bridges = false` in `Model()` to disable bridges if the \
+            solver supports the constraint type directly.
+            """,
         ),
         optimizer_index(c),
     )
