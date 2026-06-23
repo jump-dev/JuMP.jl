@@ -392,14 +392,13 @@ julia> @constraint(model, c, 2x <= 1)
 c : 2 x ≤ 1
 
 julia> @constraint(model, c, 2x <= 1)
-ERROR: An object of name c is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
-    `x = @variable(model, [1:N], ...)` where the name of the object does
-    not appear inside the macro.
+ERROR: An object of name `:c` is already registered in this model.
 
-    Alternatively, use `unregister(model, :c)` to first unregister
-    the existing name from the model. Note that this will not delete the
-    object; it will just remove the reference at `model[:c]`.
+Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
+
+Alternatively, use `unregister(model, :c)` to first unregister the existing name from the model. Note that this will not delete the object from the model; it will just remove the reference at `model[:c]`.
+
+Stacktrace:
 [...]
 ```
 
@@ -931,14 +930,13 @@ Deleting a constraint does not unregister the symbolic reference from the model.
 Therefore, creating a new constraint of the same name will throw an error:
 ```jldoctest constraints_delete
 julia> @constraint(model, con, 2x <= 1)
-ERROR: An object of name con is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
-    `x = @variable(model, [1:N], ...)` where the name of the object does
-    not appear inside the macro.
+ERROR: An object of name `:con` is already registered in this model.
 
-    Alternatively, use `unregister(model, :con)` to first unregister
-    the existing name from the model. Note that this will not delete the
-    object; it will just remove the reference at `model[:con]`.
+Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
+
+Alternatively, use `unregister(model, :con)` to first unregister the existing name from the model. Note that this will not delete the object from the model; it will just remove the reference at `model[:con]`.
+
+Stacktrace:
 [...]
 ```
 

@@ -1069,14 +1069,12 @@ julia> @variable(model, x)
 x
 
 julia> @variable(model, x)
-ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
-    `x = @variable(model, [1:N], ...)` where the name of the object does
-    not appear inside the macro.
+julia> @variable(model, x)
+ERROR: An object of name `:x` is already registered in this model.
 
-    Alternatively, use `unregister(model, :x)` to first unregister
-    the existing name from the model. Note that this will not delete the
-    object; it will just remove the reference at `model[:x]`.
+Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
+
+Alternatively, use `unregister(model, :x)` to first unregister the existing name from the model. Note that this will not delete the object from the model; it will just remove the reference at `model[:x]`.
 
 Stacktrace:
 [...]
