@@ -1069,7 +1069,6 @@ julia> @variable(model, x)
 x
 
 julia> @variable(model, x)
-julia> @variable(model, x)
 ERROR: An object of name `:x` is already registered in this model.
 
 Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
