@@ -103,7 +103,7 @@ function test_unsupported_constraint()
         """
         Unable to write the model to file because the chosen file format does not support constraints of type $F-in-$S.
 
-        Try a different file format that supports this constraint type, or reformulate the constraint using `add_bridge`.
+        Try a different file format that supports this constraint type.
         """,
     )
     @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))

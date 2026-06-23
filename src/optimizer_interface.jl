@@ -386,18 +386,20 @@ julia> error_if_direct_mode(model, :foo)
 ERROR: The `foo` function is not supported for models created with `direct_model`.
 
 Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+
 Stacktrace:
 [...]
 ```
 """
 function error_if_direct_mode(model::GenericModel, func::Symbol)
     if mode(model) == DIRECT
-        error("""
-              The `$func` function is not supported for models created with \
-              `direct_model`.
+        error(
+            """
+            The `$func` function is not supported for models created with `direct_model`.
 
-              Use `Model(optimizer)` instead of `direct_model(optimizer)`.
-              """)
+            Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+            """,
+        )
     end
     return
 end
@@ -576,15 +578,15 @@ function optimize!(
     nlp = nonlinear_model(model)
     if nlp !== nothing
         if _uses_new_nonlinear_interface(model)
-            error("""
-                  Cannot optimize a model that uses both the legacy \
-                  (`@NL` macros) and the new (`NonlinearExpr`) nonlinear \
-                  interfaces simultaneously.
+            error(
+                """
+                Cannot optimize a model that uses both the legacy (`@NL` macros) \
+                and the new (`NonlinearExpr`) nonlinear interfaces simultaneously.
 
-                  Use one nonlinear interface throughout the model. Migrate \
-                  legacy `@NL` macros to the new interface, or remove all \
-                  `NonlinearExpr` expressions.
-                  """)
+                Use one nonlinear interface throughout the model. Migrate legacy \
+                `@NL` macros to the new interface, or remove all `NonlinearExpr` expressions.
+                """,
+            )
         end
         evaluator = MOI.Nonlinear.Evaluator(
             nlp,
@@ -615,17 +617,17 @@ function optimize!(
     end
     optimizer = unsafe_backend(model)
     if !(optimizer isa MOI.AbstractOptimizer)
-        error("""
-              Cannot call `optimize!` because the provided optimizer is not a \
-              subtype of `MOI.AbstractOptimizer`.
+        error(
+            """
+            Cannot call `optimize!` because the provided optimizer is not a subtype of `MOI.AbstractOptimizer`.
 
-              The optimizer provided was:
+            The optimizer provided was:
 
-              $(sprint(show, optimizer))
+            $(sprint(show, optimizer))
 
-              Ensure the optimizer passed to `Model()` implements the MOI \
-              interface.
-              """)
+            Ensure the optimizer passed to `Model()` implements the MOI interface.
+            """,
+        )
     end
     try
         MOI.optimize!(backend(model))
@@ -1621,13 +1623,13 @@ function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     elseif MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
-        error("""
-              There is no `optimizer_index` because the optimizer is not \
-              synchronized with the cached model.
+        error(
+            """
+            There is no `optimizer_index` because the optimizer is not synchronized with the cached model.
 
-              Call `MOIU.attach_optimizer(model)` to synchronize, or use \
-              `optimize!(model)` which updates the optimizer automatically.
-              """)
+            Call `MOIU.attach_optimizer(model)` to synchronize, or use `optimize!(model)` which updates the optimizer automatically.
+            """,
+        )
     end
     @assert MOIU.state(model) == MOIU.ATTACHED_OPTIMIZER
     return _moi_optimizer_index(

@@ -247,7 +247,7 @@ function _fill_standard_form(
         """
         Unsupported constraint type in `lp_matrix_data`: $F-in-$S.
 
-        The `lp_matrix_data` function only supports linear constraints. Reformulate \
+        The `lp_matrix_data` function supports only linear constraints. Reformulate \
         the model to remove unsupported constraint types.
         """,
     )
@@ -281,7 +281,7 @@ function _fill_standard_form(::GenericModel{T}, ::Type{F}, ::Any) where {T,F}
         """
         Unsupported objective type in `lp_matrix_data`: $F.
 
-        The `lp_matrix_data` function only supports linear objectives. Reformulate \
+        The `lp_matrix_data` function supports only linear objectives. Reformulate \
         the model to use a supported objective type.
         """,
     )

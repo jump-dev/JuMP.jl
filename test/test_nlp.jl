@@ -1217,8 +1217,8 @@ function test_JuMP_extensions()
     model = MyModel()
     err = ErrorException(
         """
-        Encountered an error parsing a nonlinear expression because JuMP \
-        does not support models of type `$(typeof(model))`.
+        Encountered an error parsing a nonlinear expression because JuMP's \
+        legacy nonlinear interface does not support models of type `$(typeof(model))`.
 
         In general, JuMP's nonlinear features do not work with JuMP \
         extensions. Use a standard `JuMP.Model` instead.

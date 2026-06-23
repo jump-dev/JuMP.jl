@@ -1278,9 +1278,15 @@ function test_caching_mps_model()
     @variable(model, x >= 0)
     @test_throws(
         ErrorException(
-            "Cannot call `optimize!` because the provided optimizer is not " *
-            "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
-            "$(sprint(show, unsafe_backend(model)))\n",
+            """
+            Cannot call `optimize!` because the provided optimizer is not a subtype of `MOI.AbstractOptimizer`.
+
+            The optimizer provided was:
+
+            $(sprint(show, unsafe_backend(model)))
+
+            Ensure the optimizer passed to `Model()` implements the MOI interface.
+            """,
         ),
         optimize!(model),
     )

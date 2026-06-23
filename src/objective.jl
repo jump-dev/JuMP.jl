@@ -259,13 +259,14 @@ function set_objective_function end
 function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
-        error("""
-              The solver does not support an objective function of type \
-              `$(typeof(func))`.
+        error(
+            """
+            The solver does not support an objective function of type `$(typeof(func))`.
 
-              Use a different solver that supports this objective type, or \
-              reformulate the objective as a supported type.
-              """)
+            Use a different solver that supports this objective type, or \
+            reformulate the objective as a supported type.
+            """,
+        )
     end
     MOI.set(model, attr, func)
     # Nonlinear objectives override regular objectives, so if there was a
@@ -479,14 +480,14 @@ function set_objective_coefficient(
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("""
-              A nonlinear objective created by the legacy `@NLobjective` \
-              macro is set in the model, which does not support modification \
-              via `set_objective_coefficient`.
+        error(
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
 
-              Use `@NLobjective` to replace the entire objective, or migrate \
-              to the new nonlinear interface using `@objective`.
-              """)
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
+        )
     end
     coeff_t = convert(T, coeff)::T
     F = objective_function_type(model)
@@ -563,14 +564,14 @@ function set_objective_coefficient(
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("""
-              A nonlinear objective created by the legacy `@NLobjective` \
-              macro is set in the model, which does not support modification \
-              via `set_objective_coefficient`.
+        error(
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
 
-              Use `@NLobjective` to replace the entire objective, or migrate \
-              to the new nonlinear interface using `@objective`.
-              """)
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
+        )
     end
     n, m = length(variables), length(coeffs)
     if !(n == m)
@@ -650,14 +651,14 @@ function set_objective_coefficient(
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("""
-              A nonlinear objective created by the legacy `@NLobjective` \
-              macro is set in the model, which does not support modification \
-              via `set_objective_coefficient`.
+        error(
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
 
-              Use `@NLobjective` to replace the entire objective, or migrate \
-              to the new nonlinear interface using `@objective`.
-              """)
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
+        )
     end
     coeff_t = convert(T, coeff)::T
     F = moi_function_type(objective_function_type(model))
@@ -737,14 +738,14 @@ function set_objective_coefficient(
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("""
-              A nonlinear objective created by the legacy `@NLobjective` \
-              macro is set in the model, which does not support modification \
-              via `set_objective_coefficient`.
+        error(
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
 
-              Use `@NLobjective` to replace the entire objective, or migrate \
-              to the new nonlinear interface using `@objective`.
-              """)
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
+        )
     end
     n1, n2, m = length(variables_1), length(variables_2), length(coeffs)
     if !(n1 == n2 == m)

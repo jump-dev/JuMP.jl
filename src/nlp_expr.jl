@@ -125,11 +125,16 @@ function _variable_ref_type(head, args)
     end
     return error(
         """
-        Unable to create a nonlinear expression because it did not contain \
-        any JuMP scalars. head = `:$head`, args = `$args`.
+        Unable to create a nonlinear expression because it did not contain any \
+        JuMP scalars.
 
         Ensure that at least one argument is a JuMP variable or expression, \
         not a plain Julia value.
+
+        The expression was:
+
+            head = `:$head`
+            args = `$args`
         """,
     )
 end
@@ -346,13 +351,14 @@ _is_real(::NonlinearParameter) = true
 
 function _throw_if_not_real(x)
     if !_is_real(x)
-        error("""
-              Cannot build `GenericNonlinearExpr` because a term is \
-              complex-valued: `($x)::$(typeof(x))`.
+        error(
+            """
+            Cannot build `GenericNonlinearExpr` because a term is complex-valued: `($x)::$(typeof(x))`.
 
-              JuMP does not support complex-valued nonlinear expressions. \
-              Remove or replace the complex-valued term.
-              """)
+            JuMP does not support complex-valued nonlinear expressions. Remove \
+            or replace the complex-valued term.
+            """,
+        )
     end
     return
 end
@@ -668,13 +674,15 @@ function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
             # node.type == MOI.Nonlinear.NODE_LOGIC
             # node.type == MOI.Nonlinear.NODE_PARAMETER
             # node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
-            error("""
-                  Encountered an unsupported node type `$(node.type)` when \
-                  converting a nonlinear expression to a JuMP expression.
+            error(
+                """
+                Encountered an unsupported node type `$(node.type)` when converting \
+                a nonlinear expression to a JuMP expression.
 
-                  This conversion is not currently supported. Use the MOI \
-                  representation directly or reformulate the expression.
-                  """)
+                This conversion is not currently supported. Use the MOI \
+                representation directly or reformulate the expression.
+                """,
+            )
         end
     end
     return parsed[1]
@@ -887,7 +895,7 @@ function _MA.promote_operation(
         `$(GenericNonlinearExpr{U})` and `$(GenericNonlinearExpr{V})`.
 
         Ensure that all variables in the expression belong to the same \
-        model and variable reference type.
+        model and have the same variable reference type.
         """,
     )
 end
@@ -1031,14 +1039,15 @@ function add_nonlinear_operator(
 ) where {N}
     nargs = 1 + N
     if !(1 <= nargs <= 3)
-        error("""
-              Unable to add operator `$name`: invalid number of functions \
-              provided. Got $nargs, but expected 1 (function only), 2 \
-              (function and gradient), or 3 (function, gradient, and Hessian).
+        error(
+            """
+            Unable to add operator `$name`: invalid number of functions provided.
 
-              Pass 1, 2, or 3 functions as positional arguments after the \
-              operator dimension.
-              """)
+            Got $nargs, but expected 1 (function only), 2 (function and gradient), or 3 (function, gradient, and Hessian).
+
+            Pass 1, 2, or 3 functions as positional arguments after the operator dimension.
+            """,
+        )
     end
     # TODO(odow): we could add other checks here, but we won't for now because
     # down-stream solvers in MOI can add their own checks, and any solver using
@@ -1051,30 +1060,30 @@ end
 function _catch_redefinition_constant_error(op::Symbol, f::Function, args...)
     if op == Symbol(f)
         error("""
-        Unable to add the nonlinear operator `:$op` with the same name as
-        an existing function.
+              Unable to add the nonlinear operator `:$op` with the same name as
+              an existing function.
 
-        For example, this code will error:
-        ```julia
-        model = Model()
-        f(x) = x^2
-        @operator(model, f, 1, f)
-        ```
-        because it is equivalent to:
-        ```julia
-        model = Model()
-        f(x) = x^2
-        f = add_nonlinear_operator(model, 1, f; name = :f)
-        ```
+              For example, this code will error:
+              ```julia
+              model = Model()
+              f(x) = x^2
+              @operator(model, f, 1, f)
+              ```
+              because it is equivalent to:
+              ```julia
+              model = Model()
+              f(x) = x^2
+              f = add_nonlinear_operator(model, 1, f; name = :f)
+              ```
 
-        To fix, use a unique name, like `op_$op`:
-        ```julia
-        model = Model()
-        f(x) = x^2
-        @operator(model, op_f, 1, f)
-        @expression(model, op_f(x))
-        ```
-        """)
+              To fix, use a unique name, like `op_$op`:
+              ```julia
+              model = Model()
+              f(x) = x^2
+              @operator(model, op_f, 1, f)
+              @expression(model, op_f(x))
+              ```
+              """)
     end
     return
 end

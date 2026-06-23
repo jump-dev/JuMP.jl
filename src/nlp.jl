@@ -38,8 +38,8 @@ end
 function _init_NLP(m::AbstractModel)
     return error(
         """
-        Encountered an error parsing a nonlinear expression because JuMP \
-        does not support models of type `$(typeof(m))`.
+        Encountered an error parsing a nonlinear expression because JuMP's \
+        legacy nonlinear interface does not support models of type `$(typeof(m))`.
 
         In general, JuMP's nonlinear features do not work with JuMP \
         extensions. Use a standard `JuMP.Model` instead.
@@ -813,14 +813,15 @@ function register(
     autodiff::Bool = false,
 )
     if autodiff == false
-        error("""
-              Cannot register a user-defined function without providing a \
-              gradient unless `autodiff = true`.
+        error(
+            """
+            Cannot register a user-defined function without providing a gradient \
+            unless `autodiff = true`.
 
-              Either set `autodiff = true` to compute derivatives \
-              automatically, or provide derivative functions as additional \
-              arguments.
-              """)
+            Either set `autodiff = true` to compute derivatives automatically, \
+            or provide derivative functions as additional arguments.
+            """,
+        )
     end
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     MOI.Nonlinear.register_operator(nlp, op, dimension, f)
@@ -913,13 +914,15 @@ function register(
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     if dimension == 1
         if autodiff == false
-            error("""
-                  Registering a univariate user-defined function with a \
-                  gradient requires also providing a second-order derivative.
+            error(
+                """
+                Registering a univariate user-defined function with a gradient \
+                requires also providing a second-order derivative.
 
-                  Either provide a Hessian function as a third argument, or \
-                  set `autodiff = true` to compute derivatives automatically.
-                  """)
+                Either provide a Hessian function as a third argument, or set \
+                `autodiff = true` to compute derivatives automatically.
+                """,
+            )
         end
         MOI.Nonlinear.register_operator(nlp, op, dimension, f, ∇f)
     else

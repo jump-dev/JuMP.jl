@@ -610,12 +610,11 @@ function test_register_errors()
     @test_throws(
         ErrorException(
             """
-            Unable to add operator `foo`: invalid number of functions \
-            provided. Got 4, but expected 1 (function only), 2 \
-            (function and gradient), or 3 (function, gradient, and Hessian).
+            Unable to add operator `foo`: invalid number of functions provided.
 
-            Pass 1, 2, or 3 functions as positional arguments after the \
-            operator dimension.
+            Got 4, but expected 1 (function only), 2 (function and gradient), or 3 (function, gradient, and Hessian).
+
+            Pass 1, 2, or 3 functions as positional arguments after the operator dimension.
             """,
         ),
         @operator(model, foo, 2, f, f, f, f),
@@ -981,10 +980,15 @@ function test_generic_nonlinear_expr_infer_variable_type()
         ErrorException(
             """
             Unable to create a nonlinear expression because it did not contain \
-            any JuMP scalars. head = `:sin`, args = `(1,)`.
+            any JuMP scalars.
 
             Ensure that at least one argument is a JuMP variable or expression, \
             not a plain Julia value.
+
+            The expression was:
+
+                head = `:sin`
+                args = `(1,)`
             """,
         ),
         GenericNonlinearExpr(:sin, 1),
@@ -993,10 +997,15 @@ function test_generic_nonlinear_expr_infer_variable_type()
         ErrorException(
             """
             Unable to create a nonlinear expression because it did not contain \
-            any JuMP scalars. head = `:sin`, args = `Any[1]`.
+            any JuMP scalars.
 
             Ensure that at least one argument is a JuMP variable or expression, \
             not a plain Julia value.
+
+            The expression was:
+
+                head = `:sin`
+                args = `Any[1]`
             """,
         ),
         GenericNonlinearExpr(:sin, Any[1]),
@@ -1229,7 +1238,7 @@ function test_promote_type()
             `$F` and `$G`.
 
             Ensure that all variables in the expression belong to the same \
-            model and variable reference type.
+            model and have the same variable reference type.
             """,
         ),
         MA.promote_operation(+, F, G),
