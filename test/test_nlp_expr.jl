@@ -609,10 +609,14 @@ function test_register_errors()
     f = x -> x^2
     @test_throws(
         ErrorException(
-            "Unable to add operator foo: invalid number of " *
-            "functions provided. Got 4, but expected 1 (if function only), " *
-            "2 (if function and gradient), or 3 (if function, gradient, and " *
-            "hesssian provided)",
+            """
+            Unable to add operator `foo`: invalid number of functions \
+            provided. Got 4, but expected 1 (function only), 2 \
+            (function and gradient), or 3 (function, gradient, and Hessian).
+
+            Pass 1, 2, or 3 functions as positional arguments after the \
+            operator dimension.
+            """,
         ),
         @operator(model, foo, 2, f, f, f, f),
     )
@@ -646,8 +650,14 @@ function test_value_expression()
     bad_udf = NonlinearOperator(f, :bad_udf)
     @test_throws(
         ErrorException(
-            "Unable to evaluate nonlinear operator bad_udf because it was " *
-            "not added as an operator.",
+            """
+            Unable to evaluate nonlinear operator `bad_udf` because it was \
+            not added as an operator.
+
+            Add the operator to the model using \
+            `@operator(model, bad_udf, n, f)`, where `n` is the number of \
+            arguments and `f` is the implementing function.
+            """,
         ),
         value(f, bad_udf(x)),
     )
@@ -818,36 +828,61 @@ function test_operator_overload_complex_error()
     f = (1 + 2im) * x
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($f)::$(typeof(f))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($f)::$(typeof(f))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         sin(f),
     )
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($(1 + 2im))::$(typeof(1 + 2im))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($(1 + 2im))::$(typeof(1 + 2im))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         +(sin(x), 1 + 2im),
     )
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($(1 + 2im))::$(typeof(1 + 2im))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($(1 + 2im))::$(typeof(1 + 2im))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         +(1 + 2im, sin(x)),
     )
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($f)::$(typeof(f))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($f)::$(typeof(f))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         +(f, sin(x)),
     )
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($f)::$(typeof(f))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($f)::$(typeof(f))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         +(sin(x), f),
     )
@@ -934,15 +969,25 @@ function test_generic_nonlinear_expr_infer_variable_type()
     @test isequal_canonical(GenericNonlinearExpr(:<=, Any[1, x]), g)
     @test_throws(
         ErrorException(
-            "Unable to create a nonlinear expression because it did not " *
-            "contain any JuMP scalars. head = `:sin`, args = `(1,)`.",
+            """
+            Unable to create a nonlinear expression because it did not contain \
+            any JuMP scalars. head = `:sin`, args = `(1,)`.
+
+            Ensure that at least one argument is a JuMP variable or expression, \
+            not a plain Julia value.
+            """,
         ),
         GenericNonlinearExpr(:sin, 1),
     )
     @test_throws(
         ErrorException(
-            "Unable to create a nonlinear expression because it did not " *
-            "contain any JuMP scalars. head = `:sin`, args = `Any[1]`.",
+            """
+            Unable to create a nonlinear expression because it did not contain \
+            any JuMP scalars. head = `:sin`, args = `Any[1]`.
+
+            Ensure that at least one argument is a JuMP variable or expression, \
+            not a plain Julia value.
+            """,
         ),
         GenericNonlinearExpr(:sin, Any[1]),
     )
@@ -1070,8 +1115,13 @@ function test_error_complex_literal_pow()
     @variable(model, x in ComplexPlane())
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($x)::$(typeof(x))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($x)::$(typeof(x))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         x^3,
     )
@@ -1083,15 +1133,25 @@ function test_error_nonlinear_expr_complex_constructor()
     @variable(model, x in ComplexPlane())
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($x)::$(typeof(x))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($x)::$(typeof(x))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         NonlinearExpr(:^, Any[x, 3]),
     )
     @test_throws(
         ErrorException(
-            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
-            "valued: `($x)::$(typeof(x))`",
+            """
+            Cannot build `GenericNonlinearExpr` because a term is \
+            complex-valued: `($x)::$(typeof(x))`.
+
+            JuMP does not support complex-valued nonlinear expressions. \
+            Remove or replace the complex-valued term.
+            """,
         ),
         NonlinearExpr(:^, x, 3),
     )
@@ -1154,7 +1214,13 @@ function test_promote_type()
     G = GenericNonlinearExpr{GenericVariableRef{Float64}}
     @test_throws(
         ErrorException(
-            "Unable to promote two different types of nonlinear expression",
+            """
+            Unable to promote two different types of nonlinear expression: \
+            `$F` and `$G`.
+
+            Ensure that all variables in the expression belong to the same \
+            model and variable reference type.
+            """,
         ),
         MA.promote_operation(+, F, G),
     )

@@ -1047,9 +1047,13 @@ function test_user_defined_function_with_variable_closure_after_register()
     d = NLPEvaluator(model)
     MOI.initialize(d, [:Grad])
     err = ErrorException(
-        "Expected return type of Float64 from a user-defined function, " *
-        "but got $(typeof(1.0 + x)). Make sure your user-defined " *
-        "function only depends on variables passed as arguments.",
+        """
+        Expected return type `Float64` from a user-defined function, but got \
+        `$(typeof(1.0 + x))`.
+
+        Ensure that your user-defined function only depends on variables \
+        passed as arguments, and does not close over any JuMP variables.
+        """,
     )
     @test_throws(err, MOI.eval_objective(d, [2.0]))
     return
@@ -1064,8 +1068,13 @@ function test_user_defined_function_returning_bad_type_after_register()
     d = NLPEvaluator(model)
     MOI.initialize(d, [:Grad])
     err = ErrorException(
-        "Expected return type of Float64 from a user-defined function, " *
-        "but got String.",
+        """
+        Expected return type `Float64` from a user-defined function, but got \
+        `String`.
+
+        Ensure that your user-defined function only depends on variables \
+        passed as arguments, and does not close over any JuMP variables.
+        """,
     )
     @test_throws(err, MOI.eval_objective(d, [2.0]))
     return
@@ -1214,9 +1223,13 @@ struct MyModel <: AbstractModel end
 function test_JuMP_extensions()
     model = MyModel()
     err = ErrorException(
-        "Encountered an error parsing nonlinear expression: we don't support " *
-        "models of type $(typeof(model)). In general, JuMP's nonlinear features " *
-        "don't work with JuMP-extensions.",
+        """
+        Encountered an error parsing a nonlinear expression because JuMP \
+        does not support models of type `$(typeof(model))`.
+
+        In general, JuMP's nonlinear features do not work with JuMP \
+        extensions. Use a standard `JuMP.Model` instead.
+        """,
     )
     @test_throws err JuMP._init_NLP(model)
     return
@@ -1274,9 +1287,12 @@ function test_interval_errors()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "Interval constraint contains non-constant left- or right-hand " *
-        "sides. Reformulate as two separate constraints, or move all " *
-        "variables into the central term.",
+        """
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables into \
+        the central term.
+        """,
     )
     @test_throws err add_nonlinear_constraint(model, :($x <= $x <= 2 * $x))
     return
@@ -1406,13 +1422,25 @@ function test_register_error_autdiff_false()
     f′(x) = 2 * x
     f′′(::Any) = 2
     err = ErrorException(
-        "If only the function is provided, must set autodiff=true",
+        """
+        Cannot register a user-defined function without providing a \
+        gradient unless `autodiff = true`.
+
+        Either set `autodiff = true` to compute derivatives \
+        automatically, or provide derivative functions as additional \
+        arguments.
+        """,
     )
     @test_throws err register(model, :f, 1, f)
     @test_throws err register(model, :f, 1, f; autodiff = false)
     err = ErrorException(
-        "Currently must provide 2nd order derivatives of univariate " *
-        "functions. Try setting autodiff=true.",
+        """
+        Registering a univariate user-defined function with a \
+        gradient requires also providing a second-order derivative.
+
+        Either provide a Hessian function as a third argument, or \
+        set `autodiff = true` to compute derivatives automatically.
+        """,
     )
     @test_throws err register(model, :f, 1, f, f′)
     @test_throws err register(model, :f, 1, f, f′; autodiff = false)

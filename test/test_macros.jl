@@ -1090,9 +1090,12 @@ function test_Interval_errors()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "Interval constraint contains non-constant left- or right-hand " *
-        "sides. Reformulate as two separate constraints, or move all " *
-        "variables into the central term.",
+        """
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables into \
+        the central term.
+        """,
     )
     @test_throws err @NLconstraint(model, x <= x <= 2x)
     return

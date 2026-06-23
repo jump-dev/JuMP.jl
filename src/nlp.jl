@@ -37,9 +37,13 @@ end
 
 function _init_NLP(m::AbstractModel)
     return error(
-        "Encountered an error parsing nonlinear expression: we don't support " *
-        "models of type $(typeof(m)). In general, JuMP's nonlinear features " *
-        "don't work with JuMP-extensions.",
+        """
+        Encountered an error parsing a nonlinear expression because JuMP \
+        does not support models of type `$(typeof(m))`.
+
+        In general, JuMP's nonlinear features do not work with JuMP \
+        extensions. Use a standard `JuMP.Model` instead.
+        """,
     )
 end
 
@@ -48,9 +52,13 @@ function MOI.Nonlinear.check_return_type(
     ret::AbstractJuMPScalar,
 ) where {T}
     return error(
-        "Expected return type of $T from a user-defined function, but got " *
-        "$(typeof(ret)). Make sure your user-defined function only depends " *
-        "on variables passed as arguments.",
+        """
+        Expected return type `$T` from a user-defined function, but got \
+        `$(typeof(ret))`.
+
+        Ensure that your user-defined function only depends on variables \
+        passed as arguments, and does not close over any JuMP variables.
+        """,
     )
 end
 
@@ -480,9 +488,12 @@ end
 
 function _normalize_constraint_expr(lhs, body, rhs)
     return error(
-        "Interval constraint contains non-constant left- or right-hand " *
-        "sides. Reformulate as two separate constraints, or move all " *
-        "variables into the central term.",
+        """
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables into \
+        the central term.
+        """,
     )
 end
 
@@ -803,7 +814,14 @@ function register(
     autodiff::Bool = false,
 )
     if autodiff == false
-        error("If only the function is provided, must set autodiff=true")
+        error("""
+              Cannot register a user-defined function without providing a \
+              gradient unless `autodiff = true`.
+
+              Either set `autodiff = true` to compute derivatives \
+              automatically, or provide derivative functions as additional \
+              arguments.
+              """)
     end
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     MOI.Nonlinear.register_operator(nlp, op, dimension, f)
@@ -896,9 +914,13 @@ function register(
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     if dimension == 1
         if autodiff == false
-            error(
-                "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
-            )
+            error("""
+                  Registering a univariate user-defined function with a \
+                  gradient requires also providing a second-order derivative.
+
+                  Either provide a Hessian function as a third argument, or \
+                  set `autodiff = true` to compute derivatives automatically.
+                  """)
         end
         MOI.Nonlinear.register_operator(nlp, op, dimension, f, ∇f)
     else
