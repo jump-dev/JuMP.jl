@@ -53,8 +53,7 @@ function MOI.Nonlinear.check_return_type(
 ) where {T}
     return error(
         """
-        Expected return type `$T` from a user-defined function, but got \
-        `$(typeof(ret))`.
+        Expected return type `$T` from a user-defined function, but got `$(typeof(ret))`.
 
         Ensure that your user-defined function only depends on variables \
         passed as arguments, and does not close over any JuMP variables.

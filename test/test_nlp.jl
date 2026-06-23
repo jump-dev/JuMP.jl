@@ -1048,8 +1048,7 @@ function test_user_defined_function_with_variable_closure_after_register()
     MOI.initialize(d, [:Grad])
     err = ErrorException(
         """
-        Expected return type `Float64` from a user-defined function, but got \
-        `$(typeof(1.0 + x))`.
+        Expected return type `Float64` from a user-defined function, but got `$(typeof(1.0 + x))`.
 
         Ensure that your user-defined function only depends on variables \
         passed as arguments, and does not close over any JuMP variables.
@@ -1068,13 +1067,7 @@ function test_user_defined_function_returning_bad_type_after_register()
     d = NLPEvaluator(model)
     MOI.initialize(d, [:Grad])
     err = ErrorException(
-        """
-        Expected return type `Float64` from a user-defined function, but got \
-        `String`.
-
-        Ensure that your user-defined function only depends on variables \
-        passed as arguments, and does not close over any JuMP variables.
-        """,
+        "Expected return type of Float64 from a user-defined function, but got String.",
     )
     @test_throws(err, MOI.eval_objective(d, [2.0]))
     return

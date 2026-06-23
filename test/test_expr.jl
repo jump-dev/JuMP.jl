@@ -621,8 +621,12 @@ function test_value_type()
     T = Symbol
     @test_throws(
         ErrorException(
-            "Unable to compute the `value_type($T)`. If you are developing a " *
-            "JuMP extension, define a new method for `JuMP.value_type(::Type{$T})`",
+            """
+            Unable to compute `value_type($T)`.
+
+            If you are developing a JuMP extension, define a new method for \
+            `JuMP.value_type(::Type{$T})` that returns the numeric type used in your model.
+            """,
         ),
         value_type(T),
     )

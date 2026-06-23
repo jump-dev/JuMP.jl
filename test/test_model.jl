@@ -462,15 +462,25 @@ function test_bridge_graph_false()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot use bridge if `add_bridges` was set to `false` in " *
-            "the `Model` constructor.",
+            """
+            Cannot use bridge functions because `add_bridges` was set to `false` in \
+            the `Model` constructor.
+
+            Recreate the model without setting `add_bridges = false`, or avoid calling \
+            functions that require bridges.
+            """,
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
-            "Cannot use bridge if `add_bridges` was set to " *
-            "`false` in the `Model` constructor.",
+            """
+            Cannot use bridge functions because `add_bridges` was set to `false` in \
+            the `Model` constructor.
+
+            Recreate the model without setting `add_bridges = false`, or avoid calling \
+            functions that require bridges.
+            """,
         ),
         print_bridge_graph(model)
     )
