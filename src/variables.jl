@@ -1712,6 +1712,7 @@ julia> ParameterRef(x)
 ERROR: Variable x is not a parameter.
 
 Use `@variable(model, p in Parameter(value))` to create a parameter.
+
 Stacktrace:
 [...]
 ```

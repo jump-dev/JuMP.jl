@@ -1298,7 +1298,12 @@ julia> @constraint(model, x - y in MOI.Nonnegatives(2))
 Non-zero constants are not supported in this syntax:
 ```jldoctest set_inequality
 julia> @constraint(model, x >= 1, MOI.Nonnegatives(2))
-ERROR: Operation `sub_mul` between `Vector{VariableRef}` and `Int64` is not allowed. This most often happens when you write a constraint like `x >= y` where `x` is an array and `y` is a constant. Use the broadcast syntax `x .- y >= 0` instead.
+ERROR: Operation `sub_mul` between `Vector{VariableRef}` and `Int64` is not allowed.
+
+This most often happens when you write a constraint like `x >= y` where `x` is an array and `y` is a constant.
+
+Use the broadcast syntax `x .- y >= 0` instead.
+
 Stacktrace:
 [...]
 ```

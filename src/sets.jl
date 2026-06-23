@@ -67,14 +67,16 @@ function _MA.operate!!(
     y::Int,
 )
     if !iszero(y)
-        error("""
-              Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` \
-              is not allowed. This most often happens when you write a \
-              constraint like `x >= y` where `x` is an array and `y` is a \
-              constant.
+        error(
+            """
+            Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` is not allowed.
 
-              Use the broadcast syntax `x .- y >= 0` instead.
-              """)
+            This most often happens when you write a constraint like `x >= y` \
+            where `x` is an array and `y` is a constant.
+
+            Use the broadcast syntax `x .- y >= 0` instead.
+            """,
+        )
     end
     return x
 end
@@ -86,14 +88,16 @@ function _MA.operate!!(
     x::AbstractArray{<:AbstractJuMPScalar},
 )
     if !iszero(y)
-        error("""
-              Operation `sub_mul` between `$(typeof(y))` and `$(typeof(x))` \
-              is not allowed. This most often happens when you write a \
-              constraint like `x >= y` where `x` is a constant and `y` is an \
-              array.
+        error(
+            """
+            Operation `sub_mul` between `$(typeof(y))` and `$(typeof(x))` is not allowed.
 
-              Use the broadcast syntax `x .- y >= 0` instead.
-              """)
+            This most often happens when you write a constraint like `x >= y` \
+            where `x` is a constant and `y` is an array.
+
+            Use the broadcast syntax `x .- y >= 0` instead.
+            """,
+        )
     end
     return _MA.operate!!(*, -1, x)
 end
