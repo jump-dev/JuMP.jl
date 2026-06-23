@@ -125,17 +125,17 @@ function test_extension_AffExpr_vectorized_constraints(
     @test_throws_runtime err @constraint(model, [x, 2x] in MOI.EqualTo(1.0))
     VT = typeof([x, 2x])
     err = ErrorException(
-        "Operation `sub_mul` between `$VT` and `$Int` is not " *
-        "allowed. This most often happens when you write a constraint like " *
-        "`x >= y` where `x` is an array and `y` is a constant. Use the " *
-        "broadcast syntax `x .- y >= 0` instead.",
+        "Operation `sub_mul` between `$VT` and `$Int` is not allowed. " *
+        "This most often happens when you write a constraint like `x >= y` " *
+        "where `x` is an array and `y` is a constant.\n\nUse the broadcast " *
+        "syntax `x .- y >= 0` instead.\n",
     )
     @test_throws err @constraint(model, [x, 2x] == 1)
     err = ErrorException(
-        "Operation `sub_mul` between `$Int` and `$VT` is not " *
-        "allowed. This most often happens when you write a constraint like " *
-        "`x >= y` where `x` is a constant and `y` is an array. Use the " *
-        "broadcast syntax `x .- y >= 0` instead.",
+        "Operation `sub_mul` between `$Int` and `$VT` is not allowed. " *
+        "This most often happens when you write a constraint like `x >= y` " *
+        "where `x` is a constant and `y` is an array.\n\nUse the broadcast " *
+        "syntax `x .- y >= 0` instead.\n",
     )
     a = 1
     @test_throws err @constraint(model, a == [x, 2x])

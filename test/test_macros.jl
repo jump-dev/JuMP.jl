@@ -500,7 +500,12 @@ function test_extension_build_constraint_SOS1(
     @test con.func == x
     @test con.set == MOI.SOS1(T[1, 2, 3])
     @test_throws(
-        ErrorException("Weight vector in SOS1 is not of length 3."),
+        ErrorException(
+            "Weight vector in SOS1 has length 1, but must be of length 3 " *
+            "to match the variable vector.\n\nEither omit the weight vector " *
+            "to use the default ordering `1:3`, or provide a weight vector " *
+            "with one entry per variable.\n",
+        ),
         @build_constraint(x in SOS1(T[1]))
     )
     @test con2 isa VectorConstraint
@@ -522,7 +527,12 @@ function test_extension_build_constraint_SOS2(
     @test con.func == x
     @test con.set == MOI.SOS2(T[1, 2, 3])
     @test_throws(
-        ErrorException("Weight vector in SOS2 is not of length 3."),
+        ErrorException(
+            "Weight vector in SOS2 has length 1, but must be of length 3 " *
+            "to match the variable vector.\n\nEither omit the weight vector " *
+            "to use the default ordering `1:3`, or provide a weight vector " *
+            "with one entry per variable.\n",
+        ),
         @build_constraint(x in SOS2(T[1]))
     )
     @test con2 isa VectorConstraint

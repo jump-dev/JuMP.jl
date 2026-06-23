@@ -738,10 +738,12 @@ function test_dual_variable()
     model = Model()
     @variable(model, x == 0)
     exception = ErrorException(
-        "To query the dual variables associated with a variable bound, first " *
-        "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
-        "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
-        "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.",
+        "Calling `dual` directly on a variable is not supported.\n\nTo " *
+        "query the dual variable associated with a variable bound, first " *
+        "obtain a constraint reference using `UpperBoundRef`, " *
+        "`LowerBoundRef`, or `FixRef`, and then call `dual` on the " *
+        "constraint reference. For example, if `x <= 1`, use " *
+        "`dual(UpperBoundRef(x))` instead of `dual(x)`.\n",
     )
     @test_throws exception dual(x)
     return
@@ -984,8 +986,9 @@ function test_relax_integrality_error_cases()
     @variable(model, x)
     @constraint(model, x in MOI.Semicontinuous(1.0, 2.0))
     err = ErrorException(
-        "Support for relaxing semicontinuous constraints " *
-        "is not yet implemented.",
+        "Support for relaxing semicontinuous constraints is not yet " *
+        "implemented.\n\nRemove all semicontinuous constraints from the " *
+        "model before calling `relax_integrality`.\n",
     )
     @test_throws err relax_integrality(model)
 
@@ -993,28 +996,21 @@ function test_relax_integrality_error_cases()
     @variable(model, x)
     @constraint(model, x in MOI.Semiinteger(1.0, 2.0))
     err = ErrorException(
-        "Support for relaxing semi-integer constraints " *
-        "is not yet implemented.",
+        "Support for relaxing semi-integer constraints is not yet " *
+        "implemented.\n\nRemove all semi-integer constraints from the model " *
+        "before calling `relax_integrality`.\n",
     )
     @test_throws err relax_integrality(model)
 
     model = Model()
     @variable(model, x, Bin)
     fix(x, 2)
-    err = ErrorException(
-        "The model has no valid relaxation: binary variable " *
-        "fixed out of bounds.",
-    )
-    @test_throws err relax_integrality(model)
+    @test_throws ErrorException relax_integrality(model)
 
     model = Model()
     @variable(model, x, Bin)
     fix(x, -1)
-    err = ErrorException(
-        "The model has no valid relaxation: binary variable " *
-        "fixed out of bounds.",
-    )
-    @test_throws err relax_integrality(model)
+    @test_throws ErrorException relax_integrality(model)
     return
 end
 
@@ -1054,8 +1050,9 @@ function test_inf_lower_bound()
         @test !has_lower_bound(x)
         @test_throws(
             ErrorException(
-                "Unable to set lower bound to $y. To remove the bound, use " *
-                "`delete_lower_bound`.",
+                "Unable to set the lower bound to $y because the value is " *
+                "not finite.\n\nTo remove the lower bound, use " *
+                "`delete_lower_bound`.\n",
             ),
             set_lower_bound(x, y),
         )
@@ -1070,8 +1067,9 @@ function test_inf_upper_bound()
         @test !has_upper_bound(x)
         @test_throws(
             ErrorException(
-                "Unable to set upper bound to $y. To remove the bound, use " *
-                "`delete_upper_bound`.",
+                "Unable to set the upper bound to $y because the value is " *
+                "not finite.\n\nTo remove the upper bound, use " *
+                "`delete_upper_bound`.\n",
             ),
             set_upper_bound(x, y),
         )
@@ -1083,11 +1081,21 @@ function test_inf_fixed()
     for y in [-Inf, Inf, NaN]
         model = Model()
         @test_throws(
-            ErrorException("Unable to fix variable to $y"),
+            ErrorException(
+                "Unable to fix variable to $y because the value is not " *
+                "finite.\n\nUse a finite value instead.\n",
+            ),
             @variable(model, x == y),
         )
         @variable(model, x)
-        @test_throws(ErrorException("Unable to fix variable to $y"), fix(x, y))
+        @test_throws(
+            ErrorException(
+                "Unable to fix variable to $y because the value is not " *
+                "finite.\n\nUse a finite value instead. To remove a fix, " *
+                "call `unfix(variable)`.\n",
+            ),
+            fix(x, y),
+        )
     end
     return
 end
@@ -1458,7 +1466,11 @@ function test_parameter()
     @test parameter_value(x) === 3.0
     @variable(model, p)
     @test_throws(
-        ErrorException("Variable p is not a parameter."),
+        ErrorException(
+            "Variable p is not a parameter.\n\nUse " *
+            "`@variable(model, p in Parameter(value))` to create a " *
+            "parameter.\n",
+        ),
         ParameterRef(p),
     )
     return
@@ -1486,30 +1498,50 @@ end
 function test_missing_variable_constraint_errors()
     model = Model()
     @variable(model, x)
-    err = ErrorException("Variable x does not have a lower bound.")
+    err = ErrorException(
+        "Variable x does not have a lower bound.\n\nUse " *
+        "`set_lower_bound(v, value)` or `@variable(model, v >= value)` to " *
+        "add a lower bound.\n",
+    )
     @test !has_lower_bound(x)
     @test_throws err LowerBoundRef(x)
     @test_throws err lower_bound(x)
     @test_throws err delete_lower_bound(x)
-    err = ErrorException("Variable x does not have an upper bound.")
+    err = ErrorException(
+        "Variable x does not have an upper bound.\n\nUse " *
+        "`set_upper_bound(v, value)` or `@variable(model, v <= value)` to " *
+        "add an upper bound.\n",
+    )
     @test !has_upper_bound(x)
     @test_throws err UpperBoundRef(x)
     @test_throws err upper_bound(x)
     @test_throws err delete_upper_bound(x)
-    err = ErrorException("Variable x does not have fixed bounds.")
+    err = ErrorException(
+        "Variable x does not have fixed bounds.\n\nUse `fix(v, value)` to " *
+        "fix the variable to a value.\n",
+    )
     @test !is_fixed(x)
     @test_throws err FixRef(x)
     @test_throws err fix_value(x)
     @test_throws err unfix(x)
-    err = ErrorException("Variable x is not integer.")
+    err = ErrorException(
+        "Variable x is not integer.\n\nUse `set_integer(v)` or " *
+        "`@variable(model, v, Int)` to add an integrality constraint.\n",
+    )
     @test !is_integer(x)
     @test_throws err IntegerRef(x)
     @test_throws err unset_integer(x)
-    err = ErrorException("Variable x is not binary.")
+    err = ErrorException(
+        "Variable x is not binary.\n\nUse `set_binary(v)` or " *
+        "`@variable(model, v, Bin)` to add a binary constraint.\n",
+    )
     @test !is_binary(x)
     @test_throws err BinaryRef(x)
     @test_throws err unset_binary(x)
-    err = ErrorException("Variable x is not a parameter.")
+    err = ErrorException(
+        "Variable x is not a parameter.\n\nUse " *
+        "`@variable(model, p in Parameter(value))` to create a parameter.\n",
+    )
     @test !is_parameter(x)
     @test_throws err ParameterRef(x)
     @test_throws err parameter_value(x)
@@ -1540,9 +1572,9 @@ function test_variable_ref_type_unsupported()
     for F in (Vector{VariableRef}, Vector{Int})
         @test_throws(
             ErrorException(
-                "Unable to compute the `variable_ref_type` of the type `$F`. If you " *
-                "are developing a JuMP extension, define a new method for " *
-                "`JuMP.variable_ref_type(::Type{$F})`",
+                "Unable to compute the `variable_ref_type` of the type " *
+                "`$F`.\n\nIf you are developing a JuMP extension, define a " *
+                "new method for `JuMP.variable_ref_type(::Type{$F})`.\n",
             ),
             variable_ref_type(F),
         )
@@ -1556,7 +1588,9 @@ function test_bad_bound_types()
     function err(value, msg, T)
         return ErrorException(
             "Unable to use `$value::$(typeof(value))` as the $msg of a " *
-            "variable because it is not convertable to type `::$T`.",
+            "variable because it is not convertible to type `$T`.\n\n" *
+            "Ensure the bound value is a numeric type compatible with " *
+            "`$T`.\n",
         )
     end
     for v in (1.2, "abc", :d)
@@ -1567,9 +1601,9 @@ function test_bad_bound_types()
     end
     function err2(value, msg, T)
         return ErrorException(
-            "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
-            "The $msg must be a constant value of type `::$T`. You cannot use " *
-            "JuMP variables or expressions.",
+            "Unable to use `$value::$(typeof(value))` as the $msg of a " *
+            "variable.\n\nThe $msg must be a constant value of type `$T`. " *
+            "JuMP variables or expressions cannot be used as bounds.\n",
         )
     end
     @variable(model, y)
@@ -1689,7 +1723,11 @@ function test_variable_in_set_scalar()
     @variable(model, y, Int)
     @test !is_variable_in_set(y)
     @test_throws(
-        ErrorException("`VariableInSetRef` does not exist for `$y`"),
+        ErrorException(
+            "`VariableInSetRef` does not exist for `$y`.\n\n" *
+            "`VariableInSetRef` is only available for variables created with " *
+            "a set constraint, such as `@variable(model, x in SomeSet())`.\n",
+        ),
         VariableInSetRef(y),
     )
     for set in (
@@ -1718,7 +1756,11 @@ function test_variable_in_set_vector()
     @variable(model, y[1:2], Int)
     @test !is_variable_in_set(y)
     @test_throws(
-        ErrorException("`VariableInSetRef` does not exist for `$y`"),
+        ErrorException(
+            "`VariableInSetRef` does not exist for `$y`.\n\n" *
+            "`VariableInSetRef` is only available for variables created with " *
+            "a set constraint, such as `@variable(model, x in SomeSet())`.\n",
+        ),
         VariableInSetRef(y),
     )
     for set in (

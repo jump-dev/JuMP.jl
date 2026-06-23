@@ -621,8 +621,15 @@ end
 function _assert_isfinite(q::GenericQuadExpr)
     _assert_isfinite(q.aff)
     for (coef, var1, var2) in quad_terms(q)
-        isfinite(coef) ||
-            error("Invalid coefficient $coef on quadratic term $var1*$var2.")
+        if !isfinite(coef)
+            error(
+                """
+                Invalid coefficient $coef on quadratic term $var1 * $var2.
+
+                Coefficients in quadratic expressions must be finite. Check for division by zero or other sources of non-finite values.
+                """,
+            )
+        end
     end
 end
 

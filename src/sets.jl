@@ -67,12 +67,14 @@ function _MA.operate!!(
     y::Int,
 )
     if !iszero(y)
-        error(
-            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
-            "is not allowed. This most often happens when you write a " *
-            "constraint like `x >= y` where `x` is an array and `y` is a " *
-            "constant. Use the broadcast syntax `x .- y >= 0` instead.",
-        )
+        error("""
+              Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` \
+              is not allowed. This most often happens when you write a \
+              constraint like `x >= y` where `x` is an array and `y` is a \
+              constant.
+
+              Use the broadcast syntax `x .- y >= 0` instead.
+              """)
     end
     return x
 end
@@ -84,12 +86,14 @@ function _MA.operate!!(
     x::AbstractArray{<:AbstractJuMPScalar},
 )
     if !iszero(y)
-        error(
-            "Operation `sub_mul` between `$(typeof(y))` and `$(typeof(x))` " *
-            "is not allowed. This most often happens when you write a " *
-            "constraint like `x >= y` where `x` is a constant and `y` is an " *
-            "array. Use the broadcast syntax `x .- y >= 0` instead.",
-        )
+        error("""
+              Operation `sub_mul` between `$(typeof(y))` and `$(typeof(x))` \
+              is not allowed. This most often happens when you write a \
+              constraint like `x >= y` where `x` is a constant and `y` is an \
+              array.
+
+              Use the broadcast syntax `x .- y >= 0` instead.
+              """)
     end
     return _MA.operate!!(*, -1, x)
 end
@@ -197,7 +201,13 @@ function moi_set(set::SOS1{T}, dim::Int) where {T}
     elseif length(set.weights) == dim
         return MOI.SOS1{T}(set.weights)
     else
-        error("Weight vector in SOS1 is not of length $(dim).")
+        error("""
+              Weight vector in SOS1 has length $(length(set.weights)), but \
+              must be of length $dim to match the variable vector.
+
+              Either omit the weight vector to use the default ordering \
+              `1:$dim`, or provide a weight vector with one entry per variable.
+              """)
     end
 end
 
@@ -251,7 +261,13 @@ function moi_set(set::SOS2{T}, dim::Int) where {T}
     elseif length(set.weights) == dim
         return MOI.SOS2{T}(set.weights)
     else
-        error("Weight vector in SOS2 is not of length $(dim).")
+        error("""
+              Weight vector in SOS2 has length $(length(set.weights)), but \
+              must be of length $dim to match the variable vector.
+
+              Either omit the weight vector to use the default ordering \
+              `1:$dim`, or provide a weight vector with one entry per variable.
+              """)
     end
 end
 

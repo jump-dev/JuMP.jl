@@ -170,7 +170,12 @@ struct VariableInfo{S,T,U,V}
             upper_bound = NaN
         end
         if has_fix && !_isfinite(fixed_value)
-            error("Unable to fix variable to $(fixed_value)")
+            error("""
+                  Unable to fix variable to $fixed_value because the value is \
+                  not finite.
+
+                  Use a finite value instead.
+                  """)
         end
         return new{typeof(lower_bound),typeof(upper_bound),U,V}(
             has_lb,
@@ -232,9 +237,12 @@ variable_ref_type(::F) where {F} = variable_ref_type(F)
 
 function variable_ref_type(::Type{F}) where {F}
     return error(
-        "Unable to compute the `variable_ref_type` of the type `$F`. If you " *
-        "are developing a JuMP extension, define a new method for " *
-        "`JuMP.variable_ref_type(::Type{$F})`",
+        """
+        Unable to compute the `variable_ref_type` of the type `$F`.
+
+        If you are developing a JuMP extension, define a new method for \
+        `JuMP.variable_ref_type(::Type{$F})`.
+        """,
     )
 end
 
@@ -474,8 +482,13 @@ Stacktrace:
 function delete(model::GenericModel, variable_ref::GenericVariableRef)
     if model !== owner_model(variable_ref)
         error(
-            "The variable reference you are trying to delete does not " *
-            "belong to the model.",
+            """
+            The variable reference you are trying to delete does not belong \
+            to the model.
+
+            Use `owner_model(con_ref)` to find which model owns the variable, then \
+            delete it from that model.
+            """,
         )
     end
     model.is_model_dirty = true
@@ -519,8 +532,12 @@ function delete(
 )
     if any(model !== owner_model(v) for v in variable_refs)
         error(
-            "A variable reference you are trying to delete does not " *
-            "belong to the model.",
+            """
+            A variable reference you are trying to delete does not belong to the model.
+
+            Use `owner_model(con_ref)` to check which model owns each variable, \
+            then delete it from that model.
+            """,
         )
     end
     model.is_model_dirty = true
@@ -853,8 +870,11 @@ julia> lower_bound(x)
 function set_lower_bound(v::GenericVariableRef, lower::Number)
     if !isfinite(lower)
         error(
-            "Unable to set lower bound to $(lower). To remove the bound, use " *
-            "`delete_lower_bound`.",
+            """
+            Unable to set the lower bound to $lower because the value is not finite.
+
+            To remove the lower bound, use `delete_lower_bound`.
+            """,
         )
     end
     model = owner_model(v)
@@ -902,7 +922,14 @@ x ≥ 1
 """
 function LowerBoundRef(v::GenericVariableRef)
     if !has_lower_bound(v)
-        error("Variable $(v) does not have a lower bound.")
+        error(
+            """
+            Variable $v does not have a lower bound.
+
+            Use `set_lower_bound(v, value)` or `@variable(model, v >= value)` \
+            when creating the variable to add a lower bound.
+            """,
+        )
     end
     return ConstraintRef(owner_model(v), _lower_bound_index(v), ScalarShape())
 end
@@ -1024,8 +1051,11 @@ julia> upper_bound(x)
 function set_upper_bound(v::GenericVariableRef, upper::Number)
     if !isfinite(upper)
         error(
-            "Unable to set upper bound to $(upper). To remove the bound, use " *
-            "`delete_upper_bound`.",
+            """
+            Unable to set the upper bound to $upper because the value is not finite.
+
+            To remove the upper bound, use `delete_upper_bound`.
+            """,
         )
     end
     model = owner_model(v)
@@ -1073,7 +1103,14 @@ x ≤ 1
 """
 function UpperBoundRef(v::GenericVariableRef)
     if !has_upper_bound(v)
-        error("Variable $(v) does not have an upper bound.")
+        error(
+            """
+            Variable $v does not have an upper bound.
+
+            Use `set_upper_bound(v, value)` or `@variable(model, v <= value)` \
+            when creating the variable to add an upper bound.
+            """,
+        )
     end
     return ConstraintRef(owner_model(v), _upper_bound_index(v), ScalarShape())
 end
@@ -1219,7 +1256,13 @@ true
 """
 function fix(variable::GenericVariableRef, value::Number; force::Bool = false)
     if !isfinite(value)
-        error("Unable to fix variable to $(value)")
+        error(
+            """
+            Unable to fix variable to $value because the value is not finite.
+
+            Use a finite value instead. To remove a fix, call `unfix(variable)`.
+            """,
+        )
     end
     model = owner_model(variable)
     model.is_model_dirty = true
@@ -1242,10 +1285,13 @@ function _moi_fix(
            _moi_has_lower_bound(moi_backend, variable)
             if !force
                 error(
-                    "Unable to fix $(variable) to $(value) because it has " *
-                    "existing variable bounds. Consider calling " *
-                    "`JuMP.fix(variable, value; force=true)` which will " *
-                    "delete existing bounds before fixing the variable.",
+                    """
+                    Unable to fix $variable to $value because it has existing \
+                    variable bounds.
+
+                    Call `JuMP.fix(variable, value; force = true)` to delete \
+                    existing bounds before fixing the variable.
+                    """,
                 )
             end
             if _moi_has_upper_bound(moi_backend, variable)
@@ -1339,7 +1385,11 @@ x = 1
 """
 function FixRef(v::GenericVariableRef)
     if !is_fixed(v)
-        error("Variable $(v) does not have fixed bounds.")
+        error("""
+              Variable $v does not have fixed bounds.
+
+              Use `fix(v, value)` to fix the variable to a value.
+              """)
     end
     return ConstraintRef(owner_model(v), _fix_index(v), ScalarShape())
 end
@@ -1416,8 +1466,11 @@ function _moi_set_integer(moi_backend, variable_ref::GenericVariableRef)
         return
     elseif _moi_is_binary(moi_backend, variable_ref)
         error(
-            "Cannot set the variable_ref $(variable_ref) to integer as it " *
-            "is already binary.",
+            """
+            Cannot set variable $variable_ref to integer because it is already binary.
+
+            Call `unset_binary(variable_ref)` before setting the variable as integer.
+            """,
         )
     end
     _moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
@@ -1476,7 +1529,14 @@ x integer
 """
 function IntegerRef(v::GenericVariableRef)
     if !is_integer(v)
-        error("Variable $v is not integer.")
+        error(
+            """
+            Variable $v is not integer.
+
+            Use `set_integer(v)` or `@variable(model, v, Int)` when creating \
+            the variable to add an integrality constraint.
+            """,
+        )
     end
     return ConstraintRef(owner_model(v), _integer_index(v), ScalarShape())
 end
@@ -1549,8 +1609,12 @@ function _moi_set_binary(moi_backend, variable_ref)
         return
     elseif _moi_is_integer(moi_backend, variable_ref)
         error(
-            "Cannot set the variable_ref $(variable_ref) to binary as it " *
-            "is already integer.",
+            """
+            Cannot set variable $variable_ref to binary because it is already integer.
+
+            Call `unset_integer(variable_ref)` before setting the variable \
+            as binary.
+            """,
         )
     end
     _moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
@@ -1606,7 +1670,14 @@ x binary
 """
 function BinaryRef(v::GenericVariableRef)
     if !is_binary(v)
-        error("Variable $v is not binary.")
+        error(
+            """
+            Variable $v is not binary.
+
+            Use `set_binary(v)` or `@variable(model, v, Bin)` when creating the \
+            variable to add a binary constraint.
+            """,
+        )
     end
     return ConstraintRef(owner_model(v), _binary_index(v), ScalarShape())
 end
@@ -1639,13 +1710,21 @@ julia> @variable(model, x);
 
 julia> ParameterRef(x)
 ERROR: Variable x is not a parameter.
+
+Use `@variable(model, p in Parameter(value))` to create a parameter.
 Stacktrace:
 [...]
 ```
 """
 function ParameterRef(x::GenericVariableRef)
     if !is_parameter(x)
-        error("Variable $x is not a parameter.")
+        error(
+            """
+            Variable $x is not a parameter.
+
+            Use `@variable(model, p in Parameter(value))` to create a parameter.
+            """,
+        )
     end
     return ConstraintRef(owner_model(x), _parameter_index(x), ScalarShape())
 end
@@ -1925,7 +2004,14 @@ function VariableInSetRef(x::AbstractJuMPScalar)
     model = owner_model(x)
     ci = get(model.variable_in_set_ref, x, nothing)
     if ci === nothing
-        error("`VariableInSetRef` does not exist for `$x`")
+        error(
+            """
+            `VariableInSetRef` does not exist for `$x`.
+
+            `VariableInSetRef` is only available for variables created with a \
+            set constraint, such as `@variable(model, x in SomeSet())`.
+            """,
+        )
     end
     return constraint_ref_with_index(model, ci)
 end
@@ -1934,7 +2020,14 @@ function VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar})
     model = owner_model(first(x))
     ci = get(model.variable_in_set_ref, x, nothing)
     if ci === nothing
-        error("`VariableInSetRef` does not exist for `$x`")
+        error(
+            """
+            `VariableInSetRef` does not exist for `$x`.
+
+            `VariableInSetRef` is only available for variables created with a \
+            set constraint, such as `@variable(model, x in SomeSet())`.
+            """,
+        )
     end
     return constraint_ref_with_index(model, ci)
 end
@@ -2236,17 +2329,24 @@ function _to_value(::Type{T}, value, msg::String) where {T}
         return convert(T, value)
     catch
         error(
-            "Unable to use `$value::$(typeof(value))` as the $msg of a " *
-            "variable because it is not convertable to type `::$T`.",
+            """
+            Unable to use `$value::$(typeof(value))` as the $msg of a variable \
+            because it is not convertible to type `$T`.
+
+            Ensure the bound value is a numeric type compatible with `$T`.
+            """,
         )
     end
 end
 
 function _to_value(::Type{T}, value::AbstractJuMPScalar, msg::String) where {T}
     return error(
-        "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
-        "The $msg must be a constant value of type `::$T`. You cannot use " *
-        "JuMP variables or expressions.",
+        """
+        Unable to use `$value::$(typeof(value))` as the $msg of a variable.
+
+        The $msg must be a constant value of type `$T`. JuMP variables or \
+        expressions cannot be used as bounds.
+        """,
     )
 end
 
@@ -2642,8 +2742,14 @@ function reduced_cost(x::GenericVariableRef{T})::T where {T}
     model = owner_model(x)
     if !has_duals(model)
         error(
-            "Unable to query reduced cost of variable because model does" *
-            " not have duals available.",
+            """
+            Unable to query the reduced cost of variable $x because the \
+            model does not have duals available.
+
+            Ensure the model was solved to optimality and the solver supports \
+            dual solutions. Check `has_duals(model)` before calling \
+            `reduced_cost`.
+            """,
         )
     end
     sign = objective_sense(model) == MIN_SENSE ? one(T) : -one(T)
@@ -2691,10 +2797,15 @@ end
 
 function dual(::GenericVariableRef)
     return error(
-        "To query the dual variables associated with a variable bound, first " *
-        "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
-        "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
-        "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.",
+        """
+        Calling `dual` directly on a variable is not supported.
+
+        To query the dual variable associated with a variable bound, first \
+        obtain a constraint reference using `UpperBoundRef`, `LowerBoundRef`, \
+        or `FixRef`, and then call `dual` on the constraint reference. For \
+        example, if `x <= 1`, use `dual(UpperBoundRef(x))` instead of \
+        `dual(x)`.
+        """,
     )
 end
 
@@ -2861,15 +2972,23 @@ function _relax_or_fix_integrality(
     model::GenericModel{T},
 ) where {T}
     if num_constraints(model, GenericVariableRef{T}, MOI.Semicontinuous{T}) > 0
-        error(
-            "Support for relaxing semicontinuous constraints is not " *
-            "yet implemented.",
-        )
+        error("""
+              Support for relaxing semicontinuous constraints is not yet \
+              implemented.
+
+              Remove all semicontinuous constraints from the model before \
+              calling `relax_integrality`.
+              """)
     end
     if num_constraints(model, GenericVariableRef{T}, MOI.Semiinteger{T}) > 0
         error(
-            "Support for relaxing semi-integer constraints is not " *
-            "yet implemented.",
+            """
+            Support for relaxing semi-integer constraints is not yet \
+            implemented.
+
+            Remove all semi-integer constraints from the model before calling \
+            `relax_integrality`.
+            """,
         )
     end
     discrete_variable_constraints = vcat(
@@ -2893,8 +3012,13 @@ function _relax_or_fix_integrality(
                 set_upper_bound(v, min(one(T), info.upper_bound))
             elseif info.fixed_value < 0 || info.fixed_value > 1
                 error(
-                    "The model has no valid relaxation: binary variable " *
-                    "fixed out of bounds.",
+                    """
+                    The model has no valid relaxation because binary variable \
+                    $v is fixed to $(info.fixed_value), which is outside the \
+                    interval [0, 1].
+
+                    Either unfix the variable or fix it to a value in [0, 1].
+                    """,
                 )
             end
         end
