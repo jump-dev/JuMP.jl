@@ -40,7 +40,12 @@ function build_lookup(ax)
     cnt = 1
     for el in ax
         if haskey(d, el)
-            error("Repeated index $el. Index sets must have unique elements.")
+            error("""
+                  Repeated index `$el`.
+
+                  Each element in the index set must appear exactly once. \
+                  Check for duplicate values.
+                  """)
         end
         d[el] = cnt
         cnt += 1
@@ -67,9 +72,15 @@ function Base.getindex(
     if haskey(x.data, key)
         if all(haskey(x.data, k) for k in key)
             error(
-                "ambiguous use of getindex with key $key. We cannot tell if " *
-                "you meant to return the single element corresponding to the " *
-                "key, or a slice for each element in the key.",
+                """
+                Ambiguous use of `getindex` with key $key.
+
+                JuMP cannot determine whether you want the single element at key $key, \
+                or a slice for each element in the key.
+
+                To avoid ambiguity, ensure the key is unambiguous, or \
+                restructure the container to avoid overlapping key types.
+                """,
             )
         end
         return x.data[key]
@@ -177,9 +188,12 @@ _abstract_vector(x::AbstractVector) = x
 
 function _abstract_vector(x::AbstractVector{<:CartesianIndex})
     return error(
-        "Unsupported index type `CartesianIndex` in axis: $x. Cartesian " *
-        "indices are restricted for indexing into and iterating over " *
-        "multidimensional arrays.",
+        """
+        Unsupported index type `CartesianIndex` in axis: $x.
+
+        Cartesian indices are restricted for indexing into and iterating \
+        over multidimensional arrays. Use integer or named indices instead.
+        """,
     )
 end
 
@@ -307,7 +321,14 @@ end
 
 Base.size(A::DenseAxisArray) = size(A.data)
 function Base.LinearIndices(::DenseAxisArray)
-    return error("DenseAxisArray does not support this operation.")
+    return error(
+        """
+        `LinearIndices` is not supported for `DenseAxisArray`.
+
+        `DenseAxisArray` uses named axes instead of linear indices. Use \
+        `eachindex(A)` or iterate over `A.axes` directly.
+        """,
+    )
 end
 Base.axes(A::DenseAxisArray) = A.axes
 Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
@@ -391,11 +412,14 @@ function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.names[i] != kw
-            error(
-                "Invalid index $kw in position $i. When using keyword " *
-                "indexing, the indices must match the exact name and order " *
-                "used when creating the container.",
-            )
+            error("""
+                  Invalid index $kw in position $i. When using keyword \
+                  indexing, the indices must match the exact name and order \
+                  used when creating the container.
+
+                  Check the index names and their order in the container \
+                  definition.
+                  """)
         end
         return kwargs[i]
     end
@@ -404,7 +428,12 @@ end
 function Base.getindex(A::DenseAxisArray, args...; kwargs...)
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error("""
+                  Cannot index with a mix of positional and keyword arguments.
+
+                  Use either all positional arguments, such as `A[i, j]`, or \
+                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
+                  """)
         end
         return _getindex_inner(A, _kwargs_to_args(A; kwargs...)...)
     end
@@ -431,7 +460,12 @@ function Base.setindex!(
 ) where {T,N}
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error("""
+                  Cannot index with a mix of positional and keyword arguments.
+
+                  Use either all positional arguments, such as `A[i, j]`, or \
+                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
+                  """)
         end
         return setindex!(A, v, _kwargs_to_args(A; kwargs...)...)
     end
@@ -538,9 +572,13 @@ function _broadcast_axes_check(x::NTuple{N}) where {N}
     axes = first(x)
     for i in 2:N
         if x[i][1] != axes[1]
-            error(
-                "Unable to broadcast over DenseAxisArrays with different axes.",
-            )
+            error("""
+                  Unable to broadcast over `DenseAxisArray`s with different \
+                  axes.
+
+                  Ensure all arrays in the broadcast operation have the same \
+                  axes before broadcasting.
+                  """)
         end
     end
     return axes
@@ -782,11 +820,14 @@ function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.data.names[non_default_indices[i]] != kw
-            error(
-                "Invalid index $kw in position $i. When using keyword " *
-                "indexing, the indices must match the exact name and order " *
-                "used when creating the container.",
-            )
+            error("""
+                  Invalid index $kw in position $i. When using keyword \
+                  indexing, the indices must match the exact name and order \
+                  used when creating the container.
+
+                  Check the index names and their order in the container \
+                  definition.
+                  """)
         end
         return kwargs[i]
     end
@@ -795,7 +836,12 @@ end
 function Base.getindex(x::DenseAxisArrayView, args...; kwargs...)
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error("""
+                  Cannot index with a mix of positional and keyword arguments.
+
+                  Use either all positional arguments, such as `A[i, j]`, or \
+                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
+                  """)
         end
         return getindex(x, _kwargs_to_args(x; kwargs...)...)
     end
@@ -821,7 +867,12 @@ function Base.setindex!(
 ) where {T}
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error("""
+                  Cannot index with a mix of positional and keyword arguments.
+
+                  Use either all positional arguments, such as `A[i, j]`, or \
+                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
+                  """)
         end
         return setindex!(x, value, _kwargs_to_args(x; kwargs...)...)
     end
@@ -857,9 +908,13 @@ function Base.sum(
 ) where {F<:Function,T}
     if dims != Colon()
         return error(
-            "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
-            "to an `Array` using `sum(Array(x); dims=$dims)`, or use an explicit " *
-            "for-loop summation instead.",
+            """
+            `sum(x::DenseAxisArray; dims)` is not supported.
+
+            Convert the array to a standard `Array` using \
+            `sum(Array(x); dims = $dims)`, or use an explicit for-loop \
+            summation instead.
+            """,
         )
     end
     if init == _InitNotProvided()

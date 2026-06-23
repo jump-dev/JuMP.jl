@@ -24,7 +24,11 @@ function test_iterator_with_constant_eltype()
         end
     end
     err = ErrorException(
-        "Repeated index (1, 2). Index sets must have unique elements.",
+        """
+        Repeated index `(1, 2)`.
+
+        Each element in the index set must appear exactly once. Check for duplicate values.
+        """,
     )
     g = Base.Generator(f, [(1, 1), (1, 2), (1, 2)])
     @test_throws err Containers.NoDuplicateDict(g)
@@ -49,7 +53,11 @@ function test_iterator_with_varying_eltype()
     end
     g = Base.Generator(f, [(1, 1), (1, 2), (1, 1)])
     err = ErrorException(
-        "Repeated index (1, 1). Index sets must have unique elements.",
+        """
+        Repeated index `(1, 1)`.
+
+        Each element in the index set must appear exactly once. Check for duplicate values.
+        """,
     )
     @test_throws err Containers.NoDuplicateDict(g)
     g = Base.Generator(f, [(1, 1), (1, 1)])

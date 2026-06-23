@@ -33,7 +33,13 @@ Base.getindex(dict::NoDuplicateDict, key) = getindex(dict.dict, key)
 
 function Base.setindex!(dict::NoDuplicateDict, value, key)
     if haskey(dict, key)
-        error("Repeated index ", key, ". Index sets must have unique elements.")
+        error(
+            """
+            Repeated index `$key`.
+
+            Each element in the index set must appear exactly once. Check for duplicate values.
+            """,
+        )
     end
     return setindex!(dict.dict, value, key)
 end

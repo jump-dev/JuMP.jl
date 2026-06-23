@@ -183,12 +183,12 @@ end
 
 function test_size()
     err = ErrorException(
-        "`Base.size` is not implemented for `SparseAxisArray` because " *
+        "`Base.size` is not implemented for `SparseAxisArray` because, " *
         "although it is a subtype of `AbstractArray`, it is conceptually " *
-        "closer to a dictionary with `N`-dimensional keys. If you encounter " *
-        "this error and you didn't call `size` explicitly, it is because " *
-        "you called a method that is unsupported for `SparseAxisArray`s. " *
-        "Consult the JuMP documentation for a list of supported operations.",
+        "closer to a dictionary with N-dimensional keys.\n\nIf you did not " *
+        "call `size` explicitly, it is because you called a method that is " *
+        "unsupported for `SparseAxisArray`. Consult the JuMP documentation " *
+        "for a list of supported operations.\n",
     )
     x = Containers.@container([i = 1:3, j = i:3], i + j)
     @test_throws err size(x)
@@ -264,7 +264,8 @@ function test_containers_sparseaxisarray_kwarg_indexing()
         ErrorException(
             "Invalid index j in position 1. When using keyword indexing, the " *
             "indices must match the exact name and order used when creating " *
-            "the container.",
+            "the container.\n\nCheck the index names and their order in the " *
+            "container definition.\n",
         ),
         x[j=1, i=2],
     )
@@ -272,20 +273,25 @@ function test_containers_sparseaxisarray_kwarg_indexing()
         ErrorException(
             "Invalid index k in position 2. When using keyword indexing, the " *
             "indices must match the exact name and order used when creating " *
-            "the container.",
+            "the container.\n\nCheck the index names and their order in the " *
+            "container definition.\n",
         ),
         x[i=2, k=2],
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2],
     )
     Containers.@container(y[i=2:3, 1:2], i, container = SparseAxisArray)
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         y[i=2, 2],
     )
@@ -316,7 +322,8 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         ErrorException(
             "Invalid index j in position 1. When using keyword indexing, the " *
             "indices must match the exact name and order used when creating " *
-            "the container.",
+            "the container.\n\nCheck the index names and their order in the " *
+            "container definition.\n",
         ),
         x[j=1, i=2] = 2,
     )
@@ -324,13 +331,16 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         ErrorException(
             "Invalid index k in position 2. When using keyword indexing, the " *
             "indices must match the exact name and order used when creating " *
-            "the container.",
+            "the container.\n\nCheck the index names and their order in the " *
+            "container definition.\n",
         ),
         x[i=2, k=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2] = 3,
     )

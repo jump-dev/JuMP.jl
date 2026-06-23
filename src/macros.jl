@@ -479,7 +479,7 @@ function _plural_macro_code(model, block, macro_sym)
         error("""
               Invalid syntax for $(macro_sym)s.
 
-              The second argument must be a  `begin end` block. For example:
+              The second argument must be a `begin end` block. For example:
               ```julia
               $(macro_sym)s(model, begin
                   # ... lines here ...

@@ -146,8 +146,9 @@ end
 
 function test_invalid_container()
     err = ErrorException(
-        "Unable to build a container with the provided type $(Int). " *
-        "Implement `Containers.container(::Function, indices, ::Type{$Int})`.",
+        "Unable to build a container with the provided type $Int.\n\n" *
+        "If you are developing a JuMP extension, implement " *
+        "`Containers.container(::Function, indices, ::Type{$Int})`.\n",
     )
     @test_throws err Containers.@container(
         x[i=1:2, j=1:2],
