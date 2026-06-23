@@ -785,9 +785,16 @@ function test_Plural_failures()
     model = Model()
     @test_throws_parsetime MethodError @variables(model)
     err = ErrorException(
-        "Invalid syntax for @variables. The second argument must be a `begin end` " *
-        "block. For example:\n" *
-        "```julia\n@variables(model, begin\n    # ... lines here ...\nend)\n```.",
+        """
+        Invalid syntax for @variables.
+
+        The second argument must be a `begin end` block. For example:
+        ```julia
+        @variables(model, begin
+            # ... lines here ...
+        end)
+        ```
+        """,
     )
     @test_throws_parsetime err @variables(model, x)
     @test_throws_parsetime err @variables(model, x >= 0)
@@ -909,6 +916,26 @@ function test_NaN_in_expression()
                 """,
             ),
             @expression(model, coef * x) |> moi_function,
+        )
+    end
+    return
+end
+
+function test_NaN_in_quad_expression()
+    model = Model()
+    @variable(model, x >= 0)
+    for coef in (NaN, Inf, -Inf)
+        @test_throws(
+            ErrorException(
+                """
+                Quadratic expression contains invalid term `$coef  * $x * $x`.
+
+                The coefficients in an quadratic expression must be finite. \
+                They cannot be values like `NaN`, `Inf`, or `-Inf`. Check for \
+                division by zero or other sources of non-finite values.
+                """,
+            ),
+            @expression(model, coef * x * x) |> moi_function,
         )
     end
     return
@@ -1700,7 +1727,11 @@ function test_bad_model_type()
     model = "Not a model"
     @test_throws(
         ErrorException(
-            "Expected model to be a JuMP model, but it has type String",
+            """
+            Expected model to be a JuMP model, but it has type String.
+
+            The first argument to a JuMP macro must be a subtype of `AbstractModel`.
+            """,
         ),
         @variable(model, x),
     )

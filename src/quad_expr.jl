@@ -624,9 +624,11 @@ function _assert_isfinite(q::GenericQuadExpr)
         if !isfinite(coef)
             error(
                 """
-                Invalid coefficient $coef on quadratic term $var1 * $var2.
+                Quadratic expression contains invalid term `$coef  * $var1 * $var2`.
 
-                Coefficients in quadratic expressions must be finite. Check for division by zero or other sources of non-finite values.
+                The coefficients in an quadratic expression must be finite. \
+                They cannot be values like `NaN`, `Inf`, or `-Inf`. Check for \
+                division by zero or other sources of non-finite values.
                 """,
             )
         end
