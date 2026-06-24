@@ -83,7 +83,11 @@ function test_standard_matrix_form_bad_constraint()
     @constraint(model, x in SecondOrderCone())
     @test_throws(
         ErrorException(
-            "Unsupported constraint type in `lp_matrix_data`: $(Vector{VariableRef}) -in- $(MOI.SecondOrderCone)",
+            """
+            Unsupported constraint type in `lp_matrix_data`: $(Vector{VariableRef})-in-$(MOI.SecondOrderCone).
+
+            The `lp_matrix_data` function supports only linear constraints. Reformulate the model to remove unsupported constraint types.
+            """,
         ),
         lp_matrix_data(model),
     )
@@ -96,7 +100,11 @@ function test_standard_matrix_form_bad_objective()
     @objective(model, Min, [2x + 1, 3x])
     @test_throws(
         ErrorException(
-            "Unsupported objective type in `lp_matrix_data`: $(Vector{AffExpr})",
+            """
+            Unsupported objective type in `lp_matrix_data`: $(Vector{AffExpr}).
+
+            The `lp_matrix_data` function supports only linear objectives. Reformulate the model to use a supported objective type.
+            """,
         ),
         lp_matrix_data(model),
     )

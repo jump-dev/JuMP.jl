@@ -28,7 +28,14 @@ function test_unsupported_function_in_macro()
     model = Model()
     @variable(model, x[1:2, 1:2])
     @test_throws(
-        ErrorException("The objective function `$x` is not supported by JuMP."),
+        ErrorException(
+            """
+            The objective function `$x` is not supported by JuMP.
+
+            Use an `AbstractJuMPScalar` (such as a variable or expression) or \
+            a real-valued constant as the objective function.
+            """,
+        ),
         @objective(model, Min, x),
     )
     return
@@ -56,8 +63,14 @@ function test_objective_coef_update_linear_objective_error()
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
         ErrorException(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` \
+            macro is set in the model, which does not support modification \
+            via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate \
+            to the new nonlinear interface using `@objective`.
+            """,
         ),
         set_objective_coefficient(model, x[1], 2),
     )
@@ -70,8 +83,14 @@ function test_objective_coef_update_linear_objective_batch_error()
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
         ErrorException(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` \
+            macro is set in the model, which does not support modification \
+            via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate \
+            to the new nonlinear interface using `@objective`.
+            """,
         ),
         set_objective_coefficient(model, [x[1], x[2]], [2, 3]),
     )
@@ -328,8 +347,14 @@ function test_set_objective_coefficient_quadratic_error()
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
         ErrorException(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` \
+            macro is set in the model, which does not support modification \
+            via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate \
+            to the new nonlinear interface using `@objective`.
+            """,
         ),
         set_objective_coefficient(model, x[1], x[1], 2),
     )
@@ -342,8 +367,14 @@ function test_set_objective_coefficient_quadratic_batch_error()
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
         ErrorException(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` \
+            macro is set in the model, which does not support modification \
+            via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate \
+            to the new nonlinear interface using `@objective`.
+            """,
         ),
         set_objective_coefficient(model, [x[1]], [x[1]], [2]),
     )

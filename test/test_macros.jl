@@ -500,7 +500,12 @@ function test_extension_build_constraint_SOS1(
     @test con.func == x
     @test con.set == MOI.SOS1(T[1, 2, 3])
     @test_throws(
-        ErrorException("Weight vector in SOS1 is not of length 3."),
+        ErrorException(
+            "Weight vector in SOS1 has length 1, but must be of length 3 " *
+            "to match the variable vector.\n\nEither omit the weight vector " *
+            "to use the default ordering `1:3`, or provide a weight vector " *
+            "with one entry per variable.\n",
+        ),
         @build_constraint(x in SOS1(T[1]))
     )
     @test con2 isa VectorConstraint
@@ -522,7 +527,12 @@ function test_extension_build_constraint_SOS2(
     @test con.func == x
     @test con.set == MOI.SOS2(T[1, 2, 3])
     @test_throws(
-        ErrorException("Weight vector in SOS2 is not of length 3."),
+        ErrorException(
+            "Weight vector in SOS2 has length 1, but must be of length 3 " *
+            "to match the variable vector.\n\nEither omit the weight vector " *
+            "to use the default ordering `1:3`, or provide a weight vector " *
+            "with one entry per variable.\n",
+        ),
         @build_constraint(x in SOS2(T[1]))
     )
     @test con2 isa VectorConstraint
@@ -775,9 +785,16 @@ function test_Plural_failures()
     model = Model()
     @test_throws_parsetime MethodError @variables(model)
     err = ErrorException(
-        "Invalid syntax for @variables. The second argument must be a `begin end` " *
-        "block. For example:\n" *
-        "```julia\n@variables(model, begin\n    # ... lines here ...\nend)\n```.",
+        """
+        Invalid syntax for @variables.
+
+        The second argument must be a `begin end` block. For example:
+        ```julia
+        @variables(model, begin
+            # ... lines here ...
+        end)
+        ```
+        """,
     )
     @test_throws_parsetime err @variables(model, x)
     @test_throws_parsetime err @variables(model, x >= 0)
@@ -899,6 +916,26 @@ function test_NaN_in_expression()
                 """,
             ),
             @expression(model, coef * x) |> moi_function,
+        )
+    end
+    return
+end
+
+function test_NaN_in_quad_expression()
+    model = Model()
+    @variable(model, x >= 0)
+    for coef in (NaN, Inf, -Inf)
+        @test_throws(
+            ErrorException(
+                """
+                Quadratic expression contains invalid term `$coef  * $x * $x`.
+
+                The coefficients in an quadratic expression must be finite. \
+                They cannot be values like `NaN`, `Inf`, or `-Inf`. Check for \
+                division by zero or other sources of non-finite values.
+                """,
+            ),
+            @expression(model, coef * x * x) |> moi_function,
         )
     end
     return
@@ -1090,9 +1127,12 @@ function test_Interval_errors()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "Interval constraint contains non-constant left- or right-hand " *
-        "sides. Reformulate as two separate constraints, or move all " *
-        "variables into the central term.",
+        """
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables into \
+        the central term.
+        """,
     )
     @test_throws err @NLconstraint(model, x <= x <= 2x)
     return
@@ -1687,7 +1727,11 @@ function test_bad_model_type()
     model = "Not a model"
     @test_throws(
         ErrorException(
-            "Expected model to be a JuMP model, but it has type String",
+            """
+            Expected model to be a JuMP model, but it has type String.
+
+            The first argument to a JuMP macro must be a subtype of `AbstractModel`.
+            """,
         ),
         @variable(model, x),
     )

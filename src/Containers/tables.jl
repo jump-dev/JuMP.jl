@@ -58,7 +58,12 @@ function rowtable(
     got, want = length(header), ndims(x) + 1
     if got != want
         error(
-            "Invalid number of column names provided: Got $got, expected $want.",
+            """
+            Invalid number of column names provided: got $got, expected $want.
+
+            Provide $want column names: one for each dimension of the array \
+            plus one for the value column.
+            """,
         )
     end
     elements = [(args..., f(x[i])) for (i, args) in _rows(x)]

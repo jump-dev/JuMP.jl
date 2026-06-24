@@ -48,7 +48,14 @@ _collect(::Base.SizeUnknown, x) = collect(x)
 _collect(::Any, x) = x
 
 function _collect(::Base.IsInfinite, x)
-    return error("Unable to form a container. Axis $(x) has infinite size!")
+    return error(
+        """
+        Unable to form a container because axis $x has infinite size.
+
+        Use a finite iterator as the index set, for example by providing \
+        an explicit range or vector of values.
+        """,
+    )
 end
 
 _collect(x) = _collect(Base.IteratorSize(x), x)

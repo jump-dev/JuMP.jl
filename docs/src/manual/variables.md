@@ -243,14 +243,13 @@ julia> @variable(model, x)
 x
 
 julia> @variable(model, x)
-ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
-    `x = @variable(model, [1:N], ...)` where the name of the object does
-    not appear inside the macro.
+ERROR: An object of name `:x` is already registered in this model.
 
-    Alternatively, use `unregister(model, :x)` to first unregister
-    the existing name from the model. Note that this will not delete the
-    object; it will just remove the reference at `model[:x]`.
+Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
+
+Alternatively, use `unregister(model, :x)` to first unregister the existing name from the model. Note that this will not delete the object from the model; it will just remove the reference at `model[:x]`.
+
+Stacktrace:
 [...]
 ```
 
@@ -536,8 +535,12 @@ julia> @variable(model, x >= 1)
 x
 
 julia> fix(x, 2)
-ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
+ERROR: Unable to fix x to 2 because it has existing variable bounds.
 
+Call `JuMP.fix(variable, value; force = true)` to delete existing bounds before fixing the variable.
+
+Stacktrace:
+[...]
 julia> fix(x, 2; force = true)
 
 
@@ -767,14 +770,13 @@ Deleting a variable does not unregister the corresponding name from the model.
 Therefore, creating a new variable of the same name will throw an error:
 ```jldoctest variables_delete
 julia> @variable(model, x)
-ERROR: An object of name x is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
-    `x = @variable(model, [1:N], ...)` where the name of the object does
-    not appear inside the macro.
+ERROR: An object of name `:x` is already registered in this model.
 
-    Alternatively, use `unregister(model, :x)` to first unregister
-    the existing name from the model. Note that this will not delete the
-    object; it will just remove the reference at `model[:x]`.
+Consider instead using the anonymous construction syntax, for example, `x = @variable(model, [1:N], ...)` where the name of the object does not appear inside the macro.
+
+Alternatively, use `unregister(model, :x)` to first unregister the existing name from the model. Note that this will not delete the object from the model; it will just remove the reference at `model[:x]`.
+
+Stacktrace:
 [...]
 ```
 

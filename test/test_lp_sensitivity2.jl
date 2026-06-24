@@ -77,12 +77,20 @@ function test_Error_handling()
     MOI.set(m, MOI.PrimalStatus(), MOI.NO_SOLUTION)
     MOI.set(m, MOI.DualStatus(), MOI.NO_SOLUTION)
     err = ErrorException(
-        "Unable to compute LP sensitivity: no primal solution available.",
+        """
+        Unable to compute LP sensitivity because no primal solution is available.
+
+        Call `optimize!(model)` and verify `has_values(model)` returns `true` before calling `lp_sensitivity_report`.
+        """,
     )
     @test_throws err lp_sensitivity_report(model)
     MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     err = ErrorException(
-        "Unable to compute LP sensitivity: no dual solution available.",
+        """
+        Unable to compute LP sensitivity because no dual solution is available.
+
+        Call `optimize!(model)` and verify `has_duals(model)` returns `true` before calling `lp_sensitivity_report`.
+        """,
     )
     @test_throws err lp_sensitivity_report(model)
     MOI.Utilities.loadfromstring!(
@@ -94,8 +102,11 @@ c: x in Interval(0.0, 1.0)
 """,
     )
     err = ErrorException(
-        "Unable to compute LP sensitivity because model is not a linear " *
-        "program (or it contains interval constraints).",
+        """
+        Unable to compute LP sensitivity because the model is not a linear program, or it contains interval constraints.
+
+        Remove any nonlinear or integer components, and replace any interval constraints with separate upper and lower bound constraints.
+        """,
     )
     @test_throws err lp_sensitivity_report(model)
     MOI.empty!(m)
@@ -108,8 +119,11 @@ c: [x, y] in Nonnegatives(2)
 """,
     )
     err = ErrorException(
-        "Unable to compute LP sensitivity because model is not a linear " *
-        "program (or it contains interval constraints).",
+        """
+        Unable to compute LP sensitivity because the model is not a linear program, or it contains interval constraints.
+
+        Remove any nonlinear or integer components, and replace any interval constraints with separate upper and lower bound constraints.
+        """,
     )
     @test_throws err lp_sensitivity_report(model)
     return
@@ -529,18 +543,22 @@ function test_variable_basis_status_error()
     MOI.set(inner, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     @test_throws(
         ErrorException(
-            "Unable to query LP sensitivity information because this solver " *
-            "does not support querying the status of variables in the " *
-            "optimal basis.",
+            """
+            Unable to compute LP sensitivity because the solver does not support querying the basis status of variables.
+
+            Try a different LP solver that supports `MOI.VariableBasisStatus`.
+            """,
         ),
         lp_sensitivity_report(model),
     )
     MOI.set(inner, MOI.VariableBasisStatus(), index(x), MOI.BASIC)
     @test_throws(
         ErrorException(
-            "Unable to query LP sensitivity information because this solver " *
-            "does not support querying the status of constraints in the " *
-            "optimal basis.",
+            """
+            Unable to compute LP sensitivity because the solver does not support querying the basis status of constraints.
+
+            Try a different LP solver that supports `MOI.ConstraintBasisStatus`.
+            """,
         ),
         lp_sensitivity_report(model),
     )
@@ -559,8 +577,11 @@ function test_degenerate_error()
     MOI.set(inner, MOI.VariableBasisStatus(), index(x), MOI.BASIC)
     @test_throws(
         ErrorException(
-            "Unable to compute LP sensitivity: problem is degenerate. Try " *
-            "adding variable bounds to free variables",
+            """
+            Unable to compute LP sensitivity because the basis matrix is not square, which indicates the problem is degenerate.
+
+            Try adding bounds to free variables to obtain a non-degenerate basis.
+            """,
         ),
         lp_sensitivity_report(model),
     )

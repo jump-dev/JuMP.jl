@@ -30,13 +30,25 @@ function test_mof_io()
     @objective(model, Min, 2 * x^2 + x + 1)
     io = IOBuffer()
     @test_throws(
-        ErrorException("Unable to infer the file format from an IO stream."),
+        ErrorException(
+            """
+            Unable to infer the file format from an IO stream.
+
+            Pass the `format` keyword argument explicitly, for example: `write(io, model; format = MOI.FileFormats.FORMAT_MPS)`.
+            """,
+        ),
         write(io, model; format = MOI.FileFormats.FORMAT_AUTOMATIC)
     )
     write(io, model; format = MOI.FileFormats.FORMAT_MOF, print_compact = true)
     seekstart(io)
     @test_throws(
-        ErrorException("Unable to infer the file format from an IO stream."),
+        ErrorException(
+            """
+            Unable to infer the file format from an IO stream.
+
+            Pass the `format` keyword argument explicitly, for example: `read(io, Model; format = MOI.FileFormats.FORMAT_MPS)`.
+            """,
+        ),
         read(io, Model; format = MOI.FileFormats.FORMAT_AUTOMATIC)
     )
     seekstart(io)
@@ -88,8 +100,11 @@ function test_unsupported_constraint()
     io = IOBuffer()
     F, S = MOI.VectorOfVariables, MOI.SecondOrderCone
     err = ErrorException(
-        "Unable to write problem to file because the chosen file format " *
-        "doesn't support constraints of the type $F-in-$S.",
+        """
+        Unable to write the model to file because the chosen file format does not support constraints of type $F-in-$S.
+
+        Try a different file format that supports this constraint type.
+        """,
     )
     @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
     return

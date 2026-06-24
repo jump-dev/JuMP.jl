@@ -260,9 +260,12 @@ function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(
-            "The solver does not support an objective function of type ",
-            typeof(func),
-            ".",
+            """
+            The solver does not support an objective function of type `$(typeof(func))`.
+
+            Use a different solver that supports this objective type, or \
+            reformulate the objective as a supported type.
+            """,
         )
     end
     MOI.set(model, attr, func)
@@ -301,7 +304,14 @@ function set_objective_function(
 end
 
 function set_objective_function(model::AbstractModel, func)
-    return error("The objective function `$(func)` is not supported by JuMP.")
+    return error(
+        """
+        The objective function `$(func)` is not supported by JuMP.
+
+        Use an `AbstractJuMPScalar` (such as a variable or expression) or \
+        a real-valued constant as the objective function.
+        """,
+    )
 end
 
 """
@@ -471,8 +481,12 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
         )
     end
     coeff_t = convert(T, coeff)::T
@@ -551,8 +565,12 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
         )
     end
     n, m = length(variables), length(coeffs)
@@ -634,8 +652,12 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
         )
     end
     coeff_t = convert(T, coeff)::T
@@ -717,8 +739,12 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error(
-            "A nonlinear objective created by the legacy `@NLobjective` is " *
-            "set in the model. This does not support modification.",
+            """
+            A nonlinear objective created by the legacy `@NLobjective` macro is \
+            set in the model, which does not support modification via `set_objective_coefficient`.
+
+            Use `@NLobjective` to replace the entire objective, or migrate to the new nonlinear interface using `@objective`.
+            """,
         )
     end
     n1, n2, m = length(variables_1), length(variables_2), length(coeffs)

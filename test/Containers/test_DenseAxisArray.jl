@@ -397,9 +397,9 @@ end
 function test_CartesianIndex_error()
     S = CartesianIndex.([2, 4])
     err = ErrorException(
-        "Unsupported index type `CartesianIndex` in axis: $S. Cartesian " *
-        "indices are restricted for indexing into and iterating over " *
-        "multidimensional arrays.",
+        "Unsupported index type `CartesianIndex` in axis: $S.\n\n" *
+        "Cartesian indices are restricted for indexing into and iterating " *
+        "over multidimensional arrays. Use integer or named indices instead.\n",
     )
     @test_throws(err, DenseAxisArray([1.1, 2.2], S))
     return
@@ -659,9 +659,15 @@ function test_containers_denseaxisarray_ambiguous_slice()
     key = reverse(new_key)
     @test_throws(
         ErrorException(
-            "ambiguous use of getindex with key $key. We cannot tell if " *
-            "you meant to return the single element corresponding to the " *
-            "key, or a slice for each element in the key.",
+            """
+            Ambiguous use of `getindex` with key $key.
+
+            JuMP cannot determine whether you want the single element at key $key, \
+            or a slice for each element in the key.
+
+            To avoid ambiguity, ensure the key is unambiguous, or restructure \
+            the container to avoid overlapping key types.
+            """,
         ),
         x[key],
     )
@@ -676,30 +682,44 @@ function test_containers_denseaxisarray_kwarg_indexing()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2],
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2],
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2],
     )
     Containers.@container(y[i=2:3, 1:2], i)
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         y[i=2, 2],
     )
@@ -715,23 +735,35 @@ function test_containers_denseaxisarray_kwarg_setindex()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2] = 3,
     )
@@ -758,23 +790,35 @@ function test_containers_denseaxisarrayview_kwarg_indexing()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2],
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2],
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2],
     )
@@ -789,9 +833,14 @@ function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
     end
     @test_throws(
         ErrorException(
-            "Invalid index i in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index i in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2],
     )
@@ -820,23 +869,35 @@ function test_containers_denseaxisarrayview_kwarg_setindex()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Cannot index with mix of positional and keyword arguments",
+            "Cannot index with a mix of positional and keyword arguments.\n\n" *
+            "Use either all positional arguments, such as `A[i, j]`, or all " *
+            "keyword arguments, such as `A[dim1 = i, dim2 = j]`.\n",
         ),
         x[i=2, 2] = 3,
     )
@@ -847,9 +908,10 @@ function test_sum_dims()
     Containers.@container(x[i=1:2, j=1:2], i + j, container = DenseAxisArray)
     @test_throws(
         ErrorException(
-            "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
-            "to an `Array` using `sum(Array(x); dims=2)`, or use an explicit " *
-            "for-loop summation instead.",
+            "`sum(x::DenseAxisArray; dims)` is not supported.\n\nConvert " *
+            "the array to a standard `Array` using " *
+            "`sum(Array(x); dims = 2)`, or use an explicit for-loop " *
+            "summation instead.\n",
         ),
         sum(x; dims = 2),
     )
@@ -871,7 +933,11 @@ end
 function test_LinearIndices()
     Containers.@container(x[i in 2:3], i)
     @test_throws(
-        ErrorException("DenseAxisArray does not support this operation."),
+        ErrorException(
+            "`LinearIndices` is not supported for `DenseAxisArray`.\n\n" *
+            "`DenseAxisArray` uses named axes instead of linear indices. " *
+            "Use `eachindex(A)` or iterate over `A.axes` directly.\n",
+        ),
         LinearIndices(x),
     )
     return

@@ -71,12 +71,15 @@ Base.hash(s::SparseAxisArray, h::UInt) = hash(s.data, h)
 
 function Base.size(::SparseAxisArray)
     return error(
-        "`Base.size` is not implemented for `SparseAxisArray` because " *
-        "although it is a subtype of `AbstractArray`, it is conceptually " *
-        "closer to a dictionary with `N`-dimensional keys. If you encounter " *
-        "this error and you didn't call `size` explicitly, it is because " *
-        "you called a method that is unsupported for `SparseAxisArray`s. " *
-        "Consult the JuMP documentation for a list of supported operations.",
+        """
+        `Base.size` is not implemented for `SparseAxisArray` because, \
+        although it is a subtype of `AbstractArray`, it is conceptually \
+        closer to a dictionary with N-dimensional keys.
+
+        If you did not call `size` explicitly, it is because you called a \
+        method that is unsupported for `SparseAxisArray`. Consult the JuMP \
+        documentation for a list of supported operations.
+        """,
     )
 end
 
@@ -123,9 +126,14 @@ function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
         kw = keys(kwargs)[i]
         if d.names[i] != kw
             error(
-                "Invalid index $kw in position $i. When using keyword " *
-                "indexing, the indices must match the exact name and order " *
-                "used when creating the container.",
+                """
+                Invalid index $kw in position $i.
+
+                When using keyword indexing, the indices must match the exact \
+                name and order used when creating the container.
+
+                Check the index names and their order in the container definition.
+                """,
             )
         end
         return kwargs[i]
@@ -140,7 +148,14 @@ function Base.setindex!(
 ) where {T,N,K}
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error(
+                """
+                Cannot index with a mix of positional and keyword arguments.
+
+                Use either all positional arguments, such as `A[i, j]`, or all keyword \
+                arguments, such as `A[dim1 = i, dim2 = j]`.
+                """,
+            )
         end
         return setindex!(d, value, _kwargs_to_args(d; kwargs...)...)
     end
@@ -171,7 +186,14 @@ function Base.getindex(
 ) where {T,N,K}
     if !isempty(kwargs)
         if !isempty(args)
-            error("Cannot index with mix of positional and keyword arguments")
+            error(
+                """
+                Cannot index with a mix of positional and keyword arguments.
+
+                Use either all positional arguments, such as `A[i, j]`, or all keyword \
+                arguments, such as `A[dim1 = i, dim2 = j]`.
+                """,
+            )
         end
         return getindex(d, _kwargs_to_args(d; kwargs...)...)
     end

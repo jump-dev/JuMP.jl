@@ -583,8 +583,7 @@ julia> f(x) = x^2
 f (generic function with 1 method)
 
 julia> @operator(model, f, 1, f)
-ERROR: Unable to add the nonlinear operator `:f` with the same name as
-an existing function.
+ERROR: Unable to add the nonlinear operator `:f` with the same name as an existing function.
 [...]
 ```
 This error occurs because `@operator(model, f, 1, f)` is equivalent to:

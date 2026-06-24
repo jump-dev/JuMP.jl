@@ -192,7 +192,15 @@ function test_optimize_hook()
     @test called
 
     m = Model()
-    err = ErrorException("Unrecognized keyword arguments: unexpected_arg")
+    err = ErrorException(
+        """
+        Unrecognized keyword arguments: unexpected_arg.
+
+        Only keyword arguments accepted by the optimize hook are \
+        supported. To pass parameters to the solver, use \
+        `set_attribute(model, key, value)` before calling `optimize!`.
+        """,
+    )
     @test_throws err optimize!(m, unexpected_arg = 1)
     set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
     @test optimize!(m) === nothing
@@ -454,15 +462,25 @@ function test_bridge_graph_false()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot use bridge if `add_bridges` was set to `false` in " *
-            "the `Model` constructor.",
+            """
+            Cannot use bridge functions because `add_bridges` was set to `false` in \
+            the `Model` constructor.
+
+            Recreate the model without setting `add_bridges = false`, or avoid calling \
+            functions that require bridges.
+            """,
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
-            "Cannot use bridge if `add_bridges` was set to " *
-            "`false` in the `Model` constructor.",
+            """
+            Cannot use bridge functions because `add_bridges` was set to `false` in \
+            the `Model` constructor.
+
+            Recreate the model without setting `add_bridges = false`, or avoid calling \
+            functions that require bridges.
+            """,
         ),
         print_bridge_graph(model)
     )
@@ -920,15 +938,11 @@ end
 function test_nlp_data_error()
     model = Model()
     err = ErrorException(
-        "The internal field `.nlp_data` was removed from `Model` in JuMP " *
-        "v.1.2.0. If you encountered this message without going " *
-        "`model.nlp_data`, it means you are using a package that is " *
-        "incompatible with your installed version of JuMP. As a " *
-        "temporary fix, install a compatible version with " *
-        "`import Pkg; Pkg.pkg\"add JuMP@1.1\"`, then restart Julia for " *
-        "the changes to take effect. In addition, you should open a " *
-        "GitHub issue for the package you are using so that the issue " *
-        "can be fixed for future users.",
+        """
+        The internal field `.nlp_data` was removed from `Model` in JuMP v1.2.0.
+
+        If you encountered this message without accessing `model.nlp_data` directly, it means you are using a package that is incompatible with your installed version of JuMP. As a temporary fix, install a compatible version with `import Pkg; Pkg.pkg"add JuMP@1.1"`, then restart Julia for the changes to take effect. You should also open a GitHub issue for the package you are using so that it can be fixed for future users.
+        """,
     )
     @test_throws(err, model.nlp_data)
     return
@@ -940,8 +954,12 @@ function test_reset_optimizer()
     )
     @test_throws(
         ErrorException(
-            "The `$(MOI.Utilities.reset_optimizer)` function is not " *
-            "supported in DIRECT mode.",
+            """
+            The `$(MOI.Utilities.reset_optimizer)` function is not \
+            supported for models created with `direct_model`.
+
+            Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+            """,
         ),
         MOI.Utilities.reset_optimizer(direct),
     )
@@ -963,8 +981,12 @@ function test_drop_optimizer()
     )
     @test_throws(
         ErrorException(
-            "The `$(MOI.Utilities.drop_optimizer)` function is not supported " *
-            "in DIRECT mode.",
+            """
+            The `$(MOI.Utilities.drop_optimizer)` function is not \
+            supported for models created with `direct_model`.
+
+            Use `Model(optimizer)` instead of `direct_model(optimizer)`.
+            """,
         ),
         MOI.Utilities.drop_optimizer(direct),
     )
@@ -1256,9 +1278,15 @@ function test_caching_mps_model()
     @variable(model, x >= 0)
     @test_throws(
         ErrorException(
-            "Cannot call `optimize!` because the provided optimizer is not " *
-            "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
-            "$(sprint(show, unsafe_backend(model)))\n",
+            """
+            Cannot call `optimize!` because the provided optimizer is not a subtype of `MOI.AbstractOptimizer`.
+
+            The optimizer provided was:
+
+            $(sprint(show, unsafe_backend(model)))
+
+            Ensure the optimizer passed to `Model()` implements the MOI interface.
+            """,
         ),
         optimize!(model),
     )
@@ -1421,7 +1449,13 @@ function test_optimizer_index()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "There is no `optimizer_index` as the optimizer is not synchronized with the cached model. Call `MOIU.attach_optimizer(model)` to synchronize it.",
+            """
+            There is no `optimizer_index` because the optimizer is not \
+            synchronized with the cached model.
+
+            Call `MOIU.attach_optimizer(model)` to synchronize, or use \
+            `optimize!(model)` which updates the optimizer automatically.
+            """,
         ),
         optimizer_index(x),
     )
@@ -1511,7 +1545,14 @@ function test_optimizer_index_bridged()
     CI = typeof(index(c))
     @test_throws(
         ErrorException(
-            "There is no `optimizer_index` for $CI constraints because they are bridged.",
+            """
+            There is no `optimizer_index` for `$CI` constraints because \
+            they are bridged.
+
+            Bridged constraints do not have a direct optimizer index. Use \
+            `add_bridges = false` in `Model()` to disable bridges if the \
+            solver supports the constraint type directly.
+            """,
         ),
         optimizer_index(c),
     )

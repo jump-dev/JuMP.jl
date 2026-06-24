@@ -89,11 +89,23 @@ function _oneto(indices::AbstractVector{<:Integer})
     if indices == 1:length(indices)
         return Base.OneTo(length(indices))
     end
-    return error("Index set for array is not one-based interval.")
+    return error(
+        """
+        Index set for array is not a one-based interval.
+
+        To use a non-standard index set, create a `DenseAxisArray` instead of a standard Julia `Array`.
+        """,
+    )
 end
 
 function _oneto(::Any)
-    return error("Index set for array is not one-based interval.")
+    return error(
+        """
+        Index set for array is not a one-based interval.
+
+        To use a non-standard index set, create a `DenseAxisArray` instead of a standard Julia `Array`.
+        """,
+    )
 end
 
 _oneto(indices::Base.OneTo) = indices
@@ -220,7 +232,10 @@ end
 
 function container(::Function, ::Any, D::Type)
     return error(
-        "Unable to build a container with the provided type $(D). Implement " *
-        "`Containers.container(::Function, indices, ::Type{$(D)})`.",
+        """
+        Unable to build a container with the provided type $D.
+
+        If you are developing a JuMP extension, implement `Containers.container(::Function, indices, ::Type{$D})`.
+        """,
     )
 end
