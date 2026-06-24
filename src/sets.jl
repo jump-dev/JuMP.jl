@@ -205,13 +205,15 @@ function moi_set(set::SOS1{T}, dim::Int) where {T}
     elseif length(set.weights) == dim
         return MOI.SOS1{T}(set.weights)
     else
-        error("""
-              Weight vector in SOS1 has length $(length(set.weights)), but \
-              must be of length $dim to match the variable vector.
+        error(
+            """
+            Weight vector in SOS1 has length $(length(set.weights)), but must be of \
+            length $dim to match the variable vector.
 
-              Either omit the weight vector to use the default ordering \
-              `1:$dim`, or provide a weight vector with one entry per variable.
-              """)
+            Either omit the weight vector to use the default ordering `1:$dim`, \
+            or provide a weight vector with one entry per variable.
+            """,
+        )
     end
 end
 
@@ -265,13 +267,15 @@ function moi_set(set::SOS2{T}, dim::Int) where {T}
     elseif length(set.weights) == dim
         return MOI.SOS2{T}(set.weights)
     else
-        error("""
-              Weight vector in SOS2 has length $(length(set.weights)), but \
-              must be of length $dim to match the variable vector.
+        error(
+            """
+            Weight vector in SOS2 has length $(length(set.weights)), but must be of \
+            length $dim to match the variable vector.
 
-              Either omit the weight vector to use the default ordering \
-              `1:$dim`, or provide a weight vector with one entry per variable.
-              """)
+            Either omit the weight vector to use the default ordering `1:$dim`, \
+            or provide a weight vector with one entry per variable.
+            """,
+        )
     end
 end
 

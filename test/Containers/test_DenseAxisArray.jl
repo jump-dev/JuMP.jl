@@ -682,19 +682,27 @@ function test_containers_denseaxisarray_kwarg_indexing()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2],
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2],
     )
@@ -727,19 +735,27 @@ function test_containers_denseaxisarray_kwarg_setindex()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2] = 2,
     )
@@ -774,19 +790,27 @@ function test_containers_denseaxisarrayview_kwarg_indexing()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2],
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2],
     )
@@ -809,10 +833,14 @@ function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
     end
     @test_throws(
         ErrorException(
-            "Invalid index i in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index i in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2],
     )
@@ -841,19 +869,27 @@ function test_containers_denseaxisarrayview_kwarg_setindex()
     end
     @test_throws(
         ErrorException(
-            "Invalid index j in position 1. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index j in position 1.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[j=1, i=2] = 2,
     )
     @test_throws(
         ErrorException(
-            "Invalid index k in position 2. When using keyword indexing, the " *
-            "indices must match the exact name and order used when creating " *
-            "the container.\n\nCheck the index names and their order in the " *
-            "container definition.\n",
+            """
+            Invalid index k in position 2.
+
+            When using keyword indexing, the indices must match the exact name \
+            and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
         ),
         x[i=2, k=2] = 2,
     )

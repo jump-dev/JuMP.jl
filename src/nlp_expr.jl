@@ -1059,31 +1059,32 @@ end
 
 function _catch_redefinition_constant_error(op::Symbol, f::Function, args...)
     if op == Symbol(f)
-        error("""
-              Unable to add the nonlinear operator `:$op` with the same name as
-              an existing function.
+        error(
+            """
+            Unable to add the nonlinear operator `:$op` with the same name as an existing function.
 
-              For example, this code will error:
-              ```julia
-              model = Model()
-              f(x) = x^2
-              @operator(model, f, 1, f)
-              ```
-              because it is equivalent to:
-              ```julia
-              model = Model()
-              f(x) = x^2
-              f = add_nonlinear_operator(model, 1, f; name = :f)
-              ```
+            For example, this code will error:
+            ```julia
+            model = Model()
+            f(x) = x^2
+            @operator(model, f, 1, f)
+            ```
+            because it is equivalent to:
+            ```julia
+            model = Model()
+            f(x) = x^2
+            f = add_nonlinear_operator(model, 1, f; name = :f)
+            ```
 
-              To fix, use a unique name, like `op_$op`:
-              ```julia
-              model = Model()
-              f(x) = x^2
-              @operator(model, op_f, 1, f)
-              @expression(model, op_f(x))
-              ```
-              """)
+            To fix, use a unique name, like `op_$op`:
+            ```julia
+            model = Model()
+            f(x) = x^2
+            @operator(model, op_f, 1, f)
+            @expression(model, op_f(x))
+            ```
+            """,
+        )
     end
     return
 end

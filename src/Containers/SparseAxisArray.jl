@@ -125,14 +125,16 @@ function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if d.names[i] != kw
-            error("""
-                  Invalid index $kw in position $i. When using keyword \
-                  indexing, the indices must match the exact name and order \
-                  used when creating the container.
+            error(
+                """
+                Invalid index $kw in position $i.
 
-                  Check the index names and their order in the container \
-                  definition.
-                  """)
+                When using keyword indexing, the indices must match the exact \
+                name and order used when creating the container.
+
+                Check the index names and their order in the container definition.
+                """,
+            )
         end
         return kwargs[i]
     end
@@ -146,12 +148,14 @@ function Base.setindex!(
 ) where {T,N,K}
     if !isempty(kwargs)
         if !isempty(args)
-            error("""
-                  Cannot index with a mix of positional and keyword arguments.
+            error(
+                """
+                Cannot index with a mix of positional and keyword arguments.
 
-                  Use either all positional arguments, such as `A[i, j]`, or \
-                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
-                  """)
+                Use either all positional arguments, such as `A[i, j]`, or all keyword \
+                arguments, such as `A[dim1 = i, dim2 = j]`.
+                """,
+            )
         end
         return setindex!(d, value, _kwargs_to_args(d; kwargs...)...)
     end
@@ -182,12 +186,14 @@ function Base.getindex(
 ) where {T,N,K}
     if !isempty(kwargs)
         if !isempty(args)
-            error("""
-                  Cannot index with a mix of positional and keyword arguments.
+            error(
+                """
+                Cannot index with a mix of positional and keyword arguments.
 
-                  Use either all positional arguments, such as `A[i, j]`, or \
-                  all keyword arguments, such as `A[dim1 = i, dim2 = j]`.
-                  """)
+                Use either all positional arguments, such as `A[i, j]`, or all keyword \
+                arguments, such as `A[dim1 = i, dim2 = j]`.
+                """,
+            )
         end
         return getindex(d, _kwargs_to_args(d; kwargs...)...)
     end

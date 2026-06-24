@@ -170,12 +170,13 @@ struct VariableInfo{S,T,U,V}
             upper_bound = NaN
         end
         if has_fix && !_isfinite(fixed_value)
-            error("""
-                  Unable to fix variable to $fixed_value because the value is \
-                  not finite.
+            error(
+                """
+                Unable to fix variable to $fixed_value because the value is not finite.
 
-                  Use a finite value instead.
-                  """)
+                Use a finite value instead.
+                """,
+            )
         end
         return new{typeof(lower_bound),typeof(upper_bound),U,V}(
             has_lb,
@@ -2973,22 +2974,20 @@ function _relax_or_fix_integrality(
     model::GenericModel{T},
 ) where {T}
     if num_constraints(model, GenericVariableRef{T}, MOI.Semicontinuous{T}) > 0
-        error("""
-              Support for relaxing semicontinuous constraints is not yet \
-              implemented.
+        error(
+            """
+            Support for relaxing semicontinuous constraints is not yet implemented.
 
-              Remove all semicontinuous constraints from the model before \
-              calling `relax_integrality`.
-              """)
+            Remove all semicontinuous constraints from the model before calling `relax_integrality`.
+            """,
+        )
     end
     if num_constraints(model, GenericVariableRef{T}, MOI.Semiinteger{T}) > 0
         error(
             """
-            Support for relaxing semi-integer constraints is not yet \
-            implemented.
+            Support for relaxing semi-integer constraints is not yet implemented.
 
-            Remove all semi-integer constraints from the model before calling \
-            `relax_integrality`.
+            Remove all semi-integer constraints from the model before calling `relax_integrality`.
             """,
         )
     end
