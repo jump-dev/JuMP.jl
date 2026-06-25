@@ -52,7 +52,13 @@ function _set_lower_bound_or_error(
     lower,
 )
     if info.has_lb
-        error_fn("Cannot specify variable lower_bound twice")
+        error_fn(
+            """
+            Cannot specify variable lower_bound twice.
+
+            This can happen if you used both the `>= lower` syntax, and the `lower_bound =` keyword.
+            """,
+        )
     end
     info.has_lb = true
     info.lower_bound = lower
@@ -65,7 +71,13 @@ function _set_upper_bound_or_error(
     upper,
 )
     if info.has_ub
-        error_fn("Cannot specify variable upper_bound twice")
+        error_fn(
+            """
+            Cannot specify variable upper_bound twice.
+
+            This can happen if you used both the `<= upper` syntax, and the `upper_bound =` keyword.
+            """,
+        )
     end
     info.has_ub = true
     info.upper_bound = upper
@@ -82,7 +94,11 @@ end
 function _set_binary_or_error(error_fn::Function, info::_VariableInfoExpr)
     if info.binary
         error_fn(
-            "'Bin' and 'binary' keyword argument cannot both be specified.",
+            """
+            'Bin' and 'binary' keyword argument cannot both be specified.
+
+            Do `@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.
+            """,
         )
     end
     info.binary = true
@@ -92,7 +108,11 @@ end
 function _set_integer_or_error(error_fn::Function, info::_VariableInfoExpr)
     if info.integer
         error_fn(
-            "'Int' and 'integer' keyword argument cannot both be specified.",
+            """
+            'Int' and 'integer' keyword argument cannot both be specified.
+
+            Do `@variable(model, x, Int)` or `@variable(model, x, integer = true)`.
+            """,
         )
     end
     info.integer = true

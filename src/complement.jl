@@ -16,8 +16,12 @@ function _build_complements_constraint(
 )
     if size(F) != size(x)
         errorf(
-            "size of mapping does not match size of variables: " *
-            "$(size(F)) != $(size(x)).",
+            """
+            The number of elements in the left-hand side $(size(F)) does not match the right-hand side $(size(x)).
+
+            There must be a one-to-one mapping between the left- and right-hand \
+            sides of a complementarity constraint.
+            """,
         )
     end
     return VectorConstraint([F; x], MOI.Complements(2 * length(F)))
@@ -42,9 +46,15 @@ end
 function _build_complements_constraint(
     errorf::Function,
     ::AbstractArray{<:Union{Real,AbstractJuMPScalar}},
-    ::AbstractArray{<:AbstractJuMPScalar},
+    x::AbstractArray{<:AbstractJuMPScalar},
 )
-    return errorf("second term must be an array of variables.")
+    return errorf(
+        """
+        The right-hand side in a complementarity constraint must be a variable.
+
+        Currently, it is a `$(typeof(x))`.
+        """,
+    )
 end
 
 function _build_complements_constraint(
@@ -58,9 +68,15 @@ end
 function _build_complements_constraint(
     errorf::Function,
     ::Union{Real,AbstractJuMPScalar},
-    ::AbstractJuMPScalar,
+    x::AbstractJuMPScalar,
 )
-    return errorf("second term must be a variable.")
+    return errorf(
+        """
+        The right-hand side term in the complementarity constraint must be a variable.
+
+        Currently, it is a `$(typeof(x))`.
+        """,
+    )
 end
 
 function parse_constraint_call(

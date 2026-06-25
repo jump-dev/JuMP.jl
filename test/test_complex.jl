@@ -308,10 +308,14 @@ function test_HermitianPSDCone_general_matrix_error()
     @test !(Y isa LinearAlgebra.Hermitian)
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, Y in HermitianPSDCone())`: " *
-            "Unable to add matrix in HermitianPSDCone because the matrix is " *
-            "not a subtype of `LinearAlgebra.Hermitian`. To fix, wrap the " *
-            "matrix `H` in `LinearAlgebra.Hermitian(H)`.",
+            """
+            In `@constraint(model, Y in HermitianPSDCone())`:
+
+            Unable to add matrix in HermitianPSDCone because the matrix is \
+            not a subtype of `LinearAlgebra.Hermitian`.
+
+            To fix, wrap the matrix `H` in `LinearAlgebra.Hermitian(H)`.
+            """,
         ),
         @constraint(model, Y in HermitianPSDCone()),
     )

@@ -23,8 +23,11 @@ function _build_indicator_constraint(
     ::Type{<:MOI.Indicator},
 ) where {F}
     return error_fn(
-        "unable to build indicator constraint with the left-hand side term " *
-        "`($lhs)::$F`. The left-hand side must be a binary decision variable.",
+        """
+        Unable to build indicator constraint with the left-hand side term `($lhs)::$F`.
+
+        The left-hand side must be a binary decision variable.
+        """,
     )
 end
 
@@ -36,7 +39,11 @@ function _indicator_variable_set(error_fn::Function, expr::Expr)
     if expr.args[1] == :¬ || expr.args[1] == :!
         if length(expr.args) != 2
             error_fn(
-                "Invalid binary variable expression `$(expr)` for indicator constraint.",
+                """
+                Invalid binary variable expression `$(expr)` for indicator constraint.
+
+                The indicator variable must be a single binary variable.
+                """,
             )
         end
         return expr.args[2], MOI.Indicator{MOI.ACTIVATE_ON_ZERO}
@@ -59,15 +66,22 @@ function parse_constraint_call(
 )
     variable, S = _indicator_variable_set(error_fn, lhs)
     if !Meta.isexpr(rhs, :braces) || length(rhs.args) != 1
-        error_fn(
-            "Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
-        )
+        error_fn("""
+                 Invalid right-hand side `$(rhs)` of indicator constraint.
+
+                 Expected a constraint surrounded by `{` and `}`.
+                 """)
     end
     rhs_vectorized, rhs_parsecode, rhs_build_call =
         parse_constraint(error_fn, rhs.args[1])
     if vectorized != rhs_vectorized
         error_fn(
-            "Inconsistent use of `.` in symbols to indicate vectorization.",
+            """
+            Inconsistent use of `.` in symbols to indicate vectorization.
+
+            The left-hand side $(vectorized ? "is" : "is not") vectorized, but \
+            the right-hand side $(rhs_vectorized ? "is" : "is not") vectorized.
+            """,
         )
     end
     f, lhs_parse_code = _rewrite_expression(variable)

@@ -16,14 +16,19 @@ function parse_constraint_call(
     rhs,
 )
     if !Meta.isexpr(rhs, :braces) || length(rhs.args) != 1
-        error_fn(
-            "Invalid right-hand side `$(rhs)` of reified constraint. " *
-            "Expected constraint surrounded by `{` and `}`.",
-        )
+        error_fn("""
+                 Invalid right-hand side `$(rhs)` of reified constraint.
+
+                 Expected a constraint surrounded by `{` and `}`.
+                 """)
     end
     vectorized, parse_code, build_call = parse_constraint(error_fn, rhs.args[1])
     if vectorized
-        error_fn("vectorized constraints cannot be used with reification.")
+        error_fn("""
+                 Vectorized constraints cannot be used with reification.
+
+                 Remove any broadcasting operators `.`.
+                 """)
     end
     new_build_call =
         Expr(:call, :_build_reified_constraint, error_fn, esc(lhs), build_call)

@@ -57,10 +57,13 @@ function test_reified_inconsistent()
     @variable(model, z, Bin)
     expr = :(z <--> {x .== 1})
     @test_throws_parsetime(
-        ErrorException(
-            "In `@constraint(model, $expr)`: " *
-            "vectorized constraints cannot be used with reification.",
-        ),
+        ErrorException("""
+                       In `@constraint(model, $expr)`:
+
+                       Vectorized constraints cannot be used with reification.
+
+                       Remove any broadcasting operators `.`.
+                       """),
         @constraint(model, z <--> {x .== 1})
     )
     return
@@ -72,11 +75,13 @@ function test_reified_no_curly_bracket()
     @variable(model, z, Bin)
     expr = :(z <--> x == 1)
     @test_throws_parsetime(
-        ErrorException(
-            "In `@constraint(model, $expr)`: " *
-            "Invalid right-hand side `x == 1` of reified constraint. " *
-            "Expected constraint surrounded by `{` and `}`.",
-        ),
+        ErrorException("""
+                       In `@constraint(model, $expr)`:
+
+                       Invalid right-hand side `x == 1` of reified constraint.
+
+                       Expected a constraint surrounded by `{` and `}`.
+                       """),
         @constraint(model, z <--> x == 1)
     )
     return

@@ -354,7 +354,11 @@ end
 function _square_side(error_fn::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
-        error_fn("Symmetric variables must be square. Got size ($n, $m).")
+        error_fn("""
+                 Symmetric variables must be square.
+
+                 Got size ($n, $m).
+                 """)
     end
     return n
 end
@@ -362,10 +366,16 @@ end
 function _vectorize_variables(error_fn::Function, matrix::Matrix)
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
-        for i in 1:j
+        for i in 1:(j-1)
             if matrix[i, j] != matrix[j, i]
                 error_fn(
-                    "Non-symmetric bounds, integrality or starting values for symmetric variable.",
+                    """
+                    Data associated with a symmetric variable is not symmetric.
+
+                    Check elements ($i, $j) and ($j, $i).
+
+                    Symmetric variables must have symmetric bounds and starting values.
+                    """,
                 )
             end
         end
@@ -681,9 +691,12 @@ function build_constraint(
     cone::HermitianPSDCone,
 )
     return error_fn(
-        "Unable to add matrix in HermitianPSDCone because the matrix is " *
-        "not a subtype of `LinearAlgebra.Hermitian`. To fix, wrap the matrix " *
-        "`H` in `LinearAlgebra.Hermitian(H)`.",
+        """
+        Unable to add matrix in HermitianPSDCone because the matrix is not a \
+        subtype of `LinearAlgebra.Hermitian`.
+
+        To fix, wrap the matrix `H` in `LinearAlgebra.Hermitian(H)`.
+        """,
     )
 end
 
@@ -718,28 +731,42 @@ reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
 
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonnegatives)
     return error_fn(
-        "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
-        "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
-        "or `@constraint(model, X >= 0, HermitianPSDCone())`.",
+        """
+        Unsupported matrix in vector-valued set.
+
+        Did you mean to use the broadcasting syntax `.>=` instead?
+
+        Alternatively, perhaps you are missing a set argument like \
+        `@constraint(model, X >= 0, PSDCone())` or \
+        `@constraint(model, X >= 0, HermitianPSDCone())`.
+        """,
     )
 end
 
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonpositives)
     return error_fn(
-        "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
-        "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
-        "or `@constraint(model, X <= 0, HermitianPSDCone())`.",
+        """
+        Unsupported matrix in vector-valued set.
+
+        Did you mean to use the broadcasting syntax `.<=` instead?
+
+        Alternatively, perhaps you are missing a set argument like \
+        `@constraint(model, X <= 0, PSDCone())` or \
+        `@constraint(model, X <= 0, HermitianPSDCone())`.
+        """,
     )
 end
 
 function build_constraint(error_fn::Function, ::AbstractMatrix, ::Zeros)
     return error_fn(
-        "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
-        "this syntax is supported in the special case that the matrices are " *
-        "`Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.",
+        """
+        Unsupported matrix in vector-valued set.
+
+        Did you mean to use the broadcasting syntax `.==` for element-wise equality?
+
+        Alternatively, this syntax is supported in the special case that the \
+        matrices are `Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.
+        """,
     )
 end
 
@@ -846,9 +873,11 @@ for S in (Nonnegatives, Nonpositives, Zeros)
                 ::Nonpositives,
                 set::$S,
             )
-                return error_fn(
-                    "The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
-                )
+                return error_fn("""
+                                The syntax `x <= y, $set` not supported.
+
+                                Use `y >= x, $set` instead.
+                                """)
             end
         end
     end

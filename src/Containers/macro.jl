@@ -49,15 +49,23 @@ function parse_macro_arguments(
         if Meta.isexpr(arg, :(=), 2)
             if haskey(kwargs, arg.args[1])
                 error_fn(
-                    "the keyword argument `$(arg.args[1])` was given " *
-                    "multiple times.",
+                    """
+                    The keyword argument `$(arg.args[1])` was given multiple times.
+                    """,
                 )
             elseif valid_kwargs !== nothing && !(arg.args[1] in valid_kwargs)
-                error_fn("unsupported keyword argument `$(arg.args[1])`.")
+                error_fn("""
+                         Unsupported keyword argument `$(arg.args[1])`.
+                         """)
             elseif !(arg.args[1] isa Symbol)
                 error_fn(
-                    "Invalid keyword argument detected. If you are trying to " *
-                    "construct an equality constraint, use `==` instead of `=`.",
+                    """
+                    Invalid keyword argument detected.
+
+                    The left-hand side of the `=` operator was `$(arg.args[1])`.
+
+                    If you are trying to construct an equality constraint, use `==` instead of `=`.
+                    """,
                 )
             end
             kwargs[arg.args[1]] = arg.args[2]
@@ -69,14 +77,18 @@ function parse_macro_arguments(
         n = length(pos_args)
         if n != num_positional_args
             error_fn(
-                "expected $num_positional_args positional arguments, got $n.",
+                """
+                Expected $num_positional_args positional arguments, got $n.
+                """,
             )
         end
     elseif num_positional_args isa UnitRange{Int}
         if !(length(pos_args) in num_positional_args)
             a, b = num_positional_args.start, num_positional_args.stop
             error_fn(
-                "expected $a to $b positional arguments, got $(length(pos_args)).",
+                """
+                Expected $a to $b positional arguments, got $(length(pos_args)).
+                """,
             )
         end
     end
@@ -96,8 +108,9 @@ function _explicit_oneto(error_fn, index_set)
             $index_set
         catch
             $error_fn(
-                "unexpected error parsing reference set: ",
+                "Unexpected error parsing reference set: ",
                 $(Meta.quot(_drop_esc(index_set))),
+                "\n",
             )
         end
     end
@@ -178,8 +191,11 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
         name = popfirst!(c.args)
         if !(name isa Symbol)
             error_fn(
-                "Unsupported syntax: the expression `$name` cannot be used " *
-                "as a name.",
+                """
+                The expression `$name` cannot be used as a name.
+
+                Names must be symbols, not expressions, and they cannot contain spaces.
+                """,
             )
         end
     end
@@ -188,9 +204,12 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
         # the second argument.
         if length(c.args) > 2
             error_fn(
-                "Unsupported syntax $c: There can be at most one filtering " *
-                "condition, which is separated from the indices by a single " *
-                "`;`.",
+                """
+                Unsupported syntax `$c`.
+
+                There can be at most one filtering condition, which is separated \
+                from the indices by a single `;`.
+                """,
             )
         elseif length(c.args) == 2
             condition = pop!(c.args)
@@ -247,7 +266,13 @@ function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
 end
 
 function _container_name(error_fn::Function, x)
-    return error_fn("Expression `$x::$(typeof(x))` cannot be used as a name.")
+    return error_fn(
+        """
+        Expression `$x::$(typeof(x))` cannot be used as a name.
+
+        Names must be symbols, not expressions, and they cannot contain spaces.
+        """,
+    )
 end
 
 _container_name(::Function, expr::Union{Symbol,Nothing}) = expr
@@ -258,7 +283,13 @@ function _container_name(error_fn::Function, expr::Expr)
     elseif Meta.isexpr(expr, (:ref, :typed_vcat))
         return _container_name(error_fn, expr.args[1])
     end
-    return error_fn("Expression $expr cannot be used as a name.")
+    return error_fn(
+        """
+        Expression `$expr` cannot be used as a name.
+
+        Names must be symbols, not expressions, and they cannot contain spaces.
+        """,
+    )
 end
 
 """
@@ -305,8 +336,11 @@ function parse_ref_sets(
     for name in invalid_index_variables
         if name in index_vars
             error_fn(
-                "the index name `$name` conflicts with another variable in " *
-                "this scope. Use a different name for the index.",
+                """
+                The index name `$name` conflicts with another variable in this scope.
+
+                Use a different name for the index.
+                """,
             )
         end
     end
@@ -342,7 +376,9 @@ additionally prints the macro from which it was called.
 """
 function build_error_fn(macro_name, args, source)
     msg = build_macro_expression_string(macro_name, args)
-    error_fn(str...) = error("At $(source.file):$(source.line): $msg: ", str...)
+    function error_fn(str...)
+        return error("At $(source.file):$(source.line): $msg:\n\n", str...)
+    end
     return error_fn
 end
 
@@ -357,8 +393,11 @@ function build_ref_sets(error_fn::Function, expr)
     index_vars, index_sets, condition = _parse_ref_sets(error_fn, expr)
     if any(_expr_is_splat, index_sets)
         error_fn(
-            "cannot use splatting operator `...` in the definition of an " *
-            "index set.",
+            """
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         )
     end
     if !_has_dependent_sets(index_vars, index_sets) && condition == :()
@@ -377,8 +416,9 @@ function build_ref_sets(error_fn::Function, expr)
                     $(index_sets[i])
                 catch
                     $error_fn(
-                        "unexpected error parsing reference set: ",
+                        "Unexpected error parsing reference set: ",
                         $(Meta.quot(_drop_esc(index_sets[i]))),
+                        "\n",
                     )
                 end
             end,
@@ -390,8 +430,9 @@ function build_ref_sets(error_fn::Function, expr)
                 $(esc(condition))
             catch
                 $error_fn(
-                    "unexpected error parsing condition: ",
+                    "Unexpected error parsing condition: ",
                     $(Meta.quot(condition)),
+                    "\n",
                 )
             end
         end

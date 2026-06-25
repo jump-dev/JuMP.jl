@@ -129,8 +129,13 @@ end
 
 function _moi_sense(error_fn::Function, sense)
     return error_fn(
-        "unexpected sense `$sense`. The sense must be an " *
-        "`::MOI.OptimizatonSense`, or the symbol `:Min` or `:Max`.",
+        """
+        Unexpected objective sense `$sense`.
+
+        The sense must be an `::MOI.OptimizationSense`, or one of the \
+        symbols `:Min` or `:Max`. For example, use \
+        `@objective(model, Min, x)` or `@objective(model, Max, x)`.
+        """,
     )
 end
 

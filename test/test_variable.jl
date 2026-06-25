@@ -599,32 +599,50 @@ function test_extension_variables_constrained_on_creation_errors(
     model = ModelType()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: " *
-            "Cannot use set keyword because the variable is already " *
-            "constrained to `$(Expr(:escape, :(SecondOrderCone())))`.",
+            """
+            In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`:
+
+            Cannot use the `set` keyword argument because the variable is already \
+            constrained to `$(Expr(:escape, :(SecondOrderCone())))`.
+
+            Remove either the inline set constraint or the `set` keyword argument.
+            """,
         ),
         @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone()),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: " *
-            "Cannot pass `PSD` as a positional argument because the variable " *
-            "is already constrained to `$(Expr(:escape, :(SecondOrderCone())))`.",
+            """
+            In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`:
+
+            Cannot pass `PSD` as a positional argument because the variable \
+            is already constrained to `$(Expr(:escape, :(SecondOrderCone())))`.
+
+            Remove either the inline set constraint or the `PSD` positional argument.
+            """,
         ),
         @variable(model, x[1:2] in SecondOrderCone(), PSD),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:2, 1:2], PSD, Symmetric)`: " *
-            "Cannot pass `Symmetric` as a positional argument because the " *
-            "variable is already constrained to `$(PSDCone())`.",
+            """
+            In `@variable(model, x[1:2, 1:2], PSD, Symmetric)`:
+
+            Cannot pass `Symmetric` as a positional argument because the \
+            variable is already constrained to `$(PSDCone())`.
+
+            Remove either the inline set constraint or the `Symmetric` positional argument.
+            """,
         ),
         @variable(model, x[1:2, 1:2], PSD, Symmetric),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: " *
-            "the keyword argument `set` was given multiple times.",
+            """
+            In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`:
+
+            The keyword argument `set` was given multiple times.
+            """,
         ),
         @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone()),
     )
