@@ -471,11 +471,7 @@ function parse_constraint_head(
         used as a constraint.
 
         You may have written `@constraint(model, name, [...], ...)` when \
-        you meant `@constraint(model, name[...], ...)`. Use the second form \
-        to index the constraint name:
-        ```julia
-        @constraint(model, name[...], ...)
-        ```
+        you meant `@constraint(model, name[...], ...)`.
         """,
     )
 end

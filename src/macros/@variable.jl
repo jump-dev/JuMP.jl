@@ -157,23 +157,25 @@ macro variable(input_args...)
     model = esc(model_sym)
     x = isempty(args) ? nothing : popfirst!(args)
     if x == :Int
-        error_fn("""
-                 Ambiguous variable name `$x` detected.
+        error_fn(
+            """
+            Ambiguous variable name `$x` detected.
 
-                 `Int` is a Julia type, not a valid variable name.
+            `Int` is a Julia type, not a valid variable name.
 
-                 To create an anonymous integer variable, use \
-                 `@variable(model, integer = true)` instead.
-                 """)
+            To create an anonymous integer variable, use `@variable(model, integer = true)` instead.
+            """,
+        )
     elseif x == :Bin
-        error_fn("""
-                 Ambiguous variable name `$x` detected.
+        error_fn(
+            """
+            Ambiguous variable name `$x` detected.
 
-                 `Bin` is a JuMP keyword, not a valid variable name.
+            `Bin` is a JuMP keyword, not a valid variable name.
 
-                 To create an anonymous binary variable, use \
-                 `@variable(model, binary = true)` instead.
-                 """)
+            To create an anonymous binary variable, use `@variable(model, binary = true)` instead.
+            """,
+        )
     elseif x == :PSD
         error_fn(
             """
@@ -222,8 +224,7 @@ macro variable(input_args...)
             Expected `$var` to be a variable name, but got a \
             `$(typeof(var))`.
 
-            The variable name must be a symbol or expression. For example, \
-            use `@variable(model, x)` or `@variable(model, x[1:n])`.
+            The variable name must be a symbol. For example, use `@variable(model, x)` or `@variable(model, x[1:n])`.
             """,
         )
     end
@@ -748,8 +749,9 @@ function build_variable(
     if length(args) > 0
         error_fn(
             """
-            Unrecognized positional arguments: $(args). You may have passed \
-            an unrecognized type or a keyword value to `variable_type`.
+            Unrecognized positional arguments: $(args).
+
+            You may have passed an unrecognized type or a keyword value to `variable_type`.
 
             If you're trying to create a JuMP extension, you need to \
             implement `build_variable`. Read the docstring for more details.

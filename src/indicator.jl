@@ -66,11 +66,13 @@ function parse_constraint_call(
 )
     variable, S = _indicator_variable_set(error_fn, lhs)
     if !Meta.isexpr(rhs, :braces) || length(rhs.args) != 1
-        error_fn("""
-                 Invalid right-hand side `$(rhs)` of indicator constraint.
+        error_fn(
+            """
+            Invalid right-hand side `$(rhs)` of an indicator constraint.
 
-                 Expected a constraint surrounded by `{` and `}`.
-                 """)
+            Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
+            """,
+        )
     end
     rhs_vectorized, rhs_parsecode, rhs_build_call =
         parse_constraint(error_fn, rhs.args[1])

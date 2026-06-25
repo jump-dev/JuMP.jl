@@ -54,9 +54,13 @@ function parse_macro_arguments(
                     """,
                 )
             elseif valid_kwargs !== nothing && !(arg.args[1] in valid_kwargs)
-                error_fn("""
-                         Unsupported keyword argument `$(arg.args[1])`.
-                         """)
+                error_fn(
+                    """
+                    Unsupported keyword argument `$(arg.args[1])`.
+
+                    If you are trying to construct an equality constraint, use `==` instead of `=`.
+                    """,
+                )
             elseif !(arg.args[1] isa Symbol)
                 error_fn(
                     """
@@ -110,7 +114,7 @@ function _explicit_oneto(error_fn, index_set)
             $error_fn(
                 "Unexpected error parsing reference set: ",
                 $(Meta.quot(_drop_esc(index_set))),
-                "\n",
+                "\n\nSee the \"caused by\" stacktrace below for the underlying error.\n",
             )
         end
     end
@@ -418,7 +422,7 @@ function build_ref_sets(error_fn::Function, expr)
                     $error_fn(
                         "Unexpected error parsing reference set: ",
                         $(Meta.quot(_drop_esc(index_sets[i]))),
-                        "\n",
+                        "\n\nSee the \"caused by\" stacktrace below for the underlying error.\n",
                     )
                 end
             end,
@@ -432,7 +436,7 @@ function build_ref_sets(error_fn::Function, expr)
                 $error_fn(
                     "Unexpected error parsing condition: ",
                     $(Meta.quot(condition)),
-                    "\n",
+                    "\n\nSee the \"caused by\" stacktrace below for the underlying error.\n",
                 )
             end
         end

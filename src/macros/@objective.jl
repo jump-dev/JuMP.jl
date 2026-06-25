@@ -132,9 +132,9 @@ function _moi_sense(error_fn::Function, sense)
         """
         Unexpected objective sense `$sense`.
 
-        The sense must be an `::MOI.OptimizationSense`, or one of the \
-        symbols `:Min` or `:Max`. For example, use \
-        `@objective(model, Min, x)` or `@objective(model, Max, x)`.
+        The sense must be an `::MOI.OptimizationSense`, or one of the literals `Min` or `Max`.
+
+        For example, use `@objective(model, Min, x)`, `@objective(model, Max, x)`, or `@objective(model, MAX_SENSE, x)`.
         """,
     )
 end

@@ -434,21 +434,23 @@ function test_extension_indicator_constraint(
         """,
     )
     @test_throws_parsetime err @constraint(model, !(a, b) => {x <= 1})
-    err = ErrorException("""
-                         In `@constraint(model, a => x)`:
+    err = ErrorException(
+        """
+        In `@constraint(model, a => x)`:
 
-                         Invalid right-hand side `x` of indicator constraint.
+        Invalid right-hand side `x` of an indicator constraint.
 
-                         Expected a constraint surrounded by `{` and `}`.
-                         """)
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
+        """,
+    )
     @test_throws_parsetime err @constraint(model, a => x)
     err = ErrorException(
         """
         In `@constraint(model, a => x <= 1)`:
 
-        Invalid right-hand side `x <= 1` of indicator constraint.
+        Invalid right-hand side `x <= 1` of an indicator constraint.
 
-        Expected a constraint surrounded by `{` and `}`.
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
         """,
     )
     @test_throws_parsetime err @constraint(model, a => x <= 1)
@@ -456,9 +458,9 @@ function test_extension_indicator_constraint(
         """
         In `@constraint(model, a => {x <= 1, x >= 0})`:
 
-        Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint.
+        Invalid right-hand side `{x <= 1, x >= 0}` of an indicator constraint.
 
-        Expected a constraint surrounded by `{` and `}`.
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
         """,
     )
     @test_throws_parsetime err @constraint(model, a => {x <= 1, x >= 0})
@@ -767,13 +769,13 @@ function test_extension_nonsensical_SDP_constraint(
     T = value_type(ModelType)
     m = ModelType()
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(m, unequal[1:5, 1:6], PSD)`:
+        ErrorException(
+            """
+            In `@variable(m, unequal[1:5, 1:6], PSD)`:
 
-                       Symmetric variables must be square.
-
-                       Got size (5, 6).
-                       """),
+            Symmetric variables must be square matrices. Got size (5, 6).
+            """,
+        ),
         @variable(m, unequal[1:5, 1:6], PSD)
     )
     # Some of these errors happen at compile time, so we can't use @test_throws
@@ -2031,13 +2033,15 @@ function test_symmetric_matrix_inequality()
         @test primal isa LinearAlgebra.Symmetric
         @test primal == LinearAlgebra.Symmetric([-5.0 -2.0; -2.0 -4.0])
         @test_throws_runtime(
-            ErrorException("""
-                           In `@constraint(model, x <= y, set)`:
+            ErrorException(
+                """
+                In `@constraint(model, x <= y, set)`:
 
-                           The syntax `x <= y, $set` not supported.
+                The syntax `x <= y, $set` not supported.
 
-                           Use `y >= x, $set` instead.
-                           """),
+                Use the syntax `@constraint(model, y >= x, $set)` instead.
+                """,
+            ),
             @constraint(model, x <= y, set),
         )
     end
@@ -2062,13 +2066,15 @@ function test_matrix_inequality()
         @test primal isa Matrix{Float64}
         @test primal == [-6.0 -7.0 -8.0; -4.0 -7.0 -7.0]
         @test_throws_runtime(
-            ErrorException("""
-                           In `@constraint(model, x <= y, set)`:
+            ErrorException(
+                """
+                In `@constraint(model, x <= y, set)`:
 
-                           The syntax `x <= y, $set` not supported.
+                The syntax `x <= y, $set` not supported.
 
-                           Use `y >= x, $set` instead.
-                           """),
+                Use the syntax `@constraint(model, y >= x, $set)` instead.
+                """,
+            ),
             @constraint(model, x <= y, set),
         )
     end

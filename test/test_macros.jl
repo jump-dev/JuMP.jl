@@ -581,32 +581,34 @@ end
 function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("""
-                       In `@variable(m, Int)`:
+        ErrorException(
+            """
+            In `@variable(m, Int)`:
 
-                       Ambiguous variable name `Int` detected.
+            Ambiguous variable name `Int` detected.
 
-                       `Int` is a Julia type, not a valid variable name.
+            `Int` is a Julia type, not a valid variable name.
 
-                       To create an anonymous integer variable, use \
-                       `@variable(model, integer = true)` instead.
-                       """),
+            To create an anonymous integer variable, use `@variable(model, integer = true)` instead.
+            """,
+        ),
         @variable(m, Int)
     )
     v = @variable(model, integer = true)
     @test name(v) == ""
     @test is_integer(v)
     @test_throws_parsetime(
-        ErrorException("""
-                       In `@variable(m, Bin)`:
+        ErrorException(
+            """
+            In `@variable(m, Bin)`:
 
-                       Ambiguous variable name `Bin` detected.
+            Ambiguous variable name `Bin` detected.
 
-                       `Bin` is a JuMP keyword, not a valid variable name.
+            `Bin` is a JuMP keyword, not a valid variable name.
 
-                       To create an anonymous binary variable, use \
-                       `@variable(model, binary = true)` instead.
-                       """),
+            To create an anonymous binary variable, use `@variable(model, binary = true)` instead.
+            """,
+        ),
         @variable(m, Bin)
     )
     v = @variable(model, binary = true)
@@ -1021,7 +1023,9 @@ function test_unrecognized_variable_type()
         """
         In `@variable(model, x, 2, variable_type = a)`:
 
-        Unrecognized positional arguments: (2, 1). You may have passed an unrecognized type or a keyword value to `variable_type`.
+        Unrecognized positional arguments: (2, 1).
+
+        You may have passed an unrecognized type or a keyword value to `variable_type`.
 
         If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
         """,
@@ -2062,14 +2066,15 @@ end
 function test_constraint_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("""
-                       In `@constraint(model)`:
+        ErrorException(
+            """
+            In `@constraint(model)`:
 
-                       Expected 2 to 4 positional arguments, but got 1.
+            Expected 2 to 4 positional arguments, but got 1.
 
-                       Use `@constraint(model, expr)` or \
-                       `@constraint(model, name[...], expr)`.
-                       """),
+            Use `@constraint(model, expr)` or `@constraint(model, name[...], expr)`.
+            """,
+        ),
         @constraint(model),
     )
     return
@@ -2123,11 +2128,15 @@ function test_expression_keyword_arguments()
     model = Model()
     @variable(model, x)
     @test_throws_parsetime(
-        ErrorException("""
-                       In `@expression(model, x, foo = 1)`:
+        ErrorException(
+            """
+            In `@expression(model, x, foo = 1)`:
 
-                       Unsupported keyword argument `foo`.
-                       """),
+            Unsupported keyword argument `foo`.
+
+            If you are trying to construct an equality constraint, use `==` instead of `=`.
+            """,
+        ),
         @expression(model, x, foo = 1),
     )
     return
@@ -2137,11 +2146,15 @@ function test_objective_keyword_arguments()
     model = Model()
     @variable(model, x)
     @test_throws_parsetime(
-        ErrorException("""
-                       In `@objective(model, Min, x, foo = 1)`:
+        ErrorException(
+            """
+            In `@objective(model, Min, x, foo = 1)`:
 
-                       Unsupported keyword argument `foo`.
-                       """),
+            Unsupported keyword argument `foo`.
+
+            If you are trying to construct an equality constraint, use `==` instead of `=`.
+            """,
+        ),
         @objective(model, Min, x, foo = 1),
     )
     return
@@ -2637,7 +2650,9 @@ function test_bad_objective_sense()
 
             Unexpected objective sense `MinMax`.
 
-            The sense must be an `::MOI.OptimizationSense`, or one of the symbols `:Min` or `:Max`. For example, use `@objective(model, Min, x)` or `@objective(model, Max, x)`.
+            The sense must be an `::MOI.OptimizationSense`, or one of the literals `Min` or `Max`.
+
+            For example, use `@objective(model, Min, x)`, `@objective(model, Max, x)`, or `@objective(model, MAX_SENSE, x)`.
             """,
         ),
         @objective(model, :MinMax, x),
@@ -2664,7 +2679,7 @@ function test_variable_not_a_variable_name()
 
             Expected `x` to be a variable name, but got a `String`.
 
-            The variable name must be a symbol or expression. For example, use `@variable(model, x)` or `@variable(model, x[1:n])`.
+            The variable name must be a symbol. For example, use `@variable(model, x)` or `@variable(model, x[1:n])`.
             """,
         ),
         @variable(model, "x"),
@@ -2755,99 +2770,147 @@ function test_error_parsing_reference_sets()
     model = Model()
     @variable(model, a)
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(model, b[1:a])`:
+        ErrorException(
+            """
+            In `@variable(model, b[1:a])`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @variable(model, b[1:a]),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(model, b[1:2, 1:a])`:
+        ErrorException(
+            """
+            In `@variable(model, b[1:2, 1:a])`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @variable(model, b[1:2, 1:a]),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(model, b[i = 1:a, 1:i])`:
+        ErrorException(
+            """
+            In `@variable(model, b[i = 1:a, 1:i])`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @variable(model, b[i=1:a, 1:i]),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(model, b[i = 1:2, a:i])`:
+        ErrorException(
+            """
+            In `@variable(model, b[i = 1:2, a:i])`:
 
-                       Unexpected error parsing reference set: a:i
-                       """),
+            Unexpected error parsing reference set: a:i
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @variable(model, b[i=1:2, a:i]),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@variable(model, b[i = 1:2; i < a])`:
+        ErrorException(
+            """
+            In `@variable(model, b[i = 1:2; i < a])`:
 
-                       Unexpected error parsing condition: i < a
-                       """),
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @variable(model, b[i = 1:2; i < a]),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@expression(model, b[1:a], a + 1)`:
+        ErrorException(
+            """
+            In `@expression(model, b[1:a], a + 1)`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @expression(model, b[1:a], a + 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@expression(model, b[1:2, 1:a], a + 1)`:
+        ErrorException(
+            """
+            In `@expression(model, b[1:2, 1:a], a + 1)`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @expression(model, b[1:2, 1:a], a + 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@expression(model, b[i = 1:a, 1:i], a + 1)`:
+        ErrorException(
+            """
+            In `@expression(model, b[i = 1:a, 1:i], a + 1)`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @expression(model, b[i=1:a, 1:i], a + 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@expression(model, b[i = 1:2, a:i], a + 1)`:
+        ErrorException(
+            """
+            In `@expression(model, b[i = 1:2, a:i], a + 1)`:
 
-                       Unexpected error parsing reference set: a:i
-                       """),
+            Unexpected error parsing reference set: a:i
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @expression(model, b[i=1:2, a:i], a + 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@expression(model, b[i = 1:2; i < a], a + 1)`:
+        ErrorException(
+            """
+            In `@expression(model, b[i = 1:2; i < a], a + 1)`:
 
-                       Unexpected error parsing condition: i < a
-                       """),
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @expression(model, b[i = 1:2; i < a], a + 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@constraint(model, b[i = 1:a], a <= 1)`:
+        ErrorException(
+            """
+            In `@constraint(model, b[i = 1:a], a <= 1)`:
 
-                       Unexpected error parsing reference set: 1:a
-                       """),
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @constraint(model, b[i=1:a], a <= 1),
     )
     @test_throws_runtime(
-        ErrorException("""
-                       In `@constraint(model, b[i = 1:2; i < a], a <= 1)`:
+        ErrorException(
+            """
+            In `@constraint(model, b[i = 1:2; i < a], a <= 1)`:
 
-                       Unexpected error parsing condition: i < a
-                       """),
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
+        ),
         @constraint(model, b[i = 1:2; i < a], a <= 1),
     )
     return
@@ -2899,7 +2962,7 @@ function test_force_nonlinear()
 
             The expression did not produce a `GenericNonlinearExpr`. Got a `$(typeof(x))`: $x.
 
-            `@force_nonlinear` requires that the expression evaluates to a nonlinear expression. Ensure the expression contains nonlinear operations, or wrap linear or quadratic terms using `@NLexpression`.
+            `@force_nonlinear` requires that the expression evaluates to a nonlinear expression.
             """,
         ),
         @force_nonlinear(x),
@@ -2935,11 +2998,7 @@ function test_constraint_vect_vcat()
             Unsupported constraint expression: a `[ ]` block cannot be used as a constraint.
 
             You may have written `@constraint(model, name, [...], ...)` when \
-            you meant `@constraint(model, name[...], ...)`. Use the second form \
-            to index the constraint name:
-            ```julia
-            @constraint(model, name[...], ...)
-            ```
+            you meant `@constraint(model, name[...], ...)`.
             """,
         ),
         @constraint(model, c, [k in 1:2], x <= k),
@@ -2952,11 +3011,7 @@ function test_constraint_vect_vcat()
             Unsupported constraint expression: a `[ ]` block cannot be used as a constraint.
 
             You may have written `@constraint(model, name, [...], ...)` when \
-            you meant `@constraint(model, name[...], ...)`. Use the second form \
-            to index the constraint name:
-            ```julia
-            @constraint(model, name[...], ...)
-            ```
+            you meant `@constraint(model, name[...], ...)`.
             """,
         ),
         @constraint(model, c, [k in 1:2; isodd(k)], x <= k),

@@ -120,8 +120,7 @@ function _force_nonlinear(error_fn::F, ret::Any) where {F}
         `$(typeof(ret))`: $(ret).
 
         `@force_nonlinear` requires that the expression evaluates to a \
-        nonlinear expression. Ensure the expression contains nonlinear \
-        operations, or wrap linear or quadratic terms using `@NLexpression`.
+        nonlinear expression.
         """,
     )
 end

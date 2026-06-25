@@ -354,11 +354,11 @@ end
 function _square_side(error_fn::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
-        error_fn("""
-                 Symmetric variables must be square.
-
-                 Got size ($n, $m).
-                 """)
+        error_fn(
+            """
+            Symmetric variables must be square matrices. Got size ($n, $m).
+            """,
+        )
     end
     return n
 end
@@ -873,11 +873,13 @@ for S in (Nonnegatives, Nonpositives, Zeros)
                 ::Nonpositives,
                 set::$S,
             )
-                return error_fn("""
-                                The syntax `x <= y, $set` not supported.
+                return error_fn(
+                    """
+                    The syntax `x <= y, $set` not supported.
 
-                                Use `y >= x, $set` instead.
-                                """)
+                    Use the syntax `@constraint(model, y >= x, $set)` instead.
+                    """,
+                )
             end
         end
     end

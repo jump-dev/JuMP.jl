@@ -37,7 +37,13 @@ function _build_complements_constraint(
         if haskey(x, i)
             push!(elements, x[i])
         else
-            error_fn("keys of the SparseAxisArray's do not match.")
+            error_fn(
+                """
+                Keys of the SparseAxisArray's do not match.
+
+                The left-hand side has key `$i`, but the right-hand side does not.
+                """,
+            )
         end
     end
     return VectorConstraint(elements, MOI.Complements(length(elements)))
