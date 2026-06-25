@@ -10,12 +10,12 @@
 # @constraint(model, 2x - 1 ⟂ x)
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     F::AbstractArray{<:Union{Real,AbstractJuMPScalar}},
     x::AbstractArray{<:AbstractVariableRef},
 )
     if size(F) != size(x)
-        errorf(
+        error_fn(
             """
             The number of elements in the left-hand side $(size(F)) does not match the right-hand side $(size(x)).
 
@@ -28,7 +28,7 @@ function _build_complements_constraint(
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     F::Containers.SparseAxisArray{<:Union{Real,AbstractJuMPScalar}},
     x::Containers.SparseAxisArray{<:AbstractVariableRef},
 )
@@ -37,20 +37,21 @@ function _build_complements_constraint(
         if haskey(x, i)
             push!(elements, x[i])
         else
-            errorf("keys of the SparseAxisArray's do not match.")
+            error_fn("keys of the SparseAxisArray's do not match.")
         end
     end
     return VectorConstraint(elements, MOI.Complements(length(elements)))
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     ::AbstractArray{<:Union{Real,AbstractJuMPScalar}},
     x::AbstractArray{<:AbstractJuMPScalar},
 )
-    return errorf(
+    return error_fn(
         """
-        The right-hand side in a complementarity constraint must be a variable.
+        The right-hand side term in a complementarity constraint must be a \
+        variable or an array of variables.
 
         Currently, it is a `$(typeof(x))`.
         """,
@@ -66,13 +67,13 @@ function _build_complements_constraint(
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     ::Union{Real,AbstractJuMPScalar},
     x::AbstractJuMPScalar,
 )
-    return errorf(
+    return error_fn(
         """
-        The right-hand side term in the complementarity constraint must be a variable.
+        The right-hand side term in a complementarity constraint must be a variable.
 
         Currently, it is a `$(typeof(x))`.
         """,
@@ -80,12 +81,12 @@ function _build_complements_constraint(
 end
 
 function parse_constraint_call(
-    errorf::Function,
+    error_fn::Function,
     ::Bool,
     ::Union{Val{:complements},Val{:⟂}},
     F,
     x,
 )
-    f, parse_code = _rewrite_expression(F)
-    return parse_code, :(_build_complements_constraint($errorf, $f, $(esc(x))))
+    f, parse = _rewrite_expression(F)
+    return parse, :(_build_complements_constraint($error_fn, $f, $(esc(x))))
 end

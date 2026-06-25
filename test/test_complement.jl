@@ -39,7 +39,7 @@ function test_scalar_error_x_F()
             """
             In `@constraint(model, x ⟂ 2x - 1)`:
 
-            The right-hand side term in the complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a variable.
 
             Currently, it is a `$(typeof(2 * x - 1))`.
             """,
@@ -57,7 +57,7 @@ function test_scalar_error_F_F()
             """
             In `@constraint(model, x + 1 ⟂ 2x - 1)`:
 
-            The right-hand side term in the complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a variable.
 
             Currently, it is a `$(typeof(2 * x - 1))`.
             """,
@@ -75,7 +75,7 @@ function test_scalar_error_0_F()
             """
             In `@constraint(model, 0 ⟂ 2x - 1)`:
 
-            The right-hand side term in the complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a variable.
 
             Currently, it is a `$(typeof(2 * x - 1))`.
             """,
@@ -134,7 +134,8 @@ function test_vector_error_x_F()
             """
             In `@constraint(model, x ⟂ 2x .- 1)`:
 
-            The right-hand side in a complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a \
+            variable or an array of variables.
 
             Currently, it is a `Vector{JuMP.AffExpr}`.
             """,
@@ -151,7 +152,8 @@ function test_vector_error_F_F()
             """
             In `@constraint(model, x .+ 1 ⟂ 2x .- 1)`:
 
-            The right-hand side in a complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a \
+            variable or an array of variables.
 
             Currently, it is a `Vector{JuMP.AffExpr}`.
             """,
@@ -170,7 +172,8 @@ function test_vector_error_0_F()
             """
             In `@constraint(model, y ⟂ 2x .- 1)`:
 
-            The right-hand side in a complementarity constraint must be a variable.
+            The right-hand side term in a complementarity constraint must be a \
+            variable or an array of variables.
 
             Currently, it is a `Vector{JuMP.AffExpr}`.
             """,
