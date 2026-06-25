@@ -118,9 +118,15 @@ function test_extension_AffExpr_vectorized_constraints(
     model = ModelType()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, [x, 2x] in MOI.EqualTo(1.0))`: " *
-        "Unexpected vector in scalar constraint. The left- and right-hand " *
-        "sides of the constraint must have the same dimension.",
+        """
+        In `@constraint(model, [x, 2x] in MOI.EqualTo(1.0))`:
+
+        Unexpected vector in scalar constraint: the left- and right-hand \
+        sides of the constraint must have the same dimension.
+
+        If you intended an elementwise constraint, use broadcasting: \
+        `f(x) .<= g(x)`.
+        """,
     )
     @test_throws_runtime err @constraint(model, [x, 2x] in MOI.EqualTo(1.0))
     VT = typeof([x, 2x])
@@ -165,9 +171,13 @@ function test_extension_AffExpr_vectorized_interval_constraints(
     model = ModelType()
     @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, b <= x <= b)`: Unexpected vectors in " *
-        "scalar constraint. Did you mean to use the dot comparison " *
-        "operators `l .<= f(x) .<= u` instead?",
+        """
+        In `@constraint(model, b <= x <= b)`:
+
+        Unexpected vectors in a scalar two-sided constraint.
+
+        Use the broadcasting comparison operators instead: `l .<= f(x) .<= u`.
+        """,
     )
     b = T[5, 6]
     @test_throws_runtime err @constraint(model, b <= x <= b)
@@ -369,9 +379,16 @@ function test_extension_syntax_error_constraint(
     model = ModelType()
     @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, [3, x] in SecondOrderCone())`: Unable to " *
-        "add the constraint because we don't recognize $([3, x]) as a " *
-        "valid JuMP function.",
+        """
+        In `@constraint(model, [3, x] in SecondOrderCone())`:
+
+        Unable to add the constraint because `$([3, x])` is not a recognized \
+        JuMP expression type.
+
+        The constraint function must be a JuMP scalar or vector expression. \
+        Check that the left- and right-hand sides of your constraint are JuMP \
+        variables or expressions.
+        """,
     )
     @test_throws_runtime err @constraint(model, [3, x] in SecondOrderCone())
     return
@@ -408,23 +425,53 @@ function test_extension_indicator_constraint(
         @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(one(T)))
     end
     err = ErrorException(
-        "In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.",
+        """
+        In `@constraint(model, !(a, b) => {x <= 1})`:
+
+        Invalid binary variable expression `!(a, b)` for indicator constraint.
+
+        The indicator variable must be a single binary variable.
+        """,
     )
     @test_throws_parsetime err @constraint(model, !(a, b) => {x <= 1})
     err = ErrorException(
-        "In `@constraint(model, a => x)`: Invalid right-hand side `x` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+        """
+        In `@constraint(model, a => x)`:
+
+        Invalid right-hand side `x` of an indicator constraint.
+
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
+        """,
     )
     @test_throws_parsetime err @constraint(model, a => x)
     err = ErrorException(
-        "In `@constraint(model, a => x <= 1)`: Invalid right-hand side `x <= 1` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+        """
+        In `@constraint(model, a => x <= 1)`:
+
+        Invalid right-hand side `x <= 1` of an indicator constraint.
+
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
+        """,
     )
     @test_throws_parsetime err @constraint(model, a => x <= 1)
     err = ErrorException(
-        "In `@constraint(model, a => {x <= 1, x >= 0})`: Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+        """
+        In `@constraint(model, a => {x <= 1, x >= 0})`:
+
+        Invalid right-hand side `{x <= 1, x >= 0}` of an indicator constraint.
+
+        Expected a constraint surrounded by `{` and `}`. For example, `@constraint(model, z --> {2 * x >= 1})`.
+        """,
     )
     @test_throws_parsetime err @constraint(model, a => {x <= 1, x >= 0})
     err = ErrorException(
-        "In `@constraint(model, [a, b] .=> {x + y <= 1})`: Inconsistent use of `.` in symbols to indicate vectorization.",
+        """
+        In `@constraint(model, [a, b] .=> {x + y <= 1})`:
+
+        Inconsistent use of `.` in symbols to indicate vectorization.
+
+        The left-hand side is vectorized, but the right-hand side is not vectorized.
+        """,
     )
     @test_throws_parsetime err @constraint(model, [a, b] .=> {x + y <= 1})
     return
@@ -590,14 +637,17 @@ function test_extension_SDP_errors(
     @variable(model, w)
     aff_str = "$AffExprType"
     err = ErrorException(
-        "In `@constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1)`:" *
-        " Unrecognized constraint building format. Tried to invoke " *
-        "`build_constraint(error, $(aff_str)[x - " *
-        "1 -x + 1; -x + 1 -y + 2], $(MOI.GreaterThan(false)), $(PSDCone()); unknown_kw = 1)`, but no " *
-        "such method exists. This is due to specifying an unrecognized " *
-        "function, constraint set, and/or extra positional/keyword " *
-        "arguments.\n\nIf you're trying to create a JuMP extension, you " *
-        "need to implement `build_constraint` to accomodate these arguments.",
+        """
+        In `@constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1)`:
+
+        Unrecognized constraint format: no method \
+        `build_constraint(error, $(aff_str)[x - 1 -x + 1; -x + 1 -y + 2], $(MOI.GreaterThan(false)), $(PSDCone()); unknown_kw = 1)` \
+        exists.
+
+        This is due to an unrecognized function, constraint set, and/or \
+        extra arguments. If you are writing a JuMP extension, implement \
+        `build_constraint` to accommodate these arguments.
+        """,
     )
     @test_throws_runtime(
         err,
@@ -676,9 +726,13 @@ function test_extension_PSD_constraint_errors(
     model = ModelType()
     @variable(model, X[1:2, 1:2])
     err = ErrorException(
-        "In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:" *
-        " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
-        " use `JuMP.PSDCone()`.",
+        """
+        In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:
+
+        `$(MOI.PositiveSemidefiniteConeTriangle(2))` is not a valid JuMP constraint set for matrix constraints.
+
+        Use `JuMP.PSDCone()` instead: `@constraint(model, X >= 0, PSDCone())`.
+        """,
     )
     @test_throws_runtime(
         err,
@@ -694,9 +748,13 @@ function test_extension_matrix_constraint_errors(
     model = ModelType()
     @variable(model, X[1:2, 1:2])
     err = ErrorException(
-        "In `@constraint(model, X in MOI.SecondOrderCone(4))`: unexpected " *
-        "matrix in vector constraint. Do you need to flatten the matrix " *
-        "into a vector using `vec()`?",
+        """
+        In `@constraint(model, X in MOI.SecondOrderCone(4))`:
+
+        Unexpected matrix in a vector-valued constraint.
+
+        Flatten the matrix into a vector using `vec()` before adding the constraint.
+        """,
     )
     # Note: this should apply to any MOI.AbstractVectorSet. We just pick
     # SecondOrderCone for convenience.
@@ -712,7 +770,11 @@ function test_extension_nonsensical_SDP_constraint(
     m = ModelType()
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be square. Got size (5, 6).",
+            """
+            In `@variable(m, unequal[1:5, 1:6], PSD)`:
+
+            Symmetric variables must be square matrices. Got size (5, 6).
+            """,
         ),
         @variable(m, unequal[1:5, 1:6], PSD)
     )
@@ -721,29 +783,59 @@ function test_extension_nonsensical_SDP_constraint(
     @test_throws MethodError @variable(m, oneD[1:5], PSD)
     @test_throws MethodError @variable(m, threeD[1:5, 1:5, 1:5], PSD)
     Y = T[1 2; 21//10 3]
-    function _ErrorException(m)
-        return ErrorException(
-            "In `$m`: Non-symmetric bounds, integrality or starting values " *
-            "for symmetric variable.",
-        )
-    end
     @test_throws_runtime(
-        _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD)"),
+        ErrorException(
+            """
+            In `@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD)`:
+
+            Data associated with a symmetric variable is not symmetric.
+
+            Check elements (1, 2) and (2, 1).
+
+            Symmetric variables must have symmetric bounds and starting values.
+            """,
+        ),
         @variable(m, foo[i=1:2, j=1:2] >= Y[i, j], PSD),
     )
     @test_throws_runtime(
-        _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD)"),
+        ErrorException(
+            """
+            In `@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD)`:
+
+            Data associated with a symmetric variable is not symmetric.
+
+            Check elements (1, 2) and (2, 1).
+
+            Symmetric variables must have symmetric bounds and starting values.
+            """,
+        ),
         @variable(m, foo[i=1:2, j=1:2] <= Y[i, j], PSD),
     )
     @test_throws_runtime(
-        _ErrorException(
-            "@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric)",
+        ErrorException(
+            """
+            In `@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric)`:
+
+            Data associated with a symmetric variable is not symmetric.
+
+            Check elements (1, 2) and (2, 1).
+
+            Symmetric variables must have symmetric bounds and starting values.
+            """,
         ),
         @variable(m, foo[i=1:2, j=1:2] >= Y[i, j], Symmetric),
     )
     @test_throws_runtime(
-        _ErrorException(
-            "@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric)",
+        ErrorException(
+            """
+            In `@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric)`:
+
+            Data associated with a symmetric variable is not symmetric.
+
+            Check elements (1, 2) and (2, 1).
+
+            Symmetric variables must have symmetric bounds and starting values.
+            """,
         ),
         @variable(m, foo[i=1:2, j=1:2] <= Y[i, j], Symmetric),
     )
@@ -1579,14 +1671,17 @@ function test_extension_HermitianPSDCone_errors(
     @variable(model, y)
     aff_str = "$AffExprType"
     err = ErrorException(
-        "In `@constraint(model, H in HermitianPSDCone(), unknown_kw = 1)`:" *
-        " Unrecognized constraint building format. Tried to invoke " *
-        "`build_constraint(error, $aff_str[" *
-        "x im; -im -y], $(HermitianPSDCone()); unknown_kw = 1)`, but no " *
-        "such method exists. This is due to specifying an unrecognized " *
-        "function, constraint set, and/or extra positional/keyword " *
-        "arguments.\n\nIf you're trying to create a JuMP extension, you " *
-        "need to implement `build_constraint` to accomodate these arguments.",
+        """
+        In `@constraint(model, H in HermitianPSDCone(), unknown_kw = 1)`:
+
+        Unrecognized constraint format: no method \
+        `build_constraint(error, $aff_str[x im; -im -y], $(HermitianPSDCone()); unknown_kw = 1)` \
+        exists.
+
+        This is due to an unrecognized function, constraint set, and/or \
+        extra arguments. If you are writing a JuMP extension, implement \
+        `build_constraint` to accommodate these arguments.
+        """,
     )
     H = LinearAlgebra.Hermitian([x 1im; -1im -y])
     @test_throws_runtime(
@@ -1877,7 +1972,13 @@ function test_indicator_error()
     model = Model()
     @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, x[1] >= 0 --> {x[2] == 0})`: unable to build indicator constraint with the left-hand side term `(x[1] >= 0)::JuMP.NonlinearExpr`. The left-hand side must be a binary decision variable.",
+        """
+        In `@constraint(model, x[1] >= 0 --> {x[2] == 0})`:
+
+        Unable to build indicator constraint with the left-hand side term `(x[1] >= 0)::JuMP.NonlinearExpr`.
+
+        The left-hand side must be a binary decision variable.
+        """,
     )
     @test_throws_runtime err @constraint(model, x[1] >= 0 --> {x[2] == 0})
     return
@@ -1933,7 +2034,13 @@ function test_symmetric_matrix_inequality()
         @test primal == LinearAlgebra.Symmetric([-5.0 -2.0; -2.0 -4.0])
         @test_throws_runtime(
             ErrorException(
-                "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+                """
+                In `@constraint(model, x <= y, set)`:
+
+                The syntax `x <= y, $set` not supported.
+
+                Use the syntax `@constraint(model, y >= x, $set)` instead.
+                """,
             ),
             @constraint(model, x <= y, set),
         )
@@ -1960,7 +2067,13 @@ function test_matrix_inequality()
         @test primal == [-6.0 -7.0 -8.0; -4.0 -7.0 -7.0]
         @test_throws_runtime(
             ErrorException(
-                "In `@constraint(model, x <= y, set)`: The syntax `x <= y, $set` not supported. Use `y >= x, $set` instead.",
+                """
+                In `@constraint(model, x <= y, set)`:
+
+                The syntax `x <= y, $set` not supported.
+
+                Use the syntax `@constraint(model, y >= x, $set)` instead.
+                """,
             ),
             @constraint(model, x <= y, set),
         )
@@ -2018,25 +2131,25 @@ function test_matrix_ambiguous_greater_than_inequality()
     set_start_value.(y, [7 9 11; 8 12 13])
     err = ErrorException(
         """
-        In `@constraint(model, x >= y)`: \nThe syntax `x >= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an elementwise
-        inequality.
+        In `@constraint(model, x >= y)`:
 
-        To create a positive semidefinite constraint, pass `PSDCone()` or
+        The syntax `x >= y` is ambiguous for matrices because JuMP cannot \
+        determine if you intend a positive semidefinite constraint or an \
+        elementwise inequality.
+
+        To create a positive semidefinite constraint, pass `PSDCone()` or \
         `HermitianPSDCone()`:
-
         ```julia
         @constraint(model, x >= y, PSDCone())
         ```
-
-        To create an element-wise inequality, pass `Nonnegatives()`, or use
+        To create an elementwise inequality, pass `Nonnegatives()` or use \
         broadcasting:
-
         ```julia
         @constraint(model, x >= y, Nonnegatives())
         # or
         @constraint(model, x .>= y)
-        ```""",
+        ```
+        """,
     )
     @test_throws_runtime(err, @constraint(model, x >= y))
     c = @constraint(model, x - y in Nonnegatives())
@@ -2052,25 +2165,25 @@ function test_matrix_ambiguous_less_than_inequality()
     set_start_value.(y, [7 9 11; 8 12 13])
     err = ErrorException(
         """
-        In `@constraint(model, x <= y)`: \nThe syntax `x <= y` is ambiguous for matrices because we cannot tell if
-        you intend a positive semidefinite constraint or an elementwise
-        inequality.
+        In `@constraint(model, x <= y)`:
 
-        To create a positive semidefinite constraint, reverse the sense of the
-        inequality and pass `PSDCone()` or `HermitianPSDCone()`:
+        The syntax `x <= y` is ambiguous for matrices because JuMP cannot \
+        determine if you intend a positive semidefinite constraint or an \
+        elementwise inequality.
 
+        To create a positive semidefinite constraint, reverse the sense of \
+        the inequality and pass `PSDCone()` or `HermitianPSDCone()`:
         ```julia
         @constraint(model, y >= x, PSDCone())
         ```
-
-        To create an element-wise inequality, reverse the sense of the
-        inequality and pass `Nonnegatives()`, or use broadcasting:
-
+        To create an elementwise inequality, reverse the sense of the \
+        inequality and pass `Nonnegatives()` or use broadcasting:
         ```julia
         @constraint(model, y >= x, Nonnegatives())
         # or
         @constraint(model, x .<= y)
-        ```""",
+        ```
+        """,
     )
     @test_throws_runtime(err, @constraint(model, x <= y))
     c = @constraint(model, x - y in Nonpositives())

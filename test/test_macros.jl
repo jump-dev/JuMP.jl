@@ -582,8 +582,15 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(m, Int)`: Ambiguous variable name Int detected." *
-            " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead.",
+            """
+            In `@variable(m, Int)`:
+
+            Ambiguous variable name `Int` detected.
+
+            `Int` is a Julia type, not a valid variable name.
+
+            To create an anonymous integer variable, use `@variable(model, integer = true)` instead.
+            """,
         ),
         @variable(m, Int)
     )
@@ -592,8 +599,15 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     @test is_integer(v)
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
-            " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead.",
+            """
+            In `@variable(m, Bin)`:
+
+            Ambiguous variable name `Bin` detected.
+
+            `Bin` is a JuMP keyword, not a valid variable name.
+
+            To create an anonymous binary variable, use `@variable(model, binary = true)` instead.
+            """,
         ),
         @variable(m, Bin)
     )
@@ -602,8 +616,15 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     @test is_binary(v)
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
-            " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+            """
+            In `@variable(m, PSD)`:
+
+            The size of an anonymous positive semidefinite matrix variable is \
+            not specified.
+
+            To create an anonymous PSD matrix variable, specify the size \
+            using `@variable(model, [1:n, 1:n], PSD)`.
+            """,
         ),
         @variable(m, PSD)
     )
@@ -839,7 +860,13 @@ function test_Splatting_error()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@variable(model, y[axes(A)...])`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @variable(model, y[axes(A)...])
     )
@@ -848,31 +875,61 @@ function test_Splatting_error()
     @test length(z) == 2
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@constraint(model, [axes(A)...], x >= 1)`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @constraint(model, [axes(A)...], x >= 1)
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@NLconstraint(model, [axes(A)...], x >= 1)`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @NLconstraint(model, [axes(A)...], x >= 1)
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@expression(model, [axes(A)...], x)`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @expression(model, [axes(A)...], x)
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@NLexpression(model, [axes(A)...], x)`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @NLexpression(model, [axes(A)...], x)
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set.",
+            """
+            In `@NLparameter(model, p[axes(A)...] == x)`:
+
+            Cannot use the splatting operator `...` in the definition of an index set.
+
+            Each index must be explicitly separated by a comma.
+            """,
         ),
         @NLparameter(model, p[axes(A)...] == x)
     )
@@ -895,7 +952,14 @@ function test_NaN_in_constraints()
     @test_throws err @constraint(model, 1 <= x + Inf <= 2)
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN].",
+            """
+            In `@constraint(model, 1 <= x <= NaN)`:
+
+            Invalid bounds `[1, NaN]`: bounds cannot contain `NaN`.
+
+            Check the expressions used to compute the bounds for operations \
+            that may produce `NaN`, such as `0 / 0` or `Inf - Inf`.
+            """,
         ),
         @constraint(model, 1 <= x <= NaN)
     )
@@ -956,12 +1020,15 @@ function test_unrecognized_variable_type()
     model = Model()
     a = 1
     err = ErrorException(
-        "In `@variable(model, x, 2, variable_type = a)`: " *
-        "Unrecognized positional arguments: (2, 1). (You may have " *
-        "passed it as a positional argument, or as a keyword value to " *
-        "`variable_type`.)\n\nIf you're trying to create a JuMP " *
-        "extension, you need to implement `build_variable`. Read the " *
-        "docstring for more details.",
+        """
+        In `@variable(model, x, 2, variable_type = a)`:
+
+        Unrecognized positional arguments: (2, 1).
+
+        You may have passed an unrecognized type or a keyword value to `variable_type`.
+
+        If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
+        """,
     )
     @test_throws_runtime err @variable(model, x, 2, variable_type = a)
     return
@@ -971,7 +1038,9 @@ function test_unrecognized_kwarg()
     model = Model()
     err = ErrorException(
         """
-        In `@variable(model, x, foo = 1)`: Unrecognized keyword argument: foo.
+        In `@variable(model, x, foo = 1)`:
+
+        Unrecognized keyword argument: foo.
 
         The supported keyword arguments are:
 
@@ -1008,31 +1077,76 @@ end
 function test_Model_as_index()
     m = Model()
     @variable(m, x)
-    msg = "the index name `m` conflicts with another variable in this scope. Use a different name for the index."
     @test_throws_parsetime(
-        ErrorException("In `@variable(m, y[m = 1:2] <= m)`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(m, y[m = 1:2] <= m)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
+        ),
         @variable(m, y[m=1:2] <= m),
     )
     @test_throws_parsetime(
-        ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: $(msg)"),
+        ErrorException(
+            """
+            In `@constraint(m, [m = 1:2], x <= m)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
+        ),
         @constraint(m, [m = 1:2], x <= m),
     )
     @test_throws_parsetime(
-        ErrorException("In `@expression(m, [m = 1:2], m * x)`: $(msg)"),
+        ErrorException(
+            """
+            In `@expression(m, [m = 1:2], m * x)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
+        ),
         @expression(m, [m = 1:2], m * x),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: $(msg)",
+            """
+            In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
         ),
         @NLconstraint(m, [m = 1:2], sqrt(x) <= m),
     )
     @test_throws_parsetime(
-        ErrorException("In `@NLexpression(m, [m = 1:2], x)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLexpression(m, [m = 1:2], x)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
+        ),
         @NLexpression(m, [m = 1:2], x),
     )
     @test_throws_parsetime(
-        ErrorException("In `@NLparameter(m, p[m = 1:2] == m)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(m, p[m = 1:2] == m)`:
+
+            The index name `m` conflicts with another variable in this scope.
+
+            Use a different name for the index.
+            """,
+        ),
         @NLparameter(m, p[m=1:2] == m),
     )
     return
@@ -1056,8 +1170,13 @@ function test_singular_plural_error()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, begin\n    x\nend)`: " *
-            "Invalid syntax. Did you mean to use `@variables`?",
+            """
+            In `@variable(model, begin\n    x\nend)`:
+
+            Invalid syntax. The variable expression cannot be a `begin ... end` block.
+
+            To add multiple variables at once, use the `@variables` macro instead.
+            """,
         ),
         @variable(model, begin
             x
@@ -1066,8 +1185,14 @@ function test_singular_plural_error()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, begin\n    x >= 0\nend)`: " *
-            "Invalid syntax. Did you mean to use `@constraints`?",
+            """
+            In `@constraint(model, begin\n    x >= 0\nend)`:
+
+            Invalid syntax. The constraint expression cannot be a `begin ... end` block.
+
+            To add multiple constraints at once, use the `@constraints` \
+            macro instead.
+            """,
         ),
         @constraint(model, begin
             x >= 0
@@ -1075,8 +1200,13 @@ function test_singular_plural_error()
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@expression(model, begin\n    x\nend)`: " *
-            "Invalid syntax. Did you mean to use `@expressions`?",
+            """
+            In `@expression(model, begin\n    x\nend)`:
+
+            Invalid syntax. The expression cannot be a `begin ... end` block.
+
+            To add multiple expressions at once, use the `@expressions` macro instead.
+            """,
         ),
         @expression(model, begin
             x
@@ -1084,8 +1214,13 @@ function test_singular_plural_error()
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLconstraint(model, begin\n    x >= 0\nend)`: " *
-            "Invalid syntax. Did you mean to use `@NLconstraints`?",
+            """
+            In `@NLconstraint(model, begin\n    x >= 0\nend)`:
+
+            Invalid syntax. The constraint cannot be a `begin ... end` block.
+
+            To add multiple nonlinear constraints at once, use the `@NLconstraints` macro instead.
+            """,
         ),
         @NLconstraint(model, begin
             x >= 0
@@ -1093,8 +1228,13 @@ function test_singular_plural_error()
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLexpression(model, begin\n    x\nend)`: " *
-            "Invalid syntax. Did you mean to use `@NLexpressions`?",
+            """
+            In `@NLexpression(model, begin\n    x\nend)`:
+
+            Invalid syntax. The expression cannot be a `begin ... end` block.
+
+            To add multiple nonlinear expressions at once, use the `@NLexpressions` macro instead.
+            """,
         ),
         @NLexpression(model, begin
             x
@@ -1102,8 +1242,13 @@ function test_singular_plural_error()
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@NLparameter(model, begin\n    x == 1\nend)`: " *
-            "Invalid syntax: did you mean to use `@NLparameters`?",
+            """
+            In `@NLparameter(model, begin\n    x == 1\nend)`:
+
+            Invalid syntax. The parameter expression cannot be a `begin ... end` block.
+
+            To add multiple nonlinear parameters at once, use the `@NLparameters` macro instead.
+            """,
         ),
         @NLparameter(model, begin
             x == 1
@@ -1142,10 +1287,14 @@ function test_Interval_errors_lhs()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, x <= x <= 2)`: Interval constraint " *
-        "contains non-constant left- or right-hand sides. Reformulate as " *
-        "two separate constraints, or move all variables into the " *
-        "central term.",
+        """
+        In `@constraint(model, x <= x <= 2)`:
+
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables \
+        into the central term.
+        """,
     )
     @test_throws_runtime err @constraint(model, x <= x <= 2)
     return
@@ -1155,10 +1304,14 @@ function test_Interval_errors_rhs()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, 2 <= x <= x)`: Interval constraint " *
-        "contains non-constant left- or right-hand sides. Reformulate as " *
-        "two separate constraints, or move all variables into the " *
-        "central term.",
+        """
+        In `@constraint(model, 2 <= x <= x)`:
+
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables \
+        into the central term.
+        """,
     )
     @test_throws_runtime err @constraint(model, 2 <= x <= x)
     return
@@ -1168,10 +1321,14 @@ function test_Interval_errors_lhs_and_rhs()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, x <= x <= x)`: Interval constraint " *
-        "contains non-constant left- or right-hand sides. Reformulate as " *
-        "two separate constraints, or move all variables into the " *
-        "central term.",
+        """
+        In `@constraint(model, x <= x <= x)`:
+
+        Interval constraint contains non-constant left- or right-hand sides.
+
+        Reformulate as two separate constraints, or move all variables \
+        into the central term.
+        """,
     )
     @test_throws_runtime err @constraint(model, x <= x <= x)
     return
@@ -1218,30 +1375,52 @@ function test_nlparameter_requested_container()
 end
 
 function test_nlparameter_too_many_positional_args()
-    msg = "Invalid syntax: too many positional arguments."
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@NLparameter(model, p == 1, Int)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(model, p == 1, Int)`:
+
+            Invalid syntax: too many positional arguments were passed to `@NLparameter`.
+
+            The correct syntax is `@NLparameter(model, param == value)`. For example, `@NLparameter(model, p == 1.0)`.
+            """,
+        ),
         @NLparameter(model, p == 1, Int),
     )
     return
 end
 
 function test_nlparameter_unsupported_keyword_args()
-    msg = "Invalid syntax: unsupported keyword arguments."
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@NLparameter(model, p == 1, bad = false)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(model, p == 1, bad = false)`:
+
+            Invalid syntax: unsupported keyword arguments were passed to `@NLparameter`.
+
+            The only supported keyword argument is `value`. For example, \
+            `@NLparameter(model, value = 1.0)` creates an anonymous parameter.
+            """,
+        ),
         @NLparameter(model, p == 1, bad = false),
     )
     return
 end
 
 function test_nlparameter_invalid_syntax()
-    msg = "Invalid syntax: expected syntax of form `param == value`."
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@NLparameter(model, p)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(model, p)`:
+
+            Invalid syntax: expected syntax of form `param == value`.
+
+            For example, use `@NLparameter(model, p == 1.0)` to create a parameter named `p` with initial value `1.0`.
+            """,
+        ),
         @NLparameter(model, p),
     )
     return
@@ -1258,20 +1437,34 @@ function test_nlparameter_anonymous()
 end
 
 function test_nlparameter_anonymous_error()
-    msg = "Invalid syntax: no positional args allowed for anonymous parameters."
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@NLparameter(model, p, value = 1)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(model, p, value = 1)`:
+
+            Invalid syntax: no positional arguments are allowed when using the `value` keyword argument for an anonymous parameter.
+
+            Use either `@NLparameter(model, p == value)` (named) or `@NLparameter(model, value = value)` (anonymous), but not both.
+            """,
+        ),
         @NLparameter(model, p, value = 1),
     )
     return
 end
 
 function test_nlparameter_invalid_number()
-    msg = "Parameter value is not a number."
     model = Model()
     @test_throws_runtime(
-        ErrorException("In `@NLparameter(model, p == :a)`: $(msg)"),
+        ErrorException(
+            """
+            In `@NLparameter(model, p == :a)`:
+
+            The parameter value is not a number. Got `Symbol`.
+
+            Parameter values must be numeric. For example, use `@NLparameter(model, p == 1.0)`.
+            """,
+        ),
         @NLparameter(model, p == :a),
     )
     return
@@ -1290,149 +1483,240 @@ function test_nlparameter_register()
 end
 
 function test_variable_vector_lowerbound()
-    msg = """
-    Passing arrays as variable bounds without indexing them is not supported.
-
-    Instead of:
-    ```julia
-    @variable(model, x[1:2] >= lb)
-    ```
-    use
-    ```julia
-    @variable(model, x[i=1:2] >= lb[i])
-    ```
-    or
-    ```julia
-    @variable(model, x[1:2])
-    set_lower_bound.(x, lb)
-    ```
-    """
     model = Model()
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] >= [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] >= [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] >= lb)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] >= lb[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_lower_bound.(x, lb)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] >= [1, 2]),
     )
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] .>= [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] .>= [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] >= lb)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] >= lb[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_lower_bound.(x, lb)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] .>= [1, 2]),
     )
     return
 end
 
 function test_variable_vector_upperbound()
-    msg = """
-    Passing arrays as variable bounds without indexing them is not supported.
-
-    Instead of:
-    ```julia
-    @variable(model, x[1:2] <= ub)
-    ```
-    use
-    ```julia
-    @variable(model, x[i=1:2] <= ub[i])
-    ```
-    or
-    ```julia
-    @variable(model, x[1:2])
-    set_upper_bound.(x, ub)
-    ```
-    """
     model = Model()
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] <= [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] <= [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] <= [1, 2]),
     )
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] .<= [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] .<= [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] .<= [1, 2]),
     )
     return
 end
 
 function test_variable_vector_fixed()
-    msg = """
-    Passing arrays as variable bounds without indexing them is not supported.
-
-    Instead of:
-    ```julia
-    @variable(model, x[1:2] == fx)
-    ```
-    use
-    ```julia
-    @variable(model, x[i=1:2] == fx[i])
-    ```
-    or
-    ```julia
-    @variable(model, x[1:2])
-    fix.(x, fx)
-    ```
-    """
     model = Model()
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] == [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] == [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] == fx)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] == fx[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            fix.(x, fx)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] == [1, 2]),
     )
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2] .== [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2] .== [1, 2])`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] == fx)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] == fx[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            fix.(x, fx)
+            ```
+            """,
+        ),
         @variable(model, x[1:2] .== [1, 2]),
     )
     return
 end
 
 function test_variable_vector_start()
-    msg = """
-    Passing arrays as variable starts without indexing them is not supported.
-
-    Instead of:
-    ```julia
-    @variable(model, x[1:2], start = x0)
-    ```
-    use
-    ```julia
-    @variable(model, x[i=1:2], start = x0[i])
-    ```
-    or
-    ```julia
-    @variable(model, x[1:2])
-    set_start_value.(x, x0)
-    ```
-    """
     model = Model()
     @test_throws_runtime(
-        ErrorException("In `@variable(model, x[1:2], start = [1, 2])`: $(msg)"),
+        ErrorException(
+            """
+            In `@variable(model, x[1:2], start = [1, 2])`:
+
+            Passing arrays as variable starts without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2], start = x0)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2], start = x0[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_start_value.(x, x0)
+            ```
+            """,
+        ),
         @variable(model, x[1:2], start = [1, 2]),
     )
     return
 end
 
 function test_variable_vector_interval()
-    msg = """
-    Passing arrays as variable bounds without indexing them is not supported.
-
-    Instead of:
-    ```julia
-    @variable(model, x[1:2] <= ub)
-    ```
-    use
-    ```julia
-    @variable(model, x[i=1:2] <= ub[i])
-    ```
-    or
-    ```julia
-    @variable(model, x[1:2])
-    set_upper_bound.(x, ub)
-    ```
-    """
     model = Model()
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2))`: $(msg)",
+            """
+            In `@variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2))`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
         ),
         @variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2)),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2))`: $(msg)",
+            """
+            In `@variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2))`:
+
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
         ),
         @variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2)),
     )
@@ -1443,7 +1727,13 @@ function test_invalid_name_errors()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x.y)`: Expression x.y cannot be used as a name.",
+            """
+            In `@variable(model, x.y)`:
+
+            Expression `x.y` cannot be used as a name.
+
+            Names must be symbols, not expressions, and they cannot contain spaces.
+            """,
         ),
         @variable(model, x.y),
     )
@@ -1454,7 +1744,13 @@ function test_invalid_name_errors_denseaxisarray()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x.y[2:3, 1:2])`: Expression x.y cannot be used as a name.",
+            """
+            In `@variable(model, x.y[2:3, 1:2])`:
+
+            Expression `x.y` cannot be used as a name.
+
+            Names must be symbols, not expressions, and they cannot contain spaces.
+            """,
         ),
         @variable(model, x.y[2:3, 1:2]),
     )
@@ -1465,7 +1761,13 @@ function test_invalid_name_errors_sparseaxisarray()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x.y[i = 1:3; isodd(i)])`: Expression x.y cannot be used as a name.",
+            """
+            In `@variable(model, x.y[i = 1:3; isodd(i)])`:
+
+            Expression `x.y` cannot be used as a name.
+
+            Names must be symbols, not expressions, and they cannot contain spaces.
+            """,
         ),
         @variable(model, x.y[i = 1:3; isodd(i)]),
     )
@@ -1476,9 +1778,16 @@ function test_invalid_variable_syntax()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, MyInfo(1))`: Invalid syntax: your syntax " *
-            "is wrong, but we don't know why. Consult the documentation for " *
-            "various ways to create variables in JuMP.",
+            """
+            In `@variable(model, MyInfo(1))`:
+
+            Invalid syntax for `@variable`.
+
+            Consult the documentation for the various ways to create variables in JuMP.
+
+            For example: `@variable(model, x)`, `@variable(model, x >= 0)`, or \
+            `@variable(model, 0 <= x <= 1)`.
+            """,
         ),
         @variable(model, MyInfo(1)),
     )
@@ -1535,11 +1844,15 @@ function test_parse_constraint_head_error()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, {x == 0})`: " *
-        "Unsupported constraint expression: we don't know how to parse " *
-        "constraints containing expressions of type :braces.\n\nIf you are " *
-        "writing a JuMP extension, implement " *
-        "`parse_constraint_head(::Function, ::Val{:braces}, args...)",
+        """
+        In `@constraint(model, {x == 0})`:
+
+        Unsupported constraint expression: cannot parse a constraint \
+        containing an expression of type `:braces`.
+
+        If you are writing a JuMP extension, implement \
+        `parse_constraint_head(::Function, ::Val{:braces}, args...)`.
+        """,
     )
     @test_throws_parsetime(err, @constraint(model, {x == 0}))
     return
@@ -1549,8 +1862,15 @@ function test_parse_constraint_head_inconsistent_vectorize()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, 1 .<= [x, x] <= 2)`: " *
-        "Operators are inconsistently vectorized.",
+        """
+        In `@constraint(model, 1 .<= [x, x] <= 2)`:
+
+        Operators are inconsistently vectorized.
+
+        The left-hand side is vectorized, but the right-hand side is not vectorized.
+
+        Either both sides must be vectorized, or neither must be.
+        """,
     )
     @test_throws_parsetime(err, @constraint(model, 1 .<= [x, x] <= 2))
     return
@@ -1560,9 +1880,14 @@ function test_parse_constraint_head_inconsistent_signs()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, 1 >= x <= 2)`: " *
-        "unsupported mix of comparison operators `1 >= ... <= 2`.\n\n" *
-        "Two-sided rows must of the form `1 <= ... <= 2` or `2 >= ... >= 1`.",
+        """
+        In `@constraint(model, 1 >= x <= 2)`:
+
+        Unsupported mix of comparison operators `1 >= ... <= 2`.
+
+        Two-sided constraints must use consistent operators. Write \
+        `1 <= ... <= 2` or `2 >= ... >= 1`.
+        """,
     )
     @test_throws_parsetime(err, @constraint(model, 1 >= x <= 2))
     return
@@ -1742,7 +2067,13 @@ function test_constraint_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model)`: expected 2 to 4 positional arguments, got 1.",
+            """
+            In `@constraint(model)`:
+
+            Expected 2 to 4 positional arguments, but got 1.
+
+            Use `@constraint(model, expr)` or `@constraint(model, name[...], expr)`.
+            """,
         ),
         @constraint(model),
     )
@@ -1753,9 +2084,15 @@ function test_constraint_no_constraint_expression_detected()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, x = 2)`: No constraint expression detected. " *
-        "If you are trying to construct an equality constraint, use `==` " *
-        "instead of `=`.",
+        """
+        In `@constraint(model, x = 2)`:
+
+        No constraint expression detected. If you are trying to \
+        construct an equality constraint, use `==` instead of `=`.
+
+        For example, to constrain `x` to equal `1`, write \
+        `@constraint(model, x == 1)`.
+        """,
     )
     @test_throws_parsetime(err, @constraint(model, x = 2))
     return
@@ -1764,9 +2101,11 @@ end
 function test_objective_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
-        ErrorException(
-            "In `@objective(model, Min)`: expected 3 positional arguments, got 2.",
-        ),
+        ErrorException("""
+                       In `@objective(model, Min)`:
+
+                       Expected 3 positional arguments, got 2.
+                       """),
         @objective(model, Min),
     )
     return
@@ -1775,9 +2114,11 @@ end
 function test_expression_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
-        ErrorException(
-            "In `@expression(model)`: expected 2 to 3 positional arguments, got 1.",
-        ),
+        ErrorException("""
+                       In `@expression(model)`:
+
+                       Expected 2 to 3 positional arguments, got 1.
+                       """),
         @expression(model),
     )
     return
@@ -1788,7 +2129,13 @@ function test_expression_keyword_arguments()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@expression(model, x, foo = 1)`: unsupported keyword argument `foo`.",
+            """
+            In `@expression(model, x, foo = 1)`:
+
+            Unsupported keyword argument `foo`.
+
+            If you are trying to construct an equality constraint, use `==` instead of `=`.
+            """,
         ),
         @expression(model, x, foo = 1),
     )
@@ -1800,7 +2147,13 @@ function test_objective_keyword_arguments()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@objective(model, Min, x, foo = 1)`: unsupported keyword argument `foo`.",
+            """
+            In `@objective(model, Min, x, foo = 1)`:
+
+            Unsupported keyword argument `foo`.
+
+            If you are trying to construct an equality constraint, use `==` instead of `=`.
+            """,
         ),
         @objective(model, Min, x, foo = 1),
     )
@@ -1812,8 +2165,15 @@ function test_build_constraint_invalid()
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@build_constraint(x)`: Incomplete constraint specification " *
-            "x. Are you missing a comparison (<=, >=, or ==)?",
+            """
+            In `@build_constraint(x)`:
+
+            Incomplete constraint specification `x`. Are you missing a \
+            comparison operator like `<=`, `>=`, or `==`?
+
+            Use `@constraint(model, expr op rhs)` where `op` is a comparison \
+            operator, for example `@constraint(model, x >= 1)`.
+            """,
         ),
         @build_constraint(x),
     )
@@ -1836,7 +2196,15 @@ end
 function test_variable_unsupported_operator()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@variable(model, x ⊕ 1)`: unsupported operator ⊕"),
+        ErrorException(
+            """
+            In `@variable(model, x ⊕ 1)`:
+
+            Unsupported operator `⊕` in variable bound expression.
+
+            Supported operators for variable bounds are `>=`, `<=`, `==`, `in`, and their unicode equivalents. For example, use `@variable(model, x >= 0)`.
+            """,
+        ),
         @variable(model, x ⊕ 1),
     )
     return
@@ -1848,12 +2216,9 @@ function test_constraint_unsupported_operator()
     @test_throws_parsetime(
         ErrorException(
             """
-            In `@constraint(model, x ⊕ 1)`: unsupported operator `⊕`.
+            In `@constraint(model, x ⊕ 1)`:
 
-            ## Explanation
-
-            JuMP was unable to create a constraint because the operator `⊕` cannot
-            be interpreted as a constraint.
+            Unsupported operator `⊕` cannot be interpreted as a constraint.
 
             Supported operators include `>=`, `<=`, `==`, and `⟂`. For example:
             ```julia
@@ -1864,10 +2229,7 @@ function test_constraint_unsupported_operator()
             @constraint(model, x in MOI.ZeroOne())
             ```
 
-            ## Next steps
-
-            Double check your constraint to see if you missed an inequality, or, if
-            you want to define a custom set, implement `operator_to_set`.
+            If you want to define a custom set, implement `operator_to_set`.
             """,
         ),
         @constraint(model, x ⊕ 1),
@@ -1879,8 +2241,13 @@ function test_variable_anon_bounds()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, [1:2] >= 0)`: Cannot use explicit bounds " *
-            "via >=, <= with an anonymous variable",
+            """
+            In `@variable(model, [1:2] >= 0)`:
+
+            Cannot use explicit bounds via `>=` or `<=` with an anonymous variable.
+
+            Either give the variable a name, for example `@variable(model, x >= 0)`, or use the `lower_bound` and `upper_bound` keyword arguments, for example `@variable(model, lower_bound = 0)`.
+            """,
         ),
         @variable(model, [1:2] >= 0),
     )
@@ -1908,17 +2275,23 @@ end
 function test_variable_Bool_argument()
     model = Model()
     err = ErrorException(
-        "In `@variable(model, x, Bool)`: " *
-        "Unsupported positional argument `Bool`. If you intended to create a " *
-        "`{0, 1}` decision variable, use `Bin` instead. For example, " *
-        "`@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.",
+        """
+        In `@variable(model, x, Bool)`:
+
+        Unsupported positional argument `Bool`.
+
+        If you intended to create a `{0, 1}` decision variable, use `Bin` instead. For example, `@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.
+        """,
     )
     @test_throws_runtime(err, @variable(model, x, Bool))
     err = ErrorException(
-        "In `@variable(model, x, Bool = true)`: " *
-        "Unsupported keyword argument: Bool.\n\nIf you intended to " *
-        "create a `{0, 1}` decision variable, use the `binary` keyword " *
-        "argument instead: `@variable(model, x, binary = true)`.",
+        """
+        In `@variable(model, x, Bool = true)`:
+
+        Unsupported keyword argument: `Bool`.
+
+        If you intended to create a `{0, 1}` decision variable, use the `binary` keyword argument instead: `@variable(model, x, binary = true)`.
+        """,
     )
     @test_throws_runtime(err, @variable(model, x, Bool = true))
     return
@@ -2047,31 +2420,48 @@ function test_matrix_in_vector_set()
     A = Containers.DenseAxisArray([1 2; 3 4], 2:3, 2:3)
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, X >= A)`: " *
-            "Unsupported matrix in vector-valued set. Did you mean to use the " *
-            "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
-            "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
-            "or `@constraint(model, X >= 0, HermitianPSDCone())`.",
+            """
+            In `@constraint(model, X >= A)`:
+
+            Unsupported matrix in vector-valued set.
+
+            Did you mean to use the broadcasting syntax `.>=` instead?
+
+            Alternatively, perhaps you are missing a set argument like \
+            `@constraint(model, X >= 0, PSDCone())` or \
+            `@constraint(model, X >= 0, HermitianPSDCone())`.
+            """,
         ),
         @constraint(model, X >= A),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, X <= A)`: " *
-            "Unsupported matrix in vector-valued set. Did you mean to use the " *
-            "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
-            "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
-            "or `@constraint(model, X <= 0, HermitianPSDCone())`.",
+            """
+            In `@constraint(model, X <= A)`:
+
+            Unsupported matrix in vector-valued set.
+
+            Did you mean to use the broadcasting syntax `.<=` instead?
+
+            Alternatively, perhaps you are missing a set argument like \
+            `@constraint(model, X <= 0, PSDCone())` or \
+            `@constraint(model, X <= 0, HermitianPSDCone())`.
+            """,
         ),
         @constraint(model, X <= A),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, X == A)`: " *
-            "Unsupported matrix in vector-valued set. Did you mean to use the " *
-            "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
-            "this syntax is supported in the special case that the matrices are " *
-            "`Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.",
+            """
+            In `@constraint(model, X == A)`:
+
+            Unsupported matrix in vector-valued set.
+
+            Did you mean to use the broadcasting syntax `.==` for element-wise equality?
+
+            Alternatively, this syntax is supported in the special case that \
+            the matrices are `Array`, `LinearAlgebra.Symmetric`, or `LinearAlgebra.Hermitian`.
+            """,
         ),
         @constraint(model, X == A),
     )
@@ -2090,58 +2480,58 @@ function test_unsupported_operator_errors()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x > 0)`: " *
-            "unsupported operator `>`.\n\n" *
-            "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
-            "If you require a strict inequality, you will need to use a " *
-            "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
-            "If the variable must take integer values, use a tolerance of " *
-            "`1.0`. If the variable may take continuous values, note that this " *
-            "work-around can cause numerical issues, and your bound may not " *
-            "hold exactly.",
+            """
+            In `@variable(model, x > 0)`:
+
+            The operator `>` is not supported because JuMP does not support strict inequalities.
+
+            Use `>=` instead. If you require a strict inequality, add a tolerance: instead of `x > 1`, write `x >= 1 + 1e-4`. Note that this work-around can cause numerical issues if the variable may take continuous values.
+            """,
         ),
         @variable(model, x > 0),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x < 0)`: " *
-            "unsupported operator `<`.\n\n" *
-            "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
-            "If you require a strict inequality, you will need to use a " *
-            "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
-            "If the variable must take integer values, use a tolerance of " *
-            "`1.0`. If the variable may take continuous values, note that this " *
-            "work-around can cause numerical issues, and your bound may not " *
-            "hold exactly.",
+            """
+            In `@variable(model, x < 0)`:
+
+            The operator `<` is not supported because JuMP does not support strict inequalities.
+
+            Use `<=` instead. If you require a strict inequality, add a tolerance: instead of `x < 1`, write `x <= 1 - 1e-4`. Note that this work-around can cause numerical issues if the variable may take continuous values.
+            """,
         ),
         @variable(model, x < 0),
     )
     @variable(model, x)
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, x > 0)`: " *
-            "unsupported operator `>`.\n\n" *
-            "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
-            "If you require a strict inequality, you will need to use a " *
-            "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
-            "If the constraint must take integer values, use a tolerance of " *
-            "`1.0`. If the constraint may take continuous values, note that this " *
-            "work-around can cause numerical issues, and your constraint may not " *
-            "hold exactly.",
+            """
+            In `@constraint(model, x > 0)`:
+
+            The operator `>` is not supported because JuMP does not support \
+            strict inequalities.
+
+            Use `>=` instead. If you require a strict inequality, add a \
+            tolerance: instead of `x > 1`, write `x >= 1 + 1e-4`. Note that \
+            this work-around can cause numerical issues if the constraint may \
+            take continuous values.
+            """,
         ),
         @constraint(model, x > 0),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, x < 0)`: " *
-            "unsupported operator `<`.\n\n" *
-            "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
-            "If you require a strict inequality, you will need to use a " *
-            "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
-            "If the constraint must take integer values, use a tolerance of " *
-            "`1.0`. If the constraint may take continuous values, note that this " *
-            "work-around can cause numerical issues, and your constraint may not " *
-            "hold exactly.",
+            """
+            In `@constraint(model, x < 0)`:
+
+            The operator `<` is not supported because JuMP does not support \
+            strict inequalities.
+
+            Use `<=` instead. If you require a strict inequality, add a \
+            tolerance: instead of `x < 1`, write `x <= 1 - 1e-4`. Note that \
+            this work-around can cause numerical issues if the constraint may \
+            take continuous values.
+            """,
         ),
         @constraint(model, x < 0),
     )
@@ -2152,10 +2542,13 @@ function test_unsupported_ternary_operator()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, 1 < x < 2)`: " *
-            "unsupported mix of comparison operators `1 < ... < 2`.\n\n" *
-            "Two-sided variable bounds must of the form `1 <= ... <= 2` or " *
-            "`2 >= ... >= 1`.",
+            """
+            In `@variable(model, 1 < x < 2)`:
+
+            Unsupported mix of comparison operators `1 < ... < 2` in variable bounds.
+
+            Two-sided variable bounds must be of the form `lb <= x <= ub` or `ub >= x >= lb`. For example, `@variable(model, 0 <= x <= 1)`.
+            """,
         ),
         @variable(model, 1 < x < 2),
     )
@@ -2252,9 +2645,15 @@ function test_bad_objective_sense()
     @variable(model, x)
     @test_throws_runtime(
         ErrorException(
-            "In `@objective(model, :MinMax, x)`: unexpected sense `MinMax`. " *
-            "The sense must be an `::MOI.OptimizatonSense`, or the symbol " *
-            "`:Min` or `:Max`.",
+            """
+            In `@objective(model, :MinMax, x)`:
+
+            Unexpected objective sense `MinMax`.
+
+            The sense must be an `::MOI.OptimizationSense`, or one of the literals `Min` or `Max`.
+
+            For example, use `@objective(model, Min, x)`, `@objective(model, Max, x)`, or `@objective(model, MAX_SENSE, x)`.
+            """,
         ),
         @objective(model, :MinMax, x),
     )
@@ -2275,7 +2674,13 @@ function test_variable_not_a_variable_name()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x)`: Expected x to be a variable name",
+            """
+            In `@variable(model, x)`:
+
+            Expected `x` to be a variable name, but got a `String`.
+
+            The variable name must be a symbol. For example, use `@variable(model, x)` or `@variable(model, x[1:n])`.
+            """,
         ),
         @variable(model, "x"),
     )
@@ -2287,9 +2692,13 @@ function test_variable_set_and_hermitian_matrix_space()
     set = esc(:(HermitianMatrixSpace()))
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian)`: " *
-            "Cannot pass `Hermitian` as a positional argument because the " *
-            "variable is already constrained to `$set`.",
+            """
+            In `@variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian)`:
+
+            Cannot pass `Hermitian` as a positional argument because the variable is already constrained to `$set`.
+
+            Remove either the inline set constraint or the `Hermitian` positional argument.
+            """,
         ),
         @variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian),
     )
@@ -2362,73 +2771,145 @@ function test_error_parsing_reference_sets()
     @variable(model, a)
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, b[1:a])`: unexpected error parsing reference set: 1:a",
+            """
+            In `@variable(model, b[1:a])`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @variable(model, b[1:a]),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, b[1:2, 1:a])`: unexpected error parsing reference set: 1:a",
+            """
+            In `@variable(model, b[1:2, 1:a])`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @variable(model, b[1:2, 1:a]),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, b[i = 1:a, 1:i])`: unexpected error parsing reference set: 1:a",
+            """
+            In `@variable(model, b[i = 1:a, 1:i])`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @variable(model, b[i=1:a, 1:i]),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, b[i = 1:2, a:i])`: unexpected error parsing reference set: a:i",
+            """
+            In `@variable(model, b[i = 1:2, a:i])`:
+
+            Unexpected error parsing reference set: a:i
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @variable(model, b[i=1:2, a:i]),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@variable(model, b[i = 1:2; i < a])`: unexpected error parsing condition: i < a",
+            """
+            In `@variable(model, b[i = 1:2; i < a])`:
+
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @variable(model, b[i = 1:2; i < a]),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, b[1:a], a + 1)`: unexpected error parsing reference set: 1:a",
+            """
+            In `@expression(model, b[1:a], a + 1)`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @expression(model, b[1:a], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, b[1:2, 1:a], a + 1)`: unexpected error parsing reference set: 1:a",
+            """
+            In `@expression(model, b[1:2, 1:a], a + 1)`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @expression(model, b[1:2, 1:a], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, b[i = 1:a, 1:i], a + 1)`: unexpected error parsing reference set: 1:a",
+            """
+            In `@expression(model, b[i = 1:a, 1:i], a + 1)`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @expression(model, b[i=1:a, 1:i], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, b[i = 1:2, a:i], a + 1)`: unexpected error parsing reference set: a:i",
+            """
+            In `@expression(model, b[i = 1:2, a:i], a + 1)`:
+
+            Unexpected error parsing reference set: a:i
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @expression(model, b[i=1:2, a:i], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@expression(model, b[i = 1:2; i < a], a + 1)`: unexpected error parsing condition: i < a",
+            """
+            In `@expression(model, b[i = 1:2; i < a], a + 1)`:
+
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @expression(model, b[i = 1:2; i < a], a + 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, b[i = 1:a], a <= 1)`: unexpected error parsing reference set: 1:a",
+            """
+            In `@constraint(model, b[i = 1:a], a <= 1)`:
+
+            Unexpected error parsing reference set: 1:a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @constraint(model, b[i=1:a], a <= 1),
     )
     @test_throws_runtime(
         ErrorException(
-            "In `@constraint(model, b[i = 1:2; i < a], a <= 1)`: unexpected error parsing condition: i < a",
+            """
+            In `@constraint(model, b[i = 1:2; i < a], a <= 1)`:
+
+            Unexpected error parsing condition: i < a
+
+            See the "caused by" stacktrace below for the underlying error.
+            """,
         ),
         @constraint(model, b[i = 1:2; i < a], a <= 1),
     )
@@ -2476,7 +2957,13 @@ function test_force_nonlinear()
     @test @force_nonlinear(x^2) isa GenericNonlinearExpr
     @test_throws_runtime(
         ErrorException(
-            "In `@force_nonlinear(x)`: expression did not produce a `GenericNonlinearExpr`. Got a `$(typeof(x))`: $x",
+            """
+            In `@force_nonlinear(x)`:
+
+            The expression did not produce a `GenericNonlinearExpr`. Got a `$(typeof(x))`: $x.
+
+            `@force_nonlinear` requires that the expression evaluates to a nonlinear expression.
+            """,
         ),
         @force_nonlinear(x),
     )
@@ -2487,8 +2974,13 @@ function test_unsupported_name_syntax_multiple_ref()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, (x[1:1])[1:2])`: Unsupported syntax: " *
-            "the expression `x[1:1]` cannot be used as a name.",
+            """
+            In `@variable(model, (x[1:1])[1:2])`:
+
+            The expression `x[1:1]` cannot be used as a name.
+
+            Names must be symbols, not expressions, and they cannot contain spaces.
+            """,
         ),
         @variable(model, x[1:1][1:2]),
     )
@@ -2501,30 +2993,26 @@ function test_constraint_vect_vcat()
     @test_throws_parsetime(
         ErrorException(
             """
-            In `@constraint(model, c, [k in 1:2], x <= k)`: Unsupported constraint expression: we don't know how to parse a
-            `[ ]` block as a constraint. Have you written:
-            ```julia
-            @constraint(model, name, [...], ...)
-            ```
-            instead of:
-            ```julia
-            @constraint(model, name[...], ...)
-            ```""",
+            In `@constraint(model, c, [k in 1:2], x <= k)`:
+
+            Unsupported constraint expression: a `[ ]` block cannot be used as a constraint.
+
+            You may have written `@constraint(model, name, [...], ...)` when \
+            you meant `@constraint(model, name[...], ...)`.
+            """,
         ),
         @constraint(model, c, [k in 1:2], x <= k),
     )
     @test_throws_parsetime(
         ErrorException(
             """
-            In `@constraint(model, c, [k in 1:2; isodd(k)], x <= k)`: Unsupported constraint expression: we don't know how to parse a
-            `[ ]` block as a constraint. Have you written:
-            ```julia
-            @constraint(model, name, [...], ...)
-            ```
-            instead of:
-            ```julia
-            @constraint(model, name[...], ...)
-            ```""",
+            In `@constraint(model, c, [k in 1:2; isodd(k)], x <= k)`:
+
+            Unsupported constraint expression: a `[ ]` block cannot be used as a constraint.
+
+            You may have written `@constraint(model, name, [...], ...)` when \
+            you meant `@constraint(model, name[...], ...)`.
+            """,
         ),
         @constraint(model, c, [k in 1:2; isodd(k)], x <= k),
     )
@@ -2535,29 +3023,49 @@ function test_set_bounds_twice_error()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x >= 0, lower_bound = 1)`: " *
-            "Cannot specify variable lower_bound twice",
+            """
+            In `@variable(model, x >= 0, lower_bound = 1)`:
+
+            Cannot specify variable lower_bound twice.
+
+            This can happen if you used both the `>= lower` syntax, and the `lower_bound =` keyword.
+            """,
         ),
         @variable(model, x >= 0, lower_bound = 1),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x <= 0, upper_bound = 1)`: " *
-            "Cannot specify variable upper_bound twice",
+            """
+            In `@variable(model, x <= 0, upper_bound = 1)`:
+
+            Cannot specify variable upper_bound twice.
+
+            This can happen if you used both the `<= upper` syntax, and the `upper_bound =` keyword.
+            """,
         ),
         @variable(model, x <= 0, upper_bound = 1),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x, Bin, binary = true)`: " *
-            "'Bin' and 'binary' keyword argument cannot both be specified.",
+            """
+            In `@variable(model, x, Bin, binary = true)`:
+
+            'Bin' and 'binary' keyword argument cannot both be specified.
+
+            Do `@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.
+            """,
         ),
         @variable(model, x, Bin, binary = true),
     )
     @test_throws_parsetime(
         ErrorException(
-            "In `@variable(model, x, Int, integer = true)`: " *
-            "'Int' and 'integer' keyword argument cannot both be specified.",
+            """
+            In `@variable(model, x, Int, integer = true)`:
+
+            'Int' and 'integer' keyword argument cannot both be specified.
+
+            Do `@variable(model, x, Int)` or `@variable(model, x, integer = true)`.
+            """,
         ),
         @variable(model, x, Int, integer = true),
     )
@@ -2607,7 +3115,15 @@ function test_malformed_kwarg()
     @variable(model, x[1:1])
     @test_throws_parsetime(
         ErrorException(
-            "In `@constraint(model, x[1] = 1)`: Invalid keyword argument detected. If you are trying to construct an equality constraint, use `==` instead of `=`.",
+            """
+            In `@constraint(model, x[1] = 1)`:
+
+            Invalid keyword argument detected.
+
+            The left-hand side of the `=` operator was `x[1]`.
+
+            If you are trying to construct an equality constraint, use `==` instead of `=`.
+            """,
         ),
         @constraint(model, x[1] = 1),
     )

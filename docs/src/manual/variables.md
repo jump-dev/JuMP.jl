@@ -1148,9 +1148,14 @@ julia> type = :PSD
 :PSD
 
 julia> @variable(model, x[1:2, 1:2], type)
-ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:PSD,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`:
+
+Unrecognized positional arguments: (:PSD,).
+
+You may have passed an unrecognized type or a keyword value to `variable_type`.
 
 If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
+
 Stacktrace:
 [...]
 ```
@@ -1212,9 +1217,14 @@ julia> type = :Symmetric
 :Symmetric
 
 julia> @variable(model, x[1:2, 1:2], type)
-ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`: Unrecognized positional arguments: (:Symmetric,). (You may have passed it as a positional argument, or as a keyword value to `variable_type`.)
+ERROR: At none:1: `@variable(model, x[1:2, 1:2], type)`:
+
+Unrecognized positional arguments: (:Symmetric,).
+
+You may have passed an unrecognized type or a keyword value to `variable_type`.
 
 If you're trying to create a JuMP extension, you need to implement `build_variable`. Read the docstring for more details.
+
 Stacktrace:
 [...]
 ```

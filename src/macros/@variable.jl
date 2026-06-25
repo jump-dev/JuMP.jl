@@ -143,26 +143,48 @@ macro variable(input_args...)
     error_fn = Containers.build_error_fn(:variable, input_args, __source__)
     args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) >= 2 && Meta.isexpr(args[2], :block)
-        error_fn("Invalid syntax. Did you mean to use `@variables`?")
+        error_fn(
+            """
+            Invalid syntax. The variable expression cannot be a \
+            `begin ... end` block.
+
+            To add multiple variables at once, use the `@variables` macro \
+            instead.
+            """,
+        )
     end
     model_sym = popfirst!(args)
     model = esc(model_sym)
     x = isempty(args) ? nothing : popfirst!(args)
     if x == :Int
         error_fn(
-            "Ambiguous variable name $x detected. To specify an anonymous " *
-            "integer variable, use `@variable(model, integer = true)` instead.",
+            """
+            Ambiguous variable name `$x` detected.
+
+            `Int` is a Julia type, not a valid variable name.
+
+            To create an anonymous integer variable, use `@variable(model, integer = true)` instead.
+            """,
         )
     elseif x == :Bin
         error_fn(
-            "Ambiguous variable name $x detected. To specify an anonymous " *
-            "binary variable, use `@variable(model, binary = true)` instead.",
+            """
+            Ambiguous variable name `$x` detected.
+
+            `Bin` is a JuMP keyword, not a valid variable name.
+
+            To create an anonymous binary variable, use `@variable(model, binary = true)` instead.
+            """,
         )
     elseif x == :PSD
         error_fn(
-            "Size of anonymous square matrix of positive semidefinite " *
-            "anonymous variables is not specified. To specify size of square " *
-            "matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+            """
+            The size of an anonymous positive semidefinite matrix variable is \
+            not specified.
+
+            To create an anonymous PSD matrix variable, specify the size \
+            using `@variable(model, [1:n, 1:n], PSD)`.
+            """,
         )
     end
     info_kwargs =
@@ -183,13 +205,28 @@ macro variable(input_args...)
         is_anonymous = Meta.isexpr(var, (:vect, :vcat)) || x === nothing
         if is_anonymous && set === nothing
             error_fn(
-                "Cannot use explicit bounds via >=, <= with an anonymous variable",
+                """
+                Cannot use explicit bounds via `>=` or `<=` with an anonymous \
+                variable.
+
+                Either give the variable a name, for example \
+                `@variable(model, x >= 0)`, or use the `lower_bound` and \
+                `upper_bound` keyword arguments, for example \
+                `@variable(model, lower_bound = 0)`.
+                """,
             )
         end
     end
     # if var === nothing, then the variable is anonymous
     if !(var isa Union{Nothing,Symbol,Expr})
-        error_fn("Expected $var to be a variable name")
+        error_fn(
+            """
+            Expected `$var` to be a variable name, but got a \
+            `$(typeof(var))`.
+
+            The variable name must be a symbol. For example, use `@variable(model, x)` or `@variable(model, x[1:n])`.
+            """,
+        )
     end
     name, index_vars, indices = Containers.parse_ref_sets(
         error_fn,
@@ -202,8 +239,13 @@ macro variable(input_args...)
     if set_kw !== nothing
         if set !== nothing
             error_fn(
-                "Cannot use set keyword because the variable is already " *
-                "constrained to `$set`.",
+                """
+                Cannot use the `set` keyword argument because the variable is \
+                already constrained to `$set`.
+
+                Remove either the inline set constraint or the `set` keyword \
+                argument.
+                """,
             )
         end
         set = esc(set_kw)
@@ -232,24 +274,39 @@ macro variable(input_args...)
         elseif ex == :PSD
             if set !== nothing
                 error_fn(
-                    "Cannot pass `$ex` as a positional argument because the " *
-                    "variable is already constrained to `$set`.",
+                    """
+                    Cannot pass `$ex` as a positional argument because the \
+                    variable is already constrained to `$set`.
+
+                    Remove either the inline set constraint or the `$ex` \
+                    positional argument.
+                    """,
                 )
             end
             set = PSDCone()
         elseif ex == :Symmetric
             if set !== nothing
                 error_fn(
-                    "Cannot pass `$ex` as a positional argument because the " *
-                    "variable is already constrained to `$set`.",
+                    """
+                    Cannot pass `$ex` as a positional argument because the \
+                    variable is already constrained to `$set`.
+
+                    Remove either the inline set constraint or the `$ex` \
+                    positional argument.
+                    """,
                 )
             end
             set = SymmetricMatrixSpace()
         elseif ex == :Hermitian
             if set !== nothing
                 error_fn(
-                    "Cannot pass `$ex` as a positional argument because the " *
-                    "variable is already constrained to `$set`.",
+                    """
+                    Cannot pass `$ex` as a positional argument because the \
+                    variable is already constrained to `$set`.
+
+                    Remove either the inline set constraint or the `$ex` \
+                    positional argument.
+                    """,
                 )
             end
             set = HermitianMatrixSpace()
@@ -371,9 +428,14 @@ A hook for extensions to intercept the parsing of inequality constraints in the
 """
 function parse_variable(error_fn::Function, ::_VariableInfoExpr, args...)
     return error_fn(
-        "Invalid syntax: your syntax is wrong, but we don't know why. " *
-        "Consult the documentation for various ways to create variables in " *
-        "JuMP.",
+        """
+        Invalid syntax for `@variable`.
+
+        Consult the documentation for the various ways to create variables in JuMP.
+
+        For example: `@variable(model, x)`, `@variable(model, x >= 0)`, or \
+        `@variable(model, 0 <= x <= 1)`.
+        """,
     )
 end
 
@@ -477,7 +539,15 @@ function parse_one_operator_variable(
     ::Val{S},
     ::Any,
 ) where {S}
-    return error_fn("unsupported operator $S")
+    return error_fn(
+        """
+        Unsupported operator `$S` in variable bound expression.
+
+        Supported operators for variable bounds are `>=`, `<=`, `==`, `in`, \
+        and their unicode equivalents. For example, use \
+        `@variable(model, x >= 0)`.
+        """,
+    )
 end
 
 function parse_one_operator_variable(
@@ -526,14 +596,15 @@ function parse_one_operator_variable(
     ::Any,
 )
     return error_fn(
-        "unsupported operator `>`.\n\n" *
-        "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
-        "If you require a strict inequality, you will need to use a " *
-        "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
-        "If the variable must take integer values, use a tolerance of " *
-        "`1.0`. If the variable may take continuous values, note that this " *
-        "work-around can cause numerical issues, and your bound may not " *
-        "hold exactly.",
+        """
+        The operator `>` is not supported because JuMP does not support \
+        strict inequalities.
+
+        Use `>=` instead. If you require a strict inequality, add a \
+        tolerance: instead of `x > 1`, write `x >= 1 + 1e-4`. Note that \
+        this work-around can cause numerical issues if the variable may \
+        take continuous values.
+        """,
     )
 end
 
@@ -544,14 +615,15 @@ function parse_one_operator_variable(
     ::Any,
 )
     return error_fn(
-        "unsupported operator `<`.\n\n" *
-        "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
-        "If you require a strict inequality, you will need to use a " *
-        "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
-        "If the variable must take integer values, use a tolerance of " *
-        "`1.0`. If the variable may take continuous values, note that this " *
-        "work-around can cause numerical issues, and your bound may not " *
-        "hold exactly.",
+        """
+        The operator `<` is not supported because JuMP does not support \
+        strict inequalities.
+
+        Use `<=` instead. If you require a strict inequality, add a \
+        tolerance: instead of `x < 1`, write `x <= 1 - 1e-4`. Note that \
+        this work-around can cause numerical issues if the variable may \
+        take continuous values.
+        """,
     )
 end
 
@@ -570,9 +642,13 @@ function parse_ternary_variable(
     ub,
 ) where {A,B}
     return error_fn(
-        "unsupported mix of comparison operators `$lb $A ... $B $ub`.\n\n" *
-        "Two-sided variable bounds must of the form `$lb <= ... <= $ub` or " *
-        "`$ub >= ... >= $lb`.",
+        """
+        Unsupported mix of comparison operators `$lb $A ... $B $ub` in \
+        variable bounds.
+
+        Two-sided variable bounds must be of the form `lb <= x <= ub` or \
+        `ub >= x >= lb`. For example, `@variable(model, 0 <= x <= 1)`.
+        """,
     )
 end
 
@@ -672,20 +748,27 @@ function build_variable(
 )
     if length(args) > 0
         error_fn(
-            "Unrecognized positional arguments: $(args). (You may have " *
-            "passed it as a positional argument, or as a keyword value to " *
-            "`variable_type`.)\n\nIf you're trying to create a JuMP " *
-            "extension, you need to implement `build_variable`. Read the " *
-            "docstring for more details.",
+            """
+            Unrecognized positional arguments: $(args).
+
+            You may have passed an unrecognized type or a keyword value to `variable_type`.
+
+            If you're trying to create a JuMP extension, you need to \
+            implement `build_variable`. Read the docstring for more details.
+            """,
         )
     end
     if length(kwargs) > 0
         key, _ = first(kwargs)
         if key == :Bool
             error_fn(
-                "Unsupported keyword argument: $key.\n\nIf you intended to " *
-                "create a `{0, 1}` decision variable, use the `binary` keyword " *
-                "argument instead: `@variable(model, x, binary = true)`.",
+                """
+                Unsupported keyword argument: `$key`.
+
+                If you intended to create a `{0, 1}` decision variable, use \
+                the `binary` keyword argument instead: \
+                `@variable(model, x, binary = true)`.
+                """,
             )
         end
         error_fn(
@@ -801,9 +884,13 @@ function build_variable(
     kwargs...,
 )
     return error_fn(
-        "Unsupported positional argument `Bool`. If you intended to create a " *
-        "`{0, 1}` decision variable, use `Bin` instead. For example, " *
-        "`@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.",
+        """
+        Unsupported positional argument `Bool`.
+
+        If you intended to create a `{0, 1}` decision variable, use `Bin` \
+        instead. For example, `@variable(model, x, Bin)` or \
+        `@variable(model, x, binary = true)`.
+        """,
     )
 end
 
@@ -822,9 +909,13 @@ function build_variable(
 )
     if length(variables) != length(sets)
         return error_fn(
-            "Dimensions must match. Got a vector of scalar variables with" *
-            "$(length(variables)) elements and a vector of " *
-            "scalar sets with $(length(sets)).",
+            """
+            Dimensions must match. Got a vector of scalar variables with \
+            $(length(variables)) elements and a vector of scalar sets with \
+            $(length(sets)) elements.
+
+            Ensure the number of variables and sets are the same.
+            """,
         )
     end
     return VariableConstrainedOnCreation.(variables, sets)
@@ -844,10 +935,14 @@ function build_variable(
     sets::AbstractArray{<:MOI.AbstractScalarSet},
 )
     return error_fn(
-        "It is not possible to add a scalar variable in an Array of " *
-        "sets. Either add an Array of scalar variables in a scalar set or " *
-        "add an Array of scalar variables in an Array of scalar sets of " *
-        "the same dimension.",
+        """
+        It is not possible to add a scalar variable constrained to an array \
+        of sets.
+
+        Either add an array of scalar variables constrained to a single \
+        scalar set, or add an array of scalar variables constrained to an \
+        array of scalar sets of the same dimension.
+        """,
     )
 end
 

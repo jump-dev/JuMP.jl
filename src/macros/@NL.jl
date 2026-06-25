@@ -301,14 +301,28 @@ macro NLconstraint(m, x, args...)
         Containers.build_error_fn(:NLconstraint, (m, x, args...), __source__)
     esc_m = esc(m)
     if Meta.isexpr(x, :block)
-        error_fn("Invalid syntax. Did you mean to use `@NLconstraints`?")
+        error_fn(
+            """
+            Invalid syntax. The constraint cannot be a `begin ... end` block.
+
+            To add multiple nonlinear constraints at once, use the \
+            `@NLconstraints` macro instead.
+            """,
+        )
     end
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
     extra, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(extra) > 1 || length(kw_args) > 0
-        error_fn("too many arguments.")
+        error_fn(
+            """
+            Too many arguments were passed to `@NLconstraint`.
+
+            The correct syntax is `@NLconstraint(model, [ref,] expr)`. For \
+            example, `@NLconstraint(model, x^2 <= 1)`.
+            """,
+        )
     end
     # Canonicalize the arguments
     c = length(extra) == 1 ? x : nothing
@@ -427,12 +441,31 @@ macro NLexpression(args...)
     args, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(args) <= 1
         error_fn(
-            "To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.",
+            """
+            Too few arguments ($(length(args))) were passed to `@NLexpression`.
+
+            The correct syntax is `@NLexpression(model, [ref,] expr)`. For \
+            example, `@NLexpression(model, ex, x^2 + 1)`.
+            """,
         )
     elseif length(args) > 3 || length(kw_args) > 0
-        error_fn("To many arguments ($(length(args))).")
+        error_fn(
+            """
+            Too many arguments ($(length(args))) were passed to `@NLexpression`.
+
+            The correct syntax is `@NLexpression(model, [ref,] expr)`. For \
+            example, `@NLexpression(model, ex, x^2 + 1)`.
+            """,
+        )
     elseif Meta.isexpr(args[2], :block)
-        error_fn("Invalid syntax. Did you mean to use `@NLexpressions`?")
+        error_fn(
+            """
+            Invalid syntax. The expression cannot be a `begin ... end` block.
+
+            To add multiple nonlinear expressions at once, use the \
+            `@NLexpressions` macro instead.
+            """,
+        )
     end
     m, c, x = if length(args) == 2
         args[1], nothing, args[2]
@@ -603,22 +636,55 @@ macro NLparameter(model, args...)
     kw_args = filter(kw -> kw.args[1] != :value, kw_args)
     if !ismissing(value) && length(pos_args) > 0
         error_fn(
-            "Invalid syntax: no positional args allowed for anonymous " *
-            "parameters.",
+            """
+            Invalid syntax: no positional arguments are allowed when using the \
+            `value` keyword argument for an anonymous parameter.
+
+            Use either `@NLparameter(model, p == value)` (named) or \
+            `@NLparameter(model, value = value)` (anonymous), but not both.
+            """,
         )
     elseif length(pos_args) > 1
-        error_fn("Invalid syntax: too many positional arguments.")
+        error_fn(
+            """
+            Invalid syntax: too many positional arguments were passed to \
+            `@NLparameter`.
+
+            The correct syntax is `@NLparameter(model, param == value)`. For \
+            example, `@NLparameter(model, p == 1.0)`.
+            """,
+        )
     elseif length(kw_args) > 0
-        error_fn("Invalid syntax: unsupported keyword arguments.")
+        error_fn(
+            """
+            Invalid syntax: unsupported keyword arguments were passed to \
+            `@NLparameter`.
+
+            The only supported keyword argument is `value`. For example, \
+            `@NLparameter(model, value = 1.0)` creates an anonymous parameter.
+            """,
+        )
     elseif ismissing(value) && Meta.isexpr(pos_args[1], :block)
-        error_fn("Invalid syntax: did you mean to use `@NLparameters`?")
+        error_fn(
+            """
+            Invalid syntax. The parameter expression cannot be a \
+            `begin ... end` block.
+
+            To add multiple nonlinear parameters at once, use the `@NLparameters` macro instead.
+            """,
+        )
     elseif ismissing(value)
         ex = pos_args[1]
         if !Meta.isexpr(ex, :call) ||
            length(ex.args) != 3 ||
            ex.args[1] != :(==)
             error_fn(
-                "Invalid syntax: expected syntax of form `param == value`.",
+                """
+                Invalid syntax: expected syntax of form `param == value`.
+
+                For example, use `@NLparameter(model, p == 1.0)` to create a \
+                parameter named `p` with initial value `1.0`.
+                """,
             )
         end
     end
@@ -633,7 +699,14 @@ macro NLparameter(model, args...)
     )
     code = quote
         if !isa($(esc(value)), Number)
-            $(esc(error_fn))("Parameter value is not a number.")
+            $(esc(error_fn))(
+                """
+                The parameter value is not a number. Got `$(typeof($(esc(value))))`.
+
+                Parameter values must be numeric. For example, use \
+                `@NLparameter(model, p == 1.0)`.
+                """,
+            )
         end
         add_nonlinear_parameter($esc_m, $(esc(value)))
     end

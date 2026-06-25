@@ -10,21 +10,25 @@
 # @constraint(model, 2x - 1 ⟂ x)
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     F::AbstractArray{<:Union{Real,AbstractJuMPScalar}},
     x::AbstractArray{<:AbstractVariableRef},
 )
     if size(F) != size(x)
-        errorf(
-            "size of mapping does not match size of variables: " *
-            "$(size(F)) != $(size(x)).",
+        error_fn(
+            """
+            The number of elements in the left-hand side $(size(F)) does not match the right-hand side $(size(x)).
+
+            There must be a one-to-one mapping between the left- and right-hand \
+            sides of a complementarity constraint.
+            """,
         )
     end
     return VectorConstraint([F; x], MOI.Complements(2 * length(F)))
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     F::Containers.SparseAxisArray{<:Union{Real,AbstractJuMPScalar}},
     x::Containers.SparseAxisArray{<:AbstractVariableRef},
 )
@@ -33,18 +37,31 @@ function _build_complements_constraint(
         if haskey(x, i)
             push!(elements, x[i])
         else
-            errorf("keys of the SparseAxisArray's do not match.")
+            error_fn(
+                """
+                Keys of the SparseAxisArray's do not match.
+
+                The left-hand side has key `$i`, but the right-hand side does not.
+                """,
+            )
         end
     end
     return VectorConstraint(elements, MOI.Complements(length(elements)))
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     ::AbstractArray{<:Union{Real,AbstractJuMPScalar}},
-    ::AbstractArray{<:AbstractJuMPScalar},
+    x::AbstractArray{<:AbstractJuMPScalar},
 )
-    return errorf("second term must be an array of variables.")
+    return error_fn(
+        """
+        The right-hand side term in a complementarity constraint must be a \
+        variable or an array of variables.
+
+        Currently, it is a `$(typeof(x))`.
+        """,
+    )
 end
 
 function _build_complements_constraint(
@@ -56,20 +73,26 @@ function _build_complements_constraint(
 end
 
 function _build_complements_constraint(
-    errorf::Function,
+    error_fn::Function,
     ::Union{Real,AbstractJuMPScalar},
-    ::AbstractJuMPScalar,
+    x::AbstractJuMPScalar,
 )
-    return errorf("second term must be a variable.")
+    return error_fn(
+        """
+        The right-hand side term in a complementarity constraint must be a variable.
+
+        Currently, it is a `$(typeof(x))`.
+        """,
+    )
 end
 
 function parse_constraint_call(
-    errorf::Function,
+    error_fn::Function,
     ::Bool,
     ::Union{Val{:complements},Val{:⟂}},
     F,
     x,
 )
-    f, parse_code = _rewrite_expression(F)
-    return parse_code, :(_build_complements_constraint($errorf, $f, $(esc(x))))
+    f, parse = _rewrite_expression(F)
+    return parse, :(_build_complements_constraint($error_fn, $f, $(esc(x))))
 end
