@@ -186,7 +186,7 @@ To create a positive semidefinite constraint, pass `PSDCone()` or `HermitianPSDC
 @constraint(model, x >= y, PSDCone())
 ```
 
-To create an element-wise inequality, pass `Nonnegatives()`, or use broadcasting:
+To create an elementwise inequality, pass `Nonnegatives()` or use broadcasting:
 ```julia
 @constraint(model, x >= y, Nonnegatives())
 # or
