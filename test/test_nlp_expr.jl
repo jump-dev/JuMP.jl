@@ -6,7 +6,6 @@
 module TestNLPExpr
 
 using JuMP
-using LinearAlgebra
 using Test
 
 import LinearAlgebra
@@ -1233,24 +1232,28 @@ function test_extension_euler_to_exp(
     return
 end
 
-function test_array()
+function test_array_det()
     model = Model()
     @variable(model, x)
-    vov = MOI.VectorOfVariables([index(x)])
-    op_det = NonlinearOperator(det, :det)
+    op_det = NonlinearOperator(LinearAlgebra.det, :det)
     @objective(model, Min, op_det([x]))
-    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
-    @test f.head == :det
-    @test f.args == [vov]
+    @test isapprox(
+        MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}()),
+        MOI.ScalarNonlinearFunction(:det, Any[moi_function([x])]),
+    )
+    return
+end
 
-    op_dot = NonlinearOperator(dot, :dot)
-    a = [2.0]
-    @objective(model, Min, op_dot([x], a))
-    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
-    @test f.head == :dot
-    @test length(f.args) == 2
-    @test f.args[1] == vov
-    @test f.args[2] == a
+function test_array_dot()
+    model = Model()
+    @variable(model, x)
+    op_dot = NonlinearOperator(LinearAlgebra.dot, :dot)
+    @objective(model, Min, op_dot([x], [2.0]))
+    @test isapprox(
+        MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}()),
+        MOI.ScalarNonlinearFunction(:dot, Any[moi_function([x]), [2.0]]),
+    )
+    return
 end
 
 # Inspired from contiguous arrays in ArrayDiff and GenOpt
@@ -1263,11 +1266,11 @@ struct Contiguous end
 
 function JuMP.Containers.container(
     _,
-    axe::JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int}}},
+    axes::JuMP.Containers.VectorizedProductIterator{Tuple{Base.OneTo{Int}}},
     ::Contiguous,
 )
     # Correctness don't matter, it's not for the sake of this test
-    return ContiguousVectorOfVariableRefs(0, length(axe))
+    return ContiguousVectorOfVariableRefs(0, length(axes))
 end
 
 struct ContiguousVectorOfVariableIndices <: MOI.AbstractVectorFunction
@@ -1289,7 +1292,8 @@ function test_custom_array()
     @objective(model, Min, op_norm(x))
     f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
     @test f.head == :norm
-    @test f.args[] == ContiguousVectorOfVariableIndices(0, 2)
+    @test only(f.args) == ContiguousVectorOfVariableIndices(0, 2)
+    return
 end
 
 end  # module
