@@ -1036,6 +1036,7 @@ function check_belongs_to_model(f::Vector, model)
     for func in f
         check_belongs_to_model(func, model)
     end
+    return
 end
 
 function moi_function(model, f)
