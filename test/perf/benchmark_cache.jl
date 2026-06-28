@@ -50,7 +50,7 @@
 #                                               objectid keys fixes it.
 #   C: shared big subexpr (N=200, M=200)       model_struct 171 / model_oid 170
 #                                               vs none 191 / per_call_oid 195
-#                                               → 12–14% win for the model-
+#                                               → 12 to 14% win for the model-
 #                                               level cache. Per-call cannot
 #                                               see the cross-constraint
 #                                               sharing.
