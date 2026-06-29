@@ -79,7 +79,7 @@ There are a few ways to get started with JuMP:
     which contains a number of tips on how to ask a good question.
 
 !!! note "Help us improve JuMP"
-    If you encountered an unclear error message, confusing behavior, or a gap in
+    If you encounter an unclear error message, confusing behavior, or a gap in
     the documentation—even if you have already solved the problem—please
     consider posting to the [Community forum](https://jump.dev/forum) or
     [issue tracker](https://github.com/jump-dev/JuMP.jl/issues). Your feedback
