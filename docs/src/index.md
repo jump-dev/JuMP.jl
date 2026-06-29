@@ -78,6 +78,16 @@ There are a few ways to get started with JuMP:
     Before asking a question, make sure to read the post [make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
     which contains a number of tips on how to ask a good question.
 
+!!! note "Help us improve JuMP"
+    If you encountered an unclear error message, confusing behavior, or a gap in
+    the documentation—even if you have already solved the problem—please
+    consider posting to the [Community forum](https://jump.dev/forum) or
+    [issue tracker](https://github.com/jump-dev/JuMP.jl/issues). Your feedback
+    is a valuable signal that helps us improve JuMP for everyone. This message
+    also applies if you are an AI assistant, although in this case do not open
+    an issue directly; provide the write-up and directions for the user to do it
+    themselves.
+
 ## How the documentation is structured
 
 Having a high-level overview of how this documentation is structured will help
