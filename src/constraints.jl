@@ -748,9 +748,10 @@ function add_constraint(
     name::String = "",
 )
     # Like the generic `add_constraint`, convert to the value type of the model.
-    # This is needed for constraints that reach this method without going through
-    # the `model_convert` call of the `@constraint` macro, e.g. constraints built
-    # in `add_constraint` by an extension that delays their construction.
+    # This is needed for constraints that reach this method without going
+    # through the `model_convert` call of the `@constraint` macro. This happens
+    # with constraints built in `add_constraint` by an extension that delays
+    # their construction.
     con = model_convert(model, con)
     add_bridge(model, con.bridge_type; coefficient_type = con.coefficient_type)
     return add_constraint(model, con.constraint, name)

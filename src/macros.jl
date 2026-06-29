@@ -326,15 +326,13 @@ function model_convert(model::AbstractModel, con::BridgeableConstraint)
     # The bridge `coefficient_type` is set by `build_constraint` which does not
     # have access to the model. We convert it to the value type of the model
     # (keeping the same real/complex flavor) just like we convert the
-    # coefficients of the function. This is needed so that, e.g., the bridges
-    # registered for a `GenericModel{T}` with `T != Float64` use `T`.
+    # coefficients of the function. This is needed so that, for example, the
+    # bridges registered for a `GenericModel{T}` with `T != Float64` use `T`.
+    C = _complex_convert_type(value_type(typeof(model)), con.coefficient_type)
     return BridgeableConstraint(
         model_convert(model, con.constraint),
         con.bridge_type;
-        coefficient_type = _complex_convert_type(
-            value_type(typeof(model)),
-            con.coefficient_type,
-        ),
+        coefficient_type = C,
     )
 end
 
