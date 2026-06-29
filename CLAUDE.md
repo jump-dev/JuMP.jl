@@ -1,0 +1,3 @@
+# JuMP.jl
+
+@AGENTS.md
