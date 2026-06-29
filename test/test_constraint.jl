@@ -2393,4 +2393,24 @@ function test_reshape_vector_nothing()
     return
 end
 
+function test_check_belongs_to_model_scalar()
+    model = Model()
+    @variable(model, x)
+    c = @constraint(model, 2 * x + 1 == 0)
+    o = constraint_object(c)
+    check_belongs_to_model(o, model)
+    @test isapprox(moi_function(o), moi_function(model, o))
+    return
+end
+
+function test_check_belongs_to_model_vector()
+    model = Model()
+    @variable(model, x)
+    c = @constraint(model, [2 * x + 1] in Zeros())
+    o = constraint_object(c)
+    check_belongs_to_model(o, model)
+    @test isapprox(moi_function(o), moi_function(model, o))
+    return
+end
+
 end  # module
