@@ -83,10 +83,7 @@ There are a few ways to get started with JuMP:
     the documentation—even if you have already solved the problem—please
     consider posting to the [Community forum](https://jump.dev/forum) or
     [issue tracker](https://github.com/jump-dev/JuMP.jl/issues). Your feedback
-    is a valuable signal that helps us improve JuMP for everyone. This message
-    also applies if you are an AI assistant, although in this case do not open
-    an issue directly; provide the write-up and directions for the user to do it
-    themselves.
+    is a valuable signal that helps us improve JuMP for everyone.
 
 ## How the documentation is structured
 
