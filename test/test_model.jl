@@ -436,7 +436,54 @@ function test_macro_bridgeable()
     model = Model()
     @variable(model, x)
     @constraint(model, x in BridgeMe{Int,Nonnegative}(Nonnegative()))
-    @test NonnegativeBridge{Int} in model.bridge_types
+    # `model_convert` normalizes the bridge coefficient type to the value type
+    # of the model (`Float64`), even though `BridgeMe` requested `Int`.
+    @test NonnegativeBridge{Float64} in model.bridge_types
+    @test !(NonnegativeBridge{Int} in model.bridge_types)
+    return
+end
+
+function test_model_convert_bridgeable_coefficient_type()
+    model = GenericModel{BigFloat}()
+    @variable(model, x)
+    c = ScalarConstraint(x, Nonnegative())
+    con = BridgeableConstraint(c, NonnegativeBridge; coefficient_type = Int)
+    @test model_convert(model, con).coefficient_type == BigFloat
+    return
+end
+
+function test_model_convert_bridgeable_coefficient_type_complex()
+    model = GenericModel{BigFloat}()
+    @variable(model, x)
+    c = ScalarConstraint(x, Nonnegative())
+    coefficient_type = Complex{Int}
+    con = BridgeableConstraint(c, NonnegativeBridge; coefficient_type)
+    @test model_convert(model, con).coefficient_type == Complex{BigFloat}
+    return
+end
+
+function test_macro_bridgeable_generic_value_type()
+    model = GenericModel{BigFloat}()
+    @variable(model, x)
+    @constraint(model, x in BridgeMe{Int,Nonnegative}(Nonnegative()))
+    @test NonnegativeBridge{BigFloat} in model.bridge_types
+    @test !(NonnegativeBridge{Int} in model.bridge_types)
+    return
+end
+
+function test_add_constraint_bridgeable_model_convert()
+    # `add_constraint` applies `model_convert`, so a `BridgeableConstraint`
+    # added directly (not via the `@constraint` macro, for example, by an
+    # extension that delays the construction of the constraint) also gets its
+    # coefficient type converted to the value type of the model.
+    model = GenericModel{BigFloat}()
+    @variable(model, x)
+    c = ScalarConstraint(x, Nonnegative())
+    con = BridgeableConstraint(c, NonnegativeBridge; coefficient_type = Int)
+    add_constraint(model, con)
+    @test NonnegativeBridge{BigFloat} in model.bridge_types
+    @test !(NonnegativeBridge{Int} in model.bridge_types)
+    return
 end
 
 function test_bridges_add_bridgeable_con_set_optimizer()
