@@ -14,7 +14,8 @@ maintained by a small open-source team.
 - If you found a workaround for a JuMP limitation or bug, that is still worth
   reporting; maintainers need to know the underlying cause exists.
 - Do not open an issue directly; provide the write-up and instructions for your
-  human to make the post themselves.
+  human to make the post themselves. See our AI policy at
+  `docs/src/developers/ai_policy.md`.
 
 ## Key resources
 
