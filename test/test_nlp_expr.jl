@@ -1381,4 +1381,25 @@ function test_custom_array()
     return
 end
 
+function test_scalar_nonlinear_moi_function()
+    model = Model()
+    @variable(model, x)
+    y = sin(x)
+    y_moi = MOI.ScalarNonlinearFunction(:sin, Any[index(x)])
+    z = cos(y)
+    z_moi = MOI.ScalarNonlinearFunction(:cos, Any[y_moi])
+    @test isapprox(moi_function(y), y_moi)
+    @test isempty(model.subexpressions)
+    @test isapprox(moi_function(model, y), y_moi)
+    @test length(model.subexpressions) == 1
+    @test isapprox(model.subexpressions[objectid(y)], y_moi)
+    @test isapprox(moi_function(z), z_moi)
+    @test length(model.subexpressions) == 1
+    @test isapprox(moi_function(model, z), z_moi)
+    @test length(model.subexpressions) == 2
+    @test isapprox(model.subexpressions[objectid(y)], y_moi)
+    @test isapprox(model.subexpressions[objectid(z)], z_moi)
+    return
+end
+
 end  # module
