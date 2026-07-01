@@ -1384,21 +1384,33 @@ end
 function test_scalar_nonlinear_moi_function()
     model = Model()
     @variable(model, x)
-    y = atan(x, 2)
-    y_moi = MOI.ScalarNonlinearFunction(:atan, Any[index(x), 2])
-    z = cos(y)
-    z_moi = MOI.ScalarNonlinearFunction(:cos, Any[y_moi])
-    @test isapprox(moi_function(y), y_moi)
+    y1 = atan(x, 2)
+    y1_moi = MOI.ScalarNonlinearFunction(:atan, Any[index(x), 2])
+    y2 = y1 + y1
+    y2_moi = MOI.ScalarNonlinearFunction(:+, Any[y1_moi, y1_moi])
+    y3 = exp(y2)
+    y3_moi = MOI.ScalarNonlinearFunction(:exp, Any[y2_moi])
+    # Test y1
+    @test isapprox(moi_function(y1), y1_moi)
     @test isempty(model.subexpressions)
-    @test isapprox(moi_function(model, y), y_moi)
+    @test isapprox(moi_function(model, y1), y1_moi)
     @test length(model.subexpressions) == 1
-    @test isapprox(model.subexpressions[objectid(y)], y_moi)
-    @test isapprox(moi_function(z), z_moi)
+    @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
+    # Test y2
+    @test isapprox(moi_function(y2), y2_moi)
     @test length(model.subexpressions) == 1
-    @test isapprox(moi_function(model, z), z_moi)
+    @test isapprox(moi_function(model, y2), y2_moi)
     @test length(model.subexpressions) == 2
-    @test isapprox(model.subexpressions[objectid(y)], y_moi)
-    @test isapprox(model.subexpressions[objectid(z)], z_moi)
+    @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
+    @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
+    # Test y3
+    @test isapprox(moi_function(y3), y3_moi)
+    @test length(model.subexpressions) == 2
+    @test isapprox(moi_function(model, y3), y3_moi)
+    @test length(model.subexpressions) == 3
+    @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
+    @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
+    @test isapprox(model.subexpressions[objectid(y3)], y3_moi)
     return
 end
 
