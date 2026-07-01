@@ -590,155 +590,10 @@ function check_belongs_to_model(
     return
 end
 
-moi_function(x::Number) = x
-
-# `moi_function(::Array)` would be ambiguous with
-# `moi_function(AbstractArray{<:AbstractVariableRef})`
-moi_function(x::AbstractArray) = moi_function.(x)
-
-function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
-    key = objectid(f)
-    if haskey(model.subexpressions, key)
-        return model.subexpressions[key]
-    end
-    ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
-    stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
-    for i in length(f.args):-1:1
-        if f.args[i] isa GenericNonlinearExpr{V}
-            push!(stack, (ret, i, f.args[i]))
-        elseif f.args[i] isa AbstractJuMPScalar
-            ret.args[i] = moi_function(model, f.args[i])
-        else
-            ret.args[i] = moi_function(f.args[i])
-        end
-    end
-    while !isempty(stack)
-        parent, i, arg = pop!(stack)
-        arg_key = objectid(arg)
-        if haskey(model.subexpressions, arg_key)
-            parent.args[i] = model.subexpressions[arg_key]
-            continue
-        end
-        child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
-        parent.args[i] = child
-        for j in length(arg.args):-1:1
-            if arg.args[j] isa GenericNonlinearExpr{V}
-                push!(stack, (child, j, arg.args[j]))
-            else
-                child.args[j] = moi_function(arg.args[j])
-            end
-        end
-        model.subexpressions[arg_key] = child
-    end
-    model.subexpressions[key] = ret
-    return ret
-end
-
-# A backwards-compatible function to preserve behavior prior to #4032. This was
-# used by Plasmo.jl
-function moi_function(f::GenericNonlinearExpr{V}) where {V}
-    ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
-    stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
-    for i in length(f.args):-1:1
-        if f.args[i] isa GenericNonlinearExpr{V}
-            push!(stack, (ret, i, f.args[i]))
-        else
-            ret.args[i] = moi_function(f.args[i])
-        end
-    end
-    while !isempty(stack)
-        parent, i, arg = pop!(stack)
-        child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
-        parent.args[i] = child
-        for j in length(arg.args):-1:1
-            if arg.args[j] isa GenericNonlinearExpr{V}
-                push!(stack, (child, j, arg.args[j]))
-            else
-                child.args[j] = moi_function(arg.args[j])
-            end
-        end
-    end
-    return ret
-end
-
-jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
-
-function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
-    V = variable_ref_type(typeof(model))
-    ret = GenericNonlinearExpr{V}(f.head, Any[])
-    stack = Tuple{GenericNonlinearExpr,Any}[]
-    for arg in reverse(f.args)
-        push!(stack, (ret, arg))
-    end
-    while !isempty(stack)
-        parent, arg = pop!(stack)
-        if arg isa MOI.ScalarNonlinearFunction
-            new_ret = GenericNonlinearExpr{V}(arg.head, Any[])
-            push!(parent.args, new_ret)
-            for child in reverse(arg.args)
-                push!(stack, (new_ret, child))
-            end
-        else
-            push!(parent.args, jump_function(model, arg))
-        end
-    end
-    return ret
-end
-
-function jump_function_type(
-    model::GenericModel,
-    ::Type{<:MOI.ScalarNonlinearFunction},
-)
-    return GenericNonlinearExpr{variable_ref_type(typeof(model))}
-end
-
-moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
-
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)::MOI.Nonlinear.Model
     data = nlp.constraints[index(c)]
     return ScalarConstraint(jump_function(c.model, data.expression), data.set)
-end
-
-function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
-    V = variable_ref_type(typeof(model))
-    nlp = nonlinear_model(model)::MOI.Nonlinear.Model
-    parsed = Vector{Any}(undef, length(expr.nodes))
-    adj = MOI.Nonlinear.adjacency_matrix(expr.nodes)
-    rowvals = SparseArrays.rowvals(adj)
-    for i in length(expr.nodes):-1:1
-        node = expr.nodes[i]
-        parsed[i] = if node.type == MOI.Nonlinear.NODE_CALL_UNIVARIATE
-            GenericNonlinearExpr{V}(
-                nlp.operators.univariate_operators[node.index],
-                parsed[rowvals[SparseArrays.nzrange(adj, i)[1]]],
-            )
-        elseif node.type == MOI.Nonlinear.NODE_CALL_MULTIVARIATE
-            GenericNonlinearExpr{V}(
-                nlp.operators.multivariate_operators[node.index],
-                Any[parsed[rowvals[j]] for j in SparseArrays.nzrange(adj, i)],
-            )
-        elseif node.type == MOI.Nonlinear.NODE_MOI_VARIABLE
-            V(model, MOI.VariableIndex(node.index))
-        elseif node.type == MOI.Nonlinear.NODE_VALUE
-            expr.values[node.index]
-        else
-            # node.type == MOI.Nonlinear.NODE_COMPARISON
-            # node.type == MOI.Nonlinear.NODE_LOGIC
-            # node.type == MOI.Nonlinear.NODE_PARAMETER
-            # node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
-            error(
-                """
-                Encountered an unsupported node type `$(node.type)` when converting \
-                a nonlinear expression to a JuMP expression.
-
-                This conversion is not currently supported. Use the MOI \
-                representation directly or reformulate the expression.
-                """,
-            )
-        end
-    end
-    return parsed[1]
 end
 
 function value(f::Function, expr::GenericNonlinearExpr)
@@ -1254,31 +1109,9 @@ macro operator(model, op, dim, f, args...)
     )
 end
 
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.VectorNonlinearFunction},
-) where {T}
-    return Vector{GenericNonlinearExpr{GenericVariableRef{T}}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    f::MOI.VectorNonlinearFunction,
-) where {T}
-    return GenericNonlinearExpr{GenericVariableRef{T}}[
-        jump_function(model, fi) for fi in MOI.Utilities.eachscalar(f)
-    ]
-end
-
-function moi_function_type(::Type{<:AbstractVector{<:GenericNonlinearExpr}})
-    return MOI.VectorNonlinearFunction
-end
-
-function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
-    return MOI.VectorNonlinearFunction(f)
-end
-
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
+    # TODO(odow): isn't this breaking? It might be that the first element
+    # doesn't have an associated model.
     model = owner_model(first(f))
     return MOI.VectorNonlinearFunction(moi_function.(model, f))
 end

@@ -123,11 +123,13 @@ function MOI.submit(
     cb::MOI.LazyConstraint,
     con::ScalarConstraint,
 )
-    return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
+    f = moi_function(model, con.func)
+    return MOI.submit(backend(model), cb, f, con.set)
 end
 
 function MOI.submit(model::GenericModel, cb::MOI.UserCut, con::ScalarConstraint)
-    return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
+    f = moi_function(model, con.func)
+    return MOI.submit(backend(model), cb, f, con.set)
 end
 
 function MOI.submit(
