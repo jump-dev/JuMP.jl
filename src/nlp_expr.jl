@@ -634,7 +634,6 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
     return ret
 end
 
-
 # A backwards-compatible function to preserve behavior prior to #4032. This was
 # used by Plasmo.jl
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
