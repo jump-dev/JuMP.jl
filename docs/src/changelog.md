@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Common subexpressions are now cached when building
    `MOI.ScalarNonlinearExpression`. This can result in a large speed-up for some
    models, but we are also concerned about the potential for increased memory
-   usage in some models. If you notice changes (postive or negative), please
-   tell us via a GitHub issue. (#4032)
+   usage in some models. If you notice changes (positive or negative), please
+   tell us via a GitHub issue. (#4032), (#4189)
  - We added various features to help AI agents understand JuMP (and also help
    non-AI-assisted humans):
     - We improved the `JuMP` module docstring so that `? JuMP` now describes
