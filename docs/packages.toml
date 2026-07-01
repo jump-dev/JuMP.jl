@@ -63,14 +63,14 @@
 [Gurobi]
     rev = "v1.9.2"
 [HiGHS]
-    rev = "v1.24.0"
+    rev = "v1.24.1"
 [Hypatia]
     rev = "v0.10.0"
     has_html = true
 [Ipopt]
     rev = "v1.15.0"
 [KNITRO]
-    rev = "v1.2.1"
+    rev = "v1.3.0"
 [MathOptAnalyzer]
     rev = "v0.1.2"
 [MathOptIIS]
@@ -78,18 +78,18 @@
 [MathOptLazy]
     rev = "v0.1.0"
 [MiniZinc]
-    rev = "v0.3.14"
+    rev = "v0.3.15"
 [MosekTools]
     rev = "v0.15.10"
 [MultiObjectiveAlgorithms]
-    rev = "v1.11.0"
+    rev = "v1.12.0"
     has_html = true
 [NEOSServer]
     rev = "v1.2.0"
 [NLopt]
     rev = "v1.2.1"
 [Pajarito]
-    rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
+    rev = "v0.8.3"
 [ParametricOptInterface]
     rev = "v0.15.3"
     extension = true
@@ -105,7 +105,7 @@
     rev = "v0.8.1"
     extension = true
 [SCS]
-    rev = "v2.6.3"
+    rev = "v2.6.4"
 [SDPA]
     rev = "v0.6.1"
 [SDPLR]
@@ -120,7 +120,7 @@
     rev = "v0.8.0"
     extension = true
 [Xpress]
-    rev = "v0.18.0"
+    rev = "v0.18.1"
 
 # =========================== non-jump-dev packages ========================== #
 
@@ -155,11 +155,11 @@
     rev = "v1.1.33"
 [COSMO]
     user = "oxfordcontrol"
-    rev = "v0.8.10"
+    rev = "v0.8.11"
     has_html = true
 [CuPDLPx]
     user = "MIT-Lu-Lab"
-    rev = "v0.2.9"
+    rev = "v0.3.0"
 [DAQP]
     user = "darnstrom"
     rev = "v0.8.0"
@@ -198,7 +198,7 @@
     rev  = "v0.2.2"
 [MathOptAI]
     user = "lanl-ansi"
-    rev = "v0.2.5"
+    rev = "v0.2.6"
     extension = true
 [MathOptChordalDecomposition]
     user = "samuelsonric"
