@@ -776,51 +776,9 @@ end
 
 MOI.VariableIndex(v::GenericVariableRef) = index(v)
 
-moi_function(variable::AbstractVariableRef) = index(variable)
-
-moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
-
 # Note: No validation is performed that the variables belong to the same model.
 function MOI.VectorOfVariables(vars::Vector{<:GenericVariableRef})
     return MOI.VectorOfVariables(index.(vars))
-end
-
-function moi_function(variables::Vector{<:AbstractVariableRef})
-    return MOI.VectorOfVariables(variables)
-end
-
-function moi_function_type(::Type{<:Vector{<:AbstractVariableRef}})
-    return MOI.VectorOfVariables
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.VectorOfVariables},
-) where {T}
-    return Vector{GenericVariableRef{T}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    variables::MOI.VectorOfVariables,
-) where {T}
-    return GenericVariableRef{T}[
-        GenericVariableRef{T}(model, v) for v in variables.variables
-    ]
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.VariableIndex},
-) where {T}
-    return GenericVariableRef{T}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    variable::MOI.VariableIndex,
-) where {T}
-    return GenericVariableRef{T}(model, variable)
 end
 
 ## Bound setter/getters

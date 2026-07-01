@@ -730,14 +730,6 @@ function MOI.ScalarQuadraticFunction(
     return MOI.ScalarQuadraticFunction(qterms, moi_aff.terms, moi_aff.constant)
 end
 
-function moi_function(aff::GenericQuadExpr)
-    return MOI.ScalarQuadraticFunction(aff)
-end
-
-function moi_function_type(::Type{<:GenericQuadExpr{T}}) where {T}
-    return MOI.ScalarQuadraticFunction{T}
-end
-
 function GenericQuadExpr{C,GenericVariableRef{T}}(
     m::GenericModel{T},
     f::MOI.ScalarQuadraticFunction,
@@ -763,40 +755,6 @@ function GenericQuadExpr{C,GenericVariableRef{T}}(
         )
     end
     return quad
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.ScalarQuadraticFunction{C}},
-) where {C,T}
-    return GenericQuadExpr{promote_type(T, C),GenericVariableRef{T}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    f::MOI.ScalarQuadraticFunction{C},
-) where {C,T}
-    S = promote_type(T, C)
-    return GenericQuadExpr{S,GenericVariableRef{T}}(model, f)
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.VectorQuadraticFunction{C}},
-) where {C,T}
-    S = promote_type(T, C)
-    return Vector{GenericQuadExpr{S,GenericVariableRef{T}}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    f::MOI.VectorQuadraticFunction{C},
-) where {C,T}
-    S = promote_type(T, C)
-    return GenericQuadExpr{S,GenericVariableRef{T}}[
-        GenericQuadExpr{S,GenericVariableRef{T}}(model, f) for
-        f in MOIU.eachscalar(f)
-    ]
 end
 
 """
@@ -839,12 +797,6 @@ function MOI.VectorQuadraticFunction(
         constants[i] = constant(quad)
     end
     return MOI.VectorQuadraticFunction(quadratic_terms, lin_terms, constants)
-end
-
-moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
-
-function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
-    return MOI.VectorQuadraticFunction{T}
 end
 
 """

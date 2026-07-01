@@ -767,118 +767,6 @@ function MOI.ScalarAffineFunction(
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
 
-"""
-    moi_function(x::AbstractJuMPScalar)
-    moi_function(x::AbstractArray{<:AbstractJuMPScalar})
-
-Given a JuMP object `x`, return the MathOptInterface equivalent.
-
-See also: [`jump_function`](@ref).
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> f = 2.0 * x + 1.0
-2 x + 1
-
-julia> moi_function(f)
-1.0 + 2.0 MOI.VariableIndex(1)
-```
-"""
-function moi_function end
-
-function moi_function(x::AbstractArray{AbstractJuMPScalar})
-    return error(
-        """
-        Unable to convert an array of type `::$(typeof(x))` to an equivalent function
-        in MathOptInterface because the array has the abstract element type
-        `AbstractJuMPScalar`.
-
-        To fix this error, convert every element in the array to the same concrete
-        element type.
-
-        For example, instead of:
-        ```julia
-        model = Model();
-        @variable(model, x);
-        y = AbstractJuMPScalar[x, sin(x)]
-        @objective(model, Min, y)
-        ```
-        do
-        ```julia
-        @objective(model, Min, convert.(NonlinearExpr, y))
-        ```
-        """,
-    )
-end
-
-"""
-    moi_function_type(::Type{T}) where {T}
-
-Given a JuMP object type `T`, return the MathOptInterface equivalent.
-
-See also: [`jump_function_type`](@ref).
-
-## Example
-
-```jldoctest
-julia> moi_function_type(AffExpr)
-MathOptInterface.ScalarAffineFunction{Float64}
-```
-"""
-function moi_function_type end
-
-"""
-    jump_function(model::AbstractModel, x::MOI.AbstractFunction)
-
-Given an MathOptInterface object `x`, return the JuMP equivalent.
-
-See also: [`moi_function`](@ref).
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> f = 2.0 * index(x) + 1.0
-1.0 + 2.0 MOI.VariableIndex(1)
-
-julia> jump_function(model, f)
-2 x + 1
-```
-"""
-function jump_function end
-
-"""
-    jump_function_type(model::AbstractModel, ::Type{T}) where {T}
-
-Given an MathOptInterface object type `T`, return the JuMP equivalent.
-
-See also: [`moi_function_type`](@ref).
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> jump_function_type(model, MOI.ScalarAffineFunction{Float64})
-AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
-```
-"""
-function jump_function_type end
-
-moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
-
-function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
-    return MOI.ScalarAffineFunction{T}
-end
-
 function GenericAffExpr{C,GenericVariableRef{T}}(
     m::GenericModel{T},
     f::MOI.ScalarAffineFunction,
@@ -892,50 +780,6 @@ function GenericAffExpr{C,GenericVariableRef{T}}(
         )
     end
     return aff
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.ScalarAffineFunction{C}},
-) where {C,T}
-    S = promote_type(C, T)
-    return GenericAffExpr{S,GenericVariableRef{T}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    f::MOI.ScalarAffineFunction{C},
-) where {C,T}
-    S = promote_type(C, T)
-    return GenericAffExpr{S,GenericVariableRef{T}}(model, f)
-end
-
-function jump_function_type(
-    ::GenericModel{T},
-    ::Type{MOI.VectorAffineFunction{C}},
-) where {C,T}
-    S = promote_type(C, T)
-    return Vector{GenericAffExpr{S,GenericVariableRef{T}}}
-end
-
-function jump_function(
-    model::GenericModel{T},
-    f::MOI.VectorAffineFunction{C},
-) where {T,C}
-    S = promote_type(C, T)
-    ret = GenericAffExpr{S,GenericVariableRef{T}}[]
-    for scalar_f in MOIU.eachscalar(f)
-        g = GenericAffExpr{S,GenericVariableRef{T}}(scalar_f.constant)
-        for t in scalar_f.terms
-            add_to_expression!(
-                g,
-                t.coefficient,
-                GenericVariableRef(model, t.variable),
-            )
-        end
-        push!(ret, g)
-    end
-    return ret
 end
 
 """
@@ -982,12 +826,6 @@ function MOI.VectorAffineFunction(
         offset = _fill_vaf!(terms, offset, i, aff)
     end
     return MOI.VectorAffineFunction(terms, constant)
-end
-
-moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
-
-function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
-    return MOI.VectorAffineFunction{T}
 end
 
 """
