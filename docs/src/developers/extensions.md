@@ -502,6 +502,9 @@ Solving report
                     0 (int. viol.)
                     0 (row viol.)
   Timing            0.00
+                    0.00 (Presolve)
+                    0.00 (Solve)
+                    0.00 (Postsolve)
   Max sub-MIP depth 0
   Nodes             0
   Repair LPs        0
