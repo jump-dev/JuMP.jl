@@ -69,29 +69,27 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
 end
 
 x̄ = solve_progressive_hedging(subproblems);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">iteration primal_residual   dual_residual
-       10      7.8160e-14      3.0000e+00
-       20      1.4211e-13      3.0000e+00
-       30      2.7001e-13      3.0000e+00
-       40      1.0232e-12      3.0000e+00
-       50      5.2296e-12      3.0000e+00
-       60      5.8711e-10      3.0000e+00
-       70      1.8302e-01      1.4497e+00
-       80      1.0124e-10      4.5000e-01
-       90      3.9325e-09      4.5000e-01
-      100      4.0910e-10      6.0000e-02
-      110      8.9850e-09      6.0000e-02
-      120      1.0529e-01      2.2603e-02
-      130      5.8955e-02      1.4880e-02
-      140      3.2713e-02      9.6414e-03
-      150      1.7966e-02      6.1651e-03
-      160      9.7497e-03      3.8981e-03
-      170      5.2168e-03      2.4407e-03
-      180      2.7437e-03      1.5149e-03
-      190      1.4119e-03      9.3293e-04
-      200      7.0599e-04      5.7038e-04
-      210      3.3905e-04      3.4637e-04
-      220      1.5310e-04      2.0900e-04
-      230      6.2062e-05      1.2534e-04</code></pre><p>The consensus first-stage decision is:</p><pre><code class="language-julia hljs">x̄</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">208.3259187982162</code></pre><h2 id="Progressive-Hedging-with-an-adaptive-penalty-parameter"><a class="docs-heading-anchor" href="#Progressive-Hedging-with-an-adaptive-penalty-parameter">Progressive Hedging with an adaptive penalty parameter</a><a id="Progressive-Hedging-with-an-adaptive-penalty-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Progressive-Hedging-with-an-adaptive-penalty-parameter" title="Permalink"></a></h2><p>You can also make the penalty parameter <span>$\rho$</span> adaptive. How to do so is an open question. There is a large literature on different updates strategies. One approach is to increase <span>$\rho$</span> if the primal residual is much larger than the dual residual, and to decrease <span>$\rho$</span> if the dual residual is much larger than the primal residual.</p><pre><code class="language-julia hljs">function solve_adaptive_progressive_hedging(
+       10      1.1369e-13      3.0000e+00
+       20      2.2737e-13      3.0000e+00
+       30      4.9738e-13      3.0000e+00
+       40      2.2737e-12      3.0000e+00
+       50      2.0748e-11      3.0000e+00
+       60      2.1101e-02      2.4877e+00
+       70      9.7730e-01      4.5000e-01
+       80      1.7542e-10      4.5000e-01
+       90      8.3933e-01      4.7297e-02
+      100      1.0950e-01      4.0387e-03
+      110      6.5015e-02      7.4338e-04
+      120      3.8380e-02      5.3282e-04
+      130      2.2526e-02      8.8664e-04
+      140      1.3144e-02      8.5830e-04
+      150      7.6238e-03      7.0157e-04
+      160      4.3945e-03      5.2688e-04
+      170      2.5167e-03      3.7582e-04
+      180      1.4313e-03      2.5885e-04
+      190      8.0796e-04      1.7377e-04
+      200      4.5237e-04      1.1438e-04
+      210      2.5098e-04      7.4096e-05</code></pre><p>The consensus first-stage decision is:</p><pre><code class="language-julia hljs">x̄</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">202.03354675292104</code></pre><h2 id="Progressive-Hedging-with-an-adaptive-penalty-parameter"><a class="docs-heading-anchor" href="#Progressive-Hedging-with-an-adaptive-penalty-parameter">Progressive Hedging with an adaptive penalty parameter</a><a id="Progressive-Hedging-with-an-adaptive-penalty-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Progressive-Hedging-with-an-adaptive-penalty-parameter" title="Permalink"></a></h2><p>You can also make the penalty parameter <span>$\rho$</span> adaptive. How to do so is an open question. There is a large literature on different updates strategies. One approach is to increase <span>$\rho$</span> if the primal residual is much larger than the dual residual, and to decrease <span>$\rho$</span> if the dual residual is much larger than the primal residual.</p><pre><code class="language-julia hljs">function solve_adaptive_progressive_hedging(
     subproblems;
     iteration_limit::Int = 400,
     atol::Float64 = 1e-4,
@@ -131,28 +129,25 @@ x̄ = solve_progressive_hedging(subproblems);</code></pre><pre class="documenter
 end
 
 x̄ = solve_adaptive_progressive_hedging(subproblems);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">iteration primal_residual   dual_residual
-       10      6.3494e-11      3.0000e+00
-       20      2.0124e+00      2.7640e-02
-       30      9.6046e-01      4.4857e-02
-       40      5.2951e-01      6.4197e-02
-       50      3.3338e-01      4.5053e-02
-       60      2.6422e-01      5.3317e-02
-       70      1.6837e-01      4.2030e-02
-       80      1.1034e-01      3.7574e-02
-       90      7.1774e-02      2.5426e-02
-      100      5.8668e-02      1.7434e-02
-      110      3.6124e-02      1.2059e-02
-      120      2.1895e-02      8.4286e-03
-      130      1.3407e-02      4.2446e-03
-      140      1.0674e-02      2.4672e-03
-      150      8.3308e-03      1.5260e-03
-      160      4.9766e-03      8.9562e-04
-      170      2.9724e-03      3.1515e-04
-      180      1.7649e-03      5.8834e-05
-      190      1.3539e-03      5.9921e-05
-      200      1.0341e-03      9.3473e-05
-      210      6.0450e-04      9.9145e-05
-      220      3.5125e-04      8.4146e-05
-      230      2.6313e-04      8.5455e-05
-      240      1.9802e-04      7.4810e-05
-      250      1.1307e-04      5.2488e-05</code></pre><p>The consensus first-stage decision is:</p><pre><code class="language-julia hljs">x̄</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">208.32592807603368</code></pre><p>Try tuning the values of <code>τ</code> and <code>μ</code>. Can you get the algorithm to converge in fewer iterations?</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../pdhg/">« Writing a solver interface</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 1 July 2026 01:37">Wednesday 1 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+       10      1.4599e-10      3.0000e+00
+       20      7.3099e-01      5.9919e-02
+       30      4.2598e-01      4.2834e-02
+       40      3.7235e-09      6.0000e-02
+       50      8.4910e-02      5.7067e-02
+       60      3.9814e-02      4.5646e-02
+       70      1.8700e-02      3.5947e-02
+       80      1.1765e-02      2.7946e-02
+       90      4.7056e-03      1.6751e-02
+      100      1.4390e-03      9.9816e-03
+      110      5.0489e-05      7.6845e-03
+      120      5.6326e-04      5.8824e-03
+      130      6.9134e-04      3.4450e-03
+      140      6.1772e-04      2.0057e-03
+      150      6.6568e-04      1.4998e-03
+      160      5.9567e-04      1.1280e-03
+      170      4.0178e-04      8.4446e-04
+      180      2.7629e-04      4.8008e-04
+      190      1.8526e-04      2.7088e-04
+      200      1.5891e-04      1.9660e-04
+      210      1.2903e-04      1.4509e-04
+      220      8.2798e-05      7.9925e-05</code></pre><p>The consensus first-stage decision is:</p><pre><code class="language-julia hljs">x̄</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">202.03340329853924</code></pre><p>Try tuning the values of <code>τ</code> and <code>μ</code>. Can you get the algorithm to converge in fewer iterations?</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../pdhg/">« Writing a solver interface</a><a class="docs-footer-nextpage" href="../../applications/power_systems/">Power Systems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 2 July 2026 07:17">Thursday 2 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
