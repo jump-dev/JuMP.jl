@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimal control for a Space Shuttle reentry trajectory · JuMP</title><meta name="title" content="Optimal control for a Space Shuttle reentry trajectory · JuMP"/><meta property="og:title" content="Optimal control for a Space Shuttle reentry trajectory · JuMP"/><meta property="twitter:title" content="Optimal control for a Space Shuttle reentry trajectory · JuMP"/><meta name="description" content="Documentation for JuMP."/><meta property="og:description" content="Documentation for JuMP."/><meta property="twitter:description" content="Documentation for JuMP."/><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should you use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../linear/knapsack/">The knapsack problem example</a></li><li><a class="tocitem" href="../../linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/multi_commodity_network/">The network multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../linear/multi_objective_knapsack/">Multi-objective knapsack</a></li><li><a class="tocitem" href="../../linear/multi_objective_examples/">Simple multi-objective examples</a></li><li><a class="tocitem" href="../../linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../linear/constraint_programming/">Constraint programming</a></li><li><a class="tocitem" href="../../linear/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../linear/mip_duality/">Computing the duals of a mixed-integer program</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox" checked/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><a class="tocitem" href="../simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../portfolio/">Portfolio optimization</a></li><li><a class="tocitem" href="../rocket_control/">Rocket Control</a></li><li class="is-active"><a class="tocitem" href>Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../nested_problems/">Nested optimization problems</a></li><li><a class="tocitem" href="../querying_hessians/">Computing Hessians</a></li><li><a class="tocitem" href="../complementarity/">Mixed complementarity problems</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../conic/simple_examples/">Simple semidefinite programming examples</a></li><li><a class="tocitem" href="../../conic/dualization/">Dualization</a></li><li><a class="tocitem" href="../../conic/arbitrary_precision/">Arbitrary precision arithmetic</a></li><li><a class="tocitem" href="../../conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../conic/ellipse_approx/">Ellipsoid approximation</a></li><li><a class="tocitem" href="../../conic/quantum_discrimination/">Quantum state discrimination</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li><li><a class="tocitem" href="../../algorithms/parallelism/">Parallelism</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../applications/optimal_power_flow/">Optimal power flow</a></li><li><a class="tocitem" href="../../applications/web_app/">Serving web apps</a></li><li><a class="tocitem" href="../../applications/two_stage_stochastic/">Two-stage stochastic programs</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../../../manual/complex/">Complex number support</a></li><li><a class="tocitem" href="../../../manual/nonlinear/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling (Legacy)</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../api/JuMP/">JuMP</a></li><li><a class="tocitem" href="../../../api/JuMP.Containers/">JuMP.Containers</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li><li><a class="tocitem" href="../../../developers/checklists/">Checklists</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Solvers</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../packages/solvers/">Introduction</a></li><li><a class="tocitem" href="../../../packages/AmplNLWriter/">jump-dev/AmplNLWriter.jl</a></li><li><a class="tocitem" href="../../../packages/BARON/">jump-dev/BARON.jl</a></li><li><a class="tocitem" href="../../../packages/CPLEX/">jump-dev/CPLEX.jl</a></li><li><a class="tocitem" href="../../../packages/CSDP/">jump-dev/CSDP.jl</a></li><li><a class="tocitem" href="../../../packages/Cbc/">jump-dev/Cbc.jl</a></li><li><a class="tocitem" href="../../../packages/Clp/">jump-dev/Clp.jl</a></li><li><a class="tocitem" href="../../../packages/Dualization/">jump-dev/Dualization.jl</a></li><li><a class="tocitem" href="../../../packages/ECOS/">jump-dev/ECOS.jl</a></li><li><a class="tocitem" href="../../../packages/GLPK/">jump-dev/GLPK.jl</a></li><li><a class="tocitem" href="../../../packages/Gurobi/">jump-dev/Gurobi.jl</a></li><li><a class="tocitem" href="../../../packages/HiGHS/">jump-dev/HiGHS.jl</a></li><li><a class="tocitem" href="../../../packages/Ipopt/">jump-dev/Ipopt.jl</a></li><li><a class="tocitem" href="../../../packages/KNITRO/">jump-dev/KNITRO.jl</a></li><li><a class="tocitem" href="../../../packages/MiniZinc/">jump-dev/MiniZinc.jl</a></li><li><a class="tocitem" href="../../../packages/MosekTools/">jump-dev/MosekTools.jl</a></li><li><a class="tocitem" href="../../../packages/MultiObjectiveAlgorithms/">jump-dev/MultiObjectiveAlgorithms.jl</a></li><li><a class="tocitem" href="../../../packages/Pajarito/">jump-dev/Pajarito.jl</a></li><li><a class="tocitem" href="../../../packages/Pavito/">jump-dev/Pavito.jl</a></li><li><a class="tocitem" href="../../../packages/SCS/">jump-dev/SCS.jl</a></li><li><a class="tocitem" href="../../../packages/SDPA/">jump-dev/SDPA.jl</a></li><li><a class="tocitem" href="../../../packages/SDPNAL/">jump-dev/SDPNAL.jl</a></li><li><a class="tocitem" href="../../../packages/SDPT3/">jump-dev/SDPT3.jl</a></li><li><a class="tocitem" href="../../../packages/SeDuMi/">jump-dev/SeDuMi.jl</a></li><li><a class="tocitem" href="../../../packages/Xpress/">jump-dev/Xpress.jl</a></li><li><a class="tocitem" href="../../../packages/COPT/">COPT-Public/COPT.jl</a></li><li><a class="tocitem" href="../../../packages/GAMS/">GAMS-dev/GAMS.jl</a></li><li><a class="tocitem" href="../../../packages/NLopt/">JuliaOpt/NLopt.jl</a></li><li><a class="tocitem" href="../../../packages/CDDLib/">JuliaPolyhedra/CDDLib.jl</a></li><li><a class="tocitem" href="../../../packages/MadNLP/">MadNLP/MadNLP.jl</a></li><li><a class="tocitem" href="../../../packages/PATHSolver/">chkwon/PATHSolver.jl</a></li><li><a class="tocitem" href="../../../packages/Hypatia/">chriscoey/Hypatia.jl</a></li><li><a class="tocitem" href="../../../packages/DAQP/">darnstrom/DAQP.jl</a></li><li><a class="tocitem" href="../../../packages/Tulip/">ds4dm/Tulip.jl</a></li><li><a class="tocitem" href="../../../packages/Loraine/">kocvara/Loraine.jl</a></li><li><a class="tocitem" href="../../../packages/Alpine/">lanl-ansi/Alpine.jl</a></li><li><a class="tocitem" href="../../../packages/Juniper/">lanl-ansi/Juniper.jl</a></li><li><a class="tocitem" href="../../../packages/ProxSDP/">mariohsouto/ProxSDP.jl</a></li><li><a class="tocitem" href="../../../packages/NEOSServer/">odow/NEOSServer.jl</a></li><li><a class="tocitem" href="../../../packages/OSQP/">osqp/OSQP.jl</a></li><li><a class="tocitem" href="../../../packages/CDCS/">oxfordcontrol/CDCS.jl</a></li><li><a class="tocitem" href="../../../packages/COSMO/">oxfordcontrol/COSMO.jl</a></li><li><a class="tocitem" href="../../../packages/Clarabel/">oxfordcontrol/Clarabel.jl</a></li><li><a class="tocitem" href="../../../packages/SCIP/">scipopt/SCIP.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">Extensions</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../extensions/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../packages/DiffOpt/">jump-dev/DiffOpt.jl</a></li><li><a class="tocitem" href="../../../packages/ParametricOptInterface/">jump-dev/ParametricOptInterface.jl</a></li><li><a class="tocitem" href="../../../packages/PolyJuMP/">jump-dev/PolyJuMP.jl</a></li><li><a class="tocitem" href="../../../packages/SumOfSquares/">jump-dev/SumOfSquares.jl</a></li><li><a class="tocitem" href="../../../packages/InfiniteOpt/">infiniteopt/InfiniteOpt.jl</a></li><li><a class="tocitem" href="../../../packages/BilevelJuMP/">joaquimg/BilevelJuMP.jl</a></li><li><a class="tocitem" href="../../../packages/SDDP/">odow/SDDP.jl</a></li><li><a class="tocitem" href="../../../packages/Plasmo/">plasmo-dev/Plasmo.jl</a></li><li><a class="tocitem" href="../../../extensions/DimensionalData/">rafaqz/DimensionalData.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9" type="checkbox"/><label class="tocitem" for="menuitem-9"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-1" type="checkbox"/><label class="tocitem" for="menuitem-9-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/">Introduction</a></li><li><a class="tocitem" href="../../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-2" type="checkbox"/><label class="tocitem" for="menuitem-9-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-3" type="checkbox"/><label class="tocitem" for="menuitem-9-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-4" type="checkbox"/><label class="tocitem" for="menuitem-9-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-5" type="checkbox"/><label class="tocitem" for="menuitem-9-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-6-1" type="checkbox"/><label class="tocitem" for="menuitem-9-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-2" type="checkbox"/><label class="tocitem" for="menuitem-9-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-3" type="checkbox"/><label class="tocitem" for="menuitem-9-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-4" type="checkbox"/><label class="tocitem" for="menuitem-9-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-5" type="checkbox"/><label class="tocitem" for="menuitem-9-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-7" type="checkbox"/><label class="tocitem" for="menuitem-9-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/developer/checklists/">Checklists</a></li></ul></li><li><a class="tocitem" href="../../../moi/release_notes/">Release notes</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Nonlinear programs</a></li><li class="is-active"><a href>Optimal control for a Space Shuttle reentry trajectory</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimal control for a Space Shuttle reentry trajectory</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/nonlinear/space_shuttle_reentry_trajectory.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimal-control-for-a-Space-Shuttle-reentry-trajectory"><a class="docs-heading-anchor" href="#Optimal-control-for-a-Space-Shuttle-reentry-trajectory">Optimal control for a Space Shuttle reentry trajectory</a><a id="Optimal-control-for-a-Space-Shuttle-reentry-trajectory-1"></a><a class="docs-heading-anchor-permalink" href="#Optimal-control-for-a-Space-Shuttle-reentry-trajectory" title="Permalink"></a></h1><p><em>This tutorial was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em> <a href="../space_shuttle_reentry_trajectory.jl"><em>Download the source as a <code>.jl</code> file</em></a>.</p><p><strong>This tutorial was originally contributed by Henrique Ferrolho.</strong></p><p>This tutorial demonstrates how to compute a reentry trajectory for the <a href="https://en.wikipedia.org/wiki/Space_Shuttle">Space Shuttle</a>, by formulating and solving a nonlinear programming problem. The problem was drawn from Chapter 6 of <a href="https://epubs.siam.org/doi/book/10.1137/1.9780898718577">&quot;Practical Methods for Optimal Control and Estimation Using Nonlinear Programming&quot;</a>, by John T. Betts.</p><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>This tutorial is a more-complicated version of the <a href="../rocket_control/#Rocket-Control">Rocket Control</a> example. If you are new to solving nonlinear programs in JuMP, you may want to start there instead.</p></div></div><p>The motion of the vehicle is defined by the following set of DAEs:</p><p class="math-container">\[\begin{aligned}
+\dot{h} &amp; = v \sin \gamma , \\
+\dot{\phi} &amp; = \frac{v}{r} \cos \gamma \sin \psi / \cos \theta , \\
+\dot{\theta} &amp; = \frac{v}{r} \cos \gamma \cos \psi , \\
+\dot{v} &amp; = -\frac{D}{m} - g \sin \gamma , \\
+\dot{\gamma} &amp; = \frac{L}{m v} \cos(\beta) + \cos \gamma \left ( \frac{v}{r} - \frac{g}{v} \right ) , \\
+\dot{\psi} &amp; = \frac{1}{m v \cos \gamma} L \sin(\beta) + \frac{v}{r \cos \theta} \cos \gamma \sin \psi \sin \theta , \\
+q &amp; \le q_U , \\
+\end{aligned}\]</p><p>where the aerodynamic heating on the vehicle wing leading edge is <span>$q = q_a q_r$</span> and the dynamic variables are</p><p class="math-container">\[\begin{aligned}
+     h &amp; \quad \text{altitude (ft)},     \qquad &amp; &amp; \gamma \quad \text{flight path angle (rad)}, \\
+  \phi &amp; \quad \text{longitude (rad)},   \qquad &amp; &amp; \psi   \quad \text{azimuth (rad)},           \\
+\theta &amp; \quad \text{latitude (rad)},    \qquad &amp; &amp; \alpha \quad \text{angle of attack (rad)},   \\
+     v &amp; \quad \text{velocity (ft/sec)}, \qquad &amp; &amp; \beta  \quad \text{bank angle (rad)}.
+\end{aligned}\]</p><p>The aerodynamic and atmospheric forces on the vehicle are specified by the following quantities (English units):</p><p class="math-container">\[\begin{aligned}
+           D &amp; = \frac{1}{2} c_D S \rho v^2,                  \qquad &amp; a_0 &amp; = -0.20704, \\
+           L &amp; = \frac{1}{2} c_L S \rho v^2,                  \qquad &amp; a_1 &amp; =  0.029244, \\
+           g &amp; = \mu / r^2,                                   \qquad &amp; \mu &amp; =  0.14076539 \times 10^{17}, \\
+           r &amp; = R_e + h,                                     \qquad &amp; b_0 &amp; =  0.07854, \\
+        \rho &amp; = \rho_0 \exp[-h/h_r],                         \qquad &amp; b_1 &amp; = -0.61592  \times 10^{-2}, \\
+      \rho_0 &amp; = 0.002378,                                    \qquad &amp; b_2 &amp; =  0.621408 \times 10^{-3}, \\
+         h_r &amp; = 23800,                                       \qquad &amp; q_r &amp; =  17700 \sqrt{\rho} (0.0001 v)^{3.07}, \\
+         c_L &amp; = a_0 + a_1 \hat{\alpha},                      \qquad &amp; q_a &amp; =  c_0 + c_1 \hat{\alpha} + c_2 \hat{\alpha}^2 + c_3 \hat{\alpha}^3, \\
+         c_D &amp; = b_0 + b_1 \hat{\alpha} + b_2 \hat{\alpha}^2, \qquad &amp; c_0 &amp; =  1.0672181, \\
+\hat{\alpha} &amp; = 180 \alpha / \pi,                            \qquad &amp; c_1 &amp; = -0.19213774 \times 10^{-1}, \\
+         R_e &amp; = 20902900,                                    \qquad &amp; c_2 &amp; =  0.21286289 \times 10^{-3}, \\
+           S &amp; = 2690,                                        \qquad &amp; c_3 &amp; = -0.10117249 \times 10^{-5}.
+\end{aligned}\]</p><p>The reentry trajectory begins at an altitude where the aerodynamic forces are quite small with a weight of <span>$w = 203000$</span> (lb) and mass <span>$m = w / g_0$</span> (slug), where <span>$g_0 = 32.174$</span> (ft/sec<span>$^2$</span>). The initial conditions are as follows:</p><p class="math-container">\[\begin{aligned}
+     h &amp; = 260000 \text{ ft},  \qquad &amp; v      &amp; = 25600 \text{ ft/sec}, \\
+  \phi &amp; = 0      \text{ deg}, \qquad &amp; \gamma &amp; = -1    \text{ deg},    \\
+\theta &amp; = 0      \text{ deg}, \qquad &amp; \psi   &amp; = 90    \text{ deg}.
+\end{aligned}\]</p><p>The final point on the reentry trajectory occurs at the unknown (free) time <span>$t_F$</span>, at the so-called terminal area energy management (TAEM) interface, which is defined by the conditions</p><p class="math-container">\[h = 80000 \text{ ft}, \qquad v = 2500 \text{ ft/sec}, \qquad \gamma = -5 \text{ deg}.\]</p><p>As explained in the book, our goal is to maximize the final cross-range, which is equivalent to maximizing the final latitude of the vehicle, that is, <span>$J = \theta(t_F)$</span>.</p><p><img src="../../../assets/space_shuttle.png" alt="Max cross-range shuttle reentry"/></p><h3 id="Approach"><a class="docs-heading-anchor" href="#Approach">Approach</a><a id="Approach-1"></a><a class="docs-heading-anchor-permalink" href="#Approach" title="Permalink"></a></h3><p>We will use a discretized model of time, with a fixed number of discretized points, <span>$n$</span>. The decision variables at each point are going to be the state of the vehicle and the controls commanded to it. In addition, we will also make each time step size <span>$\Delta t$</span> a decision variable; that way, we can either fix the time step size easily, or allow the solver to fine-tune the duration between each adjacent pair of points. Finally, in order to approximate the derivatives of the problem dynamics, we will use either rectangular or <a href="http://en.wikipedia.org/wiki/Trapezoidal_rule">trapezoidal</a> integration.</p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>Do not try to actually land a Space Shuttle using this notebook. There&#39;s no mesh refinement going on, which can lead to unrealistic trajectories having position and velocity errors with orders of magnitude <span>$10^4$</span> ft and <span>$10^2$</span> ft/sec, respectively.</p></div></div><pre><code class="language-julia hljs">using JuMP
+import Interpolations
+import Ipopt
+
+# Global variables
+const w = 203000.0  # weight (lb)
+const g₀ = 32.174    # acceleration (ft/sec^2)
+const m = w / g₀    # mass (slug)
+
+# Aerodynamic and atmospheric forces on the vehicle
+const ρ₀ = 0.002378
+const hᵣ = 23800.0
+const Rₑ = 20902900.0
+const μ = 0.14076539e17
+const S = 2690.0
+const a₀ = -0.20704
+const a₁ = 0.029244
+const b₀ = 0.07854
+const b₁ = -0.61592e-2
+const b₂ = 0.621408e-3
+const c₀ = 1.0672181
+const c₁ = -0.19213774e-1
+const c₂ = 0.21286289e-3
+const c₃ = -0.10117249e-5
+
+# Initial conditions
+const h_s = 2.6          # altitude (ft) / 1e5
+const ϕ_s = deg2rad(0)   # longitude (rad)
+const θ_s = deg2rad(0)   # latitude (rad)
+const v_s = 2.56         # velocity (ft/sec) / 1e4
+const γ_s = deg2rad(-1)  # flight path angle (rad)
+const ψ_s = deg2rad(90)  # azimuth (rad)
+const α_s = deg2rad(0)   # angle of attack (rad)
+const β_s = deg2rad(0)   # bank angle (rad)
+const t_s = 1.00         # time step (sec)
+
+# Final conditions, the so-called Terminal Area Energy Management (TAEM)
+const h_t = 0.8          # altitude (ft) / 1e5
+const v_t = 0.25         # velocity (ft/sec) / 1e4
+const γ_t = deg2rad(-5)  # flight path angle (rad)
+
+# Number of mesh points (knots) to be used
+const n = 503
+
+# Integration scheme to be used for the dynamics
+const integration_rule = &quot;rectangular&quot;</code></pre><div class="admonition is-success"><header class="admonition-header">Choose a good linear solver</header><div class="admonition-body"><p>Picking a good linear solver is <strong>extremely important</strong> to maximize the performance of nonlinear solvers. For the best results, it is advised to experiment different linear solvers.</p><p>For example, the linear solver <code>MA27</code> is outdated and can be quite slow. <code>MA57</code> is a much better alternative, especially for highly-sparse problems (such as trajectory optimization problems).</p></div></div><pre><code class="language-julia hljs"># Uncomment the lines below to pass user options to the solver
+user_options = (
+# &quot;mu_strategy&quot; =&gt; &quot;monotone&quot;,
+# &quot;linear_solver&quot; =&gt; &quot;ma27&quot;,
+)
+
+# Create JuMP model, using Ipopt as the solver
+model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
+
+@variables(model, begin
+    0 ≤ scaled_h[1:n]                # altitude (ft) / 1e5
+    ϕ[1:n]                # longitude (rad)
+    deg2rad(-89) ≤ θ[1:n] ≤ deg2rad(89)  # latitude (rad)
+    1e-4 ≤ scaled_v[1:n]                # velocity (ft/sec) / 1e4
+    deg2rad(-89) ≤ γ[1:n] ≤ deg2rad(89)  # flight path angle (rad)
+    ψ[1:n]                # azimuth (rad)
+    deg2rad(-90) ≤ α[1:n] ≤ deg2rad(90)  # angle of attack (rad)
+    deg2rad(-89) ≤ β[1:n] ≤ deg2rad(1)  # bank angle (rad)
+    #        3.5 ≤       Δt[1:n] ≤ 4.5          # time step (sec)
+    Δt[1:n] == 4.0         # time step (sec)
+end);</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>Above you can find two alternatives for the <code>Δt</code> variables.</p><p>The first one, <code>3.5 ≤ Δt[1:n] ≤ 4.5</code> (currently commented), allows some wiggle room for the solver to adjust the time step size between pairs of mesh points. This is neat because it allows the solver to figure out which parts of the flight require more dense discretization than others. (Remember, the number of discretized points is fixed, and this example does not implement mesh refinement.) However, this makes the problem more complex to solve, and therefore leads to a longer computation time.</p><p>The second line, <code>Δt[1:n] == 4.0</code>, fixes the duration of every time step to exactly 4.0 seconds. This allows the problem to be solved faster. However, to do this we need to know beforehand that the close-to-optimal total duration of the flight is ~2009 seconds. Therefore, if we split the total duration in slices of 4.0 seconds, we know that we require <code>n = 503</code> knots to discretize the whole trajectory.</p></div></div><pre><code class="language-julia hljs"># Fix initial conditions
+fix(scaled_h[1], h_s; force = true)
+fix(ϕ[1], ϕ_s; force = true)
+fix(θ[1], θ_s; force = true)
+fix(scaled_v[1], v_s; force = true)
+fix(γ[1], γ_s; force = true)
+fix(ψ[1], ψ_s; force = true)
+
+# Fix final conditions
+fix(scaled_h[n], h_t; force = true)
+fix(scaled_v[n], v_t; force = true)
+fix(γ[n], γ_t; force = true)
+
+# Initial guess: linear interpolation between boundary conditions
+x_s = [h_s, ϕ_s, θ_s, v_s, γ_s, ψ_s, α_s, β_s, t_s]
+x_t = [h_t, ϕ_s, θ_s, v_t, γ_t, ψ_s, α_s, β_s, t_s]
+interp_linear = Interpolations.LinearInterpolation([1, n], [x_s, x_t])
+initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
+set_start_value.(all_variables(model), vec(initial_guess))
+
+# Functions to restore `h` and `v` to their true scale
+@expression(model, h[j = 1:n], scaled_h[j] * 1e5)
+@expression(model, v[j = 1:n], scaled_v[j] * 1e4)
+
+# Helper functions
+@expression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
+@expression(model, c_D[j = 1:n], b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2)
+@expression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
+@expression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
+@expression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
+@expression(model, r[j = 1:n], Rₑ + h[j])
+@expression(model, g[j = 1:n], μ / r[j]^2)
+
+# Motion of the vehicle as a differential-algebraic system of equations (DAEs)
+@expression(model, δh[j = 1:n], v[j] * sin(γ[j]))
+@expression(
+    model,
+    δϕ[j = 1:n],
+    (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j])
+)
+@expression(model, δθ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
+@expression(model, δv[j = 1:n], -(D[j] / m) - g[j] * sin(γ[j]))
+@expression(
+    model,
+    δγ[j = 1:n],
+    (L[j] / (m * v[j])) * cos(β[j]) +
+    cos(γ[j]) * ((v[j] / r[j]) - (g[j] / v[j]))
+)
+@expression(
+    model,
+    δψ[j = 1:n],
+    (1 / (m * v[j] * cos(γ[j]))) * L[j] * sin(β[j]) +
+    (v[j] / (r[j] * cos(θ[j]))) * cos(γ[j]) * sin(ψ[j]) * sin(θ[j])
+)
+
+# System dynamics
+for j in 2:n
+    i = j - 1  # index of previous knot
+
+    if integration_rule == &quot;rectangular&quot;
+        # Rectangular integration
+        @constraint(model, h[j] == h[i] + Δt[i] * δh[i])
+        @constraint(model, ϕ[j] == ϕ[i] + Δt[i] * δϕ[i])
+        @constraint(model, θ[j] == θ[i] + Δt[i] * δθ[i])
+        @constraint(model, v[j] == v[i] + Δt[i] * δv[i])
+        @constraint(model, γ[j] == γ[i] + Δt[i] * δγ[i])
+        @constraint(model, ψ[j] == ψ[i] + Δt[i] * δψ[i])
+    elseif integration_rule == &quot;trapezoidal&quot;
+        # Trapezoidal integration
+        @constraint(model, h[j] == h[i] + 0.5 * Δt[i] * (δh[j] + δh[i]))
+        @constraint(model, ϕ[j] == ϕ[i] + 0.5 * Δt[i] * (δϕ[j] + δϕ[i]))
+        @constraint(model, θ[j] == θ[i] + 0.5 * Δt[i] * (δθ[j] + δθ[i]))
+        @constraint(model, v[j] == v[i] + 0.5 * Δt[i] * (δv[j] + δv[i]))
+        @constraint(model, γ[j] == γ[i] + 0.5 * Δt[i] * (δγ[j] + δγ[i]))
+        @constraint(model, ψ[j] == ψ[i] + 0.5 * Δt[i] * (δψ[j] + δψ[i]))
+    else
+        @error &quot;Unexpected integration rule &#39;$(integration_rule)&#39;&quot;
+    end
+end
+
+# Objective: Maximize cross-range
+@objective(model, Max, θ[n])
+
+set_silent(model)  # Hide solver&#39;s verbose output
+optimize!(model)  # Solve for the control and state
+@assert termination_status(model) == LOCALLY_SOLVED
+
+# Show final cross-range of the solution
+println(
+    &quot;Final latitude θ = &quot;,
+    round(objective_value(model) |&gt; rad2deg; digits = 2),
+    &quot;°&quot;,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Final latitude θ = 34.18°</code></pre><h3 id="Plotting-the-results"><a class="docs-heading-anchor" href="#Plotting-the-results">Plotting the results</a><a id="Plotting-the-results-1"></a><a class="docs-heading-anchor-permalink" href="#Plotting-the-results" title="Permalink"></a></h3><p>Let&#39;s plot the results to visualize the optimal trajectory:</p><pre><code class="language-julia hljs">using Plots
+ts = cumsum([0; value.(Δt)])[1:end-1]
+plt_altitude = plot(
+    ts,
+    value.(scaled_h);
+    legend = nothing,
+    title = &quot;Altitude (100,000 ft)&quot;,
+)
+plt_longitude =
+    plot(ts, rad2deg.(value.(ϕ)); legend = nothing, title = &quot;Longitude (deg)&quot;)
+plt_latitude =
+    plot(ts, rad2deg.(value.(θ)); legend = nothing, title = &quot;Latitude (deg)&quot;)
+plt_velocity = plot(
+    ts,
+    value.(scaled_v);
+    legend = nothing,
+    title = &quot;Velocity (1000 ft/sec)&quot;,
+)
+plt_flight_path =
+    plot(ts, rad2deg.(value.(γ)); legend = nothing, title = &quot;Flight Path (deg)&quot;)
+plt_azimuth =
+    plot(ts, rad2deg.(value.(ψ)); legend = nothing, title = &quot;Azimuth (deg)&quot;)
+
+plot(
+    plt_altitude,
+    plt_velocity,
+    plt_longitude,
+    plt_flight_path,
+    plt_latitude,
+    plt_azimuth;
+    layout = grid(3, 2),
+    linewidth = 2,
+    size = (700, 700),
+)</code></pre><img src="a82ffb20.svg" alt="Example block output"/><pre><code class="language-julia hljs">function q(h, v, a)
+    ρ(h) = ρ₀ * exp(-h / hᵣ)
+    qᵣ(h, v) = 17700 * √ρ(h) * (0.0001 * v)^3.07
+    qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3
+    # Aerodynamic heating on the vehicle wing leading edge
+    return qₐ(a) * qᵣ(h, v)
+end
+
+plt_attack_angle = plot(
+    ts[1:end-1],
+    rad2deg.(value.(α)[1:end-1]);
+    legend = nothing,
+    title = &quot;Angle of Attack (deg)&quot;,
+)
+plt_bank_angle = plot(
+    ts[1:end-1],
+    rad2deg.(value.(β)[1:end-1]);
+    legend = nothing,
+    title = &quot;Bank Angle (deg)&quot;,
+)
+plt_heating = plot(
+    ts,
+    q.(value.(scaled_h) * 1e5, value.(scaled_v) * 1e4, value.(α));
+    legend = nothing,
+    title = &quot;Heating (BTU/ft/ft/sec)&quot;,
+)
+
+plot(
+    plt_attack_angle,
+    plt_bank_angle,
+    plt_heating;
+    layout = grid(3, 1),
+    linewidth = 2,
+    size = (700, 700),
+)</code></pre><img src="7e9f7ed6.svg" alt="Example block output"/><pre><code class="language-julia hljs">plot(
+    rad2deg.(value.(ϕ)),
+    rad2deg.(value.(θ)),
+    value.(scaled_h);
+    linewidth = 2,
+    legend = nothing,
+    title = &quot;Space Shuttle Reentry Trajectory&quot;,
+    xlabel = &quot;Longitude (deg)&quot;,
+    ylabel = &quot;Latitude (deg)&quot;,
+    zlabel = &quot;Altitude (100,000 ft)&quot;,
+)</code></pre><img src="35640dc3.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rocket_control/">« Rocket Control</a><a class="docs-footer-nextpage" href="../tips_and_tricks/">Tips and tricks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.1 on <span class="colophon-date" title="Tuesday 24 October 2023 19:35">Tuesday 24 October 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

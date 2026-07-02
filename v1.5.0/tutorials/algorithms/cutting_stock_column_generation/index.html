@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Column generation · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../linear/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../linear/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../nonlinear/simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../../nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../nonlinear/user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../../nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox" checked/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../benders_decomposition/">Benders decomposition</a></li><li class="is-active"><a class="tocitem" href>Column generation</a><ul class="internal"><li><a class="tocitem" href="#Mathematical-formulation"><span>Mathematical formulation</span></a></li><li><a class="tocitem" href="#Column-generation-theory"><span>Column generation theory</span></a></li><li><a class="tocitem" href="#Choosing-new-columns"><span>Choosing new columns</span></a></li><li><a class="tocitem" href="#Choosing-the-initial-set-of-patterns"><span>Choosing the initial set of patterns</span></a></li><li><a class="tocitem" href="#Solving-the-problem"><span>Solving the problem</span></a></li><li><a class="tocitem" href="#Looking-at-the-solution"><span>Looking at the solution</span></a></li></ul></li><li><a class="tocitem" href="../tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../applications/web_app/">Serving web apps</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../../../manual/complex/">Complex number support</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/">Introduction</a></li><li><a class="tocitem" href="../../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Algorithms</a></li><li class="is-active"><a href>Column generation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Column generation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/algorithms/cutting_stock_column_generation.jl" title="View source on GitHub"><span class="docs-icon fas"></span></a><a class="docs-settings-button docs-navbar-link fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button docs-navbar-link fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Column-generation"><a class="docs-heading-anchor" href="#Column-generation">Column generation</a><a id="Column-generation-1"></a><a class="docs-heading-anchor-permalink" href="#Column-generation" title="Permalink"></a></h1><p>This tutorial describes how to implement the <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem">Cutting stock problem</a> in JuMP using column generation. It uses the following packages:</p><pre><code class="language-julia hljs">using JuMP
+import GLPK
+import SparseArrays</code></pre><h2 id="Mathematical-formulation"><a class="docs-heading-anchor" href="#Mathematical-formulation">Mathematical formulation</a><a id="Mathematical-formulation-1"></a><a class="docs-heading-anchor-permalink" href="#Mathematical-formulation" title="Permalink"></a></h2><p>The cutting stock problem is about cutting large rolls of paper into smaller pieces. There is a demand different sizes of pieces to meet, and all large rolls have the same width. The goal is to meet the demand while maximizing the total profit.</p><p>We denote the set of possible sized pieces that a roll can be cut into by <span>$i\in 1,\ldots,I$</span>. Each piece <span>$i$</span> has a width, <span>$w_i$</span>, and a demand, <span>$d_i$</span>. The width of the large roll is <span>$W$</span>.</p><p>Here&#39;s the data that we are going to use in this tutorial:</p><pre><code class="language-julia hljs">struct Piece
+    w::Float64
+    d::Int
+end
+
+struct Data
+    pieces::Vector{Piece}
+    W::Float64
+end
+
+function Base.show(io::IO, d::Data)
+    println(io, &quot;Data for the cutting stock problem:&quot;)
+    println(io, &quot;  W = $(d.W)&quot;)
+    println(io, &quot;with pieces:&quot;)
+    println(io, &quot;   i   w_i d_i&quot;)
+    println(io, &quot;  ------------&quot;)
+    for (i, p) in enumerate(d.pieces)
+        println(io, lpad(i, 4), &quot; &quot;, lpad(p.w, 5), &quot; &quot;, lpad(p.d, 3))
+    end
+    return
+end
+
+function get_data()
+    data = [
+        75.0 38
+        75.0 44
+        75.0 30
+        75.0 41
+        75.0 36
+        53.8 33
+        53.0 36
+        51.0 41
+        50.2 35
+        32.2 37
+        30.8 44
+        29.8 49
+        20.1 37
+        16.2 36
+        14.5 42
+        11.0 33
+        8.6 47
+        8.2 35
+        6.6 49
+        5.1 42
+    ]
+    return Data([Piece(data[i, 1], data[i, 2]) for i in 1:size(data, 1)], 100.0)
+end
+
+data = get_data()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Data for the cutting stock problem:
+  W = 100.0
+with pieces:
+   i   w_i d_i
+  ------------
+   1  75.0  38
+   2  75.0  44
+   3  75.0  30
+   4  75.0  41
+   5  75.0  36
+   6  53.8  33
+   7  53.0  36
+   8  51.0  41
+   9  50.2  35
+  10  32.2  37
+  11  30.8  44
+  12  29.8  49
+  13  20.1  37
+  14  16.2  36
+  15  14.5  42
+  16  11.0  33
+  17   8.6  47
+  18   8.2  35
+  19   6.6  49
+  20   5.1  42
+</code></pre><p>To formulate the cutting stock problem as a mixed-integer linear program, we assume that there is a set of large rolls <span>$j=1,\ldots,J$</span> to use. Then, we introduce two classes of decision variables:</p><ul><li><span>$x_{ij} \ge 0, \text{integer}, \forall i=1,\ldots,I, j=1,\ldots,J$</span></li><li><span>$y_{j} \in \{0, 1\} \forall j=1,\ldots,J.$</span></li></ul><p><span>$y_j$</span> is a binary variable that indicates if we use roll <span>$j$</span>, and <span>$x_{ij}$</span> counts how many pieces of size <span>$i$</span> that we cut from roll <span>$j$</span>.</p><p>Our mixed-integer linear program is therefore:</p><p class="math-container">\[\begin{align}
+    \min &amp; \sum\limits_{j=1}^J y_j \\
+    \;\;\text{s.t.} &amp; \sum\limits_{i=1}^N w_i x_{ij} \le W y_j &amp; \forall j=1,\ldots,J \\
+         &amp; \sum\limits_{j=1}^J x_{ij} \ge d_i &amp; \forall i=1,\ldots,I \\
+         &amp; x_{ij} \ge 0 &amp; \forall i=1,\ldots,N, j=1,\ldots,J \\
+         &amp; x_{ij} \in \mathbb{Z} &amp; \forall i=1,\ldots,I, j=1,\ldots,J \\
+         &amp; y_{j} \in \{0, 1\} &amp; \forall j=1,\ldots,J \\
+\end{align}\]</p><p>The objective is to minimize the number of rolls that we use, and the two constraints ensure that we respect the total width of each large roll and that we satisfy demand exactly.</p><pre><code class="language-julia hljs">I = length(data.pieces)
+J = 1000  # Some large number
+model = Model(GLPK.Optimizer)
+@variable(model, x[1:I, 1:J] &gt;= 0, Int)
+@variable(model, y[1:J], Bin)
+@constraint(
+    model,
+    [j in 1:J],
+    sum(data.pieces[i].w * x[i, j] for i in 1:I) &lt;= data.W * y[j],
+)
+@constraint(model, [i in 1:I], sum(x[i, j] for j in 1:J) &gt;= data.pieces[i].d)
+@objective(model, Min, sum(y[j] for j in 1:J))
+model</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">A JuMP Model
+Minimization problem with:
+Variables: 21000
+Objective function type: AffExpr
+`AffExpr`-in-`MathOptInterface.GreaterThan{Float64}`: 20 constraints
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1000 constraints
+`VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 20000 constraints
+`VariableRef`-in-`MathOptInterface.Integer`: 20000 constraints
+`VariableRef`-in-`MathOptInterface.ZeroOne`: 1000 constraints
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: GLPK
+Names registered in the model: x, y</code></pre><p>Unfortunately, we won&#39;t attempt to solve this formulation because it takes a very long time to solve. (Try it and see.)</p><pre><code class="language-julia hljs"># optimize!(model)</code></pre><p>However, there is a formulation that solves much faster, and that is to use a column generation scheme.</p><h2 id="Column-generation-theory"><a class="docs-heading-anchor" href="#Column-generation-theory">Column generation theory</a><a id="Column-generation-theory-1"></a><a class="docs-heading-anchor-permalink" href="#Column-generation-theory" title="Permalink"></a></h2><p>The key insight for column generation is to recognize that the <span>$x$</span> variables above encode <em>cutting patterns</em>. For example, if we look only at the roll <span>$j=1$</span>, then feasible solutions are:</p><ul><li><span>$x_{1,1} = 1$</span>, <span>$x_{13,1} = 1$</span> and all the rest <span>$0$</span>, which is 1 roll of piece #1 and 1 roll of piece #13</li><li><span>$x_{1,20} = 19$</span> and all the rest <span>$0$</span>, which is 19 rolls of piece #20.</li></ul><p>Cutting patterns like <span>$x_{1,1} = 1$</span> and <span>$x_{2,1} = 1$</span> are infeasible because the combined length is greater than <span>$W$</span>.</p><p>Since there are a finite number of ways that we could cut a roll into a valid cutting pattern, we can create a set of all possible cutting patterns <span>$p = 1,\ldots,P$</span>, with data <span>$a_{i,p}$</span> indicating how many pieces of size <span>$i$</span> we cut in pattern <span>$p$</span>. Then, we can formulate our mixed-integer linear program as:</p><p class="math-container">\[\begin{align}
+    \min &amp; \sum\limits_{p=1}^P x_p \\
+    \;\;\text{s.t.} &amp; \sum\limits_{p=1}^P a_{ip} x_p \ge d_i &amp; \forall i=1,\ldots,I \\
+         &amp; x_{p} \ge 0 &amp; \forall p=1,\ldots,P \\
+         &amp; x_{p} \in \mathbb{Z} &amp; \forall p=1,\ldots,P
+\end{align}\]</p><p>Unfortunately, there will be a very large number of these patterns, so it is often intractable to enumerate all columns <span>$p=1,\ldots,P$</span>.</p><p>Column generation is an iterative algorithm that starts with a small set of initial patterns, and then cleverly chooses new columns to add to the main MILP so that we find the optimal solution without having to enumerate every column.</p><h2 id="Choosing-new-columns"><a class="docs-heading-anchor" href="#Choosing-new-columns">Choosing new columns</a><a id="Choosing-new-columns-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-new-columns" title="Permalink"></a></h2><p>For now we assume that we have our mixed-integer linear program with a subset of the columns. If we have all of the columns that appear in an optimal solution then we are done. Otherwise, how do we choose a new column that leads to an improved solution?</p><p>Column generation chooses a new column by relaxing the integrality constraint on <span>$x$</span> and looking at the dual variable <span>$\pi_i$</span> associated with demand constraint <span>$i$</span>.</p><p>Using the economic interpretation of the dual variable, we can say that a one unit increase in demand for piece <span>$i$</span> will cost an extra <span>$\pi_i$</span> rolls. Alternatively, we can say that a one unit increase in the left-hand side (for example, due to a new cutting pattern) will <em>save</em> us <span>$\pi_i$</span> rolls. Therefore, we want a new column that maximizes the savings associated with the dual variables, while respecting the total width of the roll:</p><p class="math-container">\[\begin{align}
+    \max &amp; \sum\limits_{i=1}^I \pi_i y_i \\
+    \;\;\text{s.t.} &amp; \sum\limits_{i=1}^I w_i y_{i} \le W \\
+         &amp; y_{i} \ge 0 &amp; \forall i=1,\ldots,I \\
+         &amp; y_{i} \in \mathbb{Z} &amp; \forall i=1,\ldots,I \\
+\end{align}\]</p><p>If this problem, called the <em>pricing problem</em>, has an objective value greater than <span>$1$</span>, then we estimate than adding <code>y</code> as the coefficients of a new column will decrease the objective by more than the cost of an extra roll.</p><p>Here is code to solve the pricing problem:</p><pre><code class="language-julia hljs">function solve_pricing(data::Data, π::Vector{Float64})
+    I = length(π)
+    model = Model(GLPK.Optimizer)
+    set_silent(model)
+    @variable(model, y[1:I] &gt;= 0, Int)
+    @constraint(model, sum(data.pieces[i].w * y[i] for i in 1:I) &lt;= data.W)
+    @objective(model, Max, sum(π[i] * y[i] for i in 1:I))
+    optimize!(model)
+    if objective_value(model) &gt; 1
+        return round.(Int, value.(y))
+    end
+    return nothing
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solve_pricing (generic function with 1 method)</code></pre><h2 id="Choosing-the-initial-set-of-patterns"><a class="docs-heading-anchor" href="#Choosing-the-initial-set-of-patterns">Choosing the initial set of patterns</a><a id="Choosing-the-initial-set-of-patterns-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-the-initial-set-of-patterns" title="Permalink"></a></h2><p>For the initial set of patterns, we create a trivial cutting pattern which cuts as many pieces of size <span>$i$</span> as will fit, or the amount demanded, whichever is smaller.</p><pre><code class="language-julia hljs">patterns = Vector{Int}[]
+for i in 1:I
+    pattern = zeros(Int, I)
+    pattern[i] = floor(Int, min(data.W / data.pieces[i].w, data.pieces[i].d))
+    push!(patterns, pattern)
+end
+P = length(patterns)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20</code></pre><p>We can visualize the patterns by looking at the sparse matrix of the non-zeros:</p><pre><code class="language-julia hljs">SparseArrays.sparse(hcat(patterns...))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20×20 SparseArrays.SparseMatrixCSC{Int64, Int64} with 20 stored entries:
+⠑⢄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠑⢄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠑⢄⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠑⢄⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠑⢄</code></pre><h2 id="Solving-the-problem"><a class="docs-heading-anchor" href="#Solving-the-problem">Solving the problem</a><a id="Solving-the-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Solving-the-problem" title="Permalink"></a></h2><p>First, we create our initial linear program:</p><pre><code class="language-julia hljs">model = Model(GLPK.Optimizer)
+set_silent(model)
+@variable(model, x[1:P] &gt;= 0)
+@objective(model, Min, sum(x))
+@constraint(model, demand[i = 1:I], patterns[i]&#39; * x == data.pieces[i].d)
+model</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">A JuMP Model
+Minimization problem with:
+Variables: 20
+Objective function type: AffExpr
+`AffExpr`-in-`MathOptInterface.EqualTo{Float64}`: 20 constraints
+`VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 20 constraints
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: GLPK
+Names registered in the model: demand, x</code></pre><p>Then, we run the iterative column generation scheme:</p><pre><code class="language-julia hljs">while true
+    # Solve the linear relaxation
+    optimize!(model)
+    # Obtain a new dual vector
+    π = dual.(demand)
+    # Solve the pricing problem
+    new_pattern = solve_pricing(data, π)
+    # Stop iterating if there is no new pattern
+    if new_pattern === nothing
+        break
+    end
+    push!(patterns, new_pattern)
+    # Create a new column
+    push!(x, @variable(model, lower_bound = 0))
+    # Update the objective coefficients
+    set_objective_coefficient(model, x[end], 1.0)
+    # Update the non-zeros in the coefficient matrix
+    for i in 1:I
+        if new_pattern[i] &gt; 0
+            set_normalized_coefficient(demand[i], x[end], new_pattern[i])
+        end
+    end
+end</code></pre><p>Let&#39;s have a look at the patterns now:</p><pre><code class="language-julia hljs">SparseArrays.sparse(hcat(patterns...))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20×41 SparseArrays.SparseMatrixCSC{Int64, Int64} with 88 stored entries:
+⠑⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀
+⠀⠀⠑⢄⠀⠀⠀⠀⠀⠀⡀⣀⡀⠠⠒⡀⠐⠤⠁⠊⠁
+⠀⠀⠀⠀⠑⢄⠀⠀⠀⠀⢈⢀⡨⠡⠀⠚⠣⢀⠀⠂⠀
+⠀⠀⠀⠀⠀⠀⠑⢄⠀⠀⠡⠄⡀⠐⢌⠂⡀⠀⠠⡠⠁
+⠀⠀⠀⠀⠀⠀⠀⠀⠑⢄⢁⣈⢊⠅⠱⠐⠤⠌⣄⠈⠀</code></pre><p>Nice! We found over 20 new patterns.</p><p>Here&#39;s pattern 21:</p><pre><code class="language-julia hljs">for i in 1:I
+    if patterns[21][i] &gt; 0
+        println(patterns[21][i], &quot; unit(s) of piece $i&quot;)
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1 unit(s) of piece 8
+2 unit(s) of piece 13
+1 unit(s) of piece 17</code></pre><h2 id="Looking-at-the-solution"><a class="docs-heading-anchor" href="#Looking-at-the-solution">Looking at the solution</a><a id="Looking-at-the-solution-1"></a><a class="docs-heading-anchor-permalink" href="#Looking-at-the-solution" title="Permalink"></a></h2><p>Since we only solved a linear relaxation, some of our columns have fractional solutions. We can create a integer feasible solution by rounding up the orders:</p><pre><code class="language-julia hljs">for p in 1:length(x)
+    v = ceil(Int, value(x[p]))
+    if v &gt; 0
+        println(lpad(v, 2), &quot; roll(s) of pattern $p&quot;)
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">31 roll(s) of pattern 1
+44 roll(s) of pattern 2
+30 roll(s) of pattern 3
+41 roll(s) of pattern 4
+15 roll(s) of pattern 5
+15 roll(s) of pattern 21
+23 roll(s) of pattern 22
+16 roll(s) of pattern 25
+ 1 roll(s) of pattern 26
+26 roll(s) of pattern 28
+11 roll(s) of pattern 31
+10 roll(s) of pattern 32
+ 3 roll(s) of pattern 33
+19 roll(s) of pattern 34
+11 roll(s) of pattern 36
+ 4 roll(s) of pattern 37
+ 8 roll(s) of pattern 38
+15 roll(s) of pattern 39
+12 roll(s) of pattern 40
+ 8 roll(s) of pattern 41</code></pre><p>This requires 343 rolls:</p><pre><code class="language-julia hljs">sum(ceil.(Int, value.(x)))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">343</code></pre><p>Alternatively, we can re-introduce the integrality constraints and resolve the problem:</p><pre><code class="language-julia hljs">set_integer.(x)
+optimize!(model)
+for p in 1:length(x)
+    v = round(Int, value(x[p]))
+    if v &gt; 0
+        println(lpad(v, 2), &quot; roll(s) of pattern $p, each roll of which makes:&quot;)
+        for i in 1:I
+            if patterns[p][i] &gt; 0
+                println(&quot;  &quot;, patterns[p][i], &quot; unit(s) of piece $i&quot;)
+            end
+        end
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">33 roll(s) of pattern 1, each roll of which makes:
+  1 unit(s) of piece 1
+44 roll(s) of pattern 2, each roll of which makes:
+  1 unit(s) of piece 2
+30 roll(s) of pattern 3, each roll of which makes:
+  1 unit(s) of piece 3
+41 roll(s) of pattern 4, each roll of which makes:
+  1 unit(s) of piece 4
+ 2 roll(s) of pattern 5, each roll of which makes:
+  1 unit(s) of piece 5
+ 3 roll(s) of pattern 7, each roll of which makes:
+  1 unit(s) of piece 7
+ 1 roll(s) of pattern 9, each roll of which makes:
+  1 unit(s) of piece 9
+11 roll(s) of pattern 21, each roll of which makes:
+  1 unit(s) of piece 8
+  2 unit(s) of piece 13
+  1 unit(s) of piece 17
+22 roll(s) of pattern 22, each roll of which makes:
+  1 unit(s) of piece 9
+  1 unit(s) of piece 12
+  1 unit(s) of piece 15
+  1 unit(s) of piece 20
+ 1 roll(s) of pattern 24, each roll of which makes:
+  1 unit(s) of piece 8
+  1 unit(s) of piece 12
+  1 unit(s) of piece 17
+  2 unit(s) of piece 20
+17 roll(s) of pattern 25, each roll of which makes:
+  1 unit(s) of piece 8
+  1 unit(s) of piece 12
+  1 unit(s) of piece 16
+  1 unit(s) of piece 18
+ 2 roll(s) of pattern 26, each roll of which makes:
+  1 unit(s) of piece 9
+  1 unit(s) of piece 11
+  1 unit(s) of piece 17
+  2 unit(s) of piece 20
+24 roll(s) of pattern 28, each roll of which makes:
+  1 unit(s) of piece 7
+  1 unit(s) of piece 11
+  1 unit(s) of piece 14
+12 roll(s) of pattern 31, each roll of which makes:
+  1 unit(s) of piece 8
+  1 unit(s) of piece 10
+  1 unit(s) of piece 14
+ 9 roll(s) of pattern 32, each roll of which makes:
+  1 unit(s) of piece 9
+  1 unit(s) of piece 10
+  2 unit(s) of piece 18
+ 1 roll(s) of pattern 33, each roll of which makes:
+  1 unit(s) of piece 9
+  1 unit(s) of piece 10
+  1 unit(s) of piece 16
+  1 unit(s) of piece 19
+18 roll(s) of pattern 34, each roll of which makes:
+  1 unit(s) of piece 6
+  1 unit(s) of piece 11
+  2 unit(s) of piece 19
+ 9 roll(s) of pattern 36, each roll of which makes:
+  1 unit(s) of piece 7
+  1 unit(s) of piece 12
+  2 unit(s) of piece 17
+ 4 roll(s) of pattern 37, each roll of which makes:
+  1 unit(s) of piece 5
+  3 unit(s) of piece 19
+  1 unit(s) of piece 20
+ 5 roll(s) of pattern 38, each roll of which makes:
+  1 unit(s) of piece 1
+  1 unit(s) of piece 15
+  2 unit(s) of piece 20
+15 roll(s) of pattern 39, each roll of which makes:
+  1 unit(s) of piece 6
+  1 unit(s) of piece 10
+  1 unit(s) of piece 16
+15 roll(s) of pattern 40, each roll of which makes:
+  1 unit(s) of piece 5
+  1 unit(s) of piece 15
+  1 unit(s) of piece 17
+15 roll(s) of pattern 41, each roll of which makes:
+  1 unit(s) of piece 5
+  1 unit(s) of piece 13</code></pre><p>This now requires 334 rolls:</p><pre><code class="language-julia hljs">total_rolls = sum(ceil.(Int, value.(x)))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">334</code></pre><hr/><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>This tutorial was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>. <a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/algorithms/cutting_stock_column_generation.jl">View the source <code>.jl</code> file on GitHub</a>.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_decomposition/">« Benders decomposition</a><a class="docs-footer-nextpage" href="../tsp_lazy_constraints/">Traveling Salesperson Problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.28.0-DEV on <span class="colophon-date" title="Wednesday 7 December 2022 20:45">Wednesday 7 December 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
