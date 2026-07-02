@@ -13,6 +13,8 @@ struct _AxisLookup{D}
     data::D
 end
 
+Base.hash(x::_AxisLookup, h::UInt) = hash(x.data, h)
+
 # Default fallbacks.
 Base.getindex(::_AxisLookup, key) = throw(KeyError(key))
 Base.getindex(::_AxisLookup, key::Colon) = key

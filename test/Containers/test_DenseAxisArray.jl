@@ -1073,4 +1073,14 @@ function test_sum_init_any()
     return
 end
 
+function test_hash_equality()
+    data = [1 2; 3 4; 5 6]
+    x = Containers.DenseAxisArray(data, [:a, :b, :c], [:x, :y])
+    y = Containers.DenseAxisArray(data, [:a, :b, :c], [:x, :y])
+    @test hash(x) == hash(y)
+    @test x == y
+    @test isequal(x, y)
+    return
+end
+
 end  # module
