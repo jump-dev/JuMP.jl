@@ -7,6 +7,47 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.31.0 (July 1, 2026)
+
+### Added
+
+ - As part of our long term goal to support vector-valued nonlinear expressions,
+   we added experimental support for `AbstractArray` in nonlinear expressions.
+   You can now build nonlinear expressions containing arrays, although there is
+   no corresponding support for this via solvers like Ipopt. We hope to change
+   this in future releases. (#3451)
+ - Common subexpressions are now cached when building
+   `MOI.ScalarNonlinearExpression`. This can result in a large speed-up for some
+   models, but we are also concerned about the potential for increased memory
+   usage in some models. If you notice changes (positive or negative), please
+   tell us via a GitHub issue. (#4032), (#4189)
+ - We added various features to help AI agents understand JuMP (and also help
+   non-AI-assisted humans):
+    - We improved the `JuMP` module docstring so that `? JuMP` now describes
+      where to find the documentation and how to ask for help (#4174)
+    - We rewrote error messages to be clearer and include an actionable next
+      step. This may break tests if you relied on checking the exact string of
+      an error message (#4172), (#4176), (#4177), (#4178), (#4180), (#4182)
+    - We added learning intentions to all of the tutorials in the documentation
+      (#4170)
+    - We added an `AGENTS.md` (and `CLAUDE.md`), and added requests in multiple
+      parts of the documentation for users to report issues to the maintainers
+      (#4184), (#4185)
+
+### Fixed
+
+ - Fixed a bug with `BridgeableConstraint` and `model_convert` (#4183)
+ - Fixed a failing test on Julia nightly (#4173)
+
+### Other
+
+ - Updated various parts of the documentation (#4158), (#4159), (#4164),
+   (#4165), (#4167), (#4179), (#4186), (#4187)
+ - Re-enabled `depwarn=error` in tests (#4161)
+ - Added a new [Sport scheduling](@ref) tutorial (#4160) (#4162)
+ - Updated various GitHub action versions (#4168), (#4181)
+ - Fixed formatting for new JuliaFormatter release (#4169)
+
 ## Version v1.30.1 (April 24, 2026)
 
 ### Fixed
