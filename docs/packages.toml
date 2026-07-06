@@ -147,6 +147,9 @@
 [CoolPDLP]
     user = "JuliaDecisionFocusedLearning"
     rev = "v0.1.1"
+[CONOPT]
+    user = "GAMS-dev"
+    rev = "93efb3badb311fcbf03806c475ec7075df3ed851"
 [COPT]
     user = "COPT-Public"
     rev = "v1.1.33"
