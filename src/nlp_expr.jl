@@ -634,6 +634,33 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
     return ret
 end
 
+# A backwards-compatible function to preserve behavior prior to #4032. This was
+# used by Plasmo.jl
+function moi_function(f::GenericNonlinearExpr{V}) where {V}
+    ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
+    stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
+    for i in length(f.args):-1:1
+        if f.args[i] isa GenericNonlinearExpr{V}
+            push!(stack, (ret, i, f.args[i]))
+        else
+            ret.args[i] = moi_function(f.args[i])
+        end
+    end
+    while !isempty(stack)
+        parent, i, arg = pop!(stack)
+        child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
+        parent.args[i] = child
+        for j in length(arg.args):-1:1
+            if arg.args[j] isa GenericNonlinearExpr{V}
+                push!(stack, (child, j, arg.args[j]))
+            else
+                child.args[j] = moi_function(arg.args[j])
+            end
+        end
+    end
+    return ret
+end
+
 jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
 
 function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
