@@ -7,20 +7,6 @@ is intended to help you discover commonly used solvers.
 !!! tip
     [Supported solvers](@ref) lists all solvers supported by JuMP.
 
-## Affiliation
-
-Packages beginning with `jump-dev/` are developed and maintained by the
-JuMP developers. In many cases, these packages wrap external solvers that are
-not developed by the JuMP developers and, while the Julia packages are all
-open-source, in some cases the solvers themselves are closed source commercial
-products.
-
-Packages that do not begin with `jump-dev/` are developed independently. The
-developers of these packages requested or consented to the inclusion of their
-README contents in the JuMP documentation for the benefit of users.
-
 ## Adding new solvers
 
-Written a solver? Add it to this section of the JuMP documentation by making
-a pull request to the [`docs/packages.toml`](https://github.com/jump-dev/JuMP.jl/blob/master/docs/packages.toml)
-file.
+Written a solver? See the checklist [Adding a new solver to the documentation](@ref).
