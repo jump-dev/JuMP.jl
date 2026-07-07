@@ -64,7 +64,7 @@ value.(x)
 
 get_attribute(x[1], MOI.VariableBasisStatus())
 
-# the result is a [`MOI.BasisStatusCode`](@ref). Query all of the basis statuses
+# the result is a [`MOI.BasisStatusCode`](@ref). Query all of the basis status
 # with the broadcast `get_attribute.(`:
 
 get_attribute.(x, MOI.VariableBasisStatus())
@@ -137,7 +137,7 @@ c_basis = Dict(
     all_constraints(model; include_variable_in_set_constraints = false)
 )
 
-# Thus, the basis is formed by `x`, `y`, and the slack associated with `c3`.
+# Thus, the basis is formed by `x`, `y`, and the slack is associated with `c3`.
 
 # A simple way to get the `A` matrix of an unstructured linear program is with
 # [`lp_matrix_data`](@ref):
