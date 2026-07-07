@@ -478,4 +478,3 @@ function moi_function(x::AbstractArray{AbstractJuMPScalar})
         """,
     )
 end
-
