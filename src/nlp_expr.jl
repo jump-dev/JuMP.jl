@@ -1145,10 +1145,10 @@ macro operator(model, op, dim, f, args...)
 end
 
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
-    # TODO(odow): isn't this breaking? It might be that the first element
-    # doesn't have an associated model.
-    model = owner_model(first(f))
-    return MOI.VectorNonlinearFunction(moi_function.(model, f))
+    rows = MOI.ScalarNonlinearFunction[
+        moi_function(owner_model(fi), fi) for fi in f
+    ]
+    return MOI.VectorNonlinearFunction(rows)
 end
 
 """

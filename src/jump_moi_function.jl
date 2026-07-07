@@ -20,12 +20,19 @@ MathOptInterface.ScalarAffineFunction{Float64}
 function moi_function_type end
 
 """
-    moi_function(x::AbstractJuMPScalar)
-    moi_function(x::AbstractArray{<:AbstractJuMPScalar})
+    moi_function([model::GenericModel,] x::AbstractJuMPScalar)
+    moi_function([model::GenericModel,] x::AbstractArray{<:AbstractJuMPScalar})
 
 Given a JuMP object `x`, return the MathOptInterface equivalent.
 
+If a `model` is passed, this function may, as a performance optimization, cache
+the mapping of `x` to the MOI equivalent in order to improve handling of common
+subexpressions.
+
 See also: [`jump_function`](@ref).
+
+!!! compat
+    Using the `model` argument requires or JuMP v1.31 later.
 
 ## Example
 
@@ -37,7 +44,7 @@ julia> @variable(model, x);
 julia> f = 2.0 * x + 1.0
 2 x + 1
 
-julia> moi_function(f)
+julia> moi_function(model, f)
 1.0 + 2.0 MOI.VariableIndex(1)
 ```
 """
