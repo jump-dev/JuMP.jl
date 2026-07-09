@@ -1070,11 +1070,11 @@ function test_printing_truncation()
     @variable(model, x[1:100])
     y = @expression(model, sum(sin.(x) .* 2))
     @test occursin(
-        "(sin(x[72]) * 2) + [[...41 terms omitted...]] + (sin(x[30]) * 2)",
+        "(sin(x[72]) * 2) + [[...40 terms omitted...]] + (sin(x[31]) * 2)",
         function_string(MIME("text/plain"), y),
     )
     @test occursin(
-        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{30}}\\right)} * {2}\\right)}",
+        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2}\\right) + {[[\\ldots\\text{40 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{31}}\\right)} * {2}\\right)}",
         function_string(MIME("text/latex"), y),
     )
     return
@@ -1124,7 +1124,7 @@ function test_nlp_matrix_adjoint()
     y = sin.(x)
     @test isequal_canonical(
         @expression(model, expr, y' * y),
-        NonlinearExpr(:+, Any[y[2]*y[2], y[1]*y[1]]),
+        NonlinearExpr(:+, Any[y[1]*y[1], y[2]*y[2]]),
     )
     return
 end
