@@ -549,7 +549,7 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
             # `parent.args[i:i+m-1]`. To do so, extend the args to make space:
             resize!(parent.args, n + (m - 1))
             # and then shift the parent args along to make room:
-            for j in n:-1:i+1
+            for j in n:-1:(i+1)
                 parent.args[m+j-1] = parent.args[j]
             end
             # Now we can put each child arg into the parent.
