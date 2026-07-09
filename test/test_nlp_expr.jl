@@ -124,6 +124,17 @@ function test_extension_flatten_nary(
     return
 end
 
+function test_extension_flatten_nary_order_maintained(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:3])
+    @test sum(log(x[i]) for i in 1:3) |> flatten! |> string ==
+          "log(x[1]) + log(x[2]) + log(x[3])"
+    return
+end
+
 function test_extension_zero_one(
     ModelType = Model,
     VariableRefType = VariableRef,

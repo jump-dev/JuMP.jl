@@ -511,7 +511,7 @@ a single n-ary operation.
 
 Nonlinear expressions created using operator overloading can be deeply nested
 and unbalanced. For example, `prod(x for i in 1:4)` creates
-`*(x, *(x, *(x, x)))` instead of the more preferable `*(x, x, x, x)`.
+`*(*(*(x, x), x, x)` instead of the more preferable `*(x, x, x, x)`.
 
 ## Example
 
@@ -536,7 +536,7 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
         return expr
     end
     stack = Tuple{GenericNonlinearExpr{V},Int,GenericNonlinearExpr{V}}[]
-    for i in length(expr.args):-1:1
+    for i in 1:length(expr.args)
         if _needs_flatten(expr, expr.args[i])
             push!(stack, (expr, i, expr.args[i]))
         end
@@ -544,11 +544,19 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
     while !isempty(stack)
         parent, i, arg = pop!(stack)
         if parent.head in (:+, :*) && arg.head == parent.head
-            n = length(parent.args)
-            resize!(parent.args, n + length(arg.args) - 1)
-            for j in length(arg.args):-1:1
-                parent_index = j == 1 ? i : n + j - 1
+            m, n = length(arg.args), length(parent.args)
+            # We're going to splice the `m` args of the child into
+            # `parent.args[i:i+m-1]`. To do so, extend the args to make space:
+            resize!(parent.args, n + (m - 1))
+            # and then shift the parent args along to make room:
+            for j in n:-1:i+1
+                parent.args[m+j-1] = parent.args[j]
+            end
+            # Now we can put each child arg into the parent.
+            for j in 1:m
+                parent_index = i + j - 1
                 if _needs_flatten(parent, arg.args[j])
+                    # The child needs flattening itself
                     push!(stack, (parent, parent_index, arg.args[j]))
                 else
                     parent.args[parent_index] = arg.args[j]
@@ -556,7 +564,7 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
             end
         else
             parent.args[i] = arg
-            for j in length(arg.args):-1:1
+            for j in 1:length(arg.args)
                 if _needs_flatten(arg, arg.args[j])
                     push!(stack, (arg, j, arg.args[j]))
                 end
