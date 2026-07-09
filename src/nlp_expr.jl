@@ -335,6 +335,10 @@ function Base.zero(::Type{GenericNonlinearExpr{V}}) where {V}
     return GenericNonlinearExpr{V}(:+, 0.0)
 end
 
+function Base.iszero(x::GenericNonlinearExpr)
+    return x.head == :+ && length(x.args) == 1 && iszero(only(x.args))
+end
+
 function Base.one(::Type{GenericNonlinearExpr{V}}) where {V}
     return GenericNonlinearExpr{V}(:+, 1.0)
 end
@@ -405,7 +409,7 @@ end
 
 # We need only very generic fallbacks for these, because all other cases are
 # caught with more specific methods.
-for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
+for f in (:-, :*, :^, :/, :atan, :min, :max)
     op = Meta.quot(f)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
@@ -426,6 +430,37 @@ for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
+end
+
+function Base.:+(x::AbstractJuMPScalar, y::_Constant)
+    _throw_if_not_real(x)
+    _throw_if_not_real(y)
+    rhs = convert(Float64, _constant_to_number(y))
+    if iszero(rhs)
+        return x
+    end
+    return GenericNonlinearExpr{variable_ref_type(x)}(:+, x, rhs)
+end
+
+function Base.:+(x::_Constant, y::AbstractJuMPScalar)
+    _throw_if_not_real(x)
+    _throw_if_not_real(y)
+    lhs = convert(Float64, _constant_to_number(x))
+    if iszero(lhs)
+        return y
+    end
+    return GenericNonlinearExpr{variable_ref_type(y)}(:+, lhs, y)
+end
+
+function Base.:+(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+    _throw_if_not_real(x)
+    _throw_if_not_real(y)
+    if iszero(x)
+        return y
+    elseif iszero(y)
+        return x
+    end
+    return GenericNonlinearExpr{variable_ref_type(x)}(:+, x, y)
 end
 
 function Base.:^(::Irrational{:ℯ}, y::AbstractJuMPScalar)
