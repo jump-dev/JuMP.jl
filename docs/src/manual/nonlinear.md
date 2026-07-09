@@ -169,10 +169,10 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @expression(model, expr, sum(exp.(x)))
-0 + exp(x[2]) + exp(x[1])
+exp(x[1]) + exp(x[2])
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
-(exp(x[1]) / (0 + exp(x[2]) + exp(x[1]))) + (exp(x[2]) / (0 + exp(x[2]) + exp(x[1])))
+(exp(x[1]) / (exp(x[1]) + exp(x[2]))) + (exp(x[2]) / (exp(x[1]) + exp(x[2])))
 ```
 In this model, JuMP will compute the value (and derivatives) of the denominator
 twice, without realizing that it is the same expression.
@@ -189,7 +189,7 @@ julia> @variable(model, x[1:2]);
 julia> @variable(model, expr);
 
 julia> @constraint(model, expr == sum(exp.(x)))
-expr - (0 + exp(x[2]) + exp(x[1])) = 0
+expr - (exp(x[1]) + exp(x[2])) = 0
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
 (exp(x[1]) / expr) + (exp(x[2]) / expr)
