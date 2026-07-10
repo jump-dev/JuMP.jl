@@ -1070,11 +1070,11 @@ function test_printing_truncation()
     @variable(model, x[1:100])
     y = @expression(model, sum(sin.(x) .* 2))
     @test occursin(
-        "(sin(x[72]) * 2) + [[...41 terms omitted...]] + (sin(x[30]) * 2)",
+        "(sin(x[72]) * 2) + [[...40 terms omitted...]] + (sin(x[31]) * 2)",
         function_string(MIME("text/plain"), y),
     )
     @test occursin(
-        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{30}}\\right)} * {2}\\right)}",
+        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2}\\right) + {[[\\ldots\\text{40 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{31}}\\right)} * {2}\\right)}",
         function_string(MIME("text/latex"), y),
     )
     return
@@ -1124,7 +1124,7 @@ function test_nlp_matrix_adjoint()
     y = sin.(x)
     @test isequal_canonical(
         @expression(model, expr, y' * y),
-        NonlinearExpr(:+, Any[0.0, y[2]*y[2], y[1]*y[1]]),
+        NonlinearExpr(:+, Any[y[1]*y[1], y[2]*y[2]]),
     )
     return
 end
@@ -1411,6 +1411,36 @@ function test_scalar_nonlinear_moi_function()
     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
     @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
     @test isapprox(model.subexpressions[objectid(y3)], y3_moi)
+    return
+end
+
+function test_addition_with_zero_Base_sum()
+    model = Model()
+    @variable(model, x[1:3])
+    y = sin.(x)
+    # Calling `sum(y)` naively results in `zero(NonlinearExpr) + y[1] + ...`
+    # We don't have this problem in the macros, but we do when called outside
+    # them.
+    z = sum(y) |> flatten!
+    @test z.head == :+
+    @test length(z.args) == 3
+    @test isequal_canonical(z, @expression(model, sum(sin(x[i]) for i in 1:3)))
+    return
+end
+
+function test_addition_with_iszero()
+    model = Model()
+    @variable(model, x)
+    y = log(x)
+    @test +(0.0, y) === y
+    @test +(y, 0.0) === y
+    z = zero(NonlinearExpr)
+    @test +(y, z) === y
+    @test +(z, y) === y
+    @test iszero(z)
+    @test !iszero(y)
+    # We check only for canonical representations
+    @test !iszero(NonlinearExpr(:+, 0.0, z))
     return
 end
 
