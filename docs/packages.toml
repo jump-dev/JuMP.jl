@@ -149,7 +149,7 @@
     rev = "v0.1.1"
 [CONOPT]
     user = "GAMS-dev"
-    rev = "9dc9a6c04897c56ac0f956899cc3e50643193ea3"
+    rev = "v0.1.0"
 [COPT]
     user = "COPT-Public"
     rev = "v1.1.33"
