@@ -124,6 +124,17 @@ function test_extension_flatten_nary(
     return
 end
 
+function test_extension_flatten_nary_order_maintained(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:3])
+    @test sum(log(x[i]) for i in 1:3) |> flatten! |> string ==
+          "log(x[1]) + log(x[2]) + log(x[3])"
+    return
+end
+
 function test_extension_zero_one(
     ModelType = Model,
     VariableRefType = VariableRef,
@@ -1070,11 +1081,11 @@ function test_printing_truncation()
     @variable(model, x[1:100])
     y = @expression(model, sum(sin.(x) .* 2))
     @test occursin(
-        "(sin(x[72]) * 2) + [[...40 terms omitted...]] + (sin(x[31]) * 2)",
+        "(sin(x[30]) * 2) + [[...40 terms omitted...]] + (sin(x[71]) * 2)",
         function_string(MIME("text/plain"), y),
     )
     @test occursin(
-        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2}\\right) + {[[\\ldots\\text{40 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{31}}\\right)} * {2}\\right)}",
+        "{\\left({\\textsf{sin}\\left({x_{30}}\\right)} * {2}\\right) + {[[\\ldots\\text{40 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{71}}\\right)} * {2}\\right)}",
         function_string(MIME("text/latex"), y),
     )
     return
