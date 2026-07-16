@@ -63,7 +63,7 @@ done in the same commit, or separately. The last commit should have the message
 Use the following checklist when adding a new solver to the JuMP documentation.
 
 ````
-## Basic
+## Check the upstream package
 
  - [ ] Check that the solver is a registered Julia package
  - [ ] Check that the solver supports the long-term support release of Julia
@@ -74,13 +74,21 @@ Use the following checklist when adding a new solver to the JuMP documentation.
  - [ ] Check that the README and/or documentation provides an example of how to
        use the solver with JuMP
 
-## Documentation
+## Add the package to the supported solvers table
 
  - [ ] Add a new row to the table in `docs/src/installation.md`
 
-## Optional
+## Add the package to the `/solvers` section of the JuMP documentation
+
+This section is optional.
 
  - [ ] Add package metadata to `docs/packages.toml`
+ - [ ] Check that the README has an `## Affiliation` section describing who
+       develops and maintains the package
+ - [ ] Check that the README has a `## Getting help` section describing where
+       the user should ask for help
+ - [ ] Check that the README has an `## Installation` section describing how to
+       install the package
 ````
 
 ## Adding a new shape

@@ -430,19 +430,18 @@ end
 function list_of_solvers_and_extensions()
     _LIST_OF_SOLVERS = Pair{String,String}[]
     _LIST_OF_EXTENSIONS =
-        Pair{String,String}["rafaqz/DimensionalData.jl"=>"extensions/DimensionalData.md",]
+        Pair{String,String}["DimensionalData.jl"=>"extensions/DimensionalData.md",]
     for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
-        user = get(data, "user", "jump-dev")
-        user_repo = string(user, "/", solver, get(data, "ext", ".jl"))
+        repo = string(solver, get(data, "ext", ".jl"))
         if get(data, "extension", false)
-            push!(_LIST_OF_EXTENSIONS, user_repo => "packages/$solver.md")
+            push!(_LIST_OF_EXTENSIONS, repo => "packages/$solver.md")
         else
-            push!(_LIST_OF_SOLVERS, user_repo => "packages/$solver.md")
+            push!(_LIST_OF_SOLVERS, repo => "packages/$solver.md")
         end
     end
     # Sort, with jump-dev repos at the start.
-    sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
-    sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
+    sort!(_LIST_OF_SOLVERS; by = first)
+    sort!(_LIST_OF_EXTENSIONS; by = first)
     pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
     pushfirst!(
         _LIST_OF_EXTENSIONS,
