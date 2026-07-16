@@ -207,19 +207,18 @@ end
 # A backwards-compatible function to preserve behavior prior to #4032. This was
 # used by Plasmo.jl
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
-    model = nothing
+    model = owner_model(f)
+    if model isa GenericModel
+        return moi_function(model, f)
+    end
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
-            continue
+        else
+            ret.args[i] = moi_function(f.args[i])
         end
-        if model === nothing && f.args[i] isa AbstractJuMPScalar
-            model = owner_model(f.args[i])
-        end
-        # If `model === nothing` here, we'll hit the default fallback.
-        ret.args[i] = moi_function(model, f.args[i])
     end
     while !isempty(stack)
         parent, i, arg = pop!(stack)
@@ -228,12 +227,9 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         for j in length(arg.args):-1:1
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
-                continue
+            else
+                child.args[j] = moi_function(arg.args[j])
             end
-            if model === nothing && f.args[i] isa AbstractJuMPScalar
-                model = owner_model(f.args[i])
-            end
-            child.args[j] = moi_function(model, arg.args[j])
         end
     end
     return ret
