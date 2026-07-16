@@ -1392,20 +1392,20 @@ function test_scalar_nonlinear_moi_function()
     y3_moi = MOI.ScalarNonlinearFunction(:exp, Any[y2_moi])
     # Test y1
     @test isapprox(moi_function(y1), y1_moi)
-    @test isempty(model.subexpressions)
+    @test length(model.subexpressions) == 1
     @test isapprox(moi_function(model, y1), y1_moi)
     @test length(model.subexpressions) == 1
     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
     # Test y2
     @test isapprox(moi_function(y2), y2_moi)
-    @test length(model.subexpressions) == 1
+    @test length(model.subexpressions) == 2
     @test isapprox(moi_function(model, y2), y2_moi)
     @test length(model.subexpressions) == 2
     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
     @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
     # Test y3
     @test isapprox(moi_function(y3), y3_moi)
-    @test length(model.subexpressions) == 2
+    @test length(model.subexpressions) == 3
     @test isapprox(moi_function(model, y3), y3_moi)
     @test length(model.subexpressions) == 3
     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
