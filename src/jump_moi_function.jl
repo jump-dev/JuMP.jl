@@ -20,19 +20,17 @@ MathOptInterface.ScalarAffineFunction{Float64}
 function moi_function_type end
 
 """
-    moi_function([model::GenericModel,] x::AbstractJuMPScalar)
-    moi_function([model::GenericModel,] x::AbstractArray{<:AbstractJuMPScalar})
+    moi_function(model::GenericModel, x::AbstractJuMPScalar)
+    moi_function(model::GenericModel, x::AbstractArray{<:AbstractJuMPScalar})
 
 Given a JuMP object `x`, return the MathOptInterface equivalent.
-
-If a `model` is passed, this function may, as a performance optimization, cache
-the mapping of `x` to the MOI equivalent in order to improve handling of common
-subexpressions.
 
 See also: [`jump_function`](@ref).
 
 !!! compat
-    Using the `model` argument requires or JuMP v1.31 later.
+    The `model` argument was added in JuMP v1.31. To maintain backwards
+    compatibility, there is a default fallback for `moi_function(x)`. New
+    functions should use the two-argument version.
 
 ## Example
 
@@ -204,20 +202,30 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
     return ret
 end
 
-# A backwards-compatible function to preserve behavior prior to #4032. This was
-# used by Plasmo.jl
+# A backwards-compatible function to preserve behavior prior to #4032. As one
+# example, this method was used by Plasmo.jl.
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     model = owner_model(f)
     if model isa GenericModel
+        # If `f` has a `GenericModel` as its owner, redirect to the two-arg
+        # vesion so that we can cache common subexpressions.
         return moi_function(model, f)
     end
+    # There are two reasons we might reach here:
+    #  1. The function `f` has no `AbstractJuMPScalar` terms, like
+    #     `NonlinearExpr(:+, Any[0.0])`. In this case, `model === nothing`. It
+    #     doesn't matter that we pass `(model, ` below, because no method will
+    #     exist and we will fallback to the single argument method.
+    #  2. The function `f` contains terms from a JuMP extension, for example
+    #     InfiniteOpt. We call the two-argument version in case they have
+    #     implemented it.
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         else
-            ret.args[i] = moi_function(f.args[i])
+            ret.args[i] = moi_function(model, f.args[i])
         end
     end
     while !isempty(stack)
@@ -228,7 +236,7 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
             else
-                child.args[j] = moi_function(arg.args[j])
+                child.args[j] = moi_function(model, arg.args[j])
             end
         end
     end
