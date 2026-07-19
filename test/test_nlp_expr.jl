@@ -1455,4 +1455,15 @@ function test_addition_with_iszero()
     return
 end
 
+function test_moi_function_no_owner_model()
+    f = NonlinearExpr(:+, Any[0.0, 1.0])
+    f_moi = MOI.ScalarNonlinearFunction(:+, Any[0.0, 1.0])
+    g = NonlinearExpr(:*, Any[f, f])
+    g_moi = MOI.ScalarNonlinearFunction(:*, Any[f_moi, f_moi])
+    h = NonlinearExpr(:^, Any[g, -2])
+    h_moi = MOI.ScalarNonlinearFunction(:^, Any[g_moi, -2])
+    @test isapprox(moi_function(h), h_moi)
+    return
+end
+
 end  # module
