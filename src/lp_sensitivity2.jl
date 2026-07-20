@@ -335,7 +335,7 @@ Return `true` if `model` is a linear program.
 """
 function _is_lp(model::GenericModel)
     AffType = Union{GenericVariableRef,GenericAffExpr}
-    if !(objective_function_type(model)  <: AffType)
+    if !(objective_function_type(model) <: AffType)
         return false
     end
     for (F, S) in list_of_constraint_types(model)
