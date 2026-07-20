@@ -758,28 +758,6 @@ function add_constraint(
 end
 
 """
-    jump_function(constraint::AbstractConstraint)
-
-Return the function of the constraint `constraint` in the function-in-set form
-as a `AbstractJuMPScalar` or `Vector{AbstractJuMPScalar}`.
-"""
-jump_function(constraint::AbstractConstraint) = constraint.func
-
-"""
-    moi_function(constraint::AbstractConstraint)
-
-Return the function of the constraint `constraint` in the function-in-set form
-as a `MathOptInterface.AbstractFunction`.
-"""
-function moi_function(constraint::AbstractConstraint)
-    return moi_function(jump_function(constraint))
-end
-
-function moi_function(model, constraint::AbstractConstraint)
-    return moi_function(model, jump_function(constraint))
-end
-
-"""
     moi_set(constraint::AbstractConstraint)
 
 Return the set of the constraint `constraint` in the function-in-set form as a
@@ -1045,11 +1023,6 @@ function check_belongs_to_model(f::Vector, model)
     return
 end
 
-function moi_function(model, f)
-    check_belongs_to_model(f, model)
-    return moi_function(f)
-end
-
 """
     add_constraint(
         model::GenericModel,
@@ -1066,6 +1039,7 @@ function add_constraint(
     name::String = "",
 )
     con = model_convert(model, con)
+    check_belongs_to_model(con, model)
     func, set = moi_function(model, con), moi_set(con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
