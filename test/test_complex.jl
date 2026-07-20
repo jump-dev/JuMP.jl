@@ -378,7 +378,7 @@ function test_non_real_Hermitian_errors()
 
             Non-real starting value in diagonal of Hermitian matrix.
 
-            Got `x[1, 1] = 1.0 + 1.0im`
+            Got `x[1, 1] = 1.0 + 1.0im`. The diagonal of a Hermitian matrix must be real.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j]),
@@ -390,7 +390,7 @@ function test_non_real_Hermitian_errors()
 
             Non-real lower bound in diagonal of Hermitian matrix.
 
-            Got `x[1, 1] = 1.0 + 1.0im`
+            Got `x[1, 1] = 1.0 + 1.0im`. The diagonal of a Hermitian matrix must be real.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian),
@@ -402,7 +402,7 @@ function test_non_real_Hermitian_errors()
 
             Non-real upper bound in diagonal of Hermitian matrix.
 
-            Got `x[1, 1] = 1.0 + 1.0im`
+            Got `x[1, 1] = 1.0 + 1.0im`. The diagonal of a Hermitian matrix must be real.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian),
@@ -414,7 +414,7 @@ function test_non_real_Hermitian_errors()
 
             Non-real fixed bound in diagonal of Hermitian matrix.
 
-            Got `x[1, 1] = 1.0 + 1.0im`
+            Got `x[1, 1] = 1.0 + 1.0im`. The diagonal of a Hermitian matrix must be real.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian),
@@ -433,6 +433,8 @@ function test_non_conjugate_Hermitian_errors()
             Non-conjugate starting value in Hermitian matrix.
 
             Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+
+            To be Hermitian, we expected `x[2, 1] = 2.0 - 3.0im`.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j]),
@@ -445,6 +447,8 @@ function test_non_conjugate_Hermitian_errors()
             Non-conjugate lower bound in Hermitian matrix.
 
             Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+
+            To be Hermitian, we expected `x[2, 1] = 2.0 - 3.0im`.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian),
@@ -457,6 +461,8 @@ function test_non_conjugate_Hermitian_errors()
             Non-conjugate upper bound in Hermitian matrix.
 
             Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+
+            To be Hermitian, we expected `x[2, 1] = 2.0 - 3.0im`.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian),
@@ -469,6 +475,8 @@ function test_non_conjugate_Hermitian_errors()
             Non-conjugate fixed bound in Hermitian matrix.
 
             Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+
+            To be Hermitian, we expected `x[2, 1] = 2.0 - 3.0im`.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian),
@@ -486,7 +494,8 @@ function test_discrete_variable_Hermitian_errors()
 
             Integer variables in a Hermitian matrix are not supported.
 
-            Check element `(2, 1)`.
+            To fix, check element `(2, 1)`. You may have set the variable \
+            be integer using the `Int` tag or used the `integer = true` keyword.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2], Hermitian, integer = H[i, j]),
@@ -498,7 +507,8 @@ function test_discrete_variable_Hermitian_errors()
 
             Binary variables in a Hermitian matrix are not supported.
 
-            Check element `(2, 1)`.
+            To fix, check element `(2, 1)`. You may have set the variable \
+            be binary using the `Bin` tag or used the `binary = true` keyword.
             """,
         ),
         @variable(model, x[i in 1:2, j in 1:2], Hermitian, binary = H[i, j]),

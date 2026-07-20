@@ -647,7 +647,8 @@ function _vectorize_complex_variables(
                 """
                 Binary variables in a Hermitian matrix are not supported.
 
-                Check element `($i, $j)`.
+                To fix, check element `($i, $j)`. You may have set the variable \
+                be binary using the `Bin` tag or used the `binary = true` keyword.
                 """,
             )
         elseif _is_integer(matrix[i, j])
@@ -655,7 +656,8 @@ function _vectorize_complex_variables(
                 """
                 Integer variables in a Hermitian matrix are not supported.
 
-                Check element `($i, $j)`.
+                To fix, check element `($i, $j)`. You may have set the variable \
+                be integer using the `Int` tag or used the `integer = true` keyword.
                 """,
             )
         elseif i == j
@@ -666,7 +668,7 @@ function _vectorize_complex_variables(
                         """
                         Non-real $str in diagonal of Hermitian matrix.
 
-                        Got `x[$i, $i] = $x_ii`
+                        Got `x[$i, $i] = $x_ii`. The diagonal of a Hermitian matrix must be real.
                         """,
                     )
                 end
@@ -683,6 +685,8 @@ function _vectorize_complex_variables(
                         Non-conjugate $str in Hermitian matrix.
 
                         Got `x[$i, $j] = $x_ij` and `x[$j, $i] = $x_ji`.
+
+                        To be Hermitian, we expected `x[$j, $i] = $(conj(x_ji))`.
                         """,
                     )
                 end
