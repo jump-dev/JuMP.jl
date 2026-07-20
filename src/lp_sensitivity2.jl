@@ -334,11 +334,15 @@ end
 Return `true` if `model` is a linear program.
 """
 function _is_lp(model::GenericModel)
+    AffType = Union{GenericVariableRef,GenericAffExpr}
+    if !(objective_function_type(model)  <: AffType)
+        return false
+    end
     for (F, S) in list_of_constraint_types(model)
         # TODO(odow): support Interval constraints.
         if !(S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo})
             return false
-        elseif !(F <: Union{GenericVariableRef,GenericAffExpr})
+        elseif !(F <: AffType)
             return false
         end
     end

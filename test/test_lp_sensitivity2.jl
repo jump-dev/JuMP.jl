@@ -588,4 +588,39 @@ function test_degenerate_error()
     return
 end
 
+function test_is_lp()
+    err = ErrorException(
+        """
+        Unable to compute LP sensitivity because the model is not a linear program, or it contains interval constraints.
+
+        Remove any nonlinear or integer components, and replace any interval constraints with separate upper and lower bound constraints.
+        """,
+    )
+    # Integer variable
+    model = Model()
+    @variable(model, x, Int)
+    @test_throws err lp_sensitivity_report(model)
+    # Quadratic objective
+    model = Model()
+    @variable(model, x)
+    @objective(model, Min, x^2)
+    @test_throws err lp_sensitivity_report(model)
+    # Nonlinear objective
+    model = Model()
+    @variable(model, x)
+    @objective(model, Max, log(x))
+    @test_throws err lp_sensitivity_report(model)
+    # Quadratic constraint
+    model = Model()
+    @variable(model, x)
+    @constraint(model, x^2 <= 1)
+    @test_throws err lp_sensitivity_report(model)
+    # Conic constraint
+    model = Model()
+    @variable(model, x[1:3])
+    @constraint(model, x in MOI.ExponentialCone())
+    @test_throws err lp_sensitivity_report(model)
+    return
+end
+
 end  # module
