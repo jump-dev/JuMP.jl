@@ -702,6 +702,7 @@ function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
         check_belongs_to_model(variable_pair.a, model)
         check_belongs_to_model(variable_pair.b, model)
     end
+    return
 end
 
 """

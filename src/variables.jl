@@ -367,7 +367,6 @@ end
 
 """
     check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
-    check_belongs_to_model(x::AbstractConstraint, model::AbstractModel)
 
 Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of `x` is not
 `model`.
