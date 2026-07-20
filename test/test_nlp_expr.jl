@@ -190,8 +190,7 @@ function test_extension_expression_addmul(
     model = ModelType()
     @variable(model, x)
     @test string(@expression(model, x + 3 * sin(x))) == "x + 3 * sin(x)"
-    @test string(@expression(model, 2 * x + 3 * sin(x))) ==
-          "(2 x) + 3 * sin(x)"
+    @test string(@expression(model, 2 * x + 3 * sin(x))) == "(2 x) + 3 * sin(x)"
     @test string(@expression(model, x^2 + 3 * sin(x))) ==
           "($(x^2)) + 3 * sin(x)"
     @test string(@expression(model, sin(x) + 3 * sin(x))) ==
