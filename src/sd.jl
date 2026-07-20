@@ -679,14 +679,14 @@ function _vectorize_complex_variables(
                 x_ji = getfield(matrix[j, i].info, field)
                 if isnan(x_ij) && isnan(x_ji)
                     continue
-                elseif x_ij != conj(x_ij)
+                elseif x_ji != conj(x_ij)
                     error_fn(
                         """
                         Non-conjugate $str in Hermitian matrix.
 
                         Got `x[$i, $j] = $x_ij` and `x[$j, $i] = $x_ji`.
 
-                        To be Hermitian, we expected `x[$j, $i] = $(conj(x_ji))`.
+                        To be Hermitian, we expected `x[$j, $i] = $(conj(x_ij))`.
                         """,
                     )
                 end
