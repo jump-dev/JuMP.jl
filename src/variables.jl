@@ -2679,15 +2679,6 @@ _imag(v::ScalarVariable) = _mapinfo(imag, v)
 
 _imag(scalar) = imag(scalar)
 
-_conj(v::ScalarVariable) = _mapinfo(conj, v)
-
-function _isreal(v::ScalarVariable)
-    return isreal(v.info.lower_bound) &&
-           isreal(v.info.upper_bound) &&
-           isreal(v.info.fixed_value) &&
-           isreal(v.info.start)
-end
-
 _is_binary(v::ScalarVariable) = v.info.binary
 
 _is_integer(v::ScalarVariable) = v.info.integer

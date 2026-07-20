@@ -630,26 +630,62 @@ function reshape_vector(
     return LinearAlgebra.Hermitian(matrix)
 end
 
-function _vectorize_complex_variables(error_fn::Function, matrix::Matrix)
-    if any(_is_binary, matrix) || any(_is_integer, matrix)
-        # We would then need to fix the imaginary value to zero. Let's wait to
-        # see if there is need for such complication first.
-        error_fn(
-            "Binary or integer variables in a Hermitian matrix are not supported.",
-        )
-    end
+function _vectorize_complex_variables(
+    error_fn::Function,
+    matrix::Matrix{<:ScalarVariable},
+)
     n = LinearAlgebra.checksquare(matrix)
-    for j in 1:n
-        if !_isreal(matrix[j, j])
+    fields = (
+        :lower_bound => "lower bound",
+        :upper_bound => "upper bound",
+        :fixed_value => "fixed bound",
+        :start => "starting value",
+    )
+    for i in 1:n, j in 1:n
+        if _is_binary(matrix[i, j])
             error_fn(
-                "Non-real bounds or starting values for diagonal of Hermitian variable.",
+                """
+                Binary variables in a Hermitian matrix are not supported.
+
+                Check element `($i, $j)`.
+                """,
             )
-        end
-        for i in 1:j
-            if matrix[i, j] != _conj(matrix[j, i])
-                error_fn(
-                    "Non-conjugate bounds or starting values for Hermitian variable.",
-                )
+        elseif _is_integer(matrix[i, j])
+            error_fn(
+                """
+                Integer variables in a Hermitian matrix are not supported.
+
+                Check element `($i, $j)`.
+                """,
+            )
+        elseif i == j
+            for (field, str) in fields
+                x_ii = getfield(matrix[i, i].info, field)
+                if !isreal(x_ii)
+                    error_fn(
+                        """
+                        Non-real $str in diagonal of Hermitian matrix.
+
+                        Got `x[$i, $i] = $x_ii`
+                        """,
+                    )
+                end
+            end
+        elseif i < j
+            for (field, str) in fields
+                x_ij = getfield(matrix[i, j].info, field)
+                x_ji = getfield(matrix[j, i].info, field)
+                if isnan(x_ij) && isnan(x_ji)
+                    continue
+                elseif x_ij != conj(x_ij)
+                    error_fn(
+                        """
+                        Non-conjugate $str in Hermitian matrix.
+
+                        Got `x[$i, $j] = $x_ij` and `x[$j, $i] = $x_ji`.
+                        """,
+                    )
+                end
             end
         end
     end

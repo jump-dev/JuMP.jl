@@ -368,4 +368,142 @@ function test_mul_real_hermitian()
     return
 end
 
+function test_non_real_Hermitian_errors()
+    model = Model()
+    H = [1.0+1.0im 2.0+3.0im; 2.0-3.0im 4.0]
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j])`:
+
+            Non-real starting value in diagonal of Hermitian matrix.
+
+            Got `x[1, 1] = 1.0 + 1.0im`
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian)`:
+
+            Non-real lower bound in diagonal of Hermitian matrix.
+
+            Got `x[1, 1] = 1.0 + 1.0im`
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian)`:
+
+            Non-real upper bound in diagonal of Hermitian matrix.
+
+            Got `x[1, 1] = 1.0 + 1.0im`
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian)`:
+
+            Non-real fixed bound in diagonal of Hermitian matrix.
+
+            Got `x[1, 1] = 1.0 + 1.0im`
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian),
+    )
+    return
+end
+
+function test_non_conjugate_Hermitian_errors()
+    model = Model()
+    H = [1.0 2.0+3.0im; 2.0+3.0im 4.0]
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j])`:
+
+            Non-conjugate starting value in Hermitian matrix.
+
+            Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2], Hermitian, start = H[i, j]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian)`:
+
+            Non-conjugate lower bound in Hermitian matrix.
+
+            Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] >= H[i, j], Hermitian),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian)`:
+
+            Non-conjugate upper bound in Hermitian matrix.
+
+            Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] <= H[i, j], Hermitian),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian)`:
+
+            Non-conjugate fixed bound in Hermitian matrix.
+
+            Got `x[1, 2] = 2.0 + 3.0im` and `x[2, 1] = 2.0 + 3.0im`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2] == H[i, j], Hermitian),
+    )
+    return
+end
+
+function test_discrete_variable_Hermitian_errors()
+    model = Model()
+    H = [false false; true false]
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2], Hermitian, integer = H[i, j])`:
+
+            Integer variables in a Hermitian matrix are not supported.
+
+            Check element `(2, 1)`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2], Hermitian, integer = H[i, j]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x[i in 1:2, j in 1:2], Hermitian, binary = H[i, j])`:
+
+            Binary variables in a Hermitian matrix are not supported.
+
+            Check element `(2, 1)`.
+            """,
+        ),
+        @variable(model, x[i in 1:2, j in 1:2], Hermitian, binary = H[i, j]),
+    )
+    return
+end
+
 end  # TestComplexNumberSupport
