@@ -167,9 +167,16 @@ variable_ref_type(::Type{GenericNonlinearExpr{V}}) where {V} = V
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
-_needs_parentheses(::Union{Number,AbstractVariableRef}) = false
-_needs_parentheses(::Any) = true
-function _needs_parentheses(x::GenericNonlinearExpr)
+_needs_parentheses(::Any, ::Union{Number,AbstractVariableRef}) = false
+
+_needs_parentheses(::Any, ::Any) = true
+
+function _needs_parentheses(head, x::GenericNonlinearExpr)
+    if head in (:+, :-) && x.head in (:*, :/, :^)
+        # A simplification. By all variations of BEDMAS rules, ^, /, and *
+        # apply with higher precedence than + and -.
+        return false
+    end
     return x.head in _PREFIX_OPERATORS && length(x.args) > 1
 end
 
@@ -231,7 +238,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                             push!(stack, " $op $p_open")
                         end
                         continue
-                    elseif _needs_parentheses(arg.args[i])
+                    elseif _needs_parentheses(arg.head, arg.args[i])
                         push!(stack, p_right)
                         push!(stack, arg.args[i])
                         push!(stack, p_left)

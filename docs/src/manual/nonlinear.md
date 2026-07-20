@@ -41,8 +41,8 @@ exp(x[1]) - 1 ≤ 0
 
 julia> @constraint(model, con[i = 1:2], 2^x[i] >= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- con[1] : (2 ^ x[1]) - 1 ≥ 0
- con[2] : (2 ^ x[2]) - 2 ≥ 0
+ con[1] : 2 ^ x[1] - 1 ≥ 0
+ con[2] : 2 ^ x[2] - 2 ≥ 0
 ```
 
 Delete a nonlinear constraint using [`delete`](@ref):
@@ -128,7 +128,7 @@ A [`NonlinearExpr`](@ref) can be used in [`@objective`](@ref),
 
 ```jldoctest nl_expression
 julia> @objective(model, Min, expr^2 + 1)
-((exp(x[1]) + sqrt(x[2])) ^ 2) + 1
+(exp(x[1]) + sqrt(x[2])) ^ 2 + 1
 
 julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
@@ -172,7 +172,7 @@ julia> @expression(model, expr, sum(exp.(x)))
 exp(x[1]) + exp(x[2])
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
-(exp(x[1]) / (exp(x[1]) + exp(x[2]))) + (exp(x[2]) / (exp(x[1]) + exp(x[2])))
+exp(x[1]) / (exp(x[1]) + exp(x[2])) + exp(x[2]) / (exp(x[1]) + exp(x[2]))
 ```
 In this model, JuMP will compute the value (and derivatives) of the denominator
 twice, without realizing that it is the same expression.
@@ -192,7 +192,7 @@ julia> @constraint(model, expr == sum(exp.(x)))
 expr - (exp(x[1]) + exp(x[2])) = 0
 
 julia> @objective(model, Min, sum(exp(x[i]) / expr for i in 1:2))
-(exp(x[1]) / expr) + (exp(x[2]) / expr)
+exp(x[1]) / expr + exp(x[2]) / expr
 ```
 
 The reason JuMP does not perform common subexpression elimination automatically
@@ -254,7 +254,7 @@ julia> aff = x + 1;
 julia> quad = x^2 + x;
 
 julia> expr = cos(x) * sin(quad) + aff
-(cos(x) * sin(x² + x)) + (x + 1)
+cos(x) * sin(x² + x) + (x + 1)
 ```
 
 ### Supported operators
