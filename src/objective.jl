@@ -278,7 +278,10 @@ function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
     return
 end
 
-function set_objective_function(model::GenericModel, func::AbstractJuMPScalar)
+function set_objective_function(
+    model::GenericModel,
+    func::Union{AbstractJuMPScalar,AbstractVector{<:AbstractJuMPScalar}},
+)
     check_belongs_to_model(func, model)
     set_objective_function(model, moi_function(model, func))
     return
@@ -289,17 +292,6 @@ function set_objective_function(model::GenericModel{T}, func::Real) where {T}
         model,
         MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], convert(T, func)),
     )
-    return
-end
-
-function set_objective_function(
-    model::GenericModel,
-    func::AbstractVector{<:AbstractJuMPScalar},
-)
-    for f in func
-        check_belongs_to_model(f, model)
-    end
-    set_objective_function(model, moi_function(model, func))
     return
 end
 

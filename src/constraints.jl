@@ -95,6 +95,7 @@ function check_belongs_to_model(con_ref::ConstraintRef, model::AbstractModel)
     if owner_model(con_ref) !== model
         throw(ConstraintNotOwned(con_ref))
     end
+    return
 end
 
 Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
@@ -891,7 +892,8 @@ function constraint_object(
 end
 
 function check_belongs_to_model(con::ScalarConstraint, model)
-    return check_belongs_to_model(con.func, model)
+    check_belongs_to_model(con.func, model)
+    return
 end
 
 """
@@ -990,9 +992,8 @@ function constraint_object(
 end
 
 function check_belongs_to_model(con::VectorConstraint, model)
-    for func in con.func
-        check_belongs_to_model(func, model)
-    end
+    check_belongs_to_model(con.func, model)
+    return
 end
 
 function _moi_add_constraint(
@@ -1016,7 +1017,7 @@ function _moi_add_constraint(
     return MOI.add_constraint(model, f, s)
 end
 
-function check_belongs_to_model(f::Vector, model)
+function check_belongs_to_model(f::AbstractVector, model)
     for func in f
         check_belongs_to_model(func, model)
     end

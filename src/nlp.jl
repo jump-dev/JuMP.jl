@@ -218,9 +218,10 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
-function check_belongs_to_model(arg::NonlinearParameter, model::AbstractModel)
-    return arg.model === model
-end
+# A pass-through. This is needed to catch wben a parameter is used with the new
+# nonlinear API. It doesn't matter what the model is, because we're going to
+# throw an error regardless.
+check_belongs_to_model(::NonlinearParameter, ::AbstractModel) = nothing
 
 variable_ref_type(arg::NonlinearParameter) = variable_ref_type(arg.model)
 
@@ -344,9 +345,10 @@ struct NonlinearExpression <: AbstractJuMPScalar
     index::Int
 end
 
-function check_belongs_to_model(arg::NonlinearExpression, model::AbstractModel)
-    return arg.model === model
-end
+# A pass-through. This is needed to catch wben an expression is used with the
+# new nonlinear API. It doesn't matter what the model is, because we're going to
+# throw an error regardless.
+check_belongs_to_model(::NonlinearExpression, ::AbstractModel) = nothing
 
 variable_ref_type(arg::NonlinearExpression) = variable_ref_type(arg.model)
 
