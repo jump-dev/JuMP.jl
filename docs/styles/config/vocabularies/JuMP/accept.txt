@@ -63,6 +63,7 @@ sparsifying
 subexpression(?s)
 subgraph(?s)
 sublicense
+subsolver
 subtyping
 SVM(?s)
 sysimage
@@ -141,6 +142,7 @@ Artelys
 (Cbc|CBC)
 (cdd|CDD)
 (cddlib|CDDLib)
+Chuffed
 Clarabel
 Clp
 CPLEXLink
