@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed the error messages when Hermitian variables are passed invalid data to
    explain what data was incorrect (#4198)
  - Fixed checking if problem is an LP in [`lp_sensitivity_report`](@ref) (#4199)
- - Removed some unnecessary parens when printing nonlinear expressions (#4201)
+ - Removed some unnecessary parentheses when printing nonlinear expressions (#4201)
 
 ### Other
 
