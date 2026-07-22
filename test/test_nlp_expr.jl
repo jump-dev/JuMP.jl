@@ -1390,38 +1390,38 @@ function test_custom_array()
     return
 end
 
-# function test_scalar_nonlinear_moi_function()
-#     model = Model()
-#     @variable(model, x)
-#     y1 = atan(x, 2)
-#     y1_moi = MOI.ScalarNonlinearFunction(:atan, Any[index(x), 2])
-#     y2 = y1 + y1
-#     y2_moi = MOI.ScalarNonlinearFunction(:+, Any[y1_moi, y1_moi])
-#     y3 = exp(y2)
-#     y3_moi = MOI.ScalarNonlinearFunction(:exp, Any[y2_moi])
-#     # Test y1
-#     @test isapprox(moi_function(y1), y1_moi)
-#     @test length(model.subexpressions) == 1
-#     @test isapprox(moi_function(model, y1), y1_moi)
-#     @test length(model.subexpressions) == 1
-#     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
-#     # Test y2
-#     @test isapprox(moi_function(y2), y2_moi)
-#     @test length(model.subexpressions) == 2
-#     @test isapprox(moi_function(model, y2), y2_moi)
-#     @test length(model.subexpressions) == 2
-#     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
-#     @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
-#     # Test y3
-#     @test isapprox(moi_function(y3), y3_moi)
-#     @test length(model.subexpressions) == 3
-#     @test isapprox(moi_function(model, y3), y3_moi)
-#     @test length(model.subexpressions) == 3
-#     @test isapprox(model.subexpressions[objectid(y1)], y1_moi)
-#     @test isapprox(model.subexpressions[objectid(y2)], y2_moi)
-#     @test isapprox(model.subexpressions[objectid(y3)], y3_moi)
-#     return
-# end
+function test_scalar_nonlinear_moi_function()
+    model = Model()
+    @variable(model, x)
+    y1 = atan(x, 2)
+    y1_moi = MOI.ScalarNonlinearFunction(:atan, Any[index(x), 2])
+    y2 = y1 + y1
+    y2_moi = MOI.ScalarNonlinearFunction(:+, Any[y1_moi, y1_moi])
+    y3 = exp(y2)
+    y3_moi = MOI.ScalarNonlinearFunction(:exp, Any[y2_moi])
+    # Test y1
+    @test isapprox(moi_function(y1), y1_moi)
+    @test length(model.subexpressions) == 1
+    @test isapprox(moi_function(model, y1), y1_moi)
+    @test length(model.subexpressions) == 1
+    @test isapprox(model.subexpressions[y1], y1_moi)
+    # Test y2
+    @test isapprox(moi_function(y2), y2_moi)
+    @test length(model.subexpressions) == 2
+    @test isapprox(moi_function(model, y2), y2_moi)
+    @test length(model.subexpressions) == 2
+    @test isapprox(model.subexpressions[y1], y1_moi)
+    @test isapprox(model.subexpressions[y2], y2_moi)
+    # Test y3
+    @test isapprox(moi_function(y3), y3_moi)
+    @test length(model.subexpressions) == 3
+    @test isapprox(moi_function(model, y3), y3_moi)
+    @test length(model.subexpressions) == 3
+    @test isapprox(model.subexpressions[y1], y1_moi)
+    @test isapprox(model.subexpressions[y2], y2_moi)
+    @test isapprox(model.subexpressions[y3], y3_moi)
+    return
+end
 
 function test_addition_with_zero_Base_sum()
     model = Model()
@@ -1479,6 +1479,17 @@ function test_extension_expression_bedmas_parentheses(
     @test string(@expression(model, y - 2 / y)) == "sin(x) - 2 / sin(x)"
     @test string(@expression(model, y - 2 ^ y)) == "sin(x) - 2 ^ sin(x)"
     @test string(@expression(model, y - 2 + y)) == "(sin(x) - 2) + sin(x)"
+    return
+end
+
+function test_issue_4203()
+    n = 25_000
+    model = Model()
+    @variable(model, x)
+    @constraint(model, cons[i in 1:n], sin(x) * i <= 0)
+    @testset "$i" for i in 1:n
+        @test isequal_canonical(constraint_object(cons[i]).func, sin(x) * i - 0)
+    end
     return
 end
 
