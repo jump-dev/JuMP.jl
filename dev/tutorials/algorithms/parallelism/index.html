@@ -14,11 +14,11 @@
                end
                sleep(1.0)
            end
-       end</code><code class="nohighlight hljs ansi" style="display:block;">  1.106119 seconds (166.49 k allocations: 8.146 MiB, 1 lock conflict, 18.09% compilation time)</code></pre><p>This for-loop sleeps for <code>1</code> second on each iteration. Thus, if it had executed sequentially, it should have taken the same number of seconds as there are threads available. Instead, it took only 1 second, showing that the iterations were executed simultaneously. We can verify this by checking the <code>Threads.threadid()</code> of the thread that executed each iteration:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ids</code><code class="nohighlight hljs ansi" style="display:block;">4-element Vector{Int64}:
- 4
+       end</code><code class="nohighlight hljs ansi" style="display:block;">  1.106975 seconds (166.50 k allocations: 8.146 MiB, 18.05% compilation time)</code></pre><p>This for-loop sleeps for <code>1</code> second on each iteration. Thus, if it had executed sequentially, it should have taken the same number of seconds as there are threads available. Instead, it took only 1 second, showing that the iterations were executed simultaneously. We can verify this by checking the <code>Threads.threadid()</code> of the thread that executed each iteration:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; ids</code><code class="nohighlight hljs ansi" style="display:block;">4-element Vector{Int64}:
  3
- 2
- 5</code></pre><div class="admonition is-danger" id="Danger-bfa223bc868772c0"><header class="admonition-header">Danger<a class="admonition-anchor" href="#Danger-bfa223bc868772c0" title="Permalink"></a></header><div class="admonition-body"><p>The <code>Threads.threadid()</code> that a task runs on may change during execution. Therefore, it is not safe to use <code>Threads.threadid()</code> to index into, say, a vector of buffer or stateful objects. As an example, do not do:</p><pre><code class="language-julia hljs">x = rand(Threads.nthreads())
+ 4
+ 5
+ 2</code></pre><div class="admonition is-danger" id="Danger-bfa223bc868772c0"><header class="admonition-header">Danger<a class="admonition-anchor" href="#Danger-bfa223bc868772c0" title="Permalink"></a></header><div class="admonition-body"><p>The <code>Threads.threadid()</code> that a task runs on may change during execution. Therefore, it is not safe to use <code>Threads.threadid()</code> to index into, say, a vector of buffer or stateful objects. As an example, do not do:</p><pre><code class="language-julia hljs">x = rand(Threads.nthreads())
 Threads.@threads for i in 1:Threads.nthreads()
     x[Threads.threadid()] *= 2  # Danger! This use of threadid is not safe
 end</code></pre><p>For more information, read <a href="https://julialang.org/blog/2023/07/PSA-dont-use-threadid/">PSA: thread-local state is no longer recommended</a>.</p></div></div><h3 id="Data-races"><a class="docs-heading-anchor" href="#Data-races">Data races</a><a id="Data-races-1"></a><a class="docs-heading-anchor-permalink" href="#Data-races" title="Permalink"></a></h3><p>When working with threads, you must avoid data races. A data race occurs when multiple threads access the same variable at the same time, at least one thread modifies the variable, and the order of the reads and writes are not properly coordinated.</p><p>Here&#39;s an example of a data race:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; begin
@@ -29,7 +29,7 @@ end</code></pre><p>For more information, read <a href="https://julialang.org/blo
                end
            end
            x[]
-       end</code><code class="nohighlight hljs ansi" style="display:block;">1095</code></pre><p>The expected answer is <code>4_000</code> (because there are four threads each incrementing 1,000 times), but the actual result is much smaller. Moreover, the result is non-deterministic; if we re-ran this code, we would get a different value each time.</p><p>We got the wrong answer because multiple threads are reading and writing <code>x</code> at the same time without coordination. For example, the following sequence could occur:</p><ul><li>Assume <code>x[]</code> currently has a value of <code>3</code></li><li>Thread A reads <code>x[]</code> to get <code>3</code></li><li>Thread B reads <code>x[]</code> to get <code>3</code></li><li>Thread A writes <code>x[] = 3 + 1 = 4</code></li><li>Thread B writes <code>x[] = 3 + 1 = 4</code></li><li>The final value of <code>x[]</code> is <code>4</code></li></ul><p>The write from Thread A is overwritten, and so the value of <code>x[]</code> has increased by <code>1</code> instead of <code>2</code>.</p><p>Similar to the earlier <code>ids</code> example, we can fix this data race using a <code>ReentrantLock</code>. The lock ensures that only one thread can update (read and then write) <code>x</code> at a time. Now we get the correct answer:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; begin
+       end</code><code class="nohighlight hljs ansi" style="display:block;">1178</code></pre><p>The expected answer is <code>4_000</code> (because there are four threads each incrementing 1,000 times), but the actual result is much smaller. Moreover, the result is non-deterministic; if we re-ran this code, we would get a different value each time.</p><p>We got the wrong answer because multiple threads are reading and writing <code>x</code> at the same time without coordination. For example, the following sequence could occur:</p><ul><li>Assume <code>x[]</code> currently has a value of <code>3</code></li><li>Thread A reads <code>x[]</code> to get <code>3</code></li><li>Thread B reads <code>x[]</code> to get <code>3</code></li><li>Thread A writes <code>x[] = 3 + 1 = 4</code></li><li>Thread B writes <code>x[] = 3 + 1 = 4</code></li><li>The final value of <code>x[]</code> is <code>4</code></li></ul><p>The write from Thread A is overwritten, and so the value of <code>x[]</code> has increased by <code>1</code> instead of <code>2</code>.</p><p>Similar to the earlier <code>ids</code> example, we can fix this data race using a <code>ReentrantLock</code>. The lock ensures that only one thread can update (read and then write) <code>x</code> at a time. Now we get the correct answer:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; begin
            x = Ref(0)
            l = ReentrantLock()
            Threads.@threads for i in 1:Threads.nthreads()
@@ -211,21 +211,21 @@ ERROR: TaskFailedException
            # Finally, close the `tasks` channel.
            close(tasks)
            return
-       end</code><code class="nohighlight hljs ansi" style="display:block;">run_channel_example (generic function with 1 method)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; run_channel_example(15)</code><code class="nohighlight hljs ansi" style="display:block;">s=Main.Solution(1, 0.0) [solved 1/15]
+       end</code><code class="nohighlight hljs ansi" style="display:block;">run_channel_example (generic function with 1 method)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; run_channel_example(15)</code><code class="nohighlight hljs ansi" style="display:block;">s=Main.Solution(1, -92.0) [solved 1/15]
 s=Main.Solution(2, 0.0) [solved 2/15]
-s=Main.Solution(3, -40.0) [solved 3/15]
-s=Main.Solution(4, -8.0) [solved 4/15]
-s=Main.Solution(5, -277.0) [solved 5/15]
-s=Main.Solution(6, -275.0) [solved 6/15]
-s=Main.Solution(7, -40.0) [solved 7/15]
-s=Main.Solution(8, -8.0) [solved 8/15]
-s=Main.Solution(9, -277.0) [solved 9/15]
-s=Main.Solution(10, -275.0) [solved 10/15]
-s=Main.Solution(11, -40.0) [solved 11/15]
-s=Main.Solution(12, -8.0) [solved 12/15]
-s=Main.Solution(13, -277.0) [solved 13/15]
-s=Main.Solution(14, -275.0) [solved 14/15]
-s=Main.Solution(15, -40.0) [solved 15/15]</code></pre><h2 id="Distributed-computing"><a class="docs-heading-anchor" href="#Distributed-computing">Distributed computing</a><a id="Distributed-computing-1"></a><a class="docs-heading-anchor-permalink" href="#Distributed-computing" title="Permalink"></a></h2><p>To use distributed computing with Julia, use the <code>Distributed</code> package:</p><pre><code class="language-julia hljs">julia&gt; import Distributed</code></pre><p>Like multi-threading, we need to tell Julia how many processes to add. We can do this either by starting Julia with the <code>-p N</code> command line argument, or by using <code>Distributed.addprocs</code>:</p><pre><code class="language-julia hljs">julia&gt; import Pkg
+s=Main.Solution(3, -276.0) [solved 3/15]
+s=Main.Solution(4, 0.0) [solved 4/15]
+s=Main.Solution(5, -92.0) [solved 5/15]
+s=Main.Solution(6, -154.0) [solved 6/15]
+s=Main.Solution(7, -276.0) [solved 7/15]
+s=Main.Solution(8, 0.0) [solved 8/15]
+s=Main.Solution(9, -92.0) [solved 9/15]
+s=Main.Solution(10, -154.0) [solved 10/15]
+s=Main.Solution(11, -276.0) [solved 11/15]
+s=Main.Solution(12, 0.0) [solved 12/15]
+s=Main.Solution(13, -92.0) [solved 13/15]
+s=Main.Solution(14, -154.0) [solved 14/15]
+s=Main.Solution(15, -276.0) [solved 15/15]</code></pre><h2 id="Distributed-computing"><a class="docs-heading-anchor" href="#Distributed-computing">Distributed computing</a><a id="Distributed-computing-1"></a><a class="docs-heading-anchor-permalink" href="#Distributed-computing" title="Permalink"></a></h2><p>To use distributed computing with Julia, use the <code>Distributed</code> package:</p><pre><code class="language-julia hljs">julia&gt; import Distributed</code></pre><p>Like multi-threading, we need to tell Julia how many processes to add. We can do this either by starting Julia with the <code>-p N</code> command line argument, or by using <code>Distributed.addprocs</code>:</p><pre><code class="language-julia hljs">julia&gt; import Pkg
 
 julia&gt; project = Pkg.project();
 
@@ -299,4 +299,4 @@ julia&gt; import SCS_GPU_jll
 
 julia&gt; model = Model(SCS.Optimizer);
 
-julia&gt; set_attribute(model, &quot;linear_solver&quot;, SCS.GpuIndirectSolver)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rolling_horizon/">« Rolling horizon problems</a><a class="docs-footer-nextpage" href="../pdhg/">Writing a solver interface »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 22 July 2026 23:51">Wednesday 22 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+julia&gt; set_attribute(model, &quot;linear_solver&quot;, SCS.GpuIndirectSolver)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rolling_horizon/">« Rolling horizon problems</a><a class="docs-footer-nextpage" href="../pdhg/">Writing a solver interface »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 22 July 2026 23:56">Wednesday 22 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
