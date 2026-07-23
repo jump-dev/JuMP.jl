@@ -18,16 +18,16 @@ Algorithm: Lexicographic
 ----------------------------------------------
 solve #     Obj. 1       Obj. 2       Time
 ----------------------------------------------
-    1    0.00000e+00  0.00000e+00  1.36420e+00
-    2    0.00000e+00  0.00000e+00  1.36453e+00
-    3    1.20000e+01 -9.00000e+00  1.45430e+00
-    4    1.20000e+01 -9.00000e+00  1.45454e+00
+    1    0.00000e+00  0.00000e+00  1.06074e+00
+    2    0.00000e+00  0.00000e+00  1.06101e+00
+    3    1.20000e+01 -9.00000e+00  1.13259e+00
+    4    1.20000e+01 -9.00000e+00  1.13277e+00
 ----------------------------------------------
 termination_status: OPTIMAL
 result_count: 2
 
-Total solve time:          1.56746e+00
-Time spent in subproblems: 8.30101e-01 (53%)
+Total solve time:          1.21909e+00
+Time spent in subproblems: 6.44660e-01 (53%)
 Number of subproblems:     6
 ----------------------------------------------</code></pre><pre><code class="language-julia hljs">solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 1, verbose = false)
 ├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.Lexicographic, optimizer=HiGHS]
@@ -41,7 +41,7 @@ Number of subproblems:     6
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [0.00000e+00,0.00000e+00]
 └ Work counters
-  └ solve_time (sec)   : 1.56746e+00</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 1.21909e+00</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, objective_value(model; result = i), &quot; | &quot;)
     println(&quot;x = &quot;, value.([x1, x2]; result = i))
@@ -62,21 +62,21 @@ Algorithm: EpsilonConstraint
 ----------------------------------------------
 solve #     Obj. 1       Obj. 2       Time
 ----------------------------------------------
-    1    6.00000e+00  2.40000e+01  8.09156e-01
-    2    6.00000e+00  2.40000e+01  8.09700e-01
-    3    2.20000e+01  7.00000e+00  8.16764e-01
-    4    2.20000e+01  7.00000e+00  8.17250e-01
-    6    1.90000e+01  1.00000e+01  8.25084e-01
-    8    1.60000e+01  1.10000e+01  8.33168e-01
-   10    1.20000e+01  1.30000e+01  8.41298e-01
-   12    9.00000e+00  1.70000e+01  8.42319e-01
-   14    6.00000e+00  2.40000e+01  8.43122e-01
+    1    6.00000e+00  2.40000e+01  6.46822e-01
+    2    6.00000e+00  2.40000e+01  6.47337e-01
+    3    2.20000e+01  7.00000e+00  6.53236e-01
+    4    2.20000e+01  7.00000e+00  6.53738e-01
+    6    1.90000e+01  1.00000e+01  6.60758e-01
+    8    1.60000e+01  1.10000e+01  6.67975e-01
+   10    1.20000e+01  1.30000e+01  6.74607e-01
+   12    9.00000e+00  1.70000e+01  6.75540e-01
+   14    6.00000e+00  2.40000e+01  6.76226e-01
 ----------------------------------------------
 termination_status: OPTIMAL
 result_count: 6
 
-Total solve time:          8.43670e-01
-Time spent in subproblems: 4.08039e-02 (5%)
+Total solve time:          6.76705e-01
+Time spent in subproblems: 3.51040e-02 (5%)
 Number of subproblems:     15
 ----------------------------------------------</code></pre><pre><code class="language-julia hljs">solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 1, verbose = false)
 ├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.EpsilonConstraint, optimizer=HiGHS]
@@ -90,7 +90,7 @@ Number of subproblems:     15
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [6.00000e+00,2.40000e+01]
 └ Work counters
-  └ solve_time (sec)   : 8.43670e-01</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 6.76705e-01</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, round.(Int, objective_value(model; result = i)), &quot; | &quot;)
     println(&quot;x = &quot;, round.(Int, value.(x; result = i)))
@@ -131,19 +131,19 @@ Algorithm: EpsilonConstraint
 ----------------------------------------------
 solve #     Obj. 1       Obj. 2       Time
 ----------------------------------------------
-    1    8.00000e+00  9.00000e+00  7.19190e-03
-    2    8.00000e+00  9.00000e+00  7.82299e-03
-    3    1.30000e+01  4.00000e+00  1.43058e-02
-    4    1.30000e+01  4.00000e+00  1.48969e-02
-    6    1.10000e+01  5.00000e+00  1.59838e-02
-    8    1.00000e+01  7.00000e+00  1.69508e-02
-   10    8.00000e+00  9.00000e+00  1.78728e-02
+    1    8.00000e+00  9.00000e+00  5.80502e-03
+    2    8.00000e+00  9.00000e+00  6.34289e-03
+    3    1.30000e+01  4.00000e+00  1.15011e-02
+    4    1.30000e+01  4.00000e+00  1.20039e-02
+    6    1.10000e+01  5.00000e+00  1.29011e-02
+    8    1.00000e+01  7.00000e+00  1.37000e-02
+   10    8.00000e+00  9.00000e+00  1.44100e-02
 ----------------------------------------------
 termination_status: OPTIMAL
 result_count: 4
 
-Total solve time:          1.84689e-02
-Time spent in subproblems: 1.70770e-02 (92%)
+Total solve time:          1.49069e-02
+Time spent in subproblems: 1.38655e-02 (93%)
 Number of subproblems:     11
 ----------------------------------------------</code></pre><pre><code class="language-julia hljs">solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solution_summary(; result = 1, verbose = false)
 ├ solver_name          : MOA[algorithm=MultiObjectiveAlgorithms.EpsilonConstraint, optimizer=HiGHS]
@@ -157,7 +157,7 @@ Number of subproblems:     11
 │ ├ dual_status          : NO_SOLUTION
 │ └ objective_value      : [8.00000e+00,9.00000e+00]
 └ Work counters
-  └ solve_time (sec)   : 1.84689e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
+  └ solve_time (sec)   : 1.49069e-02</code></pre><pre><code class="language-julia hljs">for i in 1:result_count(model)
     assert_is_solved_and_feasible(model; result = i)
     print(i, &quot;: z = &quot;, round.(Int, objective_value(model; result = i)), &quot; | &quot;)
     X = round.(Int, value.(x; result = i))
@@ -170,4 +170,4 @@ Number of subproblems:     11
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1: z = [8, 9] | Path: 1-&gt;2 2-&gt;4 4-&gt;6
 2: z = [10, 7] | Path: 1-&gt;2 2-&gt;5 5-&gt;6
 3: z = [11, 5] | Path: 1-&gt;2 2-&gt;6
-4: z = [13, 4] | Path: 1-&gt;3 3-&gt;4 4-&gt;6</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../transp/">« The transportation problem</a><a class="docs-footer-nextpage" href="../multi_objective_knapsack/">Multi-objective knapsack »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 22 July 2026 22:01">Wednesday 22 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+4: z = [13, 4] | Path: 1-&gt;3 3-&gt;4 4-&gt;6</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../transp/">« The transportation problem</a><a class="docs-footer-nextpage" href="../multi_objective_knapsack/">Multi-objective knapsack »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 22 July 2026 23:53">Wednesday 22 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
