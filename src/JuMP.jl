@@ -127,6 +127,27 @@ function value_type(::Type{T}) where {T}
     )
 end
 
+mutable struct _WeakCache{V}
+    data::Dict{WeakRef,V}
+    size_at_last_filter::Int
+    _WeakCache{V}() where {V} = new(Dict{WeakRef,V}(), 0)
+end
+
+Base.get(cache::_WeakCache, key, default) = get(cache.data, key, default)
+
+Base.getindex(cache::_WeakCache, key) = getindex(cache.data, WeakRef(key))
+
+Base.length(cache::_WeakCache) = length(cache.data)
+
+function Base.setindex!(cache::_WeakCache{V}, value::V, key) where {V}
+    cache.data[WeakRef(key)] = value
+    if length(cache.data) >= max(5 * cache.size_at_last_filter, 100)
+        filter!(kv -> !isnothing(first(kv).value), cache.data)
+        cache.size_at_last_filter = length(cache.data)
+    end
+    return value
+end
+
 mutable struct GenericModel{T<:Real} <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
@@ -163,7 +184,7 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     enable_macro_timing::Bool
     macro_times::Dict{Tuple{LineNumberNode,String},Float64}
     # A cache to track common subexpressions based on their `objectid`.
-    subexpressions::Dict{UInt64,MOI.ScalarNonlinearFunction}
+    subexpressions::_WeakCache{MOI.ScalarNonlinearFunction}
 end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
@@ -278,7 +299,7 @@ function direct_generic_model(
         Dict{Any,MOI.ConstraintIndex}(),
         false,
         Dict{Tuple{LineNumberNode,String},Float64}(),
-        Dict{UInt64,MOI.ScalarNonlinearFunction}(),
+        _WeakCache{MOI.ScalarNonlinearFunction}(),
     )
 end
 
