@@ -133,7 +133,7 @@ mutable struct _WeakCache{V}
     _WeakCache{V}() where {V} = new(Dict{WeakRef,V}(), 0)
 end
 
-Base.get(cache::_WeakCache, key, default) = get(cache.data, key, default)
+Base.get(cache::_WeakCache, key, default) = get(cache.data, WeakRef(key), default)
 
 Base.getindex(cache::_WeakCache, key) = getindex(cache.data, WeakRef(key))
 
