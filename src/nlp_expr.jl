@@ -77,7 +77,7 @@ julia> f = GenericNonlinearExpr{VariableRef}(
 sin(x) ^ 2
 ```
 """
-struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
+mutable struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     head::Symbol
     args::Vector{Any}
 
