@@ -291,7 +291,7 @@ safe_to_run()
 
 function a_good_way_to_use_threading()
     solutions = Pair{Int,Float64}[]
-    my_lock = Threads.ReentrantLock();
+    my_lock = Threads.ReentrantLock()
     Threads.@threads for i in 1:10
         model = Model(HiGHS.Optimizer)
         set_silent(model)
