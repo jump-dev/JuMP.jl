@@ -22,6 +22,7 @@ function test_univariate_error()
     model = Model()
     @variable(model, x >= 0)
     @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x))
+    return
 end
 
 function test_univariate_error_existing()
@@ -29,6 +30,7 @@ function test_univariate_error_existing()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
     @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex))
+    return
 end
 
 function test_univariate()
@@ -40,6 +42,7 @@ function test_univariate()
     MOI.initialize(d, Symbol[])
     x = [2.0]
     @test MOI.eval_objective(d, x) == 4.0
+    return
 end
 
 function test_univariate_register_twice()
@@ -54,6 +57,7 @@ function test_univariate_register_twice()
     y = [NaN]
     MOI.eval_constraint(d, y, x)
     @test y == [3.0]
+    return
 end
 
 function test_univariate_register_twice_error()
@@ -63,6 +67,7 @@ function test_univariate_register_twice_error()
     g(x, y) = x^2 + x^2
     @test_logs (:warn,) @NLobjective(model, Min, g(x))
     @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
+    return
 end
 
 function test_univariate_existing_nlpdata()
@@ -75,6 +80,7 @@ function test_univariate_existing_nlpdata()
     MOI.initialize(d, Symbol[])
     x = [2.0]
     @test MOI.eval_objective(d, x) == 16.0
+    return
 end
 
 function test_univariate_redefine()
@@ -90,12 +96,14 @@ function test_univariate_redefine()
 
     g = (x) -> 2x^2
     @test MOI.eval_objective(d, x) == 4.0
+    return
 end
 
 function test_multivariate_error()
     model = Model()
     @variable(model, x >= 0)
     @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x, x))
+    return
 end
 
 function test_multivariate_error_existing()
@@ -103,6 +111,7 @@ function test_multivariate_error_existing()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
     @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex, x))
+    return
 end
 
 function test_multivariate()
@@ -114,6 +123,7 @@ function test_multivariate()
     MOI.initialize(d, Symbol[])
     x = [2.0]
     @test MOI.eval_objective(d, x) == 8.0
+    return
 end
 
 function test_multivariate_register_warn()
@@ -125,6 +135,7 @@ function test_multivariate_register_warn()
         return
     end
     @test_logs (:warn,) register(model, :g, 2, g, ∇g; autodiff = true)
+    return
 end
 
 function test_multivariate_existing_nlpdata()
@@ -137,6 +148,7 @@ function test_multivariate_existing_nlpdata()
     MOI.initialize(d, Symbol[])
     x = [2.0]
     @test MOI.eval_objective(d, x) == 20.0
+    return
 end
 
 function test_multivariate_redefine()
@@ -152,6 +164,7 @@ function test_multivariate_redefine()
 
     g = (x, y) -> x^2 + y
     @test MOI.eval_objective(d, x) == 20.0
+    return
 end
 
 function test_multivariate_register_splat()
@@ -171,6 +184,7 @@ function test_multivariate_register_splat()
         ```
         """)
     @test_throws err @NLexpression(model, ex, f(x...))
+    return
 end
 
 function test_multivariate_register_splat_existing()
@@ -191,6 +205,7 @@ function test_multivariate_register_splat_existing()
         ```
         """)
     @test_throws err @NLexpression(model, ex, f(x...))
+    return
 end
 
 function test_multivariate_max()

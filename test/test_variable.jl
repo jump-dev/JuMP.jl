@@ -1279,6 +1279,7 @@ function _test_Hermitian(model, H)
     @test Q[2, 2] == 1v[3]
     @test Q[2, 1] == conj(Q[1, 2])
     @test H[2, 1] == conj(H[1, 2])
+    return
 end
 
 function test_extension_variable_Hermitian_tag(

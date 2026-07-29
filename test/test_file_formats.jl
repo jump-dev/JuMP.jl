@@ -54,6 +54,7 @@ function test_mof_io()
     seekstart(io)
     model_2 = read(io, Model; format = MOI.FileFormats.FORMAT_MOF)
     @test sprint(print, model) == sprint(print, model_2)
+    return
 end
 
 function test_mof_nlp()

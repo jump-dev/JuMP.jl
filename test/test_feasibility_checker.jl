@@ -36,6 +36,7 @@ function test_primal_solution()
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
     report = primal_feasibility_report(model)
     @test isempty(report)
+    return
 end
 
 function test_primal_solution_func()
@@ -62,6 +63,7 @@ function test_feasible()
     report =
         primal_feasibility_report(model, Dict(x => 0.0, y => 0.0, z => 0.5))
     @test isempty(report)
+    return
 end
 
 function test_missing()
@@ -74,6 +76,7 @@ function test_missing()
         primal_feasibility_report(model, Dict(z => 0.0); skip_missing = true)
     @test report[FixRef(z)] == 0.5
     @test length(report) == 1
+    return
 end
 
 function test_missing_error()
@@ -107,6 +110,7 @@ function test_bounds()
     @test report[IntegerRef(y)] ≈ 0.1
     @test report[FixRef(z)] ≈ 0.5
     @test length(report) == 4
+    return
 end
 
 function test_scalar_affine()
@@ -122,6 +126,7 @@ function test_scalar_affine()
     @test report[c3] ≈ 0.1
     @test report[c4] ≈ 0.5
     @test length(report) == 4
+    return
 end
 
 function test_scalar_affine_func()
@@ -155,6 +160,7 @@ function test_scalar_quadratic()
     @test report[c3] ≈ 0.9
     @test report[c4] ≈ 1.5
     @test length(report) == 4
+    return
 end
 
 function test_vector()
@@ -171,6 +177,7 @@ function test_vector()
     @test !haskey(report, c3)
     @test report[c4] ≈ sqrt(2)
     @test length(report) == 3
+    return
 end
 
 function test_vector_affine()
@@ -187,6 +194,7 @@ function test_vector_affine()
     @test !haskey(report, c3)
     @test report[c4] ≈ sqrt(8)
     @test length(report) == 3
+    return
 end
 
 function test_nonlinear()
@@ -201,6 +209,7 @@ function test_nonlinear()
     @test !haskey(report, c2)
     @test report[c3] ≈ 2 - exp(0.5)
     @test report[c4] ≈ 0.125
+    return
 end
 
 function test_nonlinear_missing()
