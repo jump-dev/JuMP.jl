@@ -58,14 +58,14 @@ function _test_result_attributes(; test_empty = false)
     @test_throws err value(x)
     @test_throws err value(c)
     @test_throws err dual(c)
+    return
 end
 
-function test_result_attributes()
-    return _test_result_attributes()
-end
+test_result_attributes() = _test_result_attributes()
 
 function test_result_attributes_after_empty()
-    return _test_result_attributes(; test_empty = true)
+    _test_result_attributes(; test_empty = true)
+    return
 end
 
 function fill_small_test_model!(model)
@@ -109,17 +109,20 @@ function test_empty!_model()
     @test model.optimize_hook === hook # empty! does not touch the hook
     @test isa(backend(model), backend_type)
     @test fill_small_test_model!(model) === model
+    return
 end
 
 function test_innermost_error()
     model = Model()
     @test_throws ErrorException unsafe_backend(model)
+    return
 end
 
 function test_innermost()
     model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
     MOI.Utilities.attach_optimizer(model)
     @test unsafe_backend(model) isa MOIU.MockOptimizer{MOIU.Model{Float64}}
+    return
 end
 
 function test_hygiene_variable()
@@ -131,6 +134,7 @@ function test_hygiene_variable()
     @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
     @test_throws err @constraint(model_x, [x, y] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, y)
+    return
 end
 
 function test_hygiene_linear()
@@ -139,11 +143,11 @@ function test_hygiene_linear()
     model_y = Model()
     @variable(model_y, y)
     err = VariableNotOwned(y)
-
     @test_throws err @constraint(model_x, x + y == 1)
     @test_throws err @constraint(model_x, [x, x + y] in MOI.Zeros(2))
     @test_throws err @constraint(model_x, [x + y, x] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, x + y)
+    return
 end
 
 function test_hygiene_quadratic()
@@ -152,7 +156,6 @@ function test_hygiene_quadratic()
     model_y = Model()
     @variable(model_y, y)
     err = VariableNotOwned(y)
-
     @test_throws err @constraint(model_x, x * y >= 1)
     @test_throws err @constraint(model_x, [x, x * y] in MOI.Zeros(2))
     @test_throws err @constraint(model_x, [x * y, x] in MOI.Zeros(2))
@@ -161,6 +164,7 @@ function test_hygiene_quadratic()
     @test_throws err @constraint(model_x, [x * x + x + y, x] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, x * y)
     @test_throws err @objective(model_x, Min, x * x + x + y)
+    return
 end
 
 function test_hygiene_attribute()
@@ -169,14 +173,13 @@ function test_hygiene_attribute()
     model_y = Model()
     @variable(model_y, y)
     err = VariableNotOwned(y)
-
     cy = @constraint(model_y, y in MOI.EqualTo(1.0))
     cerr = ConstraintNotOwned(cy)
-
     @test_throws err MOI.get(model_x, MOI.VariablePrimalStart(), y)
     @test_throws cerr MOI.get(model_x, MOI.ConstraintPrimalStart(), cy)
     @test_throws err MOI.set(model_x, MOI.VariablePrimalStart(), y, 1.0)
     @test_throws cerr MOI.set(model_x, MOI.ConstraintPrimalStart(), cy, 1.0)
+    return
 end
 
 function test_optimize_hook()
@@ -190,7 +193,6 @@ function test_optimize_hook()
     @test !called
     optimize!(m)
     @test called
-
     m = Model()
     err = ErrorException(
         """
@@ -205,12 +207,14 @@ function test_optimize_hook()
     set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
     @test optimize!(m) === nothing
     @test optimize!(m; my_new_arg = 1) == 1
+    return
 end
 
 function test_universal_fallback()
     m = Model()
     MOI.set(m, MOI.Test.UnknownModelAttribute(), 1)
     @test MOI.get(m, MOI.Test.UnknownModelAttribute()) == 1
+    return
 end
 
 function test_bridges_automatic()
@@ -229,7 +233,8 @@ function test_bridges_automatic()
             MOI.Interval{Float64},
         },
     }
-    return optimize!(model)
+    optimize!(model)
+    return
 end
 
 function test_bridges_automatic_disabled()
@@ -254,6 +259,7 @@ function test_bridges_automatic_disabled()
         """,
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
+    return
 end
 
 function test_bridges_direct()
@@ -274,6 +280,7 @@ function test_bridges_direct()
         """,
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
+    return
 end
 
 function test_direct_generic_model()
@@ -312,6 +319,7 @@ function test_bridges_add_before_con_model_optimizer()
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_bridges_add_before_con_set_optimizer()
@@ -324,6 +332,7 @@ function test_bridges_add_before_con_set_optimizer()
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_bridges_remove_bridge()
@@ -434,6 +443,7 @@ function test_bridges_add_bridgeable_con_model_optimizer()
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_macro_bridgeable()
@@ -506,6 +516,7 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_bridge_graph_false()
@@ -537,6 +548,7 @@ function test_bridge_graph_false()
     )
     optimize!(model)
     @test 1.0 == @inferred value(x)
+    return
 end
 
 function test_bridge_graph_true()
@@ -572,6 +584,7 @@ function test_solver_name()
 
     model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
     @test "Mock" == @inferred solver_name(model)
+    return
 end
 
 function test_set_silent()
@@ -594,6 +607,7 @@ function test_set_optimizer_attribute()
     @test set_optimizer_attribute(model, "aaa", "bbb") === nothing
     @test MOI.get(backend(model), MOI.RawOptimizerAttribute("aaa")) == "bbb"
     @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
+    return
 end
 
 function test_set_optimizer_attributes()
@@ -602,6 +616,7 @@ function test_set_optimizer_attributes()
     set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
     @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
     @test MOI.get(model, MOI.RawOptimizerAttribute("abc")) == 10
+    return
 end
 
 function test_get_optimizer_attribute()
@@ -609,6 +624,7 @@ function test_get_optimizer_attribute()
     model = Model(() -> MOIU.MockOptimizer(mock))
     @test set_optimizer_attribute(model, "aaa", "bbb") === nothing
     @test get_optimizer_attribute(model, "aaa") == "bbb"
+    return
 end
 
 function test_optimizer_attribute_abstract_string()
@@ -731,6 +747,7 @@ function test_compute_conflict()
     err = NoOptimizer()
     model = Model()
     @test_throws err compute_conflict!(model)
+    return
 end
 
 function test_copy_model_base_auto()
@@ -767,6 +784,7 @@ function test_direct_mode_using_OptimizerWithAttributes()
     @test model.moi_backend isa MOIU.MockOptimizer
     @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("a")) == 1
     @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("b")) == 2
+    return
 end
 
 function test_copy_expr_aff()
@@ -776,6 +794,7 @@ function test_copy_expr_aff()
     new_model, ref_map = copy_model(model)
     @test ref_map[ex] == new_model[:ex]
     @test new_model[:ex] == 2 * new_model[:x] + 1
+    return
 end
 
 function test_copy_expr_quad()
@@ -785,6 +804,7 @@ function test_copy_expr_quad()
     new_model, ref_map = copy_model(model)
     @test ref_map[ex] == new_model[:ex]
     @test new_model[:ex] == 2 * new_model[:x]^2 + new_model[:x] + 1
+    return
 end
 
 function test_copy_dense()
@@ -792,6 +812,7 @@ function test_copy_dense()
     @variable(model, x[[:a, :b]])
     new_model, ref_map = copy_model(model)
     @test ref_map[x] == new_model[:x]
+    return
 end
 
 function test_copy_sparse()
@@ -799,6 +820,7 @@ function test_copy_sparse()
     @variable(model, x[i = 1:4; isodd(i)])
     new_model, ref_map = copy_model(model)
     @test ref_map[x] == new_model[:x]
+    return
 end
 
 function test_copy_object_fail()
@@ -807,6 +829,7 @@ function test_copy_object_fail()
     model[:d] = Dict(x => 2)
     new_model, ref_map = copy_model(model)
     @test !haskey(new_model, :d)
+    return
 end
 
 function test_copy_extension()
@@ -823,6 +846,7 @@ function test_haskey()
     @variable(model, p[i=1:10] >= 0)
     @test haskey(model, :p)
     @test !haskey(model, :i)
+    return
 end
 
 function test_copy_refmap_expr()
@@ -842,6 +866,7 @@ function test_copy_dict_expr()
     @expression(model, dictExpr[i=1:2, j=1:2], Dict(i => x, j => 2x))
     new_model, ref_map = copy_model(model)
     @test !haskey(new_model, :dictExpr)
+    return
 end
 
 function test_copy_filter()
@@ -874,6 +899,7 @@ function test_copy_filter_array()
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred name(cref_2_new)
+    return
 end
 
 function test_copy_filter_denseaxisarray()
@@ -902,6 +928,7 @@ function test_copy_filter_denseaxisarray()
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred name(cref_2_new)
+    return
 end
 
 function test_copy_filter_sparseaxisarray()
@@ -930,6 +957,7 @@ function test_copy_filter_sparseaxisarray()
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred name(cref_2_new)
+    return
 end
 
 function test_copy_conflict()

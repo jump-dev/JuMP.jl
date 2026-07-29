@@ -22,6 +22,7 @@ include(joinpath(@__DIR__, "utilities.jl"))
 function _test_dot(a, b)
     @test LinearAlgebra.dot(a, b) == conj(a) * b
     @test LinearAlgebra.dot(b, a) == conj(b) * a
+    return
 end
 
 function test_complex_aff_expr()
@@ -117,6 +118,7 @@ function test_complex_vector_constraint()
     con_obj = constraint_object(con_ref)
     @test jump_function(con_obj) == [(1 + 2im) * x + 1]
     @test moi_set(con_obj) == MOI.Zeros(1)
+    return
 end
 
 function test_complex_vector_constraint_quadratic()
@@ -128,6 +130,7 @@ function test_complex_vector_constraint_quadratic()
     con_obj = constraint_object(con_ref)
     @test jump_function(con_obj) == [(1 + 2im) * x^2 + 1]
     @test moi_set(con_obj) == MOI.Zeros(1)
+    return
 end
 
 function test_complex_scalar_affine_constraint()
@@ -203,6 +206,7 @@ function test_complex_conj()
     @test conj(complex_quad) == (4 + 5im) * x^2 + (2 - im) * x + 3 + im
     @test real(complex_quad) == 4x^2 + 2x + 3
     @test imag(complex_quad) == -5x^2 + x - 1
+    return
 end
 
 function test_complex_abs2()
@@ -212,6 +216,7 @@ function test_complex_abs2()
     @test abs2(x + 2im) == x^2 + 4
     @test abs2(x + 2) == x^2 + 4x + 4
     @test abs2(x * im + 2) == x^2 + 4
+    return
 end
 
 function test_hermitian()

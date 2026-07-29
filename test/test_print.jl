@@ -852,6 +852,7 @@ function test_print_summary_min_sense()
     @variable(model, x)
     @objective(model, Min, x)
     @test occursin("objective_sense: MIN_SENSE", sprint(show, model))
+    return
 end
 
 function test_show_latex_parameter()
