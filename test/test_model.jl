@@ -404,20 +404,24 @@ function test_bridges_add_after_con_model_optimizer()
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_bridges_add_after_con_set_optimizer()
-    err = MOI.UnsupportedConstraint{MOI.VariableIndex,Nonnegative}()
     model = Model()
     @variable(model, x)
     c = @constraint(model, x in Nonnegative())
     set_optimizer(model, mock_factory)
-    @test_throws err optimize!(model)
+    @test_throws(
+        MOI.UnsupportedConstraint{MOI.VariableIndex,Nonnegative},
+        optimize!(model),
+    )
     add_bridge(model, NonnegativeBridge)
     optimize!(model)
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_bridges_add_bridgeable_con_model_optimizer()
