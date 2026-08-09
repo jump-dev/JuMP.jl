@@ -327,7 +327,7 @@ function _try_get_solver_name(model_like)
 end
 
 """
-    solver_name(model::GenericModel)
+    solver_name(model::GenericModel)::String
 
 If available, returns the [`MOI.SolverName`](@ref) property of the underlying
 optimizer.
@@ -761,10 +761,15 @@ function compute_conflict!(model::GenericModel)
 end
 
 """
-    termination_status(model::GenericModel)
+    termination_status(model::GenericModel)::MOI.TerminationStatusCode
 
-Return a [`MOI.TerminationStatusCode`](@ref) describing why the solver stopped
-(that is, the [`MOI.TerminationStatus`](@ref) attribute).
+Return a [`MOI.TerminationStatusCode`](@ref) describing why the solver stopped.
+
+This function is equivalent to querying the [`MOI.TerminationStatus`](@ref)
+attribute.
+
+See [`MOI.TerminationStatusCode`](@ref) for a list of all possible statuses and
+their meanings.
 
 ## Example
 
@@ -789,10 +794,13 @@ function MOI.get(model::GenericModel, attr::MOI.TerminationStatus)
 end
 
 """
-    result_count(model::GenericModel)
+    result_count(model::GenericModel)::Int
 
 Return the number of results available to query after a call to
 [`optimize!`](@ref).
+
+This function is equivalent to querying the [`MOI.ResultCount`](@ref)
+attribute.
 
 ## Example
 
@@ -813,10 +821,12 @@ function result_count(model::GenericModel)::Int
 end
 
 """
-    raw_status(model::GenericModel)
+    raw_status(model::GenericModel)::String
 
-Return the reason why the solver stopped in its own words (that is, the
-MathOptInterface model attribute [`MOI.RawStatusString`](@ref)).
+Return a `String` explaining why the solver stopped in its own words.
+
+This function is equivalent to querying the [`MOI.RawStatusString`](@ref)
+attribute.
 
 ## Example
 
@@ -847,11 +857,16 @@ function MOI.get(
 end
 
 """
-    primal_status(model::GenericModel; result::Int = 1)
+    primal_status(model::GenericModel; result::Int = 1)::MOI.ResultStatusCode
 
 Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
-primal solution of the solver (that is, the [`MOI.PrimalStatus`](@ref) attribute)
-associated with the result index `result`.
+primal solution of the solver associated with the result index `result`.
+
+See [`MOI.ResultStatusCode`](@ref) for a list of all possible statuses and their
+meanings.
+
+This function is equivalent to querying the [`MOI.PrimalStatus`](@ref)
+attribute.
 
 See also: [`result_count`](@ref).
 
@@ -871,11 +886,15 @@ function primal_status(model::GenericModel; result::Int = 1)
 end
 
 """
-    dual_status(model::GenericModel; result::Int = 1)
+    dual_status(model::GenericModel; result::Int = 1)::MOI.ResultStatusCode
 
 Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
-dual solution of the solver (that is, the [`MOI.DualStatus`](@ref) attribute)
-associated with the result index `result`.
+dual solution of the solver associated with the result index `result`.
+
+See [`MOI.ResultStatusCode`](@ref) for a list of all possible statuses and their
+meanings.
+
+This function is equivalent to querying the [`MOI.DualStatus`](@ref) attribute.
 
 See also: [`result_count`](@ref).
 
@@ -1047,10 +1066,13 @@ function assert_is_solved_and_feasible(
 end
 
 """
-    solve_time(model::GenericModel)
+    solve_time(model::GenericModel)::Float64
 
 If available, returns the solve time in wall-clock seconds reported by the
-solver (the [`MOI.SolveTimeSec`](@ref) attribute).
+solver.
+
+This function is equivalent to querying the [`MOI.SolveTimeSec`](@ref)
+attribute.
 
 Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
 by the solver.
@@ -1075,10 +1097,13 @@ function solve_time(model::GenericModel)
 end
 
 """
-    simplex_iterations(model::GenericModel)
+    simplex_iterations(model::GenericModel)::Int64
 
 If available, returns the cumulative number of simplex iterations during the
-most-recent optimization (the [`MOI.SimplexIterations`](@ref) attribute).
+most-recent optimization.
+
+This function is equivalent to querying the [`MOI.SimplexIterations`](@ref)
+attribute.
 
 Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
 by the solver.
@@ -1103,10 +1128,13 @@ function simplex_iterations(model::GenericModel)
 end
 
 """
-    barrier_iterations(model::GenericModel)
+    barrier_iterations(model::GenericModel)::Int64
 
 If available, returns the cumulative number of barrier iterations during the
-most-recent optimization (the [`MOI.BarrierIterations`](@ref) attribute).
+most-recent optimization.
+
+This function is equivalent to querying the [`MOI.BarrierIterations`](@ref)
+attribute.
 
 Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
 by the solver.
@@ -1131,11 +1159,12 @@ function barrier_iterations(model::GenericModel)
 end
 
 """
-    node_count(model::GenericModel)
+    node_count(model::GenericModel)::Int64
 
 If available, returns the total number of branch-and-bound nodes explored during
-the most recent optimization in a Mixed Integer Program (the
-[`MOI.NodeCount`](@ref) attribute).
+the most recent optimization in a Mixed Integer Program.
+
+This function is equivalent to querying the [`MOI.NodeCount`](@ref) attribute.
 
 Throws a `MOI.GetAttributeNotAllowed` error if the attribute is not implemented
 by the solver.
