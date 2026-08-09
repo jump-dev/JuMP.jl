@@ -401,10 +401,14 @@ function _getindex_recurse(data::Tuple, keys::Tuple, condition::Function)
     return condition(k) ? tuple(d[k], remainder...) : remainder
 end
 
+_is_one(x::Real) = isone(x)
+_is_one(::Any) = false
+
 function Base.to_index(A::DenseAxisArray{T,N}, idx) where {T,N}
     if length(idx) < N
         throw(BoundsError(A, idx))
-    elseif any(i -> !isone(idx[i]), (N+1):length(idx))
+    elseif any(i -> !_is_one(idx[i]), (N+1):length(idx))
+        # Like Base.Array, allow `1` in trailing dimensions.
         throw(KeyError(idx))
     end
     return _getindex_recurse(A.lookup, idx, x -> true)
