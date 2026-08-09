@@ -1083,4 +1083,12 @@ function test_hash_equality()
     return
 end
 
+function test_issue_4213()
+    keys = [(:a, :b)]
+    x = Containers.DenseAxisArray([:answer], keys)
+    @test x[(:a, :b)] == :answer
+    @test_throws KeyError x[:a, :b]
+    return
+end
+
 end  # module

@@ -415,4 +415,13 @@ function test_small_displaysize()
     return
 end
 
+function test_issue_4213()
+    x = Containers.SparseAxisArray(Dict((:a, :b) => :answer))
+    @test x[(:a, :b)] == :answer
+    # This works unintentionally, because of Base.Dict's getindex semantics.
+    @test x[:a, :b] == :answer
+    @test_throws BoundsError x[:a, :b, :c]
+    return
+end
+
 end  # module
