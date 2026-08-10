@@ -489,7 +489,7 @@ end
 Updates `expression` in-place to `expression + (*)(terms...)`.
 
 This is typically much more efficient than `expression += (*)(terms...)` because
-it avoids the temorary allocation of the right-hand side term.
+it avoids the temporary allocation of the right-hand side term.
 
 For example, `add_to_expression!(expression, a, b)` produces the same result as
 `expression += a*b`, and `add_to_expression!(expression, a)` produces the same result as
@@ -834,7 +834,7 @@ end
 In many cases, `@variable` can return a `GenericAffExpr` instead of a
 `GenericVariableRef`. This is particularly the case for complex-valued
 expressions. To make common operations like `lower_bound(x)` work, we should
-forward the method if and only if `x` is convertable to a `GenericVariableRef`.
+forward the method if and only if `x` is convertible to a `GenericVariableRef`.
 """
 function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
     if length(x.terms) != 1
