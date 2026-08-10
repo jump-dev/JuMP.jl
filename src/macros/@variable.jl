@@ -73,7 +73,7 @@ Four keyword arguments are useful in all cases:
    [`MOI.VariableName`](@ref) attribute. Passing `set_string_name = false` can
    improve performance.
 
-Other keyword arguments are needed to disambiguate sitations with anonymous
+Other keyword arguments are needed to disambiguate situations with anonymous
 variables:
 
  * `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the

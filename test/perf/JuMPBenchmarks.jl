@@ -535,7 +535,7 @@ To run a more rigorous benchmark, do not pass `-r` and pass `-f file`
 instead.
 
  * If `--compare` is not given, save a new benchmark dataset to `file`.
- * If `--compare`, compare aginst the data in `file`.
+ * If `--compare`, compare against the data in `file`.
 
 ### Example
 
