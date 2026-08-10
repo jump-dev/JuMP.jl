@@ -5,6 +5,7 @@
 
 import Documenter
 import DocumenterCitations
+import DocumenterCodeBlocks
 import Downloads
 import Gurobi
 import Literate
@@ -711,6 +712,7 @@ function make_html()
                 joinpath(@__DIR__, "src", "references.bib");
                 style = :authoryear,
             ),
+            DocumenterCodeBlocks.CodeBlocks(),
         ],
     )
     return
