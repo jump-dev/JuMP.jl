@@ -88,3 +88,6 @@ SpecialFunctions = "2.8.0"
 StatsPlots = "0.15.8"
 Tables = "1.13.0"
 Wavelets = "0.10.1"
+
+[sources]
+DocumenterCodeBlocks = {rev = "signature-header-links", url = "https://github.com/fredrikekre/DocumenterCodeBlocks.jl"}
