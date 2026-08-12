@@ -60,7 +60,7 @@ DimensionalData = "=0.30.1"
 Distributions = "0.25.129"
 Documenter = "=1.17.0"
 DocumenterCitations = "1.4.1"
-DocumenterCodeBlocks = "1.1.0"
+DocumenterCodeBlocks = "1.2.0"
 Dualization = "0.7.7"
 Enzyme = "=0.13.187"
 ForwardDiff = "1.4.1"
@@ -88,6 +88,3 @@ SpecialFunctions = "2.8.0"
 StatsPlots = "0.15.8"
 Tables = "1.13.0"
 Wavelets = "0.10.1"
-
-[sources]
-DocumenterCodeBlocks = {rev = "signature-header-links", url = "https://github.com/fredrikekre/DocumenterCodeBlocks.jl"}
