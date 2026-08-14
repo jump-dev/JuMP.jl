@@ -712,7 +712,7 @@ function make_html()
                 joinpath(@__DIR__, "src", "references.bib");
                 style = :authoryear,
             ),
-            DocumenterCodeBlocks.CodeBlocks(),
+            DocumenterCodeBlocks.CodeBlocks(; line_counter = :named),
         ],
     )
     return
