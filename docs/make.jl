@@ -5,6 +5,21 @@
 
 import Distributed
 
+if get(ENV, "GITHUB_EVENT_NAME", "") == "pull_request"
+    # To speed up the Documentation build during pull requests, over-write
+    # {minted} blocks by {verbatim}. In pushes to `master` and on tags, we don't
+    # do this.
+    write(
+        joinpath(@__DIR__, "src", "assets", "custom.sty"),
+        """
+        % Neutralize the minted environment so LaTeX doesn't invoke Pygments
+        \\let\\minted\\verbatim
+        \\let\\endminted\\endverbatim
+        \\let\\inputminted\\verbatiminput
+        """,
+    )
+end
+
 Distributed.@everywhere include(joinpath(@__DIR__, "make_utilities.jl"))
 
 # Needed to make Documenter think that there is a PDF in the right place when
@@ -22,13 +37,11 @@ end
 @time if _PDF || _IS_GITHUB_ACTIONS
     # Copy the src into a new directory for the latex build
     cp(joinpath(@__DIR__, "src"), joinpath(@__DIR__, "latex_src"); force = true)
-    # w = Distributed.workers()
-    # f_latex = Distributed.remotecall(make_latex, w[1])
-    # f_html = Distributed.remotecall(make_html, w[2])
-    # fetch(f_latex)
-    # fetch(f_html)
-    make_html()
-    make_latex()
+    w = Distributed.workers()
+    f_latex = Distributed.remotecall(make_latex, w[1])
+    f_html = Distributed.remotecall(make_html, w[2])
+    fetch(f_latex)
+    fetch(f_html)
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
     # includes lots of extraneous LaTeX files.
