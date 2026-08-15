@@ -187,15 +187,13 @@ function add_solver_readmes()
         filename = get(data, "filename", "README.md")
         out_filename = joinpath(@__DIR__, "src", "packages", "$solver.md")
         user_repo = string(user, "/", solver, get(data, "ext", ".jl"))
-        headers = Dict{String,Any}()
+        url = "https://raw.githubusercontent.com/$user_repo/$tag/$filename"
         if haskey(ENV, "GITHUB_TOKEN")
-            headers["Authorization"] = "token " * ENV["GITHUB_TOKEN"]
+            headers = Dict("Authorization" => "token " * ENV["GITHUB_TOKEN"])
+            Downloads.download(url, out_filename; headers)
+        else
+            Downloads.download(url, out_filename)
         end
-        Downloads.download(
-            "https://raw.githubusercontent.com/$user_repo/$tag/$filename",
-            out_filename;
-            headers,
-        )
         _add_edit_url(
             out_filename,
             "https://github.com/$user_repo/blob/$tag/$filename",
