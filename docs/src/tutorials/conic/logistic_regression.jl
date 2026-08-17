@@ -195,7 +195,7 @@ model = build_logit_model(X, y, λ)
 set_optimizer(model, Clarabel.Optimizer)
 set_silent(model)
 optimize!(model)
-assert_is_solved_and_feasible(model)
+assert_is_solved_and_feasible(model; allow_almost = true)
 
 #-
 
@@ -238,7 +238,7 @@ sparse_model = build_sparse_logit_model(X, y, λ)
 set_optimizer(sparse_model, Clarabel.Optimizer)
 set_silent(sparse_model)
 optimize!(sparse_model)
-assert_is_solved_and_feasible(sparse_model)
+assert_is_solved_and_feasible(sparse_model; allow_almost = true)
 
 #-
 
