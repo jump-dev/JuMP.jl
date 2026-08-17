@@ -12,7 +12,6 @@ import Literate
 import MathOptInterface
 import Pkg
 import TOML
-import tectonic_jll
 import Test
 
 using JuMP
@@ -757,10 +756,7 @@ function make_latex()
     Documenter.makedocs(;
         sitename = "JuMP",
         authors = "The JuMP core developers and contributors",
-        format = Documenter.LaTeX(;
-            platform = "tectonic",
-            tectonic = tectonic_jll.tectonic(),
-        ),
+        format = Documenter.LaTeX(; platform = "docker"),
         source = joinpath(@__DIR__, "latex_src"),
         build = joinpath(@__DIR__, "latex_build"),
         pages,
