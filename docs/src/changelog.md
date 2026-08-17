@@ -7,6 +7,23 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.31.2 (August 17, 2026)
+
+### Fixed
+
+ - Fixed a test of `MOI.UnsupportedConstraint` to use type instead of value
+   (#4209)
+ - Fixed the error when indexing [`Containers.DenseAxisArray`](@ref) with the
+   wrong number of arguments (#4215)
+
+### Other
+
+ - Fixed various formatting issues (#4208), (#4211)
+ - Documentation updates (#4214), (#4216), (#4217), (#4219), (#4220), (#4221),
+   (#4223), (#4226)
+ - Relaxed `depwarn=error` to `depwarn=yes` on Julia nightly (#4222)
+ - Added support for OrderedCollections@2 (#4224)
+
 ## Version v1.31.1 (July 23, 2026)
 
 ### Fixed

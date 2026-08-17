@@ -110,7 +110,10 @@ julia> objective_value(model)
 3.0
 
 julia> objective_value(model; result = 2)
-ERROR: Result index of attribute MathOptInterface.ObjectiveValue(2) out of bounds. There are currently 1 solution(s) in the model.
+ERROR: Result index of attribute MathOptInterface.ObjectiveValue(2) is out of bounds.
+
+There are currently 1 solution(s) in the model.
+
 Stacktrace:
 [...]
 ```
@@ -155,7 +158,10 @@ julia> dual_objective_value(model)
 3.0
 
 julia> dual_objective_value(model; result = 2)
-ERROR: Result index of attribute MathOptInterface.DualObjectiveValue(2) out of bounds. There are currently 1 solution(s) in the model.
+ERROR: Result index of attribute MathOptInterface.DualObjectiveValue(2) is out of bounds.
+
+There are currently 1 solution(s) in the model.
+
 Stacktrace:
 [...]
 ```
