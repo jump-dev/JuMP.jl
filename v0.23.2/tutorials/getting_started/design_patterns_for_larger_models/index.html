@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Design patterns for larger models · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox" checked/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><a class="tocitem" href="../getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../performance_tips/">Performance tips</a></li><li class="is-active"><a class="tocitem" href>Design patterns for larger models</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#A-simple-script"><span>A simple script</span></a></li><li><a class="tocitem" href="#Wrap-the-model-in-a-function"><span>Wrap the model in a function</span></a></li><li><a class="tocitem" href="#Create-better-data-structures"><span>Create better data structures</span></a></li><li><a class="tocitem" href="#Read-in-data-from-files"><span>Read in data from files</span></a></li><li><a class="tocitem" href="#Add-options-via-if-else"><span>Add options via if-else</span></a></li><li><a class="tocitem" href="#Add-configuation-options-via-dispatch"><span>Add configuation options via dispatch</span></a></li><li><a class="tocitem" href="#Generalize-constraints-and-objectives"><span>Generalize constraints and objectives</span></a></li><li><a class="tocitem" href="#Remove-solver-dependence,-add-error-checks"><span>Remove solver dependence, add error checks</span></a></li><li><a class="tocitem" href="#Create-a-module"><span>Create a module</span></a></li><li><a class="tocitem" href="#Add-tests"><span>Add tests</span></a></li><li><a class="tocitem" href="#Next-steps"><span>Next steps</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../linear/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../linear/prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../../linear/steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../../linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../linear/urban_plan/">The urban planning problem</a></li><li><a class="tocitem" href="../../linear/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../nonlinear/qcp/">Quadratically constrained programs</a></li><li><a class="tocitem" href="../../nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../nonlinear/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../nonlinear/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../nonlinear/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../conic/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../applications/power_systems/">Power Systems</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/">Introduction</a></li><li><a class="tocitem" href="../../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/implementation/">Implementation</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Getting started</a></li><li class="is-active"><a href>Design patterns for larger models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Design patterns for larger models</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/design_patterns_for_larger_models.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Design-patterns-for-larger-models"><a class="docs-heading-anchor" href="#Design-patterns-for-larger-models">Design patterns for larger models</a><a id="Design-patterns-for-larger-models-1"></a><a class="docs-heading-anchor-permalink" href="#Design-patterns-for-larger-models" title="Permalink"></a></h1><p>JuMP makes it easy to build and solve optimization models. However, once you start to construct larger models, and especially ones that interact with external data sources or have customizable sets of variables and constraints based on client choices, you may find that your scripts become unwieldy. This tutorial demonstrates a variety of ways in which you can structure larger JuMP models to improve their readability and maintainability.</p><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>This tutorial is more advanced than the other &quot;Getting started&quot; tutorials. It&#39;s in the &quot;Getting started&quot; section to give you an early preview of how JuMP makes it easy to structure larger models. However, if you are new to JuMP you may want to briefly skim the tutorial, and come back to it once you have written a few JuMP models.</p></div></div><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>This tutorial uses explanation-by-example. We&#39;re going to start with a simple <a href="https://en.wikipedia.org/wiki/Knapsack_problem">knapsack model</a>, and then expand it to add various features and structure.</p><h2 id="A-simple-script"><a class="docs-heading-anchor" href="#A-simple-script">A simple script</a><a id="A-simple-script-1"></a><a class="docs-heading-anchor-permalink" href="#A-simple-script" title="Permalink"></a></h2><p>Your first prototype of a JuMP model is probably a script that uses a small set of hard-coded data.</p><pre><code class="language-julia hljs">using JuMP, HiGHS
+profit = [5, 3, 2, 7, 4]
+weight = [2, 8, 4, 2, 5]
+capacity = 10
+N = 5
+model = Model(HiGHS.Optimizer)
+@variable(model, x[1:N], Bin)
+@objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
+@constraint(model, sum(weight[i] * x[i] for i in 1:N) &lt;= capacity)
+optimize!(model)
+value.(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Float64}:
+  1.0
+  0.0
+ -0.0
+  1.0
+  1.0</code></pre><p>The benefits of this approach are:</p><ul><li>it is quick to code</li><li>it is quick to make changes.</li></ul><p>The downsides include:</p><ul><li>all variables are global (read <a href="https://docs.julialang.org/en/v1/manual/performance-tips/">Performance tips</a>)</li><li>it is easy to introduce errors, e.g., having <code>profit</code> and <code>weight</code> be vectors of different lengths, or not match <code>N</code></li><li>the solution, <code>x[i]</code>, is hard to interpret without knowing the order in which we provided the data.</li></ul><h2 id="Wrap-the-model-in-a-function"><a class="docs-heading-anchor" href="#Wrap-the-model-in-a-function">Wrap the model in a function</a><a id="Wrap-the-model-in-a-function-1"></a><a class="docs-heading-anchor-permalink" href="#Wrap-the-model-in-a-function" title="Permalink"></a></h2><p>A good next step is to wrap your model in a function. This is useful for a few reasons:</p><ul><li>it removes global variables</li><li>it encapsulates the JuMP model and forces you to clarify your inputs and outputs</li><li>we can add some error checking.</li></ul><pre><code class="language-julia hljs">function solve_knapsack_1(profit::Vector, weight::Vector, capacity::Real)
+    if length(profit) != length(weight)
+        throw(DimensionMismatch(&quot;profit and weight are different sizes&quot;))
+    end
+    N = length(weight)
+    model = Model(HiGHS.Optimizer)
+    @variable(model, x[1:N], Bin)
+    @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
+    @constraint(model, sum(weight[i] * x[i] for i in 1:N) &lt;= capacity)
+    optimize!(model)
+    return value.(x)
+end
+
+solve_knapsack_1([5, 3, 2, 7, 4], [2, 8, 4, 2, 5], 10)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Float64}:
+  1.0
+  0.0
+ -0.0
+  1.0
+  1.0</code></pre><h2 id="Create-better-data-structures"><a class="docs-heading-anchor" href="#Create-better-data-structures">Create better data structures</a><a id="Create-better-data-structures-1"></a><a class="docs-heading-anchor-permalink" href="#Create-better-data-structures" title="Permalink"></a></h2><p>Although we can check for errors like mis-matched vector lengths, if you start to develop models with a lot of data, keeping track of vectors and lengths and indices is fragile and a common source of bugs. A good solution is to use Julia&#39;s type system to create an abstraction over your data.</p><p>For example, we can create a <code>struct</code> that represents a single object, with a constructor that lets us validate assumptions on the input data:</p><pre><code class="language-julia hljs">struct KnapsackObject
+    profit::Float64
+    weight::Float64
+    function KnapsackObject(profit::Float64, weight::Float64)
+        if weight &lt; 0
+            throw(DomainError(&quot;Weight of object cannot be negative&quot;))
+        end
+        return new(profit, weight)
+    end
+end</code></pre><p>as well as a <code>struct</code> that holds a dictionary of objects and the knapsack&#39;s capacity:</p><pre><code class="language-julia hljs">struct KnapsackData
+    objects::Dict{String,KnapsackObject}
+    capacity::Float64
+end</code></pre><p>Here&#39;s what our data might look like now:</p><pre><code class="language-julia hljs">objects = Dict(
+    &quot;apple&quot; =&gt; KnapsackObject(5.0, 2.0),
+    &quot;banana&quot; =&gt; KnapsackObject(3.0, 8.0),
+    &quot;cherry&quot; =&gt; KnapsackObject(2.0, 4.0),
+    &quot;date&quot; =&gt; KnapsackObject(7.0, 2.0),
+    &quot;eggplant&quot; =&gt; KnapsackObject(4.0, 5.0),
+)
+data = KnapsackData(objects, 10.0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Main.KnapsackData(Dict{String, Main.KnapsackObject}(&quot;cherry&quot; =&gt; Main.KnapsackObject(2.0, 4.0), &quot;banana&quot; =&gt; Main.KnapsackObject(3.0, 8.0), &quot;date&quot; =&gt; Main.KnapsackObject(7.0, 2.0), &quot;eggplant&quot; =&gt; Main.KnapsackObject(4.0, 5.0), &quot;apple&quot; =&gt; Main.KnapsackObject(5.0, 2.0)), 10.0)</code></pre><p>If you want, you can add custom printing to make it easier to visualize:</p><pre><code class="language-julia hljs">function Base.show(io::IO, data::KnapsackData)
+    println(io, &quot;A knapsack with capacity $(data.capacity) and possible items:&quot;)
+    for (k, v) in data.objects
+        println(
+            io,
+            &quot;  $(rpad(k, 8)) : profit = $(v.profit), weight = $(v.weight)&quot;,
+        )
+    end
+    return
+end
+
+data</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">A knapsack with capacity 10.0 and possible items:
+  cherry   : profit = 2.0, weight = 4.0
+  banana   : profit = 3.0, weight = 8.0
+  date     : profit = 7.0, weight = 2.0
+  eggplant : profit = 4.0, weight = 5.0
+  apple    : profit = 5.0, weight = 2.0
+</code></pre><p>Then, we can re-write our <code>solve_knapsack</code> function to take our <code>KnapsackData</code> as input:</p><pre><code class="language-julia hljs">function solve_knapsack_2(data::KnapsackData)
+    model = Model(HiGHS.Optimizer)
+    @variable(model, x[keys(data.objects)], Bin)
+    @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
+    @constraint(
+        model,
+        sum(v.weight * x[k] for (k, v) in data.objects) &lt;= data.capacity,
+    )
+    optimize!(model)
+    return value.(x)
+end
+
+solve_knapsack_2(data)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><h2 id="Read-in-data-from-files"><a class="docs-heading-anchor" href="#Read-in-data-from-files">Read in data from files</a><a id="Read-in-data-from-files-1"></a><a class="docs-heading-anchor-permalink" href="#Read-in-data-from-files" title="Permalink"></a></h2><p>Having a data structure is a good step. But it is still annoying that we have to hard-code the data into Julia. A good next step is to separate the data into an external file format; JSON is a common choice.</p><p>The JuMP repository <a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/data/knapsack.json">has a file</a> we&#39;re going to use for this tutorial. To run this tutorial locally, download the file and then update <code>data_filename</code> as appropriate.</p><p>To build this version of the JuMP documentation, we needed to set the filename:</p><pre><code class="language-julia hljs">data_filename = joinpath(@__DIR__, &quot;data&quot;, &quot;knapsack.json&quot;);</code></pre><p><code>knapsack.json</code> has the following contents:</p><pre><code class="language-julia hljs">println(read(data_filename, String))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+    &quot;objects&quot;: {
+        &quot;apple&quot;: {&quot;profit&quot;: 5.0, &quot;weight&quot;: 2.0},
+        &quot;banana&quot;: {&quot;profit&quot;: 3.0, &quot;weight&quot;: 8.0},
+        &quot;cherry&quot;: {&quot;profit&quot;: 2.0, &quot;weight&quot;: 4.0},
+        &quot;date&quot;: {&quot;profit&quot;: 7.0, &quot;weight&quot;: 2.0},
+        &quot;eggplant&quot;: {&quot;profit&quot;: 4.0, &quot;weight&quot;: 5.0}
+    },
+    &quot;capacity&quot;: 10.0
+}</code></pre><p>Now let&#39;s write a function that reads this file and builds a <code>KnapsackData</code> object:</p><pre><code class="language-julia hljs">import JSON
+
+function read_data(filename)
+    d = JSON.parsefile(filename)
+    return KnapsackData(
+        Dict(
+            k =&gt; KnapsackObject(v[&quot;profit&quot;], v[&quot;weight&quot;]) for
+            (k, v) in d[&quot;objects&quot;]
+        ),
+        d[&quot;capacity&quot;],
+    )
+end
+
+data = read_data(data_filename)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">A knapsack with capacity 10.0 and possible items:
+  cherry   : profit = 2.0, weight = 4.0
+  banana   : profit = 3.0, weight = 8.0
+  date     : profit = 7.0, weight = 2.0
+  eggplant : profit = 4.0, weight = 5.0
+  apple    : profit = 5.0, weight = 2.0
+</code></pre><h2 id="Add-options-via-if-else"><a class="docs-heading-anchor" href="#Add-options-via-if-else">Add options via if-else</a><a id="Add-options-via-if-else-1"></a><a class="docs-heading-anchor-permalink" href="#Add-options-via-if-else" title="Permalink"></a></h2><p>At this point, we have data in a file format which we can load and solve a single problem. For many users, this might be sufficient. However, at some point you may be asked to add features like &quot;but what if I want to take more than one of a particular item?&quot;</p><p>If this is the first time that you&#39;ve been asked to add a feature, adding options via <code>if-else</code> statements is a good approach. For example, we might write:</p><pre><code class="language-julia hljs">function solve_knapsack_3(data::KnapsackData; binary_knapsack::Bool)
+    model = Model(HiGHS.Optimizer)
+    if binary_knapsack
+        @variable(model, x[keys(data.objects)], Bin)
+    else
+        @variable(model, x[keys(data.objects)] &gt;= 0, Int)
+    end
+    @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
+    @constraint(
+        model,
+        sum(v.weight * x[k] for (k, v) in data.objects) &lt;= data.capacity,
+    )
+    optimize!(model)
+    return value.(x)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solve_knapsack_3 (generic function with 1 method)</code></pre><p>Now we can solve the binary knapsack:</p><pre><code class="language-julia hljs">solve_knapsack_3(data; binary_knapsack = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><p>And an integer knapsack where we can take more than one copy of each item:</p><pre><code class="language-julia hljs">solve_knapsack_3(data; binary_knapsack = false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ 0.0
+ 0.0
+ 5.0
+ 0.0
+ 0.0</code></pre><h2 id="Add-configuation-options-via-dispatch"><a class="docs-heading-anchor" href="#Add-configuation-options-via-dispatch">Add configuation options via dispatch</a><a id="Add-configuation-options-via-dispatch-1"></a><a class="docs-heading-anchor-permalink" href="#Add-configuation-options-via-dispatch" title="Permalink"></a></h2><p>If you get repeated requests to add different options, you&#39;ll quickly find yourself in a mess of different flags and <code>if-else</code> statements. It&#39;s hard to write, hard to read, and hard to ensure you haven&#39;t introduced any bugs. A good solution is to use Julia&#39;s type dispatch to control the configuration of the model. The easiest way to explain this is by example.</p><p>First, start by defining a new abstract type, as well as new subtypes for each of our options. These types are going to control the configuration of the knapsack model.</p><pre><code class="language-julia hljs">abstract type AbstractConfiguration end
+
+struct BinaryKnapsackConfig &lt;: AbstractConfiguration end
+
+struct IntegerKnapsackConfig &lt;: AbstractConfiguration end</code></pre><p>Then, we rewrite our <code>solve_knapsack</code> function to take a <code>config</code> argument, and we introduce an <code>add_knapsack_variables</code> function to abstract the creation of our variables.</p><pre><code class="language-julia hljs">function solve_knapsack_4(data::KnapsackData, config::AbstractConfiguration)
+    model = Model(HiGHS.Optimizer)
+    x = add_knapsack_variables(model, data, config)
+    @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
+    @constraint(
+        model,
+        sum(v.weight * x[k] for (k, v) in data.objects) &lt;= data.capacity,
+    )
+    optimize!(model)
+    return value.(x)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">solve_knapsack_4 (generic function with 1 method)</code></pre><p>For the binary knapsack problem, <code>add_knapsack_variables</code> looks like this:</p><pre><code class="language-julia hljs">function add_knapsack_variables(
+    model::Model,
+    data::KnapsackData,
+    ::BinaryKnapsackConfig,
+)
+    return @variable(model, x[keys(data.objects)], Bin)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">add_knapsack_variables (generic function with 1 method)</code></pre><p>For the integer knapsack problem, <code>add_knapsack_variables</code> looks like this:</p><pre><code class="language-julia hljs">function add_knapsack_variables(
+    model::Model,
+    data::KnapsackData,
+    ::IntegerKnapsackConfig,
+)
+    return @variable(model, x[keys(data.objects)] &gt;= 0, Int)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">add_knapsack_variables (generic function with 2 methods)</code></pre><p>Now we can solve the binary knapsack:</p><pre><code class="language-julia hljs">solve_knapsack_4(data, BinaryKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><p>and the integer knapsack problem:</p><pre><code class="language-julia hljs">solve_knapsack_4(data, IntegerKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ 0.0
+ 0.0
+ 5.0
+ 0.0
+ 0.0</code></pre><p>The main benefit of the dispatch approach is that you can quickly add new options without needing to modify the existing code. For example:</p><pre><code class="language-julia hljs">struct UpperBoundedKnapsackConfig &lt;: AbstractConfiguration
+    limit::Int
+end
+
+function add_knapsack_variables(
+    model::Model,
+    data::KnapsackData,
+    config::UpperBoundedKnapsackConfig,
+)
+    return @variable(model, 0 &lt;= x[keys(data.objects)] &lt;= config.limit, Int)
+end
+
+solve_knapsack_4(data, UpperBoundedKnapsackConfig(3))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ 0.0
+ 0.0
+ 3.0
+ 0.0
+ 2.0</code></pre><h2 id="Generalize-constraints-and-objectives"><a class="docs-heading-anchor" href="#Generalize-constraints-and-objectives">Generalize constraints and objectives</a><a id="Generalize-constraints-and-objectives-1"></a><a class="docs-heading-anchor-permalink" href="#Generalize-constraints-and-objectives" title="Permalink"></a></h2><p>It&#39;s easy to extend the dispatch approach to constraints and objectives as well. The key points to notice in the next two functions are that:</p><ul><li>we can access registered variables via <code>model[:x]</code></li><li>we can define generic functions which accept any <code>AbstractConfiguration</code> as a configuration argument. That means we can implement a single method and have it apply to multiple configuration types.</li></ul><pre><code class="language-julia hljs">function add_knapsack_constraints(
+    model::Model,
+    data::KnapsackData,
+    ::AbstractConfiguration,
+)
+    x = model[:x]
+    @constraint(
+        model,
+        capacity_constraint,
+        sum(v.weight * x[k] for (k, v) in data.objects) &lt;= data.capacity,
+    )
+    return
+end
+
+function add_knapsack_objective(
+    model::Model,
+    data::KnapsackData,
+    ::AbstractConfiguration,
+)
+    x = model[:x]
+    @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
+    return
+end
+
+function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
+    model = Model(HiGHS.Optimizer)
+    add_knapsack_variables(model, data, config)
+    add_knapsack_constraints(model, data, config)
+    add_knapsack_objective(model, data, config)
+    optimize!(model)
+    return value.(model[:x])
+end
+
+solve_knapsack_5(data, BinaryKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><h2 id="Remove-solver-dependence,-add-error-checks"><a class="docs-heading-anchor" href="#Remove-solver-dependence,-add-error-checks">Remove solver dependence, add error checks</a><a id="Remove-solver-dependence,-add-error-checks-1"></a><a class="docs-heading-anchor-permalink" href="#Remove-solver-dependence,-add-error-checks" title="Permalink"></a></h2><p>Compared to where we started, our knapsack model is now significantly different. We&#39;ve wrapped it in a function, defined some data types, and introduced configuration options to control the variables and constraints that get added. There are a few other steps we can do to further improve things:</p><ul><li>remove the dependence on <code>HiGHS</code></li><li>add checks that we found an optimal solution</li><li>add a helper function to avoid the need to explicitly construct the data.</li></ul><pre><code class="language-julia hljs">function solve_knapsack_6(
+    optimizer,
+    data::KnapsackData,
+    config::AbstractConfiguration,
+)
+    model = Model(optimizer)
+    add_knapsack_variables(model, data, config)
+    add_knapsack_constraints(model, data, config)
+    add_knapsack_objective(model, data, config)
+    optimize!(model)
+    if termination_status(model) != OPTIMAL
+        @warn(&quot;Model not solved to optimality&quot;)
+        return nothing
+    end
+    return value.(model[:x])
+end
+
+function solve_knapsack_6(
+    optimizer,
+    data::String,
+    config::AbstractConfiguration,
+)
+    return solve_knapsack_6(optimizer, read_data(data), config)
+end
+
+solution =
+    solve_knapsack_6(HiGHS.Optimizer, data_filename, BinaryKnapsackConfig())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><h2 id="Create-a-module"><a class="docs-heading-anchor" href="#Create-a-module">Create a module</a><a id="Create-a-module-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-module" title="Permalink"></a></h2><p>Now we&#39;re ready to expose our model to the wider world. That might be as part of a larger Julia project that we&#39;re contributing to, or as a stand-alone script that we can run on-demand. In either case, it&#39;s good practice to wrap everything in a module. This further encapsulates our code into a single namespace, and we can add documentation in the form of <a href="https://docs.julialang.org/en/v1/manual/documentation/">docstrings</a>.</p><p>Some good rules to follow when creating a module are:</p><ul><li>use <code>import</code> in a module instead of <code>using</code> to make it clear which functions are from which packages</li><li>use <code>_</code> to start function and type names that are considered private</li><li>add docstrings to all public variables and functions.</li></ul><pre><code class="language-julia hljs">module KnapsackModel
+
+import JuMP
+import JSON
+
+struct _KnapsackObject
+    profit::Float64
+    weight::Float64
+    function _KnapsackObject(profit::Float64, weight::Float64)
+        if weight &lt; 0
+            throw(DomainError(&quot;Weight of object cannot be negative&quot;))
+        end
+        return new(profit, weight)
+    end
+end
+
+struct _KnapsackData
+    objects::Dict{String,_KnapsackObject}
+    capacity::Float64
+end
+
+function _read_data(filename)
+    d = JSON.parsefile(filename)
+    return _KnapsackData(
+        Dict(
+            k =&gt; _KnapsackObject(v[&quot;profit&quot;], v[&quot;weight&quot;]) for
+            (k, v) in d[&quot;objects&quot;]
+        ),
+        d[&quot;capacity&quot;],
+    )
+end
+
+abstract type _AbstractConfiguration end
+
+&quot;&quot;&quot;
+    BinaryKnapsackConfig()
+
+Create a binary knapsack problem where each object can be taken 0 or 1 times.
+&quot;&quot;&quot;
+struct BinaryKnapsackConfig &lt;: _AbstractConfiguration end
+
+&quot;&quot;&quot;
+    IntegerKnapsackConfig()
+
+Create an integer knapsack problem where each object can be taken any number of
+times.
+&quot;&quot;&quot;
+struct IntegerKnapsackConfig &lt;: _AbstractConfiguration end
+
+function _add_knapsack_variables(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::BinaryKnapsackConfig,
+)
+    return JuMP.@variable(model, x[keys(data.objects)], Bin)
+end
+
+function _add_knapsack_variables(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::IntegerKnapsackConfig,
+)
+    return JuMP.@variable(model, x[keys(data.objects)] &gt;= 0, Int)
+end
+
+function _add_knapsack_constraints(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::_AbstractConfiguration,
+)
+    x = model[:x]
+    JuMP.@constraint(
+        model,
+        capacity_constraint,
+        sum(v.weight * x[k] for (k, v) in data.objects) &lt;= data.capacity,
+    )
+    return
+end
+
+function _add_knapsack_objective(
+    model::JuMP.Model,
+    data::_KnapsackData,
+    ::_AbstractConfiguration,
+)
+    x = model[:x]
+    JuMP.@objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
+    return
+end
+
+function _solve_knapsack(
+    optimizer,
+    data::_KnapsackData,
+    config::_AbstractConfiguration,
+)
+    model = JuMP.Model(optimizer)
+    _add_knapsack_variables(model, data, config)
+    _add_knapsack_constraints(model, data, config)
+    _add_knapsack_objective(model, data, config)
+    JuMP.optimize!(model)
+    if JuMP.termination_status(model) != JuMP.OPTIMAL
+        @warn(&quot;Model not solved to optimality&quot;)
+        return nothing
+    end
+    return JuMP.value.(model[:x])
+end
+
+&quot;&quot;&quot;
+    solve_knapsack(
+        optimizer,
+        data_filename::String,
+        config::_AbstractConfiguration,
+    )
+
+Solve the knapsack problem and return the optimal primal solution
+
+# Arguments
+
+ * `optimizer` : an object that can be passed to `JuMP.Model` to construct a new
+   JuMP model.
+ * `data_filename` : the filename of a JSON file containing the data for the
+   problem.
+ * `config` : an object to control the type of knapsack model constructed.
+   Valid options are:
+    * `BinaryKnapsackConfig()`
+    * `IntegerKnapsackConfig()`
+
+# Returns
+
+ * If an optimal solution exists: a `JuMP.DenseAxisArray` that maps the `String`
+   name of each object to the number of objects to pack into the knapsack.
+ * Otherwise, `nothing`, indicating that the problem does not have an optimal
+   solution.
+
+# Examples
+
+```julia
+solution = solve_knapsack(
+    HiGHS.Optimizer,
+    &quot;path/to/data.json&quot;,
+    BinaryKnapsackConfig(),
+)
+```
+
+```julia
+solution = solve_knapsack(
+    MOI.OptimizerWithAttributes(HiGHS.Optimizer, &quot;output_flag&quot; =&gt; false),
+    &quot;path/to/data.json&quot;,
+    IntegerKnapsackConfig(),
+)
+```
+&quot;&quot;&quot;
+function solve_knapsack(
+    optimizer,
+    data_filename::String,
+    config::_AbstractConfiguration,
+)
+    return _solve_knapsack(optimizer, _read_data(data_filename), config)
+end
+
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Main.KnapsackModel</code></pre><p>Finally, you can call your model:</p><pre><code class="language-julia hljs">import .KnapsackModel
+
+KnapsackModel.solve_knapsack(
+    HiGHS.Optimizer,
+    joinpath(@__DIR__, &quot;data&quot;, &quot;knapsack.json&quot;),
+    KnapsackModel.BinaryKnapsackConfig(),
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, [&quot;cherry&quot;, &quot;banana&quot;, &quot;date&quot;, &quot;eggplant&quot;, &quot;apple&quot;]
+And data, a 5-element Vector{Float64}:
+ -0.0
+  0.0
+  1.0
+  1.0
+  1.0</code></pre><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>The <code>.</code> in <code>.KnapsackModel</code> denotes that it is a submodule and not a separate package that we installed with <code>Pkg.add</code>. If you put the <code>KnapsackModel</code> in a separate file, load it with:</p><pre><code class="language-julia hljs">include(&quot;path/to/KnapsackModel.jl&quot;)
+import .KnapsackModel</code></pre></div></div><h2 id="Add-tests"><a class="docs-heading-anchor" href="#Add-tests">Add tests</a><a id="Add-tests-1"></a><a class="docs-heading-anchor-permalink" href="#Add-tests" title="Permalink"></a></h2><p>As a final step, you should add tests for your model. This often means testing on a small problem for which you can work out the optimal solution by hand. The Julia standard library <code>Test</code> has good unit-testing functionality.</p><pre><code class="language-julia hljs">import .KnapsackModel
+using Test
+
+@testset &quot;KnapsackModel&quot; begin
+    @testset &quot;feasible_binary_knapsack&quot; begin
+        x = KnapsackModel.solve_knapsack(
+            HiGHS.Optimizer,
+            joinpath(@__DIR__, &quot;data&quot;, &quot;knapsack.json&quot;),
+            KnapsackModel.BinaryKnapsackConfig(),
+        )
+        @test isapprox(x[&quot;apple&quot;], 1, atol = 1e-5)
+        @test isapprox(x[&quot;banana&quot;], 0, atol = 1e-5)
+        @test isapprox(x[&quot;cherry&quot;], 0, atol = 1e-5)
+        @test isapprox(x[&quot;date&quot;], 1, atol = 1e-5)
+        @test isapprox(x[&quot;eggplant&quot;], 1, atol = 1e-5)
+    end
+    @testset &quot;feasible_integer_knapsack&quot; begin
+        x = KnapsackModel.solve_knapsack(
+            HiGHS.Optimizer,
+            joinpath(@__DIR__, &quot;data&quot;, &quot;knapsack.json&quot;),
+            KnapsackModel.IntegerKnapsackConfig(),
+        )
+        @test isapprox(x[&quot;apple&quot;], 0, atol = 1e-5)
+        @test isapprox(x[&quot;banana&quot;], 0, atol = 1e-5)
+        @test isapprox(x[&quot;cherry&quot;], 0, atol = 1e-5)
+        @test isapprox(x[&quot;date&quot;], 5, atol = 1e-5)
+        @test isapprox(x[&quot;eggplant&quot;], 0, atol = 1e-5)
+    end
+    @testset &quot;infeasible_binary_knapsack&quot; begin
+        x = KnapsackModel.solve_knapsack(
+            HiGHS.Optimizer,
+            # This file contains data that makes the problem infeasible.
+            joinpath(@__DIR__, &quot;data&quot;, &quot;knapsack_infeasible.json&quot;),
+            KnapsackModel.BinaryKnapsackConfig(),
+        )
+        @test x === nothing
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Test.DefaultTestSet(&quot;KnapsackModel&quot;, Any[Test.DefaultTestSet(&quot;feasible_binary_knapsack&quot;, Any[], 5, false, false), Test.DefaultTestSet(&quot;feasible_integer_knapsack&quot;, Any[], 5, false, false), Test.DefaultTestSet(&quot;infeasible_binary_knapsack&quot;, Any[], 1, false, false)], 0, false, false)</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Place these tests in a separate file <code>test_knapsack_model.jl</code> so that you can run the tests by adding <code>include(&quot;test_knapsack_model.jl&quot;)</code> to any file where needed.</p></div></div><h2 id="Next-steps"><a class="docs-heading-anchor" href="#Next-steps">Next steps</a><a id="Next-steps-1"></a><a class="docs-heading-anchor-permalink" href="#Next-steps" title="Permalink"></a></h2><p>We&#39;ve only briefly scratched the surface of ways to create and structure large JuMP models, so consider this tutorial a starting point, rather than a comprehensive list of all the possible ways to structure JuMP models.  If you are embarking on a large project that uses JuMP, a good next step is to look at ways people have written large JuMP projects &quot;in the wild&quot;.</p><p>Here are some good examples (all co-incidentally related to energy):</p><ul><li>AnyMOD.jl<ul><li><a href="https://www.youtube.com/watch?v=QE_tNDER0F4">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/leonardgoeke/AnyMOD.jl">source code</a></li></ul></li><li>PowerModels.jl<ul><li><a href="https://www.youtube.com/watch?v=POOt1FCA8LI">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/lanl-ansi/PowerModels.jl">source code</a></li></ul></li><li>PowerSimulations.jl<ul><li><a href="https://www.youtube.com/watch?v=-ZoO3npjwYU">JuliaCon 2021 talk</a></li><li><a href="https://github.com/NREL-SIIP/PowerSimulations.jl">source code</a></li></ul></li><li>UnitCommitment.jl<ul><li><a href="https://www.youtube.com/watch?v=rYUZK9kYeIY">JuMP-dev 2021 talk</a></li><li><a href="https://github.com/ANL-CEEESA/UnitCommitment.jl">source code</a></li></ul></li></ul><hr/><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>This tutorial was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>. <a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/design_patterns_for_larger_models.jl">View the source <code>.jl</code> file on GitHub</a>.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../performance_tips/">« Performance tips</a><a class="docs-footer-nextpage" href="../../linear/introduction/">Introduction »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Tuesday 15 March 2022 01:43">Tuesday 15 March 2022</span>. Using Julia version 1.6.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
