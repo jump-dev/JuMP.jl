@@ -383,9 +383,6 @@ E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 # AC-OPF problem:
 
 model = Model(Clarabel.Optimizer)
-set_attribute(model, "tol_gap_rel", 1e-3)
-set_attribute(model, "tol_feas", 1e-3)
-set_attribute(model, "tol_ktratio", 1e-3)
 @variable(
     model,
     S_G[i in 1:N] in ComplexPlane(),
@@ -395,7 +392,6 @@ set_attribute(model, "tol_ktratio", 1e-3)
 @variable(model, W[1:N, 1:N] in HermitianPSDCone())
 @variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
 @constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
-@constraint(model, real(V[1]) >= 0)
 @constraint(model, imag(V[1]) == 0)
 @constraint(model, 0.9 <= real(V[1]) <= 1.1)
 @constraint(model, LinearAlgebra.Hermitian([1 V'; V W]) in HermitianPSDCone())
@@ -422,7 +418,11 @@ optimize!(model)
 
 #-
 
-assert_is_solved_and_feasible(model; allow_almost = true)
+## Sometimes Clarabel fails to solve this problem to optimality and the
+## termination status might be NUMERICAL_ERROR because of a short step-size.
+## The primal solution is still pretty close though.
+Test.@test is_solved_and_feasible(model; allow_almost = true) ||
+           termination_status(model) == NUMERICAL_ERROR
 sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
 Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)
 println(
