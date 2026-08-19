@@ -167,10 +167,9 @@ end
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
-    # key = objectid(f)
-    # if haskey(model.subexpressions, key)
-    #     return model.subexpressions[key]
-    # end
+    if (cache = get(model.subexpressions, f, nothing)) !== nothing
+        return cache
+    end
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
@@ -182,11 +181,10 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
     end
     while !isempty(stack)
         parent, i, arg = pop!(stack)
-        # arg_key = objectid(arg)
-        # if haskey(model.subexpressions, arg_key)
-        #     parent.args[i] = model.subexpressions[arg_key]
-        #     continue
-        # end
+        if (cache = get(model.subexpressions, arg, nothing)) !== nothing
+            parent.args[i] = cache
+            continue
+        end
         child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
         parent.args[i] = child
         for j in length(arg.args):-1:1
@@ -196,9 +194,9 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
                 child.args[j] = moi_function(model, arg.args[j])
             end
         end
-        # model.subexpressions[arg_key] = child
+        model.subexpressions[arg] = child
     end
-    # model.subexpressions[key] = ret
+    model.subexpressions[f] = ret
     return ret
 end
 
