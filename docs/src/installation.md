@@ -235,6 +235,27 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
 Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
 available through the [NEOS Server](https://neos-server.org).
 
+## NLPModels-based solvers
+
+Use [NLPModelsJuMP.jl](https://github.com/JuliaSmoothOptimizers/NLPModelsJuMP.jl)
+to access solvers that implement the
+[NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl) interface.
+
+These solvers do not follow the usual `ModuleName.Optimizer` convention. Pass
+`NLPModelsJuMP.Optimizer` to [`Model`](@ref), then name the solver with the
+`solver` attribute:
+```julia
+using JuMP, NLPModelsJuMP, Percival
+model = Model(NLPModelsJuMP.Optimizer)
+set_attribute(model, "solver", Percival.PercivalSolver)
+```
+
+Such solvers include [Percival.jl](https://github.com/JuliaSmoothOptimizers/Percival.jl)
+and [NLPModelsAlgencan.jl](https://github.com/pjssilva/NLPModelsAlgencan.jl).
+
+Consult the [JuliaSmoothOptimizers documentation](https://jso.dev) for a complete
+list of solvers.
+
 ## Common installation issues
 
 !!! tip

@@ -5,6 +5,21 @@
 
 import Distributed
 
+if get(ENV, "GITHUB_EVENT_NAME", "") == "pull_request"
+    # To speed up the Documentation build during pull requests, over-write
+    # {minted} blocks by {verbatim}. In pushes to `master` and on tags, we don't
+    # do this.
+    write(
+        joinpath(@__DIR__, "src", "assets", "custom.sty"),
+        """
+        % Neutralize the minted environment so LaTeX doesn't invoke Pygments
+        \\let\\minted\\verbatim
+        \\let\\endminted\\endverbatim
+        \\let\\inputminted\\verbatiminput
+        """,
+    )
+end
+
 Distributed.@everywhere include(joinpath(@__DIR__, "make_utilities.jl"))
 
 # Needed to make Documenter think that there is a PDF in the right place when

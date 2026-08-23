@@ -154,7 +154,7 @@ COSMOAccelerators
 Couenne
 cuOpt
 Divio
-Dualization
+[Dd]ualization
 EAGO
 [Ee]mbotech
 [Ee]cos

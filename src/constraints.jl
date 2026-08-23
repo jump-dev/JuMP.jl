@@ -433,8 +433,8 @@ if no constraint has this name attribute.
 
 Throws an error if several constraints have `name` as their name attribute.
 
-If `F` and `S` are provided, this method addititionally throws an error if the
-constraint is not an `F`-in-`S` contraint where `F` is either the JuMP or MOI
+If `F` and `S` are provided, this method additionally throws an error if the
+constraint is not an `F`-in-`S` constraint where `F` is either the JuMP or MOI
 type of the function and `S` is the MOI type of the set.
 
 Providing `F` and `S` is recommended if you know the type of the function and
