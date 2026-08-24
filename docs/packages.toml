@@ -203,6 +203,9 @@
 [MathOptChordalDecomposition]
     user = "samuelsonric"
     rev = "v0.2.0"
+[NLPModelsAlgencan]
+    user = "pjssilva"
+    rev = "v0.10.2"
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v2.2.1"

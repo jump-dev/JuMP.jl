@@ -135,6 +135,7 @@ warmstart
 % Proper nouns
 Adagrad
 Agence
+Algencan
 AMPL
 Appveyor
 Artelys
