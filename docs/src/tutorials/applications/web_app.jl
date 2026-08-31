@@ -84,9 +84,9 @@ function wrap_endpoint(endpoint::Function)
         task = Threads.@spawn try
             input = request.body |> String |> JSON.parse
             ret = convert(Dict{String,Any}, input) |> endpoint |> JSON.json
-            HTTP.Response(200, ret)
+            HTTP.Response(200; body = ret)
         catch err
-            HTTP.Response(500, "internal error: $err")
+            HTTP.Response(500; body = "internal error: $err")
         end
         return fetch(task)
     end
@@ -98,7 +98,7 @@ end
 router = HTTP.Router()
 ## Register other routes as needed
 HTTP.register!(router, "/api/solve", wrap_endpoint(endpoint_solve))
-server = HTTP.serve!(router, HTTP.ip"127.0.0.1", 8080)
+server = HTTP.serve!(router, "127.0.0.1", 8080)
 
 # ## The client side
 
@@ -109,7 +109,12 @@ function send_request(data::Dict; endpoint::String = "solve")
         "POST",
         ## This should match the URL and endpoint we defined for our server.
         "http://127.0.0.1:8080/api/$endpoint",
-        ["Content-Type" => "application/json"],
+        [
+            "Content-Type" => "application/json",
+            ## This line is needed so we can run this tutorial multiple times in
+            ## the documentation. You don't need it in practice.
+            "Connection" => "close",
+        ],
         JSON.json(data),
     )
     if ret.status != 200
@@ -141,7 +146,7 @@ send_request(Dict("lower_bound" => "1.2"))
 
 # Finally, we can shutdown our HTTP server:
 
-close(server)
+HTTP.forceclose(server)
 
 # ## Next steps
 
