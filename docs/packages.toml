@@ -144,6 +144,9 @@
     user = "oxfordcontrol"
     rev = "v0.11.1"
     has_html = true
+[ConicIP]
+    user = "MPF-Optimization-Laboratory"
+    rev = "82e0e6d60a5aae96c9d9373c6deed933ec6743bb"
 [CoolPDLP]
     user = "JuliaDecisionFocusedLearning"
     rev = "v0.2.1"
