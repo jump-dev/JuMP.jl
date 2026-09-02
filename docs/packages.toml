@@ -134,6 +134,9 @@
 [CATrustRegionMethod]
     user = "fadihamad94"
     rev = "v0.1.0"
+[CCOpt]
+    user = "madsuite-org"
+    rev = "v0.1.0"
 [CDCS]
     user = "oxfordcontrol"
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
@@ -193,7 +196,7 @@
     user = "kocvara"
     rev = "v0.2.8"
 [MadNLP]
-    user = "MadNLP"
+    user = "madsuite-org"
     rev = "v0.10.1"
     has_html = true
 [MAiNGO]

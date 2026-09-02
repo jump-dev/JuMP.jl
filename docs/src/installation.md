@@ -115,6 +115,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Manual | Comm.    | (MI)NLP                   |
 | [Bonmin](http://github.com/coin-or/Bonmin)                                     | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     |        | EPL      | (MI)LP                    |
+| [CCOpt](https://github.com/madsuite-org/CCOpt.jl)                              |                                                                                  |        | MIT      | MPCC                      |
 | [CDCS](https://github.com/oxfordcontrol/CDCS)                                  | [CDCS.jl](https://github.com/oxfordcontrol/CDCS.jl)                              | Manualᴹ | GPL     | LP, SOCP, SDP             |
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         |        | GPL      | LP                        |
 | [Clarabel.jl](https://github.com/oxfordcontrol/Clarabel.jl)                    |                                                                                  |        | Apache   | LP, QP, SOCP, SDP         |
@@ -180,6 +181,7 @@ Where:
   quadratic constraints or objective)
 - MCP = Mixed-complementarity programming
 - NLP = Nonlinear programming
+- MPCC = (Nonlinear) mathematical programs with complementarity constraints
 - SDP = Semidefinite programming
 - (MI)XXX = Mixed-integer equivalent of problem type `XXX`
 - CP-SAT = Constraint programming and Boolean satisfiability

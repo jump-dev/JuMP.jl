@@ -141,6 +141,7 @@ Appveyor
 Artelys
 (Bonmin|BONMIN)
 (Cbc|CBC)
+CCOpt
 (cdd|CDD)
 (cddlib|CDDLib)
 Chuffed
