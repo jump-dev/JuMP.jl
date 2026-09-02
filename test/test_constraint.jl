@@ -2012,6 +2012,12 @@ function test_set_normalized_coefficient_quadratic_batch()
         ),
         set_normalized_coefficient([con], [x[1], x[1]], [x[1], x[2]], [4, 5]),
     )
+    @test_throws(
+        DimensionMismatch(
+            "The number of constraints (2), variables (2, 1) and coefficients (2) must match",
+        ),
+        set_normalized_coefficient([con, con], [x[1], x[1]], [x[1]], [4, 5]),
+    )
     return
 end
 
