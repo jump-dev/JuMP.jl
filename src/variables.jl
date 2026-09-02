@@ -1818,10 +1818,8 @@ end
 # VariableInSetRef
 
 """
-    is_variable_in_set(
-        model::GenericModel,
-        x::Union{AbstractJuMPScalar,AbstractArray{<:AbstractJuMPScalar}},
-    )::Bool
+    is_variable_in_set(x::AbstractJuMPScalar)::Bool
+    is_variable_in_set(x::AbstractArray{<:AbstractJuMPScalar})::Bool
 
 Return a `Bool` if [`VariableInSetRef`](@ref) returns a valid constraint
 reference without erroring.
@@ -1901,10 +1899,8 @@ function is_variable_in_set(x::AbstractArray{<:AbstractJuMPScalar})
 end
 
 """
-    VariableInSetRef(
-        model::GenericModel,
-        x::Union{AbstractJuMPScalar,AbstractArray{<:AbstractJuMPScalar}},
-    )
+    VariableInSetRef(x::AbstractJuMPScalar)
+    VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar}})
 
 Return the constraint reference associated with `x` when it is constrained on
 creation.
