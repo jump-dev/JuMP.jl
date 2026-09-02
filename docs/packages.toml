@@ -146,7 +146,7 @@
     has_html = true
 [ConicIP]
     user = "MPF-Optimization-Laboratory"
-    rev = "v0.3.1"
+    rev = "v0.3.2"
 [CoolPDLP]
     user = "JuliaDecisionFocusedLearning"
     rev = "v0.2.1"
