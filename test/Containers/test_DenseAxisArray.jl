@@ -1091,4 +1091,35 @@ function test_issue_4213()
     return
 end
 
+function test_getindex_kwargs()
+    A = Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3; names = (:x, :y))
+    @test_throws(
+        ErrorException(
+            """
+            Number of keyword arguments (3) does not match the number of dimensions (2).
+
+            When using keyword indexing, the indices must match the exact \
+            name and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
+        ),
+        A[x=:a, y=2, z=99],
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Number of keyword arguments (1) does not match the number of dimensions (2).
+
+            When using keyword indexing, the indices must match the exact \
+            name and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
+        ),
+        A[x=:a],
+    )
+    return
+end
+
 end  # module
