@@ -3302,7 +3302,7 @@ function set_normalized_coefficient(
     coeffs::AbstractVector{<:Number},
 ) where {T,F<:MOI.ScalarQuadraticFunction{T}}
     c, m = length(constraints), length(coeffs)
-    n1, n2 = length(variables_1), length(variables_1)
+    n1, n2 = length(variables_1), length(variables_2)
     if !(c == n1 == n2 == m)
         msg = "The number of constraints ($c), variables ($n1, $n2) and coefficients ($m) must match"
         throw(DimensionMismatch(msg))
