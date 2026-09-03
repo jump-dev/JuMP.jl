@@ -231,4 +231,18 @@ function _add_infeasible_nonlinear_constraints(
 end
 
 _distance_to_set(::Missing, set, ::Type{T}) where {T} = zero(T)
-_distance_to_set(point, set, ::Type) = MOI.Utilities.distance_to_set(point, set)
+
+function _distance_to_set(
+    point::AbstractVector,
+    set::MOI.AbstractVectorSet,
+    ::Type{T},
+) where {T}
+    if any(ismissing, point)
+        return zero(T)
+    end
+    return MOI.Utilities.distance_to_set(point, set, T)
+end
+
+function _distance_to_set(point, set::MOI.AbstractScalarSet, ::Type)
+    return MOI.Utilities.distance_to_set(point, set)
+end
