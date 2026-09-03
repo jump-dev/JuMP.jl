@@ -217,7 +217,7 @@ function test_sparse_key_mismatch()
             Keys of the SparseAxisArrays do not match.
 
             The left-hand side has key `(1,)`, but the right-hand side does not.
-            """
+            """,
         ),
         @constraint(model, 2x .- 1 ⟂ y),
     )
@@ -236,7 +236,7 @@ function test_sparse_klength_mismatch()
             The number of elements in the left-hand side (2) does not match the right-hand side (3).
 
             There must be a one-to-one mapping between the left- and right-hand sides of a complementarity constraint.
-            """
+            """,
         ),
         @constraint(model, 2x .- 1 ⟂ y),
     )
