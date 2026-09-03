@@ -88,7 +88,7 @@ model = Model(HiGHS.Optimizer);
 
 @constraint(model, [m in M, t in 1:T], sum(x[m, :, t]) + sum(x[:, m, t]) <= 1);
 
-# Constraint: every team `m` plays at approximately half home games
+# Constraint: every team `m` plays approximately half home games
 
 @constraint(model, [m in M], div(T, 2) <= sum(x[m, :, :]) <= div(T, 2) + 1);
 
