@@ -157,53 +157,7 @@ function _add_infeasible_constraints(
 ) where {T,F,S}
     for con in all_constraints(model, F, S)
         obj = constraint_object(con)
-        d = _distance_to_set(value.(point_f, obj.func), obj.set, T)
-        if d > atol
-            violated_constraints[con] = d
-        end
-    end
-    return
-end
-
-function _add_infeasible_constraints(
-    model::GenericModel{T},
-    ::Type{F},
-    ::Type{S},
-    violated_constraints::Dict{Any,T},
-    point_f::Function,
-    atol::T,
-) where {T,F<:GenericNonlinearExpr,S}
-    for con in all_constraints(model, F, S)
-        obj = constraint_object(con)
-        ret = value(point_f, obj.func)
-        if ismissing(ret)
-            continue
-        end
-        # value(::GenericNonlinearExpr) returns `Float64`. Convert it to `T` for
-        # the case where the model is a different number type.
-        d = _distance_to_set(convert(T, ret), obj.set, T)
-        if d > atol
-            violated_constraints[con] = d
-        end
-    end
-    return
-end
-
-function _add_infeasible_constraints(
-    model::GenericModel{T},
-    ::Type{F},
-    ::Type{S},
-    violated_constraints::Dict{Any,T},
-    point_f::Function,
-    atol::T,
-) where {T,F<:Vector{<:GenericNonlinearExpr},S}
-    for con in all_constraints(model, F, S)
-        obj = constraint_object(con)
-        # value(::GenericNonlinearExpr) returns `Float64`. Convert it to `T` for
-        # the case where the model is a different number type.
-        fn_value = convert(Vector{T}, value.(point_f, obj.func))
-        d = _distance_to_set(fn_value, obj.set, T)
-        if d > atol
+        if (d = _distance_to_set(point_f, obj.func, obj.set, T)) > atol
             violated_constraints[con] = d
         end
     end
@@ -218,11 +172,10 @@ function _add_infeasible_nonlinear_constraints(
 ) where {T}
     evaluator = NLPEvaluator(model)
     MOI.initialize(evaluator, Symbol[])
-    g = zeros(num_nonlinear_constraints(model))
+    g = zeros(T, num_nonlinear_constraints(model))
     MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
     for (i, (index, constraint)) in enumerate(evaluator.model.constraints)
-        d = _distance_to_set(g[i], constraint.set, T)
-        if d > atol
+        if (d = MOI.Utilities.distance_to_set(g[i], constraint.set)) > atol
             cref = ConstraintRef(model, index, ScalarShape())
             violated_constraints[cref] = d
         end
@@ -230,5 +183,28 @@ function _add_infeasible_nonlinear_constraints(
     return
 end
 
-_distance_to_set(::Missing, set, ::Type{T}) where {T} = zero(T)
-_distance_to_set(point, set, ::Type) = MOI.Utilities.distance_to_set(point, set)
+function _distance_to_set(
+    point_f::F,
+    func,
+    set::MOI.AbstractScalarSet,
+    ::Type{T},
+) where {F,T}
+    ret = value(point_f, func)
+    if ismissing(ret)
+        return zero(T)
+    end
+    return MOI.Utilities.distance_to_set(convert(T, ret), set)
+end
+
+function _distance_to_set(
+    point_f::F,
+    func::AbstractVector,
+    set::MOI.AbstractVectorSet,
+    ::Type{T},
+) where {F,T}
+    ret = value.(point_f, func)
+    if any(ismissing, ret)
+        return zero(T)
+    end
+    return MOI.Utilities.distance_to_set(convert(Vector{T}, ret), set)
+end

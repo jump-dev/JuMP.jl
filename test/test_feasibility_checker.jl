@@ -278,4 +278,13 @@ function test_nonlinear_expr_missing()
     return
 end
 
+function test_skip_missing_in_vector()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, c, x in Nonnegatives())
+    point = Dict(x[1] => 1.0)
+    @test isempty(primal_feasibility_report(model, point; skip_missing = true))
+    return
+end
+
 end  # module
