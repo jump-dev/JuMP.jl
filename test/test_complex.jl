@@ -201,7 +201,7 @@ function test_complex_conj()
     real_quad = 4x^2 + 2 * x + 3
     @test conj(real_quad) === real_quad
     @test real(real_quad) === real_quad
-    @test imag(real_quad) === real_quad
+    @test imag(real_quad) == 0
     complex_quad = (4 - 5im) * x^2 + (2 + im) * x + 3 - im
     @test conj(complex_quad) == (4 + 5im) * x^2 + (2 - im) * x + 3 + im
     @test real(complex_quad) == 4x^2 + 2x + 3
