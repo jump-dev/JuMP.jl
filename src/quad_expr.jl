@@ -180,7 +180,7 @@ Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
 Base.conj(a::GenericQuadExpr{<:Real}) = a
 Base.real(a::GenericQuadExpr{<:Real}) = a
-Base.imag(a::GenericQuadExpr{<:Real}) = a
+Base.imag(a::GenericQuadExpr{<:Real}) = zero(a)
 Base.isreal(::GenericQuadExpr{<:Real}) = true
 
 Base.conj(a::GenericQuadExpr{<:Complex}) = map_coefficients(conj, a)
