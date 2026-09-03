@@ -157,7 +157,8 @@ function _add_infeasible_constraints(
 ) where {T,F,S}
     for con in all_constraints(model, F, S)
         obj = constraint_object(con)
-        d = _distance_to_set(value.(point_f, obj.func), obj.set, T)
+        point = convert(Vector{T}, value.(point_f, obj.func))
+        d = _distance_to_set(point, obj.set, T)
         if d > atol
             violated_constraints[con] = d
         end
@@ -218,7 +219,7 @@ function _add_infeasible_nonlinear_constraints(
 ) where {T}
     evaluator = NLPEvaluator(model)
     MOI.initialize(evaluator, Symbol[])
-    g = zeros(num_nonlinear_constraints(model))
+    g = zeros(T, num_nonlinear_constraints(model))
     MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
     for (i, (index, constraint)) in enumerate(evaluator.model.constraints)
         d = _distance_to_set(g[i], constraint.set, T)
@@ -230,10 +231,24 @@ function _add_infeasible_nonlinear_constraints(
     return
 end
 
-_distance_to_set(::Missing, set, ::Type{T}) where {T} = zero(T)
+function _distance_to_set(
+    ::Missing,
+    ::MOI.AbstractScalarSet,
+    ::Type{T},
+) where {T}
+    return zero(T)
+end
 
 function _distance_to_set(
-    point::AbstractVector,
+    point::T,
+    set::MOI.AbstractScalarSet,
+    ::Type{T},
+) where {T}
+    return MOI.Utilities.distance_to_set(point, set)
+end
+
+function _distance_to_set(
+    point::Vector{T},
     set::MOI.AbstractVectorSet,
     ::Type{T},
 ) where {T}
@@ -241,8 +256,4 @@ function _distance_to_set(
         return zero(T)
     end
     return MOI.Utilities.distance_to_set(point, set, T)
-end
-
-function _distance_to_set(point, set::MOI.AbstractScalarSet, ::Type)
-    return MOI.Utilities.distance_to_set(point, set)
 end
