@@ -86,24 +86,24 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 9.71e-01  3.87e+00  3.12e+02  2.65e+02  1.00e-01  7.84e-03
-   250| 1.20e-03  3.27e-04  2.64e-01  1.42e+02  2.92e-02  3.29e-01
-   500| 2.97e-04  7.52e-05  4.58e-02  1.42e+02  2.92e-02  6.52e-01
-   750| 2.40e-04  6.14e-05  3.89e-02  1.42e+02  2.92e-02  9.73e-01
-  1000| 1.91e-04  5.10e-05  3.30e-02  1.42e+02  2.92e-02  1.30e+00
-  1250| 1.55e-04  4.34e-05  2.78e-02  1.42e+02  2.92e-02  1.62e+00
-  1500| 1.34e-04  3.65e-05  2.34e-02  1.42e+02  2.92e-02  1.95e+00
-  1750| 2.19e-01  2.84e-01  3.74e+00  1.44e+02  2.92e-02  2.27e+00
-  2000| 1.01e-04  2.57e-05  1.67e-02  1.42e+02  2.92e-02  2.60e+00
-  2250| 9.41e-05  2.15e-05  1.42e-02  1.42e+02  2.92e-02  2.93e+00
+     0| 9.71e-01  3.87e+00  3.12e+02  2.65e+02  1.00e-01  1.07e-02
+   250| 1.20e-03  3.27e-04  2.64e-01  1.42e+02  2.92e-02  4.94e-01
+   500| 2.97e-04  7.52e-05  4.58e-02  1.42e+02  2.92e-02  9.87e-01
+   750| 2.40e-04  6.14e-05  3.89e-02  1.42e+02  2.92e-02  1.48e+00
+  1000| 1.91e-04  5.10e-05  3.30e-02  1.42e+02  2.92e-02  1.97e+00
+  1250| 1.55e-04  4.34e-05  2.78e-02  1.42e+02  2.92e-02  2.47e+00
+  1500| 1.34e-04  3.65e-05  2.34e-02  1.42e+02  2.92e-02  2.96e+00
+  1750| 2.19e-01  2.84e-01  3.74e+00  1.44e+02  2.92e-02  3.46e+00
+  2000| 1.01e-04  2.57e-05  1.67e-02  1.42e+02  2.92e-02  3.96e+00
+  2250| 9.41e-05  2.15e-05  1.42e-02  1.42e+02  2.92e-02  4.46e+00
 ------------------------------------------------------------------
 status:  solved
-timings: total: 2.93e+00s = setup: 2.10e-03s + solve: 2.93e+00s
-	 lin-sys: 9.66e-02s, cones: 2.79e+00s, accel: 1.02e-02s
+timings: total: 4.46e+00s = setup: 2.24e-03s + solve: 4.45e+00s
+	 lin-sys: 1.80e-01s, cones: 4.21e+00s, accel: 1.30e-02s
 ------------------------------------------------------------------
 objective = 141.972713
 ------------------------------------------------------------------
-  5.277823 seconds (7.44 M allocations: 366.704 MiB, 43.85% compilation time: 4% of which was recompilation)</code></pre><p>In comparison, if we wrap <code>SCS.Optimizer</code> in <code>MathOptChordalDecomposition.Optimizer</code>, then the problem takes less than 1 second to solve:</p><pre id="c-48887d09"><code class="nohighlight hljs line-numbers"><span class="code-lines" data-ln-start="16" style="counter-reset: line 15"><span class="line"><span class="line-num" aria-hidden="true"></span><a class="julia-ref" href="../../../api/JuMP/#JuMP.set_optimizer"><span class="julia-funcall">set_optimizer</span></a>(model, () <span class="julia-operator">-&gt;</span> MathOptChordalDecomposition<span class="julia-operator">.</span><span class="julia-funcall">Optimizer</span>(SCS<span class="julia-operator">.</span>Optimizer))</span><span class="line"><span class="line-num" aria-hidden="true"></span><span class="julia-macro">@</span><span class="julia-macro">time</span> <a class="julia-ref" href="../../../api/JuMP/#JuMP.optimize!"><span class="julia-funcall">optimize!</span></a>(model)</span></span></code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
+  7.786499 seconds (7.46 M allocations: 367.571 MiB, 0.64% gc time, 42.19% compilation time: 4% of which was recompilation)</code></pre><p>In comparison, if we wrap <code>SCS.Optimizer</code> in <code>MathOptChordalDecomposition.Optimizer</code>, then the problem takes less than 1 second to solve:</p><pre id="c-48887d09"><code class="nohighlight hljs line-numbers"><span class="code-lines" data-ln-start="16" style="counter-reset: line 15"><span class="line"><span class="line-num" aria-hidden="true"></span><a class="julia-ref" href="../../../api/JuMP/#JuMP.set_optimizer"><span class="julia-funcall">set_optimizer</span></a>(model, () <span class="julia-operator">-&gt;</span> MathOptChordalDecomposition<span class="julia-operator">.</span><span class="julia-funcall">Optimizer</span>(SCS<span class="julia-operator">.</span>Optimizer))</span><span class="line"><span class="line-num" aria-hidden="true"></span><span class="julia-macro">@</span><span class="julia-macro">time</span> <a class="julia-ref" href="../../../api/JuMP/#JuMP.optimize!"><span class="julia-funcall">optimize!</span></a>(model)</span></span></code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">------------------------------------------------------------------
 	       SCS v3.2.11 - Splitting Conic Solver
 	(c) Brendan O&#39;Donoghue, Stanford University, 2012
 ------------------------------------------------------------------
@@ -120,17 +120,17 @@ lin-sys:  sparse-direct-amd-qdldl
 ------------------------------------------------------------------
  iter | pri res | dua res |   gap   |   obj   |  scale  | time (s)
 ------------------------------------------------------------------
-     0| 2.75e+01  1.00e+00  9.93e+03 -4.81e+03  1.00e-01  3.39e-03
-   250| 6.74e-03  1.47e-03  6.73e-03  1.42e+02  1.73e+00  1.03e-01
-   350| 1.23e-04  7.46e-05  4.30e-05  1.42e+02  1.73e+00  1.44e-01
+     0| 2.75e+01  1.00e+00  9.93e+03 -4.81e+03  1.00e-01  3.21e-03
+   250| 6.74e-03  1.47e-03  6.73e-03  1.42e+02  1.73e+00  1.63e-01
+   350| 1.23e-04  7.46e-05  4.30e-05  1.42e+02  1.73e+00  2.28e-01
 ------------------------------------------------------------------
 status:  solved
-timings: total: 1.44e-01s = setup: 2.68e-03s + solve: 1.41e-01s
-	 lin-sys: 2.19e-02s, cones: 1.10e-01s, accel: 1.91e-03s
+timings: total: 2.28e-01s = setup: 2.54e-03s + solve: 2.25e-01s
+	 lin-sys: 4.07e-02s, cones: 1.72e-01s, accel: 2.32e-03s
 ------------------------------------------------------------------
 objective = 141.990174
 ------------------------------------------------------------------
-  3.849465 seconds (11.99 M allocations: 577.925 MiB, 1.96% gc time, 96.07% compilation time: 1% of which was recompilation)</code></pre><p>The difference in performance is because of the chordal decomposition. The decomposed problem introduced new variables (there are now 1,155 variables instead of 124) and constraints (there are now 115 PSD constraints instead of one), but each PSD constraint is smaller than the original.</p><pre id="c-fc1d6daa"><code class="nohighlight hljs line-numbers"><span class="code-lines" data-ln-start="18" style="counter-reset: line 17"><span class="line"><span class="line-num" aria-hidden="true"></span>decom <span class="julia-keyword">=</span> <a class="julia-ref" href="../../../api/JuMP/#JuMP.unsafe_backend"><span class="julia-funcall">unsafe_backend</span></a>(model)</span></span></code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MathOptChordalDecomposition.Optimizer{CliqueTrees.MF}
+  5.503257 seconds (11.92 M allocations: 574.421 MiB, 1.11% gc time, 95.72% compilation time: 2% of which was recompilation)</code></pre><p>The difference in performance is because of the chordal decomposition. The decomposed problem introduced new variables (there are now 1,155 variables instead of 124) and constraints (there are now 115 PSD constraints instead of one), but each PSD constraint is smaller than the original.</p><pre id="c-fc1d6daa"><code class="nohighlight hljs line-numbers"><span class="code-lines" data-ln-start="18" style="counter-reset: line 17"><span class="line"><span class="line-num" aria-hidden="true"></span>decom <span class="julia-keyword">=</span> <a class="julia-ref" href="../../../api/JuMP/#JuMP.unsafe_backend"><span class="julia-funcall">unsafe_backend</span></a>(model)</span></span></code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MathOptChordalDecomposition.Optimizer{CliqueTrees.MF}
 ├ ObjectiveSense: MIN_SENSE
 ├ ObjectiveFunctionType: MOI.ScalarAffineFunction{Float64}
 ├ NumberOfVariables: 1155
@@ -146,7 +146,7 @@ objective = 141.990174
   9  =&gt; 2
   8  =&gt; 3
   3  =&gt; 35
-  1  =&gt; 12</code></pre><p>The largest PSD constraint is now of size 10, which is much smaller than the original 124-by-124 matrix.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_examples/">« Simple semidefinite programming examples</a><a class="docs-footer-nextpage" href="../logistic_regression/">Example: logistic regression »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 3 September 2026 10:20">Thursday 3 September 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div><div class="ref-tips" hidden><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.AffExpr"><code class="ref-tip-sig nohighlight">AffExpr</code><p class="ref-tip-brief">Alias for GenericAffExpr{Float64,VariableRef}, the specific GenericAffExpr used by JuMP.</p></div><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.SymmetricMatrixShape"><code class="ref-tip-sig nohighlight"><span class="julia-funcall">SymmetricMatrixShape</span>(
+  1  =&gt; 12</code></pre><p>The largest PSD constraint is now of size 10, which is much smaller than the original 124-by-124 matrix.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_examples/">« Simple semidefinite programming examples</a><a class="docs-footer-nextpage" href="../logistic_regression/">Example: logistic regression »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 3 September 2026 20:52">Thursday 3 September 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div><div class="ref-tips" hidden><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.AffExpr"><code class="ref-tip-sig nohighlight">AffExpr</code><p class="ref-tip-brief">Alias for GenericAffExpr{Float64,VariableRef}, the specific GenericAffExpr used by JuMP.</p></div><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.SymmetricMatrixShape"><code class="ref-tip-sig nohighlight"><span class="julia-funcall">SymmetricMatrixShape</span>(
     side_dimension<span class="julia-operator">::</span><span class="julia-type">Int</span>;
     needs_adjoint_dual<span class="julia-operator">::</span><span class="julia-type">Bool</span> <span class="julia-keyword">=</span> <span class="julia-number">false</span>,
 )</code><p class="ref-tip-brief">The shape object for a symmetric square matrix of side_dimension rows and columns.</p></div><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.all_constraints@arity-3"><code class="ref-tip-sig nohighlight"><span class="julia-funcall">all_constraints</span>(model<span class="julia-operator">::</span><span class="julia-type">GenericModel</span>, function_type, set_type)<span class="julia-operator">::</span><span class="julia-type">Vector</span>{<span class="julia-operator">&lt;:</span><span class="julia-type">ConstraintRef</span>}</code><p class="ref-tip-brief">Return a list of all constraints currently in the model where the function has type function_type and the set has type set_type.</p></div><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.constraint_object"><code class="ref-tip-sig nohighlight"><span class="julia-funcall">constraint_object</span>(con_ref<span class="julia-operator">::</span><span class="julia-type">ConstraintRef</span>)</code><p class="ref-tip-brief">Return the underlying constraint data for the constraint referenced by con_ref.</p></div><div class="ref-tip" data-for="../../../api/JuMP/#JuMP.optimize!"><code class="ref-tip-sig nohighlight"><span class="julia-funcall">optimize!</span>(
