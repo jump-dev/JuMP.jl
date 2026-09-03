@@ -328,6 +328,28 @@ function test_DenseAxisArray_with_Base_OneTo()
     return
 end
 
+function test_similar_vararg_abstractvector()
+    A = Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3)
+    A1 = similar(A, Float64, axes(A))
+    A1.data .= rand(2, 2)
+    @test A1 == Containers.DenseAxisArray(A1.data, [:a, :b], 2:3)
+    B = map(x -> 2 * x, A)
+    C = Containers.DenseAxisArray(2 * [1 2; 3 4], [:a, :b], 2:3)
+    @test B == C
+    return
+end
+
+function test_similar_vararg_oneto()
+    A = Containers.DenseAxisArray([1 2; 3 4], 1:2, 1:2)
+    A1 = similar(A, Float64, axes(A))
+    A1.data .= rand(2, 2)
+    @test A1 == Containers.DenseAxisArray(A1.data, 1:2, 1:2)
+    B = map(x -> 2 * x, A)
+    C = Containers.DenseAxisArray(2 * [1 2; 3 4], 1:2, 1:2)
+    @test B == C
+    return
+end
+
 function test_Array()
     A = DenseAxisArray([1, 3, 2], Base.OneTo(3))
     B = @inferred Array(A)

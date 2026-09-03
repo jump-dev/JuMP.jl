@@ -309,7 +309,7 @@ function Base.similar(
     A::DenseAxisArray{T,N,Ax},
     ::Type{S},
     axes::Ax,
-) where {T,N,Ax<:Tuple{<:AbstractVector},S}
+) where {T,N,Ax<:Tuple{Vararg{AbstractVector}},S}
     return construct_undef_array(S, axes)
 end
 
