@@ -1104,7 +1104,7 @@ function test_getindex_kwargs()
             Check the index names and their order in the container definition.
             """,
         ),
-        A[x = :a, y = 2, z = 99],
+        A[x=:a, y=2, z=99],
     )
     @test_throws(
         ErrorException(
@@ -1117,7 +1117,7 @@ function test_getindex_kwargs()
             Check the index names and their order in the container definition.
             """,
         ),
-        A[x = :a],
+        A[x=:a],
     )
     return
 end
