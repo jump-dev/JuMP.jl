@@ -559,7 +559,8 @@ function _string_summary(x)
     if length(x) <= 75
         return x
     end
-    return x[1:32] * " [...] " * x[(end-31):end]
+    # Don't use `x[1:32]` type indexing here because it's not safe with unicode.
+    return first(x, 32) * " [...] " * last(x, 32)
 end
 
 _format_time(x::Float64) = string(_format(x), " seconds")
