@@ -236,10 +236,9 @@ julia> function JuMP.parse_constraint_call(
            println("Rewriting my_equal_to to ==")
            new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
            build_code = if is_vectorized
-               :(build_constraint($(error_fn), $(new_lhs), MOI.EqualTo($(rhs)))
-           )
-           else
                :(build_constraint.($(error_fn), $(new_lhs), MOI.EqualTo($(rhs))))
+           else
+               :(build_constraint($(error_fn), $(new_lhs), MOI.EqualTo($(rhs))))
            end
            return parse_code, build_code
        end
@@ -586,7 +585,7 @@ For example, instead of:
 ```julia
 function all_names_slow(model)
     names = Set{String}()
-    for ci in all_constraints(model)
+    for ci in all_constraints(model; include_variable_in_set_constraints = true)
         push!(names, name(ci))
     end
     return names

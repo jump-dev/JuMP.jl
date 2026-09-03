@@ -232,7 +232,7 @@ for factor in factors
     push!(run_times_cached, @elapsed build_cached_model(graph...))
 end
 Plots.plot(; xlabel = "Factor", ylabel = "Runtime [s]")
-Plots.scatter!(factors, run_times_naive; label = "Actual")
+Plots.scatter!(factors, run_times_naive; label = "Naive")
 a, b = hcat(ones(10), factors .^ 2) \ run_times_naive
 Plots.plot!(factors, a .+ b * factors .^ 2; label = "Quadratic fit")
 Plots.scatter!(factors, run_times_cached; label = "Cached")
