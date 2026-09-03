@@ -53,6 +53,8 @@ The recognized positional arguments in `args` are the following:
  * `Symmetric`: Only available when creating a square matrix of variables, that
    is when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
    it creates a symmetric matrix of variables.
+ * `Hermitian`: Similar to `Symmetric` but create a Hermtian matrix of
+   complex-valued variables.
  * `PSD`: A restrictive extension to `Symmetric` which constraints a square
    matrix of variables to `Symmetric` and constrains to be positive
    semidefinite.

@@ -360,7 +360,8 @@ The above code creates a JuMP model with the objective function
     in JuMP expressions.
  3. The number of input arguments that the function takes.
  4. The Julia method which computes the function
- 5. A flag to instruct JuMP to compute exact gradients automatically.
+ 5. The `autodiff` keywrod argument, which instructs JuMP to compute exact
+    gradients automatically.
 
 !!! tip
     The symbol `:my_f` doesn't have to match the name of the function `f`.
@@ -737,7 +738,7 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @NLconstraint(model, Min, x + x^2 <= 1)
+julia> @NLconstraint(model, x + x^2 <= 1)
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 

@@ -257,10 +257,10 @@ cref : x = 2
 
 julia> new_model = copy(model);
 
-julia> x_new = model[:x]
+julia> x_new = new_model[:x]
 x
 
-julia> cref_new = model[:cref]
+julia> cref_new = new_model[:cref]
 cref : x = 2
 ```
 """
