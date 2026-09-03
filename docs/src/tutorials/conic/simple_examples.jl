@@ -94,7 +94,8 @@ end
 # ```raw
 # [1] --- 5 --- [2]
 # ```
-# The solution is `(S, T)  = ({1}, {2})`
+# The solution is `(S, T)  = ({1}, {2})` (or `({2}, {1})`, since swapping the
+# labels doesn't change the cut).
 
 S, T = solve_max_cut_sdp([0 5; 5 0])
 

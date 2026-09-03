@@ -134,7 +134,7 @@ model = Model();
 
 # To model ``y = x \text{ mod } n``, where ``n`` is a constant modulus, we use the
 # relationship ``x = n \cdot z + y``, where ``z \in \mathbb{Z}_+`` is the number
-# of times that ``n`` can be divided by ``x`` and ``y`` is the remainder.
+# of times that ``n`` divides into ``x`` and ``y`` is the remainder.
 
 n = 4
 model = Model();
@@ -183,7 +183,7 @@ end)
 
 # ### Not
 
-# $$x_1 \neg x_2$$
+# $$x_1 = \neg x_2$$
 
 model = Model();
 @variable(model, x[1:2], Bin)

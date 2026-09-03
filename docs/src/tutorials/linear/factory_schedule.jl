@@ -54,7 +54,7 @@ import Test
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} \\
 # \text{s.t.} & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
 #             & x_{m,f} \ge l_f z_{m,f} && \forall f \in F, m \in M \\
-#             & \sum\limits_{f\in F} x_{m,f} = d_m && \forall f \in F, m \in M \\
+#             & \sum\limits_{f\in F} x_{m,f} = d_m && \forall m \in M \\
 #             & z_{m,f} \in \{0, 1\} && \forall f \in F, m \in M.
 # \end{aligned}
 # ```
@@ -79,7 +79,7 @@ import Test
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} + \sum\limits_{m \in M}10000 \delta_m \\
 # \text{s.t.} & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
 #             & x_{m,f} \ge l_f z_{m,f} && \forall f \in F, m \in M \\
-#             & \sum\limits_{f\in F} x_{m,f} - \delta_m = d_m && \forall f \in F, m \in M \\
+#             & \sum\limits_{f\in F} x_{m,f} - \delta_m = d_m && \forall m \in M \\
 #             & z_{m,f} \in \{0, 1\} && \forall f \in F, m \in M \\
 #             & \delta_m \ge 0 && \forall m \in M.
 # \end{aligned}
@@ -135,7 +135,7 @@ demand_df = CSV.read(
 # too large (or too small), which might indicate a typo or a unit conversion
 # issue (perhaps the variable costs are in \$/1000 units instead of \$/unit).
 
-function valiate_data(
+function validate_data(
     demand_df::DataFrames.DataFrame,
     factory_df::DataFrames.DataFrame,
 )
@@ -150,7 +150,7 @@ function valiate_data(
     return
 end
 
-valiate_data(demand_df, factory_df)
+validate_data(demand_df, factory_df)
 
 # ## JuMP formulation
 
@@ -165,7 +165,7 @@ function solve_factory_scheduling(
 )
     ## Even though we validated the data above, it's good practice to do it here
     ## too.
-    valiate_data(demand_df, factory_df)
+    validate_data(demand_df, factory_df)
     months, factories = unique(factory_df.month), unique(factory_df.factory)
     model = Model(HiGHS.Optimizer)
     set_silent(model)

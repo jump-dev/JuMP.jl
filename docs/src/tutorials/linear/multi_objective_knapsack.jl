@@ -191,7 +191,7 @@ Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = "Ideal point")
 
 # Visualizing the objective space lets the decision maker choose a solution that
 # suits their personal preferences. For example, result `#7` is close to the
-# maximum value of profit, but offers significantly higher desirability compared
+# maximum value of desire, but offers significantly higher profit compared
 # with solutions `#8` and `#9`.
 
 # The set of items that are chosen in solution `#7` are:

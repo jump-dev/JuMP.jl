@@ -385,6 +385,7 @@ set_silent(model)
 @constraint(model, [t; triangle_vec(X)] in MOI.RootDetConeTriangle(2))
 @constraint(model, X .== [2 1; 1 3])
 optimize!(model)
+assert_is_solved_and_feasible(model)
 value(t), sqrt(LinearAlgebra.det(value.(X)))
 
 # ## LogDetCone

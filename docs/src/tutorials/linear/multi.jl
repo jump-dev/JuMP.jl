@@ -132,7 +132,7 @@ set_silent(model)
 cost = DBInterface.execute(db, "SELECT * FROM cost") |> DataFrames.DataFrame
 @objective(
     model,
-    Max,
+    Min,
     sum(r.cost * x[r.origin, r.destination, r.product] for r in eachrow(cost)),
 );
 
@@ -182,7 +182,7 @@ end
 
 optimize!(model)
 assert_is_solved_and_feasible(model)
-Test.@test objective_value(model) == 225_700.0
+Test.@test objective_value(model) == 199_500.0
 solution_summary(model)
 
 # and print the solution:

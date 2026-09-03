@@ -11,14 +11,14 @@ objective function are nonlinear:
 \end{align}
 ```
 
-Mixed-integer nonlinear linear programs (MINLPs) are extensions of nonlinear
+Mixed-integer nonlinear programs (MINLPs) are extensions of nonlinear
 programs in which some (or all) of the decision variables take discrete values.
 
 ## How to choose a solver
 
 JuMP supports a range of nonlinear solvers; look for "NLP" in the list
 of [Supported solvers](@ref). However, very few solvers support mixed-integer
-nonlinear linear programs. Solvers supporting discrete variables start with
+nonlinear programs. Solvers supporting discrete variables start with
 "(MI)" in the list of [Supported solvers](@ref).
 
 If the only nonlinearities in your model are quadratic terms (that is,
