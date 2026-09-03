@@ -719,7 +719,7 @@ julia> @constraint(model, A * x <= b)
 struct Nonpositives end
 
 """
-    GreaterThanZero()
+    LessThanZero()
 
 A struct used to intercept when `<=` or `≤` is used in a macro via
 [`operator_to_set`](@ref).
