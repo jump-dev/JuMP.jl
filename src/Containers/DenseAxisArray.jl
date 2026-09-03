@@ -419,6 +419,19 @@ _is_range(::Colon) = true
 _is_range(::AbstractVector{<:Integer}) = true
 
 function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
+    if length(kwargs) != N
+        error(
+            """
+            Number of keyword arguments ($(length(kwargs))) does not match the \
+            number of dimensions ($N).
+
+            When using keyword indexing, the indices must match the exact \
+            name and order used when creating the container.
+
+            Check the index names and their order in the container definition.
+            """,
+        )
+    end
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.names[i] != kw
