@@ -666,7 +666,10 @@ function test_extension_SDP_errors(
     return
 end
 
-function _test_constraint_name_util(ModelType, VariableRefType)
+function test_constraint_name_util(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     @constraint(model, con, x^2 == 1)

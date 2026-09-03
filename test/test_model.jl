@@ -99,7 +99,7 @@ end
 function test_empty!_model()
     model = Model()
     backend_type = typeof(backend(model))
-    model.optimize_hook === nothing
+    @test model.optimize_hook === nothing
     hook(m) = nothing
     set_optimize_hook(model, hook)
     @test model.optimize_hook === hook

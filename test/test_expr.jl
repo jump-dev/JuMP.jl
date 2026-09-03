@@ -411,15 +411,6 @@ function test_eltype_QuadTermIterator()
     return
 end
 
-function test_GenericQuadExpr_constructor()
-    model = Model()
-    @variable(model, x[1:2])
-    y = 1 * x[1] + 2 * x[2] + 3 * x[1]^2 + 4 * x[2]^2
-    map_coefficients_inplace!(c -> 2c, y)
-    @test y == 2 * x[1] + 4 * x[2] + 6 * x[1]^2 + 8 * x[2]^2
-    return
-end
-
 function test_GenericQuadExpr_map_coefficients_inplace!()
     model = Model()
     @variable(model, x[1:2])

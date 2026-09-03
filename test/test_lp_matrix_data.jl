@@ -33,9 +33,9 @@ function test_standard_matrix_form()
     unset_binary(x)
     set_integer(x)
     b = lp_matrix_data(model)
-    b.sense == MOI.MIN_SENSE
-    b.c == [0, 1, 0]
-    b.c_offset == 0
+    @test b.sense == MOI.MIN_SENSE
+    @test b.c == [0, 1, 0]
+    @test b.c_offset == 0
     @test b.integers == [1, 3]
     @test b.binaries == Int[]
     return

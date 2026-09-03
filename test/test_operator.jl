@@ -383,6 +383,7 @@ function test_extension_basic_operators_variable(
     @test_expression_with_string w * α "4.13 w"
     @test_expression_with_string w / T(2) "0.5 w"
     @test w == w
+    @test w != x
     @test_expression_with_string x * y - 1 "x*y - 1"
     @test_expression_with_string(x^2, "x²", interrable = false)
     @test_expression_with_string(x^1, "x", interrable = false)
@@ -436,6 +437,7 @@ function test_extension_basic_operators_affexpr(
     @test_expression_with_string aff / 2 "3.55 x + 1.25"
     @test_throws MethodError aff ≤ 1
     @test aff == aff
+    @test aff != aff + 1
     @test_throws MethodError aff ≥ 1
     @test_expression_with_string aff - 1 "7.1 x + 1.5"
     @test_expression_with_string(
@@ -509,6 +511,7 @@ function test_extension_basic_operators_quadexpr(
     @test_expression_with_string q * 2 "5 y*z + 14.2 x + 5"
     @test_expression_with_string q / 2 "1.25 y*z + 3.55 x + 1.25"
     @test q == q
+    @test q != q2
     @test_expression_with_string aff2 - q "-2.5 y*z - 7.1 x + 1.2 y - 1.3"
     # 4-2 QuadExpr--Variable
     @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
