@@ -209,7 +209,37 @@ function test_sparse_key_mismatch()
     model = Model()
     @variable(model, x[i = 1:3; isodd(i)] >= 0)
     @variable(model, y[i = 3:5; isodd(i)] >= 0)
-    @test_throws(ErrorException, @constraint(model, 2x .- 1 ⟂ y))
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@constraint(model, 2x .- 1 ⟂ y)`:
+
+            Keys of the SparseAxisArrays do not match.
+
+            The left-hand side has key `(1,)`, but the right-hand side does not.
+            """
+        ),
+        @constraint(model, 2x .- 1 ⟂ y),
+    )
+    return
+end
+
+function test_sparse_klength_mismatch()
+    model = Model()
+    @variable(model, x[i = 1:3; isodd(i)] >= 0)
+    @variable(model, y[i = 1:5; isodd(i)] >= 0)
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@constraint(model, 2x .- 1 ⟂ y)`:
+
+            The number of elements in the left-hand side (2) does not match the right-hand side (3).
+
+            There must be a one-to-one mapping between the left- and right-hand sides of a complementarity constraint.
+            """
+        ),
+        @constraint(model, 2x .- 1 ⟂ y),
+    )
     return
 end
 
