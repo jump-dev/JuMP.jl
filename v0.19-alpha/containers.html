@@ -1,0 +1,64 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Containers · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script data-main="assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="index.html"><img alt="JuMP logo" class="logo" src="assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="search.html" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="index.html">Introduction</a></li><li><a class="toctext" href="installation.html">Installation Guide</a></li><li><a class="toctext" href="quickstart.html">Quick Start Guide</a></li><li><a class="toctext" href="concepts.html">Concepts</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="expressions.html">Expressions</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li><li class="current"><a class="toctext" href="containers.html">Containers</a><ul class="internal"><li><a class="toctext" href="#Containers-in-macro-1">Containers in macro</a></li></ul></li><li><a class="toctext" href="names.html">Names</a></li><li><a class="toctext" href="solvers.html">Solvers</a></li><li><a class="toctext" href="nlp.html">Nonlinear Modeling</a></li><li><a class="toctext" href="style.html">Style Guide</a></li><li><a class="toctext" href="extensions.html">Extensions</a></li><li><a class="toctext" href="updating.html">Updating Guide</a></li><li><a class="toctext" href="howdoi.html">How do I ...? (FAQ)</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="containers.html">Containers</a></li></ul><a class="edit-page" href="https://github.com/JuliaOpt/JuMP.jl/blob/master/docs/src/containers.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Containers</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Containers-1" id="Containers-1">Containers</a></h1><p>Containers can be created using the <code>generatecontainer</code> function</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.generatecontainer" id="JuMP.generatecontainer"><code>JuMP.generatecontainer</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">generatecontainer(T, indexvars, indexsets, requestedtype)</code></pre><p>Return a tuple, the first element of which is <em>code</em> that generates a container for objects of type <code>T</code> given the index variables, index sets, and <code>requestedtype</code>. <code>requestedtype</code> may be one of <code>:Array</code>, <code>:JuMPArray</code>, <code>:Dict</code>, or <code>:Auto</code>. Return error-producing code if requested type is incompatible. For the case of <code>:Auto</code>, the following rules are used to determine the appropriate container:</p><ol><li><p>If all index sets are either explicit <code>1:B</code> objects for any <code>B</code> or symbols which refer to objects of type <code>Base.OneTo</code>, then an <code>Array</code> is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the <code>Base.OneTo</code> condition.</p></li><li><p>If condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an <code>JuMPArray</code> is generated of the appropriate size.</p></li><li><p>Otherwise, generate an empty <code>Dict{Any,T}</code>.</p></li></ol><p>The second element of the return tuple is a <code>Bool</code>, <code>true</code> if the container type automatically checks for duplicate terms in the index sets and <code>false</code> otherwise.</p><p><strong>Examples</strong></p><pre><code class="language-none">generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
+# Returns code equivalent to:
+# :(Array{VariableRef}(length(1:N), length(1:T))
+
+generatecontainer(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
+# Returns code equivalent to:
+# :(JuMPArray(Array{VariableRef}(length(1:N), length(2:T)), $indexvars...))
+
+generatecontainer(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
+# Returns code that generates an Array if S is of type Base.OneTo,
+# otherwise an JuMPArray.
+
+generatecontainer(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
+# Returns code equivalent to:
+# :(Dict{Any,VariableRef}())</code></pre></div></div></section><h2><a class="nav-anchor" href="#Containers-in-macro-1" id="Containers-in-macro-1">Containers in macro</a></h2><p>In the <a href="variables.html#JuMP.@variable"><code>@variable</code></a> (resp. <a href="constraints.html#JuMP.@constraint"><code>@constraint</code></a>) macro, containers of variables (resp. constraints) can be created the following syntax</p><ul><li><code>name[index_set_1,index_set_2,...,index_set_n]</code> creating an <code>n</code>-dimensional container of name <code>name</code>; or</li><li><code>[index_set_1,index_set_2,...,index_set_n]</code> creating an <em>anonymous</em> (see <a href="names.html#Names-1">Names</a>) <code>n</code>-dimensional container.</li></ul><p>Each expression <code>index_set_i</code> can either be</p><ul><li>of the form <code>index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code>; or</li><li>of the form <code>index_name=index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code> and allowing values used in the macro expression and keyword arguments to be expressions depending on the <code>index_name</code>.</li></ul><p>The macro then creates the container using the <a href="containers.html#JuMP.generatecontainer"><code>JuMP.generatecontainer</code></a> function with the following arguments:</p><ol><li><code>VariableRef</code> for the <a href="variables.html#JuMP.@variable"><code>@variable</code></a> macro and <code>ConstraintRef</code> for the <a href="constraints.html#JuMP.@constraint"><code>@constraint</code></a> macro.</li><li>The index variables and arbitrary symbols for dimensions for which no variable index is specified.</li><li>The index sets specified.</li><li>The value of the <code>keyword</code> argument if given or <code>:Auto</code>.</li></ol><footer><hr/><a class="previous" href="constraints.html"><span class="direction">Previous</span><span class="title">Constraints</span></a><a class="next" href="names.html"><span class="direction">Next</span><span class="title">Names</span></a></footer></article></body></HTML>
