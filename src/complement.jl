@@ -32,6 +32,16 @@ function _build_complements_constraint(
     F::Containers.SparseAxisArray{<:Union{Real,AbstractJuMPScalar}},
     x::Containers.SparseAxisArray{<:AbstractVariableRef},
 )
+    if length(F) != length(x)
+        error_fn(
+            """
+            The number of elements in the left-hand side ($(length(F))) does not match the right-hand side ($(length(x))).
+
+            There must be a one-to-one mapping between the left- and right-hand \
+            sides of a complementarity constraint.
+            """,
+        )
+    end
     elements = [F[i] for i in eachindex(F)]
     for i in eachindex(F)
         if haskey(x, i)
@@ -39,7 +49,7 @@ function _build_complements_constraint(
         else
             error_fn(
                 """
-                Keys of the SparseAxisArray's do not match.
+                Keys of the SparseAxisArrays do not match.
 
                 The left-hand side has key `$i`, but the right-hand side does not.
                 """,
