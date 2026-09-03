@@ -857,9 +857,8 @@ not assume that the inputs are `Float64`.
  * If the function `f` is multi-variate, `∇f` must have a signature matching
    `∇f(g::AbstractVector{T}, args::T...) where {T<:Real}`, where the first
    argument is a vector `g` that is modified in-place with the gradient.
- * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
-   compute the second-order derivative information. If `autodiff = false`, only
-   first-order derivative information will be used.
+ * If `dimension == 1`, you must set `autodiff = true`, since there is no way to
+   implement only first-order derivatives for univariate functions.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 
@@ -961,7 +960,6 @@ derivatives of the function `f` respectively.
 
  * Because automatic differentiation is not used, you can assume the inputs are
    all `Float64`.
- * This method will throw an error if `dimension > 1`.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 

@@ -117,10 +117,9 @@ function solution_summary(
 end
 
 """
-    Base.show([io::IO], summary::SolutionSummary; verbose::Bool = false)
+    Base.show(io::IO, summary::_SolutionSummary)
 
-Write a summary of the solution results to `io` (or to `stdout` if `io` is not
-given).
+Write a summary of the solution results to `io`.
 """
 function Base.show(io::IO, summary::_SolutionSummary)
     branches = Pair{String,Any}[

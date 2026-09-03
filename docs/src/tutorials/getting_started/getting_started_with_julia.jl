@@ -629,8 +629,8 @@ end                         #hide
 
 # ### Broadcasting
 
-# In the example above, we didn't define what to do if `f` was passed a
-# `Vector`. Luckily, Julia provides a convenient syntax for mapping `f`
+# In the example above, we didn't define what to do if `foo` was passed a
+# `Vector`. Luckily, Julia provides a convenient syntax for mapping `foo`
 # element-wise over arrays. Just add a `.` between the name of the function and
 # the opening `(`. This works for _any_ function, including functions with
 # multiple arguments. For example:

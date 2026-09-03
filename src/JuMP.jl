@@ -72,9 +72,9 @@ See also: [`mode`](@ref).
 
 Possible values are:
 
- * [`AUTOMATIC`]: `moi_backend` field holds a CachingOptimizer in AUTOMATIC mode.
- * [`MANUAL`]: `moi_backend` field holds a CachingOptimizer in MANUAL mode.
- * [`DIRECT`]: `moi_backend` field holds an AbstractOptimizer. No extra copy of
+ * [`AUTOMATIC`](@ref): `moi_backend` field holds a CachingOptimizer in AUTOMATIC mode.
+ * [`MANUAL`](@ref): `moi_backend` field holds a CachingOptimizer in MANUAL mode.
+ * [`DIRECT`](@ref): `moi_backend` field holds an AbstractOptimizer. No extra copy of
    the model is stored. The `moi_backend` must support `add_constraint` etc.
 """
 @enum(ModelMode, AUTOMATIC, MANUAL, DIRECT)
@@ -256,7 +256,7 @@ in mind the following implications of creating models using this *direct* mode:
   situations can be dealt with by storing the modifications in a cache and
   loading them into the optimizer when `optimize!` is called.
 * No constraint bridging is supported by default.
-* The optimizer used cannot be changed the model is constructed.
+* The optimizer used cannot be changed after the model is constructed.
 * The model created cannot be copied.
 """
 function direct_generic_model(
@@ -338,7 +338,7 @@ end
 
 Create a new instance of a JuMP model.
 
-If `optimizer_factory` is provided, the model is initialized with thhe optimizer
+If `optimizer_factory` is provided, the model is initialized with the optimizer
 returned by `MOI.instantiate(optimizer_factory)`.
 
 If `optimizer_factory` is not provided, use [`set_optimizer`](@ref) to set the
@@ -386,7 +386,7 @@ in mind the following implications of creating models using this *direct* mode:
   situations can be dealt with by storing the modifications in a cache and
   loading them into the optimizer when `optimize!` is called.
 * No constraint bridging is supported by default.
-* The optimizer used cannot be changed the model is constructed.
+* The optimizer used cannot be changed after the model is constructed.
 * The model created cannot be copied.
 """
 direct_model(backend::MOI.ModelLike) = direct_generic_model(Float64, backend)

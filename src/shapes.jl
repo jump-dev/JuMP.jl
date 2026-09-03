@@ -67,9 +67,8 @@ Return a set in its original shape `shape` given its vectorized form
 ## Example
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form
-`[1, 2, 3] in MOI.PositiveSemidefinieConeTriangle(2)`, the
-following code returns the set of the original constraint
-`Symmetric(Matrix[1 2; 2 3]) in PSDCone()`:
+`[1, 2, 3] in MOI.PositiveSemidefiniteConeTriangle(2)`, the following code
+returns the set of the original constraint `Symmetric([1 2; 2 3]) in PSDCone()`:
 
 ```jldoctest
 julia> reshape_set(MOI.PositiveSemidefiniteConeTriangle(2), SymmetricMatrixShape(2))

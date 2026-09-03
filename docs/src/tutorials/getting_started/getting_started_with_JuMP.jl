@@ -160,7 +160,7 @@ model = Model(HiGHS.Optimizer)
 
 # Variables can have lower and upper bounds:
 
-@variable(model, 0 <= y <= 30)
+@variable(model, 0 <= y <= 3)
 
 # The objective is set using [`@objective`](@ref):
 

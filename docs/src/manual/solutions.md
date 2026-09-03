@@ -115,7 +115,7 @@ solution_summary(; result = 1, verbose = true)
 
 ## Why did the solver stop?
 
-Use[`termination_status`](@ref) to understand why the solver stopped.
+Use [`termination_status`](@ref) to understand why the solver stopped.
 
 ```jldoctest solutions
 julia> termination_status(model)
@@ -671,7 +671,7 @@ computation of a conflict. Once this process is finished, query the
 
 If found, copy the IIS to a new model using [`copy_conflict`](@ref), which you
 can then print or write to a file for easier debugging:
-```julia
+```jldoctest highs_conflict
 julia> using JuMP
 
 julia> import HiGHS
@@ -684,10 +684,10 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, c1, x >= 2)
-c1 : x ≥ 2.0
+c1 : x ≥ 2
 
 julia> @constraint(model, c2, x <= 1)
-c2 : x ≤ 1.0
+c2 : x ≤ 1
 
 julia> optimize!(model)
 
@@ -699,14 +699,14 @@ julia> if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
        end
 Feasibility
 Subject to
- c1 : x ≥ 2.0
- c2 : x ≤ 1.0
+ c1 : x ≥ 2
+ c2 : x ≤ 1
 ```
 
 If you need more control over the list of constraints that appear in the
 conflict, iterate over the list of constraints and query the
 [`MOI.ConstraintConflictStatus`](@ref) attribute:
-```julia
+```jldoctest highs_conflict
 julia> list_of_conflicting_constraints = ConstraintRef[]
 ConstraintRef[]
 
@@ -720,8 +720,8 @@ julia> for (F, S) in list_of_constraint_types(model)
 
 julia> list_of_conflicting_constraints
 2-element Vector{ConstraintRef}:
- c1 : x ≥ 2.0
- c2 : x ≤ 1.0
+ c1 : x ≥ 2
+ c2 : x ≤ 1
 ```
 
 ## Multiple solutions
@@ -866,7 +866,7 @@ useful when [`primal_status`](@ref) is [`FEASIBLE_POINT`](@ref) or
     also provide a candidate point (solvers generally do not provide one). To
     diagnose the source of infeasibility, see [Conflicts](@ref).
 
-Pass `skip_mising = true` to skip constraints which contain variables that are
+Pass `skip_missing = true` to skip constraints which contain variables that are
 not in `point`:
 ```jldoctest feasibility
 julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)

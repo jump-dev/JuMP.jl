@@ -373,7 +373,7 @@ This function is used in `_build_constraint`.
 ## Why is this needed?
 
 When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
-the equivalent of `f(zero(eltype(x))`. Here's an example:
+the equivalent of `f(zero(eltype(x)))`. Here's an example:
 
 ```jldoctest
 julia> import SparseArrays
@@ -381,10 +381,11 @@ julia> import SparseArrays
 julia> foo(x) = (println("Calling \$(x)"); x)
 foo (generic function with 1 method)
 
-julia> foo.(SparseArrays.sparsevec([1, 2], [1, 2]))
+julia> foo.(SparseArrays.sparsevec([1, 2], [1, 2], 3))
+Calling 0
 Calling 1
 Calling 2
-2-element SparseArrays.SparseVector{Int64, Int64} with 2 stored entries:
+3-element SparseArrays.SparseVector{Int64, Int64} with 2 stored entries:
   [1]  =  1
   [2]  =  2
 ```
@@ -718,7 +719,7 @@ julia> @constraint(model, A * x <= b)
 struct Nonpositives end
 
 """
-    GreaterThanZero()
+    LessThanZero()
 
 A struct used to intercept when `<=` or `≤` is used in a macro via
 [`operator_to_set`](@ref).
