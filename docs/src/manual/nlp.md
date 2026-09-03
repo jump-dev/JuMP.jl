@@ -360,7 +360,7 @@ The above code creates a JuMP model with the objective function
     in JuMP expressions.
  3. The number of input arguments that the function takes.
  4. The Julia method which computes the function
- 5. The `autodiff` keywrod argument, which instructs JuMP to compute exact
+ 5. The `autodiff` keyword argument, which instructs JuMP to compute exact
     gradients automatically.
 
 !!! tip
