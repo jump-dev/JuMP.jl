@@ -3167,6 +3167,9 @@ function test_print_macro_timing_summary()
     @test all(>=(0), values(model.macro_times))
     @test !occursin("@variable(model, x[1:2])", contents)
     @test !occursin("@expression(model, expr, x[1] + x[2])", contents)
+    #
+    @test occursin("[...]", JuMP._string_summary("x"^29 * "≥" * "y"^60))
+    @test occursin("[...]", JuMP._string_summary("x"^60 * "≥" * "y"^30))
     return
 end
 
