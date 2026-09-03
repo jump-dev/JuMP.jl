@@ -119,9 +119,9 @@ assignment = Model(HiGHS.Optimizer)
 set_silent(assignment)
 @variable(assignment, y[1:n, 1:n], Bin)
 ## One person can only be assigned to one object
-@constraint(assignment, [i = 1:n], sum(y[:, i]) == 1)
+@constraint(assignment, [i = 1:n], sum(y[i, :]) == 1)
 ## One object can only be assigned to one person
-@constraint(assignment, [j = 1:n], sum(y[j, :]) == 1)
+@constraint(assignment, [j = 1:n], sum(y[:, j]) == 1)
 @objective(assignment, Max, sum(G .* y))
 optimize!(assignment)
 assert_is_solved_and_feasible(assignment)

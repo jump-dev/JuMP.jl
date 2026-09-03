@@ -195,7 +195,7 @@ for x̄ in range(; start = -2, stop = 2, length = 15)
 end
 plot
 
-# ## Maximizing a convex function (inner approximation)
+# ## Maximizing a concave function (inner approximation)
 
 # The inner approximation also works if we want to maximize "up" into a concave
 # function.

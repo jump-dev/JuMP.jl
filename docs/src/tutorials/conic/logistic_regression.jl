@@ -247,7 +247,7 @@ println(
     "Number of non-zero components: ",
     count_nonzero(θ♯),
     " (out of ",
-    p,
+    length(θ♯),
     " features)",
 )
 

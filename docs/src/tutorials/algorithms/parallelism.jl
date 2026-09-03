@@ -537,7 +537,7 @@ run_channel_example(15)
 #                @objective(model, Min, x)
 #                set_lower_bound(x, i)
 #                optimize!(model)
-#                assert_is_solved_and_feasible(sudoku)
+#                assert_is_solved_and_feasible(model)
 #                return objective_value(model)
 #            end
 #        end

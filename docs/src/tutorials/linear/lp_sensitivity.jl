@@ -136,7 +136,7 @@ end
 
 c1_report = constraint_report(c1)
 
-# That's a bit hard to read, so let's call this on every variable in the model
+# That's a bit hard to read, so let's call this on every constraint in the model
 # and put things into a DataFrame:
 
 constraint_df = DataFrames.DataFrame(

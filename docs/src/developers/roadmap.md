@@ -37,7 +37,7 @@ represent broad themes that we see as areas in which JuMP could be improved.
    Since the very beginning, JuMP has hard-coded the coefficient type as
    `Float64`. This has made it impossible to support solvers which can use other
    types such as `BigFloat` or `Rational{BigInt}`.
- - **Done [#3385](https://github.com/jump-dev/JuMP.jl/pull/3635)** Add support for constraint programming:
+ - **Done [#3635](https://github.com/jump-dev/JuMP.jl/pull/3635)** Add support for constraint programming:
    [https://github.com/jump-dev/JuMP.jl/issues/2227](https://github.com/jump-dev/JuMP.jl/issues/2227)
    JuMP has a strong focus on linear, conic and nonlinear optimization problems.
    We want to add better support for constraint programming.

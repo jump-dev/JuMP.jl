@@ -169,7 +169,7 @@ file.
 
 Sometimes a solver may provide a number of libraries and executables, and
 specifying the path for each of the becomes tedious. In this case, we can use
-Julia's `Override.toml` to replace an entire artifact.
+Julia's `Overrides.toml` to replace an entire artifact.
 
 Overriding an entire artifact requires you to replicate the structure and
 contents of the JLL package that we [explored above](@ref jll_structure).

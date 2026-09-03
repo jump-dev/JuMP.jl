@@ -120,7 +120,7 @@ dm = LinearAlgebra.LowerTriangular([
 # Now that we have the basics taken  care of, we can set up our model, create
 # decision variables, add constraints, and then solve.
 
-# First, we'll set up a model that leverages the Cbc solver. Next, we'll set up
+# First, we'll set up a model that leverages the HiGHS solver. Next, we'll set up
 # a binary variable $x_{i,k}$ that takes the value $1$ if city $i$ is in group
 # $k$ and $0$ otherwise. Each city must be in a group, so we'll add the
 # constraint $\sum_k x_{i,k} = 1$ for every $i$.

@@ -176,9 +176,6 @@ sol
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
-## HiGHS v1.2 has a bug in presolve which causes the problem to be classified as
-## infeasible.
-set_attribute(model, "presolve", "off")
 
 # Instead of the binary variables, we directly define a 9x9 grid of integer
 # values between 1 and 9:

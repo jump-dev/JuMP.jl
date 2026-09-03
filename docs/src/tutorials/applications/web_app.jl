@@ -56,7 +56,7 @@ function endpoint_solve(params::Dict{String,Any})
     optimize!(model)
     ret = Dict{String,Any}(
         "status" => "okay",
-        "terminaton_status" => termination_status(model),
+        "termination_status" => termination_status(model),
         "primal_status" => primal_status(model),
     )
     ## Only include the `x` key if it has a value.

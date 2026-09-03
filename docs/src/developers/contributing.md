@@ -210,7 +210,7 @@ Open Julia, then run:
 ```julia
 cd("~/.julia/dev/JuMP/docs")
 ] activate .
-include("src/make.jl")
+include("make.jl")
 ```
 
 !!! warning
