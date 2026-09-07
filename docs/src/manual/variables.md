@@ -1028,7 +1028,7 @@ julia> @variable(model, y[A], container=Array)
  y[1]
  y[2]
 ```
-JuMP now creates a `Vector` of JuMP variables instead of a [`Containers.DenseAxisArray](@ref).
+JuMP now creates a `Vector` of JuMP variables instead of a [`Containers.DenseAxisArray`](@ref).
 Choosing an invalid container type will throw an error.
 
 ### User-defined containers
