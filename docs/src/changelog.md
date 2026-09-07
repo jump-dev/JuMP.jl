@@ -7,6 +7,36 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.32.0 (September 9, 2026)
+
+### Added
+
+ - Re-enabled the subexpression caching that was added in v1.31.0 but reverted
+   in v1.31.1. This time, we use `Base.WeakKeyDict` for the subexpression
+   dictionary (#4207)
+
+### Fixed
+
+ - Fixed a `DimensionMismatch` bug in [`set_normalized_coefficient`](@ref)
+   (#4230)
+ - Fixed a string indexing error in [`print_macro_timing_summary`](@ref) (#4233)
+ - Fixed a variety of incorrect docstrings and doctests (#4234)
+ - Fixed complementarity constraints with mis-matched LHS and RHS (#4236)
+ - Fixed [`primal_feasibility_report`](@ref) with `skip_missing` in a vector
+   (#4235)
+ - Fixed keyword indexing of `DenseAxisArray` with wrong number of kwargs
+   (#4238)
+ - Fixed `Base.similar` for `DenseAxisArray` (#4239)
+ - Fixed the incorrect `Base.imag(::GenericQuadExpr{<:Real})` (#4242)
+ - Removed unneeded `Containers.parse_ref_sets` in [`@NLexpression`](@ref) macro
+   (#4245)
+
+### Other
+
+ - Added Algencan, CCOpt, ConicIP to solvers (#4218), (#4228), (#4229)
+ - Fixed support for HTTP@2 in the documentation (#4227)
+ - Fixed various things in the tests and documentation (#4240), (#4241), (#4246), (#4247)
+
 ## Version v1.31.2 (August 18, 2026)
 
 ### Fixed
