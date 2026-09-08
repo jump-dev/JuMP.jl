@@ -226,17 +226,23 @@ objective_value(model)
 
 value.(x)
 
+# The problem takes 8 iterations to converge:
+
+@assert barrier_iterations(model) == 8 #src
+barrier_iterations(model)
+
 # ## Computing the Hessian
 
 # To improve performance we can pass a function that computes the Hessian of `V`
 # with respect to the inputs `x`. Computing this Hessian requires some calculus.
+#
 # Let ``f(x, y)`` be the objective function, then:
 # ```math
-# \nabla V^2_{xx}(x) = \nabla^2_{xx}f(x, y^*) + \nabla^2_{yx}f(x, y^*) \cdot D_x y^*(x)
+# \nabla V^2_{xx}(x) = \nabla^2_{xx}f(x, y^*) + \nabla^2_{xy}f(x, y^*) \cdot \frac{d y^*}{d x}
 # ```
-# It is easy to compute ``\nabla^2_xx f`` and ``\nabla^2_yx f`` with calculus.
-# Computing ``D_x y^*(x)`` (the derivative of the optimal solution ``y^*`` with
-# respect to the input ``x``) is tricker. However, JuMP has a package,
+# It is easy to compute ``\nabla^2_{xx} f`` and ``\nabla^2_{xy} f`` by hand.
+# Computing ``\frac{d y^*}{d x}`` (the derivative of the optimal solution ``y^*``
+# with respect to the input ``x``) is tricker. However, JuMP has a package,
 # [DiffOpt.jl](@ref) which can do this for us.
 
 function solve_lower_level_with_sensitivity(x...)
@@ -290,3 +296,8 @@ objective_value(model)
 # and the optimal upper-level decision variables ``x`` are:
 
 value.(x)
+
+# With the Hessian, the problem now takes 7 iterations to converge:
+
+@assert barrier_iterations(model) == 7 #src
+barrier_iterations(model)
