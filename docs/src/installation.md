@@ -112,7 +112,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [ALGLIB Solver](https://www.alglib.net/)                                       | [ALGLIB.jl](https://github.com/alglib-project/ALGLIB.jl)                         | Manual | Comm.    | (MI)NLP                   |
 | [Alpine.jl](https://github.com/lanl-ansi/Alpine.jl)                            |                                                                                  |        | Triad NS | (MI)NLP                   |
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP, (MI)NLP |
-| [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Manual | Comm.    | (MI)NLP                   |
+| [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/jump-dev/BARON.jl)                              | Manual | Comm.    | (MI)NLP                   |
 | [Bonmin](http://github.com/coin-or/Bonmin)                                     | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     |        | EPL      | (MI)LP                    |
 | [CCOpt](https://github.com/madsuite-org/CCOpt.jl)                              |                                                                                  |        | MIT      | MPCC                      |
@@ -137,20 +137,20 @@ The link in the `Solver` column is the corresponding Julia package.
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   |        | GPL      | (MI)LP                    |
 | [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        | MIT      | (MI)LP, QP                |
-| [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
+| [Hypatia.jl](https://github.com/jump-dev/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 |        | EPL      | LP, QP, NLP               |
 | [JaCoP](https://github.com/radsz/jacop)                                        | [JaCoP.jl](https://github.com/JuliaConstraints/JaCoP.jl)                         |        | AGPL     | CP-SAT                    |
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
 | [Loraine.jl](https://github.com/kocvara/Loraine.jl)                            |                                                                                  |        | MIT      | LP, SDP                   |
-| [MadNLP.jl](https://github.com/sshin23/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
+| [MadNLP.jl](https://github.com/madsuite-org/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
 | [MAiNGO](https://git.rwth-aachen.de/avt-svt/public/maingo)                     | [MAiNGO.jl](https://github.com/MAiNGO-github/MAiNGO.jl)                          |        | EPL 2.0  |(MI)NLP                    |
 | [MiniZinc](https://www.minizinc.org/)                                          | [MiniZinc.jl](https://github.com/jump-dev/MiniZinc.jl)                           | Manual | MPL-2    | CP-SAT                    |
 | [Minotaur](https://github.com/coin-or/minotaur)                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   | Manual | BSD-like | (MI)NLP                   |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
-| [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
+| [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/jump-dev/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [Octeract](https://octeract.gg)                                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | Comm.    | (MI)NLP                   |
 | [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl/)                        |                                                                                  |        | MIT      | NLP                       |
-| [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
+| [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/osqp/OSQP.jl)                              |        | Apache   | LP, QP                    |
 | [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                         |        | Comm.    | MCP                       |
 | [Pajarito.jl](https://github.com/jump-dev/Pajarito.jl)                         |                                                                                  |        | MPL-2    | (MI)NLP, (MI)SOCP, (MI)SDP |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
@@ -235,7 +235,7 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
 
 ## NEOS-based solvers
 
-Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
+Use [NEOSServer.jl](https://github.com/jump-dev/NEOSServer.jl) to access solvers
 available through the [NEOS Server](https://neos-server.org).
 
 ## NLPModels-based solvers
