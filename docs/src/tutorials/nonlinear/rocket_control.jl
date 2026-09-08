@@ -86,7 +86,7 @@ D_c = 0.5 * 620 * m_0 / g_0  # Drag scaling
 u_t_max = 3.5 * g_0 * m_0    # Maximum thrust
 T_max = 0.2                  # Number of seconds
 T = 1_000                    # Number of time steps
-Δt = 0.2 / T;                # Time per discretized step
+Δt = T_max / T;              # Time per discretized step
 
 # ## JuMP formulation
 
@@ -162,7 +162,7 @@ Plots.plot(
 # ## Next steps
 
 # * Experiment with different values for the constants. How does the solution
-#   change? In particular, what happens if you change `T_max`?
+#   change?
 # * The dynamical equations use rectangular integration for the right-hand side
 #   terms. Modify the equations to use the [Trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule_(differential_equations))
 #   instead. (As an example, `x_v[t-1]` would become
