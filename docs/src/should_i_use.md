@@ -91,7 +91,7 @@ Alternatives to consider are:
 
  * [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl)
  * [Optimization.jl](https://github.com/SciML/Optimization.jl)
- * [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
+ * [NLopt.jl](https://github.com/jump-dev/NLopt.jl)
 
 ### Disciplined convex programming
 
