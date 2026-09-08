@@ -473,7 +473,6 @@ macro NLexpression(args...)
         @assert length(args) == 3
         args
     end
-    name, idxvars, indices = Containers.parse_ref_sets(error_fn, c)
     name, idxvars, indices = Containers.parse_ref_sets(
         error_fn,
         c;
