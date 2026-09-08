@@ -1697,4 +1697,34 @@ function test_issue_4089()
     return
 end
 
+function test_empty_subexpressions()
+    model = Model()
+    @variable(model, x)
+    y = sin(x)
+    moi_y = moi_function(model, y)
+    @test !isempty(model.subexpressions)
+    empty!(model)
+    @test isempty(model.subexpressions)
+    return
+end
+
+function test_empty_variable_in_set_ref()
+    model = Model()
+    @variable(model, x[1:3] in Nonnegatives())
+    @test !isempty(model.variable_in_set_ref)
+    empty!(model)
+    @test isempty(model.variable_in_set_ref)
+    return
+end
+
+function test_empty_variable_in_set_ref()
+    model = Model()
+    @variable(model, x >= 0)
+    empty!(model)
+    @variable(model, y >= 2)
+    # This behavior is optional. It's a bit scary!!!
+    @test lower_bound(x) == 2
+    return
+end
+
 end  # module TestModels

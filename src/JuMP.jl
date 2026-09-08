@@ -128,40 +128,59 @@ function value_type(::Type{T}) where {T}
 end
 
 mutable struct GenericModel{T<:Real} <: AbstractModel
+    # !!! note
+    #     When adding new fields to this struct, you must also update
+    #     `Base.empty!(::GenericModel)`.
+
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.ModelLike
+
     # List of shapes of constraints that are not `ScalarShape` or `VectorShape`.
     shapes::Dict{MOI.ConstraintIndex,AbstractShape}
+
     # List of bridges to add in addition to the ones added in
     # `MOI.Bridges.full_bridge_optimizer`. With `BridgeableConstraint`, the
     # same bridge may be added many times so we store them in a `Set` instead
     # of, for example, a `Vector`.
+
     bridge_types::Set{Any}
+
     # Hook into a solve call...function of the form f(m::GenericModel; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook::Any
+
     # TODO: Document.
     nlp_model::Union{Nothing,MOI.Nonlinear.Model}
+
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol,Any}
+
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
+
     # A flag to track whether we have modified the model after calling
     # optimize!.
     is_model_dirty::Bool
+
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol,Any}
+
     # A model-level option that is used as the default for the set_string_name
     # keyword to @variable and @constraint.
     set_string_names_on_creation::Bool
-    #
+
+    # A dictionary to map variables (or arrays of variables to their
+    # corresponding constraint index from add_constrained_variables
     variable_in_set_ref::Dict{Any,MOI.ConstraintIndex}
-    # A dictionary to store timing information from the JuMP macros.
+
+    # A dictionary (and opt-in flag) to store timing information from the JuMP
+    # macros.
     enable_macro_timing::Bool
     macro_times::Dict{Tuple{LineNumberNode,String},Float64}
+
     # A cache to track common subexpressions based on their `objectid`.
     subexpressions::WeakKeyDict{Any,MOI.ScalarNonlinearFunction}
 end
@@ -948,6 +967,29 @@ attributes but not optimizer attributes. Always return the argument.
 
 Note: removes extensions data.
 
+## Caution
+
+Use this function with caution. References to variables and constraints are not
+deleted, and after `empty!` they may refer to different variables in the new
+model. For example:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0)
+x
+
+julia> empty!(model);
+
+julia> @variable(model, y >= 2)
+y
+
+julia> lower_bound(x)
+2.0
+
+julia> x === y
+true
+```
+
 ## Example
 
 ```jldoctest
@@ -976,21 +1018,30 @@ true
 """
 function Base.empty!(model::GenericModel)::GenericModel
     # The method changes the Model object to, basically, the state it was when
-    # created (if the optimizer was already pre-configured). The exceptions
-    # are:
-    # * optimize_hook: it is basically an optimizer attribute and we promise
-    #   to leave them alone (as do MOI.empty!).
-    # * bridge_types: for consistency with MOI.empty! for
-    #   MOI.Bridges.LazyBridgeOptimizer.
-    # * operator_counter: it is just a counter for a single-time warning
-    #   message (so keeping it helps to discover inefficiencies).
+    # created (if the optimizer was already pre-configured).
     MOI.empty!(model.moi_backend)
     empty!(model.shapes)
+    # .bridge_types                     # Skip
+    #   For consistency with MOI.empty! for MOI.Bridges.LazyBridgeOptimizer.
+    # .optimize_hook                    # Skip
+    #   This is basically an optimizer attribute, and we promise to leave them
+    #   alone (as does MOI.empty!).
     model.nlp_model = nothing
     empty!(model.obj_dict)
-    empty!(model.ext)
-    empty!(model.macro_times)
+    # .operator_counter                 # Skip
+    #   This is just a counter for a single-time warning message (so keeping it
+    #   helps to discover inefficiencies).
     model.is_model_dirty = false
+    empty!(model.ext)
+    # .set_string_names_on_creation     # Skip
+    #   This is basically an optimizer attribute, and we promise to leave them
+    #   alone (as does MOI.empty!).
+    empty!(model.variable_in_set_ref)
+    # .enable_macro_timing              # Skip
+    #   This is basically an optimizer attribute, and we promise to leave them
+    #   alone (as does MOI.empty!).
+    empty!(model.macro_times)
+    empty!(model.subexpressions)
     return model
 end
 
