@@ -162,7 +162,7 @@ Plots.plot(
 # ## Next steps
 
 # * Experiment with different values for the constants. How does the solution
-#   change?
+#   change? In particular, what happens if you change `T_max`?
 # * The dynamical equations use rectangular integration for the right-hand side
 #   terms. Modify the equations to use the [Trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule_(differential_equations))
 #   instead. (As an example, `x_v[t-1]` would become
