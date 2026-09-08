@@ -230,12 +230,12 @@ value.(x)
 
 # To improve performance we can pass a function that computes the Hessian of `V`
 # with respect to the inputs `x`. Computing this Hessian requires some calculus.
-# Let ``f(y, x)`` be the objective function, then:
+# Let ``f(x, y)`` be the objective function, then:
 # ```math
-# \nabla V^2_{xx}(x) = \nabla^2_{xx}f(y^*, x) + \nabla^2_{yx}f(y^*, x) D_x y^*(x)
+# \nabla V^2_{xx}(x) = \nabla^2_{xx}f(x, y^*) + \nabla^2_{yx}f(x, y^*) \cdot D_x y^*(x)
 # ```
 # It is easy to compute ``\nabla^2_xx f`` and ``\nabla^2_yx f`` with calculus.
-# Computing ``D_x y^*(x)` (the derivative of the optimal solution ``y^*`` with
+# Computing ``D_x y^*(x)`` (the derivative of the optimal solution ``y^*`` with
 # respect to the input ``x``) is tricker. However, JuMP has a package,
 # [DiffOpt.jl](@ref) which can do this for us.
 
@@ -256,15 +256,10 @@ function solve_lower_level_with_sensitivity(x...)
     y_star = value.(y)
     dy_dx = zeros(2, 2)
     for j in 1:2
-        attr = DiffOpt.ForwardConstraintSet()
-        ## Reset the parameters
-        set_attribute.(ParameterRef.(p), attr, Parameter.(0.0))
-        ## Set the seed of p[j] to 1
-        set_attribute(ParameterRef(p[j]), attr, Parameter(1.0))
-        ## Differentiate
+        DiffOpt.set_forward_parameter.(model, p, 0.0)
+        DiffOpt.set_forward_parameter(model, p[j], 1.0)
         DiffOpt.forward_differentiate!(model)
-        ## Store the solution
-        dy_dx[:, j] .= get_attribute.(y, DiffOpt.ForwardVariablePrimal())
+        dy_dx[:, j] .= DiffOpt.get_forward_variable.(model, y)
     end
     return y_star, dy_dx
 end
