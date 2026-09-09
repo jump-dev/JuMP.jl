@@ -40,6 +40,7 @@ invalidations
 jll|JLL
 [Jj]ulia
 juxtaposted
+kwarg(?s)
 libblastrampoline
 makespan
 [Mm]ultiline
