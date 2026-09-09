@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added Algencan, CCOpt, ConicIP to solvers (#4218), (#4228), (#4229)
  - Fixed support for HTTP@2 in the documentation (#4227)
  - Fixed various things in the tests and documentation (#4240), (#4241), (#4246), (#4247)
+ - Added [DiffOpt.jl](@ref) to the [Nested optimization problems](@ref) tutorial (#4248)
 
 ## Version v1.31.2 (August 18, 2026)
 
