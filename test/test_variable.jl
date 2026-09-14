@@ -1910,4 +1910,15 @@ function test_variable_in_zeros()
     return
 end
 
+function test_reduced_cost_generic_type()
+    model = direct_generic_model(
+        Rational{Int},
+        MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Rational{Int}}()),
+    )
+    @variable(model, x)
+    MOI.set(backend(model), MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    @test @inferred reduced_cost(x) == 0 // 1
+    return
+end
+
 end  # module TestVariable
