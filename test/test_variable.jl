@@ -1112,9 +1112,9 @@ function test_inf_fixed()
         @test_throws(
             ErrorException(
                 """
-                Unable to fix variable to $y because the value is not finite.
+                Unable to use `$y::Float64` as the fixed value of a variable because it is not finite.
 
-                Use a finite value instead.
+                Ensure that the fixed value is a finite value.
                 """,
             ),
             @variable(model, x == y),
@@ -1907,6 +1907,81 @@ function test_variable_in_zeros()
     c = constraint_object(VariableInSetRef(x))
     @test c.func == x
     @test c.set == MOI.Zeros(2)
+    return
+end
+
+function test_non_finite_bounds()
+    model = Model()
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `Inf::Float64` as the lower bound of a variable because it is not finite.
+
+            Ensure that the lower bound is a finite value.
+            """,
+        ),
+        @variable(model, x >= Inf),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `NaN::Float64` as the lower bound of a variable because it is not finite.
+
+            Ensure that the lower bound is a finite value.
+            """,
+        ),
+        @variable(model, x >= NaN),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `NaN::Float64` as the upper bound of a variable because it is not finite.
+
+            Ensure that the upper bound is a finite value.
+            """,
+        ),
+        @variable(model, x <= NaN),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `-Inf::Float64` as the upper bound of a variable because it is not finite.
+
+            Ensure that the upper bound is a finite value.
+            """,
+        ),
+        @variable(model, x <= -Inf),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `-Inf::Float64` as the upper bound of a variable because it is not finite.
+
+            Ensure that the upper bound is a finite value.
+            """,
+        ),
+        @variable(model, x, upper_bound = -Inf),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `-Inf::Float64` as the start value of a variable because it is not finite.
+
+            Ensure that the start value is a finite value.
+            """,
+        ),
+        @variable(model, x, start = -Inf),
+    )
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `Inf::Float64` as the lower bound of a variable because it is not finite.
+
+            Ensure that the lower bound is a finite value.
+            """,
+        ),
+        @variable(model, x in ComplexPlane(), lower_bound = 1 + Inf * im),
+    )
     return
 end
 
