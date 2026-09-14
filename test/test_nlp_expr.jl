@@ -1445,6 +1445,21 @@ function test_scalar_nonlinear_moi_function_checks_model_with_aliases()
     return
 end
 
+function test_check_belongs_to_model_nonlinear_expression()
+    model = Model()
+    other_model = Model()
+    @variable(model, x)
+    @variable(other_model, y)
+    shared = sin(x)
+    expression = shared + shared
+    @test isnothing(check_belongs_to_model(expression, model))
+    @test_throws VariableNotOwned check_belongs_to_model(
+        expression + sin(y),
+        model,
+    )
+    return
+end
+
 function test_addition_with_zero_Base_sum()
     model = Model()
     @variable(model, x[1:3])
