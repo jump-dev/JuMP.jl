@@ -530,7 +530,7 @@ end
 """
     delete(model::GenericModel, con_ref::ConstraintRef)
 
-Delete the constraint associated with `constraint_ref` from the model `model`.
+Delete the constraint associated with `con_ref` from the model `model`.
 
 Note that `delete` does not unregister the name from the model, so adding a new
 constraint of the same name will throw an error. Use [`unregister`](@ref) to
@@ -681,7 +681,7 @@ abstract type AbstractConstraint end
         coefficient_type::Type{T} = Float64,
     ) where {C<:AbstractConstraint,B<:Type{<:MOI.Bridges.AbstractBridge},T}
 
-An [`AbstractConstraint`](@ref) representinng that `constraint` that can be
+An [`AbstractConstraint`](@ref) representing a `constraint` that can be
 bridged by the bridge of type `bridge_type{coefficient_type}`.
 
 Adding a `BridgeableConstraint` to a model is equivalent to:
@@ -726,7 +726,7 @@ JuMP extensions should extend `JuMP.build_constraint` only if they also defined
  2. A missing method will not inform the users that they forgot to load the
     extension module defining the `build_constraint` method.
  3. Defining a method where neither the function nor any of the argument types
-    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
+    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/#avoid-type-piracy)
     and is discouraged in the Julia style guide.
 """
 struct BridgeableConstraint{C,B,T} <: AbstractConstraint
@@ -1677,9 +1677,6 @@ function all_constraints(
     return result
 end
 
-# TODO: Support vector function types. This is blocked by not having the shape
-# information available.
-
 """
     list_of_constraint_types(model::GenericModel)::Vector{Tuple{Type,Type}}
 
@@ -1818,8 +1815,12 @@ end
 """
     relax_with_penalty!(
         model::GenericModel{T},
-        [penalties::Dict{ConstraintRef,T}];
-        [default::Union{Nothing,Real} = nothing,]
+        penalties::Dict{ConstraintRef,T};
+        default::Union{Nothing,Real} = nothing,
+    ) where {T}
+    relax_with_penalty!(
+        model::GenericModel{T};
+        default::Real = one(T),
     ) where {T}
 
 Destructively modify the model in-place to create a penalized relaxation of the
@@ -1931,7 +1932,7 @@ end
 JuMP uses [`model_convert`](@ref) to automatically promote [`MOI.AbstractScalarSet`](@ref)
 sets to the same [`value_type`](@ref) as the model.
 
-In cases there this is undesirable, wrap the set in `SkipModelConvertScalarSetWrapper`
+In cases where this is undesirable, wrap the set in `SkipModelConvertScalarSetWrapper`
 to pass the set un-changed to the solver.
 
 !!! warning

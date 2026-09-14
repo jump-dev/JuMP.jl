@@ -155,7 +155,7 @@ model = Model();
 # ## Boolean operators
 
 # Binary variables can be used to construct logical operators. Here are some
-# example.
+# examples.
 
 # ### Or
 
@@ -215,7 +215,7 @@ model = Model();
 @variable(model, y[1:2], Bin)
 @constraint(model, y[1] --> {x[1] <= 1})
 @constraint(model, y[2] --> {x[2] <= 2})
-@constraint(model, sum(y) == 1)  # Exactly one branch must be true
+@constraint(model, sum(y) == 1)  # At least one branch must be true
 
 # ### Trick 2
 

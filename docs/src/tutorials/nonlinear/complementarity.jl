@@ -171,10 +171,10 @@ value(K)
 #
 # After making the capital investment, there are five possible consumption
 # scenarios, ``\omega``, which occur with probability ``\theta_\omega``. In each
-# scenario , the producer makes ``Y_ω`` MW of electricity.
+# scenario, the producer makes ``Y_ω`` MW of electricity.
 #
 # There is one consumer in the model, who has a quadratic utility function,
-# ``U(Q_ω) = A_ω Q_ω + \frac{B_ω Q_ω^2}{2}``.
+# ``U(Q_ω) = A_ω Q_ω - \frac{B_ω Q_ω^2}{2}``.
 #
 # We now build and solve the mixed complementarity problem with a few brief
 # comments. The economic justification for the model would require a larger
@@ -213,7 +213,7 @@ solution_summary(model)
 Test.@test isapprox(value(x), 389; atol = 1)
 value(x)
 
-# The production in each scenario is:
+# The consumption in each scenario is:
 
 Test.@test isapprox(value.(Q), [240, 290, 340, 389, 389]; atol = 1)
 value.(Q)

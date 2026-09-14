@@ -26,7 +26,7 @@ using JuMP
 
 # ## The problem
 
-# Consider a transshipment model of a single product from factories to markets.
+# Consider a transportation model of a single product from factories to markets.
 # One way to model the flow variable is:
 
 F, M = 3, 3

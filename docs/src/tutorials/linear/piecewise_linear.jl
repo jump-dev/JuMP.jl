@@ -151,7 +151,7 @@ plot
 # x = \sum\limits_{k=1}^K \lambda_k x_k \\
 # y = \sum\limits_{k=1}^K \lambda_k y_k \\
 # \sum\limits_{k=1}^K \lambda_k = 1 \\
-# \lambda_k \ge 0, k=1,\ldots,k \\
+# \lambda_k \ge 0, k=1,\ldots,K \\
 # \end{aligned}
 # ```
 
@@ -240,9 +240,9 @@ plot
 
 # ## Piecewise linear approximation
 
-# If the model is non-convex (or non-concave), then we cannot use an outer
+# If the function is neither convex nor concave, then we cannot use an outer
 # approximation, and the inner approximation allows a solution far from the true
-# function. For example, for $f(x) = sin(x)$, we have:
+# function. For example, for $f(x) = \sin(x)$, we have:
 
 f(x) = sin(x)
 plot = Plots.plot(f, 0:0.01:2π; label = false)

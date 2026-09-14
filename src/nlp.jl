@@ -754,7 +754,7 @@ end
         op::Symbol,
         dimension::Integer,
         f::Function;
-        autodiff:Bool = false,
+        autodiff::Bool = false,
     )
 
 Register the user-defined function `f` that takes `dimension` arguments in
@@ -837,13 +837,13 @@ end
         dimension::Integer,
         f::Function,
         ∇f::Function;
-        autodiff:Bool = false,
+        autodiff::Bool = false,
     )
 
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
 
-The functions `f`and `∇f` must support all subtypes of `Real` as arguments. Do
+The functions `f` and `∇f` must support all subtypes of `Real` as arguments. Do
 not assume that the inputs are `Float64`.
 
 !!! compat
@@ -1001,12 +1001,12 @@ end
 
 """
     NLPEvaluator(
-        model::Model,
+        model::Model;
         _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
             MOI.Nonlinear.SparseReverseMode(),
     )
 
-Return an [`MOI.AbstractNLPEvaluator`](@ref) constructed from `model`
+Return an [`MOI.AbstractNLPEvaluator`](@ref) constructed from `model`.
 
 !!! warning
     Before using, you must initialize the evaluator using

@@ -427,7 +427,8 @@ end
 # introduced configuration options to control the variables and constraints that
 # get added. There are a few other steps we can do to further improve things:
 #  * remove the dependence on `HiGHS`
-#  * add checks that we found an optimal solution
+#  * return `nothing` with a warning, instead of throwing an error, if we do not
+#    find an optimal solution
 #  * add a helper function to avoid the need to explicitly construct the data.
 
 function solve_knapsack_6(

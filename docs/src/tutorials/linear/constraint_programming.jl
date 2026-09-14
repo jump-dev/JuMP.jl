@@ -116,9 +116,8 @@ n = 1
 
 @constraint(model, variables in MOI.CountAtLeast(n, partitions, values))
 
-# To ensure the uniqueness of the solution, we'll add a constraint that `x[2]`
-# must be `<= 2`. This ensures that the only feasible solution is for `x[1]` and
-# `x[3]` to be `3`:
+# To force `x[1]` and `x[3]` to be `3`, we'll add a constraint that `x[2]` must
+# be `<= 2`:
 
 @constraint(model, x[2] <= 2)
 
@@ -165,11 +164,11 @@ value(n), value.(x)
 # ## CountGreaterThan
 
 # The [`MOI.CountGreaterThan`](@ref) set is used to strictly upper-bound the
-# number of distinct elements in a set of variables that have a value equal to
-# another variable.
+# number of elements in a set of variables that have a value equal to another
+# variable.
 
-# For example, to count the number `n` of times that `y` appears in the vector
-# `x`, use:
+# For example, to bound the number of times that `y` appears in the vector `x`
+# by `n`, use:
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)

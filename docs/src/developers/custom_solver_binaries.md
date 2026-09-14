@@ -124,7 +124,7 @@ There are two ways you can check.
  1. Check the bottom of the JLL's GitHub README. For example,
     [ECOS_jll](https://github.com/JuliaBinaryWrappers/ECOS_jll.jl#products) has
     a single `LibraryProduct` called `libecos`.
- 2. Type `ECOS_jll.` and the press the `[TAB]` key twice to auto-complete
+ 2. Type `ECOS_jll.` and then press the `[TAB]` key twice to auto-complete
     available options:
     ```julia
     julia> ECOS_jll.
@@ -168,7 +168,7 @@ file.
 ## Overriding an entire artifact
 
 Sometimes a solver may provide a number of libraries and executables, and
-specifying the path for each of the becomes tedious. In this case, we can use
+specifying the path for each of them becomes tedious. In this case, we can use
 Julia's `Overrides.toml` to replace an entire artifact.
 
 Overriding an entire artifact requires you to replicate the structure and

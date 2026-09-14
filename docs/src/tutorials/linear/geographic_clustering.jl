@@ -135,7 +135,7 @@ fix(x[1, 1], 1; force = true)
 # The total population of a group $k$ is $Q_k = \sum_ix_{i,k}q_i$ where $q_i$ is
 # simply the $i$-th value from the `population` column in our `cities` DataFrame.
 # Let's add constraints so that $\alpha \leq (Q_k - P) \leq \beta$. We'll set
-# $\alpha$ equal to $-3$ million and $\beta$ equal to $3$. By adjusting
+# $\alpha$ equal to $-3$ million and $\beta$ equal to $3$ million. By adjusting
 # these thresholds you'll find that there is a tradeoff between having
 # relatively even populations between groups and having geographically close
 # cities within each group. In other words, the larger the absolute values of
@@ -150,8 +150,8 @@ fix(x[1, 1], 1; force = true)
 # $\sum_{i,j}d_{i,j}z_{i,j}$. Variable $z_{i,j}$ will equal $1$ if cities $i$
 # and $j$ are in the same group, and $0$ if they are not in the same group.
 
-# To ensure that $z_{i,j} = 1$ if and only if cities $i$ and $j$ are in the same
-# group, we add the constraints $z_{i,j} \geq x_{i,k} + x_{j,k} - 1$ for every
+# To ensure that $z_{i,j} = 1$ if cities $i$ and $j$ are in the same group, we
+# add the constraints $z_{i,j} \geq x_{i,k} + x_{j,k} - 1$ for every
 # pair $i,j$ and every $k$:
 
 @variable(model, z[i=1:n, j=1:i], Bin)

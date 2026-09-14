@@ -246,7 +246,7 @@ Plots.plot!(factors, a .+ b * factors; label = "Linear fit")
 # ## Lesson
 
 # If you write code with `sum-if` type conditions, for example,
-# `@constraint(model, [a in set], sum(x[b] for b in list if condition(a, b))`,
+# `@constraint(model, [a in set], sum(x[b] for b in list if condition(a, b)) <= 1)`,
 # you can improve the performance by caching the elements for which `condition(a, b)`
 # is true.
 

@@ -45,7 +45,7 @@ import Random
 #
 # **Objective**
 # The objective is to minimize the total cost of serving all clients.
-# This costs breaks down into two components:
+# This cost breaks down into two components:
 # * Fixed cost of building a facility.
 # In this example, this cost is $f_{j} = 1, \ \forall j$.
 # * Cost of serving clients from the assigned facility.
@@ -148,7 +148,7 @@ println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
 
-# The threshold 1e-5 ensure that edges between clients and facilities are drawn
+# The threshold 1e-5 ensures that edges between clients and facilities are drawn
 # when `x[i, j] ≈ 1`.
 x_is_selected = isapprox.(value.(x), 1; atol = 1e-5);
 y_is_selected = isapprox.(value.(y), 1; atol = 1e-5);
@@ -205,7 +205,7 @@ p
 # ```
 #
 # Note that, if $y_{j}$ is set to $0$, the capacity constraint above
-# automatically forces $x_{i, j}$ to $0$.
+# automatically forces $x_{i, j}$ to $0$ for every client with $a_{i} > 0$.
 
 # Thus, the capacitated facility location can be formulated as follows
 #
@@ -275,7 +275,7 @@ println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
 
-# The threshold 1e-5 ensure that edges between clients and facilities are drawn
+# The threshold 1e-5 ensures that edges between clients and facilities are drawn
 # when `x[i, j] ≈ 1`.
 x_is_selected = isapprox.(value.(x), 1; atol = 1e-5);
 y_is_selected = isapprox.(value.(y), 1; atol = 1e-5);

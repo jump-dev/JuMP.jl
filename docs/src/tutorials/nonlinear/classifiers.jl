@@ -320,7 +320,7 @@ function solve_kernel_SVM_classifier(
     kwargs...,
 )
     m, n = size(P)
-    K = pairwise_transform(kernel, P)
+    K = pairwise_transform((s, t) -> kernel(s, t; kwargs...), P)
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, 0 <= u[1:m] <= C)

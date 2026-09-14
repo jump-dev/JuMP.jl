@@ -78,7 +78,7 @@ end
 
 # Here the rows are the origins, the columns are the destinations, and the
 # values are the cost of shipping one pogo stick from the origin to the
-# destination. If pogo stick cannot be transported from a source to a
+# destination. If pogo sticks cannot be transported from a source to a
 # destination, then the value is `.`. The final row and final column are the
 # demand and supply of each location respectively.
 
@@ -105,7 +105,7 @@ data = read_data(joinpath(@__DIR__, "transp.txt"))
 # `stdout`:
 
 function solve_transportation_problem(data::Containers.DenseAxisArray)
-    ## Get the set of supplies and demands
+    ## Get the sets of origins and destinations
     O, D = axes(data)
     ## Drop the SUPPLY and DEMAND nodes from our sets
     O, D = setdiff(O, ["DEMAND"]), setdiff(D, ["SUPPLY"])

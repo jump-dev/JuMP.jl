@@ -539,7 +539,7 @@ Here's a summary of the differences:
  * Named constraints have the form `@constraint(model, c, expr)`. For named
    constraints:
    * The `String` name of the constraint is set to `"c"`.
-   * A Julia variable `c` is created that binds `c` to  the JuMP constraint.
+   * A Julia variable `c` is created that binds `c` to the JuMP constraint.
    * The name `:c` is registered as a key in the model with the value `c`.
  * Anonymous constraints have the form `c = @constraint(model, expr)`. For
    anonymous constraints:
@@ -732,7 +732,7 @@ multiple ways to achieve this goal; we explain three options.
 ### Option 1: change the right-hand side
 
 Use [`set_normalized_rhs`](@ref) to modify the right-hand side (constant)
-term of a linear or quadratic  constraint. Use [`normalized_rhs`](@ref) to query
+term of a linear or quadratic constraint. Use [`normalized_rhs`](@ref) to query
 the right-hand side term.
 ```jldoctest
 julia> model = Model();
@@ -790,7 +790,7 @@ The constraint `con` is now equivalent to `2x <= 2`.
 
 The third option is to use [`add_to_function_constant`](@ref). The constant
 given is added to the function of a `func`-in-`set` constraint. In the following
-example, adding `2` to the function has the effect of removing `2` to the
+example, adding `2` to the function has the effect of removing `2` from the
 right-hand side:
 ```jldoctest con_add
 julia> model = Model();
@@ -1434,7 +1434,7 @@ a --> {x + y ≤ 1}
 ```
 
 If the constraint must hold when `a` is zero, add `!` or `¬` before the binary
-variable;
+variable:
 ```jldoctest indicator
 julia> @constraint(model, !a --> {x + y <= 1})
 !a --> {x + y ≤ 1}

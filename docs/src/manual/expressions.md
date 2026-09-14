@@ -394,7 +394,7 @@ zero element, and then creates an appropriately sized array filled with the same
 element.
 
 Note that this behaviour is not JuMP-specific. For example, `zeros(BigInt, 2)`
-will create two copies of the same instance of `BigInt`:
+will create an array containing the same instance of `BigInt` twice:
 ```jldoctest
 julia> x = zeros(BigInt, 2)
 2-element Vector{BigInt}:
@@ -504,7 +504,7 @@ julia> @expression(model, prod(2 for i in 2:0; init = 1.0))
 1.0
 ```
 
-There also cases where you may need to use `init`, for example, when the element
+There are also cases where you may need to use `init`, for example, when the element
 type of the summation is not a scalar:
 ```jldoctest
 julia> model = Model();

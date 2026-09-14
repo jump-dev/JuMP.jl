@@ -84,7 +84,7 @@ import DataFrames
 
 import Plots
 
-# ### CSV .jl
+# ### CSV.jl
 
 # CSV and other delimited text files can be read by the CSV.jl package.
 
@@ -252,7 +252,7 @@ csv_df[1, :] # This produces a DataFrameRow.
 
 # We can change the values just as we normally assign values.
 
-# Assign a range to scalar:
+# Assign a scalar to a range:
 
 csv_df[1:3, :Height] .= 1.83
 
@@ -330,7 +330,7 @@ end
 # Since we wish to visit all the countries, for every country, we must own at
 # least one passport that lets us travel to that country visa free. For one
 # destination, this can be mathematically represented as
-# $\sum_{c \in C} a_{c,d} \cdot x_{d} \geq 1$, where $a$ is the `passport_data`
+# $\sum_{c \in C} a_{c,d} \cdot x_{c} \geq 1$, where $a$ is the `passport_data`
 # dataframe.
 
 # Thus, we can represent this problem using the following model:

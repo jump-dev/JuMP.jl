@@ -62,7 +62,7 @@ nothing            # hide
 
 # Conic programming problems are convex optimization problems in which a convex
 # function is minimized over the intersection of an affine subspace and a convex
-# cone. An example of a conic-form minimization problems, in the primal form is:
+# cone. An example of a conic-form minimization problem, in the primal form is:
 
 # ```math
 # \begin{aligned}
@@ -298,7 +298,7 @@ LinearAlgebra.norm(x, 4), p_norm(x, 4)
 # ## Positive Semidefinite Cone
 
 # The set of positive semidefinite matrices (PSD) of dimension $n$ form a cone
-# in $\mathbb{R}^n$. We write this set mathematically as:
+# in $\mathbb{S}^n$. We write this set mathematically as:
 
 # ```math
 # \mathcal{S}_{+}^n = \{ X \in \mathcal{S}^n \mid z^T X z \geq 0, \: \forall z\in \mathbb{R}^n \}.
@@ -348,6 +348,7 @@ set_silent(model)
 @variable(model, t)
 @constraint(model, sum(x) == 1)
 @constraint(model, [t; x] in MOI.GeometricMeanCone(5))
+@objective(model, Max, t)
 optimize!(model)
 value(t), value.(x)
 
@@ -435,7 +436,7 @@ value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 # ```math
 # K = \{ (t, X) \in \mathbb{R}^{1+m \cdot n} : t \ge \sum_i \sigma_i(X) \}
 # ```
-# where ``\sigma_i`` is the `i` singular value of ``X``.
+# where ``\sigma_i`` is the ``i``-th singular value of ``X``.
 
 model = Model(Clarabel.Optimizer)
 set_silent(model)
@@ -454,7 +455,7 @@ value(t), sum(LinearAlgebra.svdvals(value.(X)))
 # ```math
 # K = \{ (t, X) \in \mathbb{R}^{1+m \cdot n} : t \ge \max_i \sigma_i(X) \}
 # ```
-# where ``\sigma_i`` is the `i` singular value of ``X``.
+# where ``\sigma_i`` is the ``i``-th singular value of ``X``.
 
 model = Model(Clarabel.Optimizer)
 set_silent(model)

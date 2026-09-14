@@ -49,8 +49,8 @@ end
 
 # This is a problem for JuMP, because it requires user-defined operators to
 # return a single number. One option is to define two separate functions, the
-# first returning the first argument, and the second returning the second
-# argument.
+# first returning the first output, and the second returning the second
+# output.
 
 foo_1(x, y) = foo(x, y)[1]
 foo_2(x, y) = foo(x, y)[2]

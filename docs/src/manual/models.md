@@ -50,8 +50,8 @@ julia> set_optimizer(model, HiGHS.Optimizer)
 ```
 
 !!! tip
-    Don't know what the fields `Model mode` and `CachingOptimizer state` mean?
-    Read the [Backends](@ref) section.
+    To learn how JuMP stores the model and communicates with the solver, read
+    the [Backends](@ref) section.
 
 ### What is the difference?
 
@@ -187,7 +187,7 @@ A JuMP Model
 ```
 
 Use `print` to print the formulation of the model (in IJulia, this will render
-as LaTeX.
+as LaTeX).
 ```jldoctest model_print
 julia> print(model)
 Max x
@@ -210,7 +210,7 @@ $$ \begin{aligned}
 \end{aligned} $$
 ```
 
-In IJulia (and Documenter), ending a cell in with [`latex_formulation`](@ref)
+In IJulia (and Documenter), ending a cell with [`latex_formulation`](@ref)
 will render the model in LaTeX:
 
 ```@example
@@ -235,7 +235,7 @@ julia> unset_silent(model)
 
 !!! tip
     Most solvers will also have a [solver-specific option](@ref solver_options)
-    to provide finer-grained control over the output. Consult their README's for
+    to provide finer-grained control over the output. Consult their READMEs for
     details.
 
 ## Set a time limit
@@ -703,7 +703,7 @@ A JuMP Model
     `CachingOptimizer` instead.
 
 The benefit of using [`direct_model`](@ref) is that there are no extra layers
-(for example, `Cachingoptimizer` or `LazyBridgeOptimizer`) between `model` and the
+(for example, `CachingOptimizer` or `LazyBridgeOptimizer`) between `model` and the
 provided optimizer:
 ```jldoctest direct_mode
 julia> backend(model)

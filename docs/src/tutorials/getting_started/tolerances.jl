@@ -28,7 +28,7 @@
 # **Learning intentions:**
 # * Understand the four main solver tolerance types—primal feasibility, dual
 #   feasibility, integrality, and optimality—and why this tutorial focuses on
-#   the first two
+#   primal feasibility and integrality
 # * Recognize when a solution is wrong due to loose tolerances and adjust
 #   solver settings to tighten them
 # * Use [`primal_feasibility_report`](@ref) to check whether a solution
@@ -46,13 +46,13 @@
 # that has no noticeable impact on the quality of the optimal solution. In the
 # worst case, the solver can return a "wrong" solution, or fail to find one even
 # if it exists. (The solution is "wrong" only in the sense of user expectation.
-# It will satisfy the solution to the tolerances that are provided.)
+# It will satisfy the constraints to the tolerances that are provided.)
 #
 # There are a few sources of additional information:
 #  * Ambros Gleixner has an excellent YouTube talk
 #    [Numerics in LP & MIP Solvers](https://youtu.be/rKcdF4Fgl-g?feature=shared)
 #  * Gurobi has a series of articles in their documentation called
-#    [Guidelines for Numerical Issues](https://www.gurobi.com/documentation/current/refman/guidelines_for_numerical_i.html)
+#    [Guidelines for Numerical Issues](https://docs.gurobi.com/projects/optimizer/en/current/concepts/numericguide.html)
 
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.
@@ -86,7 +86,7 @@ import SCS
 # both. The definition and default value of each tolerance is solver-dependent.
 
 # The dual feasibility tolerance is much the same as the primal feasibility
-# tolerance, only that operates on the space of dual solutions instead of the
+# tolerance, only that it operates on the space of dual solutions instead of the
 # primal. HiGHS has `dual_feasibility_tolerance`, but some solvers have only a
 # single feasibility tolerance that uses the same value for both.
 
@@ -171,7 +171,7 @@ value(x[1])
 report = primal_feasibility_report(model)
 
 # `report` is a dictionary which maps constraints to the violation.  The largest
-# violation is approximately `1e-5`:
+# violation is less than `1e-4`:
 
 maximum(values(report))
 
@@ -222,7 +222,7 @@ value(x[1])
 # of increased solve time.
 
 # For example, SCS is a first-order solver. This means it uses only local
-# gradient information at update each iteration. SCS took 100 iterations to
+# gradient information to update at each iteration. SCS took 100 iterations to
 # solve the problem with the default tolerance of `1e-4`, and 550 iterations to
 # solve the problem with `1e-5`. SCS may not be able to find a solution to our
 # problem with a tighter tolerance in a reasonable amount of time.
@@ -486,7 +486,7 @@ model = Model()
 
 # ### Large magnitude ratios
 
-# If the ratio of the smallest to the largest magnitude is too large, then the
+# If the ratio of the largest to the smallest magnitude is too large, then the
 # tolerances or small changes in the input data can lead to large changes in the
 # optimal solution. We have already seen an example with the integrality
 # tolerance, but we can exacerbate the behavior by putting a small coefficient
@@ -513,7 +513,7 @@ primal_feasibility_report(model, Dict(x => 1_000_000.01, y => 1e-6))
 
 # With that caveat in mind, a general rule of thumb to follow is:
 
-# Try to keep the ratio of the smallest to largest coefficient less than $10^6$
+# Try to keep the ratio of the largest to smallest coefficient less than $10^6$
 # in any row and column, and try to keep most values between $10^{-3}$ and
 # $10^6$.
 
@@ -531,10 +531,10 @@ model = Model()
 # This constraint violates the recommendations because there are values greater
 # than $10^6$, and the ratio of the coefficients in the constraint is $10^8$. In
 # real terms, an absolute feasibility tolerance of `1e-8` means that the
-# capacity cost must be not exceed 1 millionth of a cent more than 200 million
+# capacity cost must not exceed 1 millionth of a cent more than 200 million
 # dollars. No financial system measures costs to that level of accuracy.
 
-# One fix is the convert our capacity variable from Watts to Megawatts. This
+# One fix is to convert our capacity variable from Watts to Megawatts. This
 # yields:
 
 model = Model()

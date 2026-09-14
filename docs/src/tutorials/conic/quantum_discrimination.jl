@@ -58,7 +58,7 @@ import LinearAlgebra
 
 N, d = 2, 2
 
-# We then generated `N` random `d`-dimensional quantum states:
+# We then generate `N` random `d`-dimensional quantum states:
 
 function random_state(d)
     x = randn(ComplexF64, (d, d))
@@ -90,7 +90,7 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N]
 @constraint(model, sum(E) == LinearAlgebra.I)
 
 # This constraint is a complex-valued equality constraint. In the solver, it
-# will be decomposed onto two types of equality constraints: one to enforce
+# will be decomposed into two types of equality constraints: one to enforce
 # equality of the real components, and one to enforce equality of the imaginary
 # components.
 
