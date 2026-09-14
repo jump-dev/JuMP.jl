@@ -665,11 +665,12 @@ function test_extension_variables_constrained_on_creation(
     @variable(model, [1:3] ∈ MOI.SecondOrderCone(3))
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 3
 
+    T = value_type(ModelType)
     z = @variable(model, z ∈ MOI.Semiinteger(1.0, 2.0))
-    @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 1
+    @test num_constraints(model, typeof(z), MOI.Semiinteger{T}) == 1
 
     @variable(model, set = MOI.Semiinteger(1.0, 2.0))
-    @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 2
+    @test num_constraints(model, typeof(z), MOI.Semiinteger{T}) == 2
 
     X = @variable(model, [1:3, 1:3] in PSDCone())
     @test X isa LinearAlgebra.Symmetric

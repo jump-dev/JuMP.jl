@@ -1387,7 +1387,7 @@ julia> is_variable_in_set(z)
 true
 
 julia> c_z = VariableInSetRef(z)
-z ∈ MathOptInterface.Semicontinuous{Float64}(1, 2)
+z ∈ MathOptInterface.Semicontinuous{Float64}(1.0, 2.0)
 ```
 
 ### Example: positive semidefinite variables
