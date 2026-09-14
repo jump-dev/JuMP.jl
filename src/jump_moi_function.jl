@@ -69,20 +69,6 @@ function _moi_function_with_model_check(
     return moi_function(model, f)
 end
 
-# Match `check_belongs_to_model(::GenericNonlinearExpr, model)`: containers
-# used as arguments to user-defined operators are opaque leaves. In particular,
-# JuMP extensions may provide `moi_function` for an `AbstractArray` without
-# implementing the complete array interface needed to iterate over it.
-_moi_function_with_model_check_nonlinear_arg(model, f) =
-    moi_function(model, f)
-
-function _moi_function_with_model_check_nonlinear_arg(
-    model,
-    f::AbstractJuMPScalar,
-)
-    return _moi_function_with_model_check(model, f)
-end
-
 """
     jump_function_type(model::AbstractModel, ::Type{T}) where {T}
 
@@ -207,10 +193,8 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         else
-            ret.args[i] = _moi_function_with_model_check_nonlinear_arg(
-                model,
-                f.args[i],
-            )
+            ret.args[i] =
+                _moi_function_with_model_check(model, f.args[i])
         end
     end
     while !isempty(stack)
@@ -226,10 +210,7 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
                 push!(stack, (child, j, arg.args[j]))
             else
                 child.args[j] =
-                    _moi_function_with_model_check_nonlinear_arg(
-                        model,
-                        arg.args[j],
-                    )
+                    _moi_function_with_model_check(model, arg.args[j])
             end
         end
         model.subexpressions[arg] = child
@@ -419,7 +400,7 @@ function _moi_function_with_model_check(
     f::AbstractVector{<:GenericNonlinearExpr},
 )
     return MOI.VectorNonlinearFunction(
-        [moi_function(model, row) for row in f],
+        [_moi_function_with_model_check(model, row) for row in f],
     )
 end
 
