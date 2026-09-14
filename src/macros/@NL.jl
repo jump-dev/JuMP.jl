@@ -231,7 +231,9 @@ end
     @NLobjective(model, sense, expression)
 
 Add a nonlinear objective to `model` with optimization sense `sense`.
-`sense` must be `Max` or `Min`.
+
+`sense` must be the literal `Max` or `Min`., or an [`MOI.OptimizationSense`](@ref)
+enum.
 
 !!! compat
     This macro is part of the legacy nonlinear interface. Consider using the
@@ -397,7 +399,7 @@ end
     @NLexpression(args...)
 
 Efficiently build a nonlinear expression which can then be inserted in other
-nonlinear constraints and the objective. See also [`@expression`].
+nonlinear constraints and the objective. See also [`@expression`](@ref).
 
 !!! compat
     This macro is part of the legacy nonlinear interface. Consider using the

@@ -13,7 +13,7 @@
 # 0-dimensional Array{Tuple{Int64,Int64},0}:
 # (2, 3)
 # ```
-# while we could like it to be a `3`-dimensional array of size `(1, 1)`.
+# while we would like it to be a `2`-dimensional array of size `(1, 1)`.
 # When the user does `@container([2, 3], 1)`, a `DenseAxisArray` of size
 # `(1, 1)`. Another example:
 # ```julia
@@ -23,8 +23,8 @@
 # (3,)  (4,)
 # ```
 # while we need the size to be `(4,)`, not `(2, 2)` when the user does
-# `@container([i = [1, 2; 3 4]], i^2)`.
-# Long story short, we want to tried everything as an iterator without shape
+# `@container([i = [1 2; 3 4]], i^2)`.
+# Long story short, we want to treat everything as an iterator without shape
 # while `Iterators.ProductIterator` does care about preserving the shape
 # when doing the Cartesian product.
 
@@ -33,8 +33,8 @@
         prod::Iterators.ProductIterator{T}
     end
 
-A wrapper type for `Iterators.ProuctIterator` that discards shape information
-and returns a `Vector`.
+A wrapper type for `Iterators.ProductIterator` that discards the shape
+information of each ierator, treating each one as a `Vector`.
 
 Construct a `VectorizedProductIterator` using [`vectorized_product`](@ref).
 """
@@ -63,7 +63,7 @@ _collect(x) = _collect(Base.IteratorSize(x), x)
 """
     vectorized_product(iterators...)
 
-Created a [`VectorizedProductIterator`](@ref).
+Create a [`VectorizedProductIterator`](@ref).
 
 ## Example
 

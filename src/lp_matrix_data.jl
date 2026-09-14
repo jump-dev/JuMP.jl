@@ -64,6 +64,8 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
    corresponding to order of the columns in the matrix form.
  * `affine_constraints::Vector{ConstraintRef}`: a vector of [`ConstraintRef`](@ref),
    corresponding to the order of rows in the matrix form.
+ * `variable_constraints::Vector{ConstraintRef}`: a vector of [`ConstraintRef`](@ref)
+   of the variable bound constraints.
 
 ## Limitations
 

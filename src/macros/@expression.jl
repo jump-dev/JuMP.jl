@@ -16,8 +16,8 @@ and the expression may depend on the indices of the index sets.
 
 ## Keyword arguments
 
- * `container = :Auto`: force the container type by passing `container = Array`,
-   `container = DenseAxisArray`, `container = SparseAxisArray`, or any another
+ * `container = Auto`: force the container type by passing `container = Array`,
+   `container = DenseAxisArray`, `container = SparseAxisArray`, or any other
    container type which is supported by a JuMP extension.
 
 ## Example

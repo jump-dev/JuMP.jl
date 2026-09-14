@@ -10,7 +10,7 @@ Set the objective sense to `sense` and objective function to `func`.
 
 ## `sense`
 
-The objective sense must be either be the literals `Min` or `Max`, or one of the
+The objective sense must be one of the literals `Min` or `Max`, or one of the
 three [`MOI.OptimizationSense`](@ref) enum values ([`MIN_SENSE`](@ref),
 [`MAX_SENSE`](@ref), or [`FEASIBILITY_SENSE`](@ref)).
 

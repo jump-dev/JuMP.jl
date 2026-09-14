@@ -4,9 +4,9 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
-    struct NestedIterator{T}
+    struct NestedIterator{T,C}
         iterators::T # Tuple of functions
-        condition::Function
+        condition::C
     end
 
 Iterators over the tuples that are produced by a nested for loop.
