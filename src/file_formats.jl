@@ -301,7 +301,7 @@ end
         ::Type{GenericModel{T}};
         format::MOI.FileFormats.FileFormat,
         kwargs...,
-    ) where {T{}}
+    ) where {T}
 
 Return a JuMP model read from `io` in the format `format`.
 
