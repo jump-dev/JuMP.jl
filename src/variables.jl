@@ -2722,7 +2722,7 @@ function reduced_cost(x::GenericVariableRef{T})::T where {T}
     if is_fixed(x)
         return sign * dual(FixRef(x))
     end
-    rc = 0.0
+    rc = zero(T)
     if has_upper_bound(x)
         rc += dual(UpperBoundRef(x))
     end
