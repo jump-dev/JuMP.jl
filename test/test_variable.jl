@@ -1923,8 +1923,8 @@ function test_semicontinuous_model_convert()
     model = Model()
     @variable(model, x in Semicontinuous(2, 3))
     set = constraint_object(VariableInSetRef(x)).set
-    @test set == MOI.Semiinteger{Float64}(2.0, 3.0)
-    @test set != MOI.Semiinteger{Int}(2, 3)
+    @test set == MOI.Semicontinuous{Float64}(2.0, 3.0)
+    @test set != MOI.Semicontinuous{Int}(2, 3)
     return
 end
 
