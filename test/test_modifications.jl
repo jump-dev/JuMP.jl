@@ -257,7 +257,7 @@ function test_set_normalized_rhs_vector()
     model.is_model_dirty = false  # Hack!
     set_normalized_rhs([c], [2])
     @test model.is_model_dirty
-    @test normalized_rhs([c]) == [2]
+    @test normalized_rhs(c) == 2
     return
 end
 
