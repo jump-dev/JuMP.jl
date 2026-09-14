@@ -837,7 +837,16 @@ expressions. To make common operations like `lower_bound(x)` work, we should
 forward the method if and only if `x` is convertible to a `GenericVariableRef`.
 """
 function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
-    if length(x.terms) != 1
+    if !iszero(x.constant)
+        error(
+            """
+            Cannot call `$f` with the affine expression `$x` because the expression \
+            has a non-zero constant.
+
+            `$f` can be called only with affine expressions of the form `1.0 * x`.
+            """,
+        )
+    elseif length(x.terms) != 1
         error(
             """
             Cannot call `$f` with the affine expression `$x` because the expression

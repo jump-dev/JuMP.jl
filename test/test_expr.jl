@@ -507,12 +507,34 @@ function test_aff_expr_complex_HermitianPSDCone()
         ),
         start_value(imag(x[2, 1])),
     )
+    return
+end
+
+function test_eval_as_variable_no_terms()
     y = AffExpr(0.0)
     @test_throws(
         ErrorException(
             """
             Cannot call `$start_value` with the affine expression `$y` because the expression
             does not have exactly one term.
+
+            `$start_value` can be called only with affine expressions of the form `1.0 * x`.
+            """,
+        ),
+        start_value(y),
+    )
+    return
+end
+
+function test_eval_as_variable_with_constant()
+    model = Model()
+    @variable(model, x, start = 1)
+    y = 1.0 * x + 2.0
+    @test_throws(
+        ErrorException(
+            """
+            Cannot call `$start_value` with the affine expression `$y` because \
+            the expression has a non-zero constant.
 
             `$start_value` can be called only with affine expressions of the form `1.0 * x`.
             """,
