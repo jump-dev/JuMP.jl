@@ -532,7 +532,7 @@ end
         value,
     ) where {S}
 
-Update `info_exr` for a variable expression in the `@variable` macro of the form
+Update `info_expr` for a variable expression in the `@variable` macro of the form
 `variable name S value`.
 """
 function parse_one_operator_variable(
