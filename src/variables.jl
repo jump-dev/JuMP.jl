@@ -2994,6 +2994,9 @@ function _relax_or_fix_integrality(
         for (v, solution, info) in info_pre_relaxation
             if solution !== nothing
                 unfix(v)
+                if info.has_fix
+                    fix(v, info.fixed_value)
+                end
             end
             if info.has_lb
                 set_lower_bound(v, info.lower_bound)

@@ -1921,4 +1921,23 @@ function test_reduced_cost_generic_type()
     return
 end
 
+function test_fix_discrete_variables_fixed()
+    model = Model()
+    @variable(model, x == 1, Bin, start = 0) # Weird start for the test
+    @variable(model, y >= 0, Int, start = 1)
+    @constraint(model, y <= x)
+    undo = fix_discrete_variables(start_value, model)
+    @test is_fixed(x)
+    @test fix_value(x) == 0
+    @test is_fixed(y)
+    @test fix_value(y) == 1
+    undo()
+    @test is_fixed(x)
+    @test fix_value(x) == 1
+    @test !is_fixed(y)
+    @test has_lower_bound(y)
+    @test lower_bound(y) == 0
+    return
+end
+
 end  # module TestVariable
