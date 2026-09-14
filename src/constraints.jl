@@ -1098,12 +1098,14 @@ function set_normalized_rhs(
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
+    model = owner_model(con_ref)
     MOI.set(
-        owner_model(con_ref),
+        model,
         MOI.ConstraintSet(),
         con_ref,
         S(convert(T, value)),
     )
+    model.is_model_dirty = true
     return
 end
 
@@ -1152,12 +1154,14 @@ function set_normalized_rhs(
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
+    model = owner_model(first(constraints))
     MOI.set(
-        backend(owner_model(first(constraints))),
+        backend(model),
         MOI.ConstraintSet(),
         index.(constraints),
         S.(convert.(T, values)),
     )
+    model.is_model_dirty = true
     return
 end
 
@@ -1912,6 +1916,7 @@ function relax_with_penalty!(
         backend(model),
         MOI.Utilities.PenaltyRelaxation(moi_penalties; default = default),
     )
+    model.is_model_dirty = true
     return Dict(
         constraint_ref_with_index(model, k) => jump_function(model, v) for
         (k, v) in map
@@ -1922,7 +1927,7 @@ function relax_with_penalty!(
     model::GenericModel{T};
     default::Real = one(T),
 ) where {T}
-    return relax_with_penalty!(model, Dict(); default = default)
+    return relax_with_penalty!(model, Dict(); default)
 end
 
 """
