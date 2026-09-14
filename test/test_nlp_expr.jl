@@ -1378,6 +1378,13 @@ function JuMP.moi_function(x::ContiguousVectorOfVariableRefs)
     return ContiguousVectorOfVariableIndices(x.offset, x.length)
 end
 
+function JuMP.check_belongs_to_model(
+    ::ContiguousVectorOfVariableRefs,
+    ::JuMP.AbstractModel,
+)
+    return
+end
+
 function test_custom_array()
     model = Model()
     @variable(model, x[1:2], container = Contiguous())
