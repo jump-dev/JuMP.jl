@@ -1423,6 +1423,21 @@ function test_scalar_nonlinear_moi_function()
     return
 end
 
+function test_scalar_nonlinear_moi_function_checks_model_with_aliases()
+    model = Model()
+    other_model = Model()
+    @variable(model, x)
+    @variable(other_model, y)
+    shared = sin(x)
+    expression = shared + shared
+    @test moi_function(model, expression).args[1] ===
+          moi_function(model, expression).args[2]
+    @test_throws VariableNotOwned moi_function(model, shared + sin(y))
+    @test_throws VariableNotOwned @constraint(model, shared + sin(y) == 0)
+    @test_throws VariableNotOwned @objective(model, Min, shared + sin(y))
+    return
+end
+
 function test_addition_with_zero_Base_sum()
     model = Model()
     @variable(model, x[1:3])

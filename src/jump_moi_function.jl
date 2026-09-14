@@ -52,6 +52,23 @@ function moi_function end
 # introduced in JuMP@1.31.0.
 moi_function(model, f) = moi_function(f)
 
+# Convert a JuMP function to an MOI function while checking that its variables
+# belong to `model`. Specialized methods may fuse the two traversals.
+_moi_function_with_model_check(model, f) = moi_function(model, f)
+
+function _moi_function_with_model_check(model, f::AbstractJuMPScalar)
+    check_belongs_to_model(f, model)
+    return moi_function(model, f)
+end
+
+function _moi_function_with_model_check(
+    model,
+    f::AbstractVector{<:AbstractJuMPScalar},
+)
+    check_belongs_to_model(f, model)
+    return moi_function(model, f)
+end
+
 """
     jump_function_type(model::AbstractModel, ::Type{T}) where {T}
 
@@ -176,7 +193,8 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         else
-            ret.args[i] = moi_function(model, f.args[i])
+            ret.args[i] =
+                _moi_function_with_model_check(model, f.args[i])
         end
     end
     while !isempty(stack)
@@ -191,13 +209,21 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
             else
-                child.args[j] = moi_function(model, arg.args[j])
+                child.args[j] =
+                    _moi_function_with_model_check(model, arg.args[j])
             end
         end
         model.subexpressions[arg] = child
     end
     model.subexpressions[f] = ret
     return ret
+end
+
+function _moi_function_with_model_check(
+    model::GenericModel,
+    f::GenericNonlinearExpr,
+)
+    return moi_function(model, f)
 end
 
 # A backwards-compatible function to preserve behavior prior to #4032. As one
@@ -369,6 +395,15 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
     return MOI.VectorNonlinearFunction(f)
 end
 
+function _moi_function_with_model_check(
+    model::GenericModel,
+    f::AbstractVector{<:GenericNonlinearExpr},
+)
+    return MOI.VectorNonlinearFunction(
+        [moi_function(model, row) for row in f],
+    )
+end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VectorNonlinearFunction},
@@ -442,6 +477,10 @@ end
 
 function moi_function(model, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
+end
+
+function _moi_function_with_model_check(model, constraint::AbstractConstraint)
+    return _moi_function_with_model_check(model, jump_function(constraint))
 end
 
 """

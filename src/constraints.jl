@@ -1040,8 +1040,8 @@ function add_constraint(
     name::String = "",
 )
     con = model_convert(model, con)
-    check_belongs_to_model(con, model)
-    func, set = moi_function(model, con), moi_set(con)
+    func = _moi_function_with_model_check(model, con)
+    set = moi_set(con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     cindex = _moi_add_constraint(
