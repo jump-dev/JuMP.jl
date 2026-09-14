@@ -342,7 +342,7 @@ x
 julia> print(model)
 Feasibility
 Subject to
- x ∈ MathOptInterface.Semicontinuous{Float64}(1, 2)
+ x ∈ MathOptInterface.Semicontinuous{Float64}(1.0, 2.0)
 ```
 """
 struct Semicontinuous{T} <: AbstractScalarSet
@@ -383,7 +383,7 @@ x
 julia> print(model)
 Feasibility
 Subject to
- x ∈ MathOptInterface.Semiinteger{Int64}(3, 5)
+ x ∈ MathOptInterface.Semiinteger{Float64}(3.0, 5.0)
 ```
 """
 struct Semiinteger{T} <: AbstractScalarSet
