@@ -3076,9 +3076,9 @@ function test_array_scalar_sets()
     model = Model()
     sets = [Semicontinuous(2, 3), Semiinteger(2, 3)]
     @variable(model, x[1:2] in sets)
-    c = only(all_constraints(model, VariableRef, MOI.Semicontinuous{Int}))
+    c = only(all_constraints(model, VariableRef, MOI.Semicontinuous{Float64}))
     @test constraint_object(c).func == x[1]
-    c = only(all_constraints(model, VariableRef, MOI.Semiinteger{Int}))
+    c = only(all_constraints(model, VariableRef, MOI.Semiinteger{Float64}))
     @test constraint_object(c).func == x[2]
     return
 end
