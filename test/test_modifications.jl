@@ -239,4 +239,36 @@ function test_status_direct()
     return
 end
 
+function test_set_normalized_rhs()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    model.is_model_dirty = false  # Hack!
+    set_normalized_rhs(c, 2)
+    @test model.is_model_dirty
+    @test normalized_rhs(c) == 2
+    return
+end
+
+function test_set_normalized_rhs_vector()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    model.is_model_dirty = false  # Hack!
+    set_normalized_rhs([c], [2])
+    @test model.is_model_dirty
+    @test normalized_rhs(c) == 2
+    return
+end
+
+function test_relax_with_penalty()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    model.is_model_dirty = false  # Hack!
+    penalties = relax_with_penalty!(model)
+    @test model.is_model_dirty
+    return
+end
+
 end
