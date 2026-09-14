@@ -358,6 +358,11 @@ function moi_set(set::Semicontinuous{T}) where {T}
     return MOI.Semicontinuous{T}(set.lower, set.upper)
 end
 
+function model_convert(model::AbstractModel, set::MOI.Semicontinuous)
+    T = value_type(typeof(model))
+    return MOI.Semicontinuous{T}(set.lower, set.upper)
+end
+
 """
     Semiinteger(lower, upper)
 
@@ -391,6 +396,11 @@ struct Semiinteger{T} <: AbstractScalarSet
 end
 
 function moi_set(set::Semiinteger{T}) where {T}
+    return MOI.Semiinteger{T}(set.lower, set.upper)
+end
+
+function model_convert(model::AbstractModel, set::MOI.Semiinteger)
+    T = value_type(typeof(model))
     return MOI.Semiinteger{T}(set.lower, set.upper)
 end
 

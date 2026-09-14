@@ -2013,4 +2013,22 @@ function test_non_finite_bounds()
     return
 end
 
+function test_semiinteger_model_convert()
+    model = Model()
+    @variable(model, x in Semiinteger(2, 3))
+    set = constraint_object(VariableInSetRef(x)).set
+    @test set == MOI.Semiinteger{Float64}(2.0, 3.0)
+    @test set != MOI.Semiinteger{Int}(2, 3)
+    return
+end
+
+function test_semicontinuous_model_convert()
+    model = Model()
+    @variable(model, x in Semicontinuous(2, 3))
+    set = constraint_object(VariableInSetRef(x)).set
+    @test set == MOI.Semiinteger{Float64}(2.0, 3.0)
+    @test set != MOI.Semiinteger{Int}(2, 3)
+    return
+end
+
 end  # module TestVariable
