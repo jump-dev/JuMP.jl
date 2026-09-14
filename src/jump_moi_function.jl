@@ -193,8 +193,7 @@ function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         else
-            ret.args[i] =
-                _moi_function_with_model_check(model, f.args[i])
+            ret.args[i] = _moi_function_with_model_check(model, f.args[i])
         end
     end
     while !isempty(stack)
@@ -399,9 +398,9 @@ function _moi_function_with_model_check(
     model::GenericModel,
     f::AbstractVector{<:GenericNonlinearExpr},
 )
-    return MOI.VectorNonlinearFunction(
-        [_moi_function_with_model_check(model, row) for row in f],
-    )
+    return MOI.VectorNonlinearFunction([
+        _moi_function_with_model_check(model, row) for row in f
+    ],)
 end
 
 function jump_function_type(
