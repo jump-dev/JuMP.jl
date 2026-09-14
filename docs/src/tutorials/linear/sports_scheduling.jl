@@ -55,7 +55,7 @@ M = [
     "Iowa",     # University of Iowa
     "MSU",      # Michigan State University
     "NU",       # Northwestern University
-    "OSU",      # The Ohio State Univesity
+    "OSU",      # The Ohio State University
     "Penn",     # Pennsylvania State University
     "Purd",     # Purdue University
     "Rtgrs",    # Rutgers University
@@ -71,7 +71,7 @@ M = [
 
 T = length(M) - 1;
 
-# Now we create a JuMP model to build our optimzation problem:
+# Now we create a JuMP model to build our optimization problem:
 
 model = Model(HiGHS.Optimizer);
 
@@ -84,7 +84,7 @@ model = Model(HiGHS.Optimizer);
 
 @constraint(model, [m in M, t in 1:T], x[m, m, t] == 0);
 
-# Constraint: each team `m` can play at most once per day
+# Constraint: each team `m` can play at most once per week
 
 @constraint(model, [m in M, t in 1:T], sum(x[m, :, t]) + sum(x[:, m, t]) <= 1);
 
@@ -104,7 +104,7 @@ model = Model(HiGHS.Optimizer);
     sum(x[m, n, :]) + sum(x[n, m, :]) == 1,
 );
 
-# One problem with out model is that there is a lot of symmetry. To make the
+# One problem with our model is that there is a lot of symmetry. To make the
 # problem easier to solve, we fix the schedule of a random team to play every
 # team in order, alternating between home and away:
 
@@ -180,7 +180,7 @@ set_time_limit_sec(model, 30.0)
 
 set_start_value.(x, Y)
 for m in M, t in 2:T
-    set_start_value(y[m, t], sum(Y[:, m, (t-1):t]) - 1)
+    set_start_value(y[m, t], max(0, sum(Y[:, m, (t-1):t]) - 1))
 end
 
 # Now we can optimize:

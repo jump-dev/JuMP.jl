@@ -47,8 +47,8 @@ import Test
 # ``z_{m,f}`` is ``1`` if factory ``f`` runs in month ``m``. The factory must
 # produce enough units to satisfy demand ``d_m``.
 
-# With a little effort, we can formulate our problem as the following linear
-# program:
+# With a little effort, we can formulate our problem as the following
+# mixed-integer linear program:
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} \\
@@ -79,7 +79,7 @@ import Test
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} + \sum\limits_{m \in M}10000 \delta_m \\
 # \text{s.t.} & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
 #             & x_{m,f} \ge l_f z_{m,f} && \forall f \in F, m \in M \\
-#             & \sum\limits_{f\in F} x_{m,f} - \delta_m = d_m && \forall m \in M \\
+#             & \sum\limits_{f\in F} x_{m,f} + \delta_m = d_m && \forall m \in M \\
 #             & z_{m,f} \in \{0, 1\} && \forall f \in F, m \in M \\
 #             & \delta_m \ge 0 && \forall m \in M.
 # \end{aligned}
@@ -275,7 +275,7 @@ StatsPlots.groupedbar(
 # Let's run another experiment, this time seeing how the optimal objective
 # value changes as we vary the variable costs of each factory.
 
-# First though, let's reset the demand to it's original level:
+# First though, let's reset the demand to its original level:
 
 demand_df.demand ./= 1.5;
 

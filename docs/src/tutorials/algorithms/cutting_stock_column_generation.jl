@@ -15,7 +15,7 @@
 #   starting from a small set and iteratively adding only the most profitable one,
 #   guided by LP dual variables
 # * Formulate the pricing subproblem as a knapsack integer program whose objective
-#   uses the current dual prices, and recognize a positive reduced cost as the
+#   uses the current dual prices, and recognize a negative reduced cost as the
 #   signal that a new column is worth adding
 # * Convert the final LP relaxation to a practical integer solution by
 #   re-imposing integrality and re-solving
@@ -117,7 +117,7 @@ data = get_data()
 # ```
 # The objective is to minimize the number of rolls that we use, and the two
 # constraints ensure that we respect the total width of each large roll and that
-# we satisfy demand exactly.
+# we satisfy demand.
 
 # The JuMP formulation of this model is:
 
@@ -158,7 +158,7 @@ solution_summary(model)
 #
 # Another solution is
 #
-#  * ``x_{20,1} = 19`` (19 unit of piece \#20)
+#  * ``x_{20,1} = 19`` (19 units of piece \#20)
 #  * All other ``x_{i,1} = 0``
 #
 # Cutting patterns like ``x_{1,1} = 1`` and ``x_{2,1} = 1`` are infeasible
@@ -286,7 +286,7 @@ assert_is_solved_and_feasible(model; dual = true)
 # \end{align}
 # ```
 # If this problem, called the _pricing problem_, has an objective value greater
-# than ``1``, then we estimate than adding `y` as the coefficients of a new
+# than ``1``, then we estimate that adding `y` as the coefficients of a new
 # column will decrease the objective by more than the cost of an extra roll.
 
 # Here is code to solve the pricing problem:
@@ -370,7 +370,7 @@ solution = DataFrames.DataFrame([
 filter!(row -> row.rolls > 0, solution)
 
 # Since we solved a linear program, some of our columns have fractional
-# solutions. We can create a integer feasible solution by rounding up the
+# solutions. We can create an integer feasible solution by rounding up the
 # orders. This requires 306 rolls:
 
 Test.@test sum(ceil.(Int, solution.rolls)) == 306

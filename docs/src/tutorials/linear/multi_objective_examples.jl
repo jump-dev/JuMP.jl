@@ -5,8 +5,8 @@
 
 # # Simple multi-objective examples
 
-# This tutorial presents three worked examples of multi-objective linear programs
-# —a bi-objective LP, a bi-objective assignment problem, and a bi-objective
+# This tutorial presents three worked examples of multi-objective (integer)
+# linear programs—a bi-objective LP, a bi-objective assignment problem, and a bi-objective
 # shortest path problem—drawn from the operations research literature. It
 # introduces the core JuMP and MultiObjectiveAlgorithms.jl workflow for
 # enumerating Pareto-optimal solutions.

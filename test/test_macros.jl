@@ -2225,7 +2225,7 @@ function test_constraint_unsupported_operator()
             @constraint(model, x >= 1)
             @constraint(model, x <= 1)
             @constraint(model, x == 1)
-            @constraint(model, 1 - x ⟂ 1)
+            @constraint(model, 1 - x ⟂ x)
             @constraint(model, x in MOI.ZeroOne())
             ```
 

@@ -54,7 +54,7 @@ If the filename ends in `.bz2`, the file will be compressed using BZip2.
 
 Other `kwargs` are passed to the `Model` constructor of the chosen format.
 
-For details, see the docstring each file format's `Model` constructor. For
+For details, see the docstring of each file format's `Model` constructor. For
 example, [`MOI.FileFormats.MPS.Model`](@ref).
 
 ## Example
@@ -161,7 +161,7 @@ Other `kwargs` are passed to the `Model` constructor of the chosen format.
 
 Other `kwargs` are passed to the `Model` constructor of the chosen format.
 
-For details, see the docstring each file format's `Model` constructor. For
+For details, see the docstring of each file format's `Model` constructor. For
 example, [`MOI.FileFormats.MPS.Model`](@ref).
 
 ## Example
@@ -239,7 +239,7 @@ See [`MOI.FileFormats.FileFormat`](@ref) for a list of supported formats.
 
 Other `kwargs` are passed to the `Model` constructor of the chosen format.
 
-For details, see the docstring each file format's `Model` constructor. For
+For details, see the docstring of each file format's `Model` constructor. For
 example, [`MOI.FileFormats.MPS.Model`](@ref).
 
 ## Nonlinear models
@@ -298,10 +298,10 @@ end
 """
     Base.read(
         io::IO,
-        ::Type{<:GenericModel};
+        ::Type{GenericModel{T}};
         format::MOI.FileFormats.FileFormat,
         kwargs...,
-    )
+    ) where {T}
 
 Return a JuMP model read from `io` in the format `format`.
 
@@ -311,7 +311,7 @@ See [`MOI.FileFormats.FileFormat`](@ref) for a list of supported formats.
 
 Other `kwargs` are passed to the `Model` constructor of the chosen format.
 
-For details, see the docstring each file format's `Model` constructor. For
+For details, see the docstring of each file format's `Model` constructor. For
 example, [`MOI.FileFormats.MPS.Model`](@ref).
 
 ## Nonlinear models

@@ -67,13 +67,13 @@ julia> x = @variable(model, set = ComplexPlane())
 _[1] + _[2] im
 ```
 
-## Complex-valued variable and start values bounds
+## Complex-valued variable bounds and start values
 
 Because complex-valued variables lack a total ordering, the definition of a
 variable bound for a complex-valued variable is ambiguous. If you pass a real-
 or complex-valued argument to keywords such as `lower_bound`, `upper_bound`,
-and `start_value`, JuMP will apply the real and imaginary parts to the
-associated real-valued variables.
+and `start`, JuMP will apply the real and imaginary parts to the associated
+real-valued variables.
 
 ```jldoctest complex_variables
 julia> model = Model();
@@ -132,7 +132,7 @@ julia> start_value(imag(x))
 
 JuMP reformulates complex-valued equality constraints into two real-valued
 constraints: one representing the real part, and one representing the imaginary
-part. Thus, complex-valued equality constraints can be solved any solver that
+part. Thus, complex-valued equality constraints can be solved by any solver that
 supports the real-valued constraint type.
 
 For example:
@@ -221,7 +221,7 @@ julia> value(x_real) + value(x_imag) * im
 
 ## Hermitian PSD Cones
 
-JuMP supports creating matrices where are Hermitian.
+JuMP supports creating matrices that are Hermitian.
 ```jldoctest hermitian_psd_cone
 julia> model = Model();
 

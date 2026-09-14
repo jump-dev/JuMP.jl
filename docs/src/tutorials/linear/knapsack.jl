@@ -67,7 +67,7 @@ n = 5;
 
 capacity = 10.0;
 
-# and the profit and cost data:
+# and the profit and weight data:
 
 profit = [5.0, 3.0, 2.0, 7.0, 4.0];
 weight = [2.0, 8.0, 4.0, 2.0, 5.0];

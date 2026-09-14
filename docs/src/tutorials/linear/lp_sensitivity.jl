@@ -74,7 +74,7 @@ report = lp_sensitivity_report(model)
 
 # Both tuples are relative, rather than absolute. So, given an objective
 # coefficient of `1.0` and a tuple `(-0.5, 0.5)`, the objective coefficient can
-# range between `1.0 - 0.5` an `1.0 + 0.5`.
+# range between `1.0 - 0.5` and `1.0 + 0.5`.
 
 # For example:
 
@@ -87,8 +87,8 @@ report[x]
 report[c1]
 
 # means that the right-hand side of the `c1` constraint (100), can decrease
-# by 4 units, or increase by 2.85 units, and the primal solution `(15, 1.25)`
-# will remain optimal.
+# by 4 units, or increase by 2.86 units, and the current basis will remain
+# optimal (although the primal solution will change).
 
 # ## Variable sensitivity
 

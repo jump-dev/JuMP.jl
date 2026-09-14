@@ -331,7 +331,7 @@ function an_incorrect_way_to_build_with_multithreading()
     return model
 end
 
-# This code errors (although on same Julia versions it may just return a model
+# This code errors (although on some Julia versions it may just return a model
 # that is missing some constraints):
 # ```julia
 # julia> an_incorrect_way_to_build_with_multithreading()
@@ -484,7 +484,7 @@ run_channel_example(15)
 # ````
 
 # Unfortunately, if you try this code directly, you will get an error message
-# that says `On worker 2: UndefVarError: hard_work not defined`. The error is
+# that says `On worker 2: UndefVarError: #hard_work not defined`. The error is
 # thrown because, although process `1` knows what the `hard_work` function is,
 # the worker processes do not.
 
@@ -582,7 +582,7 @@ run_channel_example(15)
 # GPU.
 
 # One example is [SCS.jl](@ref), which supports using a GPU to internally solve
-# a system of linear equations. If you are on `x86_64` Linux machine, do:
+# a system of linear equations. If you are on an `x86_64` Linux machine, do:
 # ```julia
 # julia> using JuMP
 #

@@ -92,7 +92,7 @@ for ind in 1:9  # Each row, OR each column
     end
 end
 
-# Finally, we have the to enforce the constraint that each digit appears once in
+# Finally, we have to enforce the constraint that each digit appears once in
 # each of the nine 3x3 sub-grids. Our strategy will be to index over the
 # top-left corners of each 3x3 square with `for` loops, then sum over the
 # squares.

@@ -631,12 +631,12 @@ function container_code(
 end
 
 """
-    @container([i=..., j=..., ...], expr[, container = :Auto])
+    @container([i=..., j=..., ...], expr[, container = Auto])
 
 Create a container with indices `i`, `j`, ... and values given by `expr` that
 may depend on the value of the indices.
 
-    @container(ref[i=..., j=..., ...], expr[, container = :Auto])
+    @container(ref[i=..., j=..., ...], expr[, container = Auto])
 
 Same as above but the container is assigned to the variable of name `ref`.
 

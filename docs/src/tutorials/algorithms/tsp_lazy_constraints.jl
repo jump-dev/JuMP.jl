@@ -273,7 +273,7 @@ plot_tour(X, Y, value.(iterative_model[:x]))
 #     constraints. For more information on callbacks, read the page
 #     [Solver-independent callbacks](@ref callbacks_manual).
 
-# As before, we construct the same first-stage subproblem:
+# As before, we construct the same TSP model:
 
 lazy_model = build_tsp_model(d, n, optimizer)
 function subtour_elimination_callback(cb_data)

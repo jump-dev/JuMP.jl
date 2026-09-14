@@ -73,7 +73,7 @@ typeof(constraint.func)
 
 typeof(constraint.set)
 
-# The syntax for adding and objective is the same as a normal JuMP model, except
+# The syntax for adding an objective is the same as a normal JuMP model, except
 # that coefficients are converted to `BigFloat`:
 
 @objective(model, Min, 3x[1]^2 + 2x[2]^2 - x[1] - big"4" * x[2])

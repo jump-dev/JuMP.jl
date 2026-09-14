@@ -207,7 +207,7 @@ JuMP computes first- and second-order derivatives using sparse reverse-mode
 automatic differentiation. For details, see [ReverseAD](@ref).
 
 For a tutorial on how to construct and query the derivatives, see
-[Computing Hessians](@ref)
+[Computing Hessians](@ref).
 
 ## Nonlinear expressions in detail
 
@@ -542,7 +542,7 @@ Instead, unless [Gradients and Hessians](@ref) are explicitly provided,
 user-defined operators must support automatic differentiation by
 [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl).
 
-The use of FowardDiff.jl has two important implications:
+The use of ForwardDiff.jl has two important implications:
 
  1. ForwardDiff.jl supports only a limited subset of Julia. If you encounter an
     error adding the operator, see [Common mistakes when writing a user-defined operator](@ref).
@@ -788,7 +788,7 @@ ERROR: MethodError: no method matching Float64(::ForwardDiff.Dual{ForwardDiff.Ta
 ```
 
 Unfortunately, the list of calls supported by ForwardDiff is too large to
-enumerate what is an isn't allowed, so the best advice is to try and see if it
+enumerate what is and isn't allowed, so the best advice is to try and see if it
 works.
 
 #### Operator does not accept splatted input

@@ -140,7 +140,7 @@ plot
 # A risk measure is a function which maps a random variable to a real number.
 # Common risk measures include the mean (expectation), median, mode, and
 # maximum. We need a risk measure to convert the distribution of second stage
-# costs into a single number that can be optimized.
+# profits into a single number that can be optimized.
 
 # Our model currently uses the expectation risk measure, but others are possible
 # too. One popular risk measure is the conditional value at risk (CVaR).

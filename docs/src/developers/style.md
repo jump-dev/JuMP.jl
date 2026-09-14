@@ -15,7 +15,7 @@ a style guide include:
   style guide)
 
 In some cases, the JuMP style guide diverges from the
-[Julia style guide](https://docs.julialang.org/en/v1.0.0/manual/style-guide/).
+[Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/).
 All such cases will be explicitly noted and justified.
 
 The JuMP style guide adopts many recommendations from the
@@ -80,7 +80,7 @@ my_sum (generic function with 1 method)
 This function contains a number of implicit assumptions about the type of `x`:
  * `x` supports 1-based `getindex` and implements `length`
  * The element type of `x` supports addition with `0.0`, and then with the
-   result of `x + 0.0`.
+   result of `x[i] + 0.0`.
 
 !!! info
     As a motivating example for the second point, [`VariableRef`](@ref) plus
@@ -110,7 +110,7 @@ passed by the user.
 
 #### Dealing with `MethodError`s
 
-This section diverges from the [Julia style guide](https://docs.julialang.org/en/v1.6/manual/style-guide/#Avoid-writing-overly-specific-types),
+This section diverges from the [Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-writing-overly-specific-types),
 as well as other common guides like [SciML](https://github.com/SciML/SciMLStyle#generic-code-is-preferred-unless-code-is-known-to-be-specific).
 The following suggestions are intended to provide a friendlier experience for
 novice Julia programmers, at the cost of limiting the power and flexibility of
@@ -249,7 +249,7 @@ This function makes the following assumptions:
 
  * That `zero(T)` is defined
  * That `x` supports the iteration interface
- * That  `+(::T, ::T)` is defined
+ * That `+(::T, ::T)` is defined
 """
 function my_sum_defensive(x::AbstractArray{T}) where {T}
     test_my_sum_defensive_assumptions(x)
@@ -270,7 +270,7 @@ This function works on `Vector{Float64}`:
 julia> my_sum_defensive([1.0, 2.0, 3.0])
 6.0
 ```
-as well as `Matrix{Rational{Int}}`:
+as well as `Vector{Complex{Rational{Int}}}`:
 ```jldoctest my_sum
 julia> my_sum_defensive([(1//2) + (4//3)im; (6//5) + (7//11)im])
 17//10 + 65//33*im
@@ -553,7 +553,7 @@ points more specific to Julia and documentation that use [Documenter](https://gi
    ```
    [`VariableRef`](@ref)s
    ```
- - Use [`@meta`](https://juliadocs.github.io/Documenter.jl/v0.21/man/syntax/#@meta-block-1)
+ - Use [`@meta`](https://documenter.juliadocs.org/stable/man/syntax/#@meta-block)
    blocks for TODOs and other comments that shouldn't be visible to readers.
    For example,
    ````@markdown

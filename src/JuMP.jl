@@ -1191,8 +1191,8 @@ function _get_index_keyword_indexing_error()
         """
         Indexing an `Array` with keyword arguments is not supported.
 
-        Indexing with keyword arguments _is_ supported for `Container.DenseAxisArray`
-        (and `Container.SparseAxisArray`).
+        Indexing with keyword arguments _is_ supported for `Containers.DenseAxisArray`
+        (and `Containers.SparseAxisArray`).
 
         Force the container type by passing `container = DenseAxisArray` to any of
         the JuMP macros. For example:

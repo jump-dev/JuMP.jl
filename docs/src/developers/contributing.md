@@ -140,7 +140,7 @@ Open Julia and run:
 ] dev JuMP
 ```
 This will download the JuMP Git repository to `~/.julia/dev/JuMP`. If you're on
-Windows, this will be `C:\\Users\\<my_name>\\.julia\\dev\\JuMP`.
+Windows, this will be `C:\Users\<my_name>\.julia\dev\JuMP`.
 
 !!! warning
     `] command` means "first type `]` to enter the Julia pkg mode, then type the
@@ -189,7 +189,7 @@ Make sure you:
 To test that your changes work, run the JuMP test-suite by opening Julia and
 running:
 ```julia
-cd("~/.julia/dev/JuMP")
+cd(expanduser("~/.julia/dev/JuMP"))
 ] activate .
 ] test
 ```
@@ -208,7 +208,7 @@ cd("~/.julia/dev/JuMP")
 
 Open Julia, then run:
 ```julia
-cd("~/.julia/dev/JuMP/docs")
+cd(expanduser("~/.julia/dev/JuMP/docs"))
 ] activate .
 include("make.jl")
 ```
@@ -218,7 +218,7 @@ include("make.jl")
 
 !!! tip
     If there's a problem with the tests that you don't know how to fix, don't
-    worry. Continue to step 5, and one of the JuMP contributors will comment
+    worry. Continue to step 7, and one of the JuMP contributors will comment
     on your pull request telling you how to fix things.
 
 **Step 7: make a pull request**

@@ -49,8 +49,8 @@ which are not listed here.
    corresponds to the constraint name for scalar constraints, otherwise, the
    constraint names are set to `base_name[...]` for each index `...`.
 
- * `container = :Auto`: force the container type by passing `container = Array`,
-  `container = DenseAxisArray`, `container = SparseAxisArray`, or any another
+ * `container = Auto`: force the container type by passing `container = Array`,
+  `container = DenseAxisArray`, `container = SparseAxisArray`, or any other
   container type which is supported by a JuMP extension.
 
  * `set_string_name::Bool = true`: control whether to set the [`MOI.ConstraintName`](@ref)
@@ -328,7 +328,6 @@ JuMP currently supports the following `expr` objects:
  * `z --> {constraint}`
  * `!z --> {constraint}`
  * `z <--> {constraint}`
- * `!z <--> {constraint}`
  * `z => {constraint}`
  * `!z => {constraint}`
 as well as all broadcasted variants.
@@ -600,7 +599,7 @@ function operator_to_set(error_fn::Function, ::Val{S}) where {S}
         @constraint(model, x >= 1)
         @constraint(model, x <= 1)
         @constraint(model, x == 1)
-        @constraint(model, 1 - x ⟂ 1)
+        @constraint(model, 1 - x ⟂ x)
         @constraint(model, x in MOI.ZeroOne())
         ```
 

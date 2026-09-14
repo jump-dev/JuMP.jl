@@ -11,7 +11,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 JuMP provides a variety of ways to extend the basic modeling functionality.
 
 !!! tip
-    This documentation in this section is still a work-in-progress. The best
+    The documentation in this section is still a work-in-progress. The best
     place to look for ideas and help when writing a new JuMP extension are
     existing JuMP extensions. Examples include:
      * [BilevelJuMP.jl](https://github.com/joaquimg/BilevelJuMP.jl)
@@ -95,7 +95,7 @@ julia> @constraint(model, x in NewVectorSet())
 
 Just as `Bin` and `Int` create binary and integer variables, you can extend
 the [`@variable`](@ref) macro to create new types of variables. Here is an
-explanation by example, where we create a `AddTwice` type, that creates a tuple
+explanation by example, where we create an `AddTwice` type, that creates a tuple
 of two JuMP variables instead of a single variable.
 
 First, create a new struct. This can be anything. Our struct holds a
@@ -430,6 +430,10 @@ for (root, dirs, files) in walkdir(joinpath(pkgdir(JuMP), "test"))
 end
 ```
 
+The JuMP test files load some additional packages, so you must also add
+`DimensionalData`, `LinearAlgebra`, `MutableArithmetics`, `OrderedCollections`,
+and `SparseArrays` to the test dependencies of your extension.
+
 ## Set an `optimize!` hook
 
 Some extensions require modification to the problem after the user has finished
@@ -515,7 +519,8 @@ Solving report
 JuMP macros (for example, [`@variable`](@ref)) accept a `container` keyword
 argument to force the type of container that is chosen. By default, JuMP
 supports `container = Array`, `container = DenseAxisArray`,
-`container = SparseAxisArray` and `container = Auto`. You can extend support to
+`container = SparseAxisArray`, `container = Auto`, and subtypes of
+`AbstractDict` such as `container = Dict`. You can extend support to
 user-defined types by implementing [`Containers.container`](@ref).
 
 For example, here is a container that reverses the order of the indices:

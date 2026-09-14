@@ -37,7 +37,7 @@ You can explicitly specify the set to which the variable belongs:
 
  * `@variable(model, x in MOI.Interval(0.0, 1.0))`
 
- For more information on this syntax, read
+For more information on this syntax, read
 [Variables constrained on creation](@ref).
 
 ## Positional arguments
@@ -53,10 +53,10 @@ The recognized positional arguments in `args` are the following:
  * `Symmetric`: Only available when creating a square matrix of variables, that
    is when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
    it creates a symmetric matrix of variables.
- * `Hermitian`: Similar to `Symmetric` but create a Hermtian matrix of
+ * `Hermitian`: Similar to `Symmetric` but creates a Hermtian matrix of
    complex-valued variables.
- * `PSD`: A restrictive extension to `Symmetric` which constraints a square
-   matrix of variables to `Symmetric` and constrains to be positive
+ * `PSD`: A restrictive extension to `Symmetric` which constrains a square
+   matrix of variables to be `Symmetric` and constrains it to be positive
    semidefinite.
 
 ## Keyword arguments
@@ -441,11 +441,11 @@ function parse_variable(error_fn::Function, ::_VariableInfoExpr, args...)
     )
 end
 
-# There is not way to determine at parsing time which of lhs or rhs is the
+# There is no way to determine at parsing time which of lhs or rhs is the
 # variable name and which is the value if both are symbols. For instance,
 # lhs could be the Symbol `:x` and rhs could be the Symbol `:a` where a
 # variable `a` is assigned to 1 in the local scope. Knowing this, we know
-# that `x` is the variable name but at parse time there is now way to know
+# that `x` is the variable name but at parse time there is no way to know
 # that `a` has a value.
 # In that case we assume the variable is the lhs.
 function parse_variable(
@@ -532,7 +532,7 @@ end
         value,
     ) where {S}
 
-Update `infoexr` for a variable expression in the `@variable` macro of the form
+Update `info_expr` for a variable expression in the `@variable` macro of the form
 `variable name S value`.
 """
 function parse_one_operator_variable(

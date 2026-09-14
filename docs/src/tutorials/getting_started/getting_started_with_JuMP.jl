@@ -167,7 +167,7 @@ model = Model(HiGHS.Optimizer)
 @objective(model, Min, 12x + 20y)
 
 # Constraints are modeled using [`@constraint`](@ref). Here, `c1` and `c2` are
-# the names of our constraint:
+# the names of our constraints:
 
 @constraint(model, c1, 6x + 8y >= 100)
 @constraint(model, c2, 7x + 12y >= 120)

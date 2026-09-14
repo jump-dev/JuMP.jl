@@ -197,7 +197,7 @@ julia> nonalgebraic_knapsack([1, 2], [0.5, 0.5], 1.25)
 
 Hopefully you agree that the macro version is much easier to read.
 
-### Part III: JuMP to MathOptInterface
+### Step III: JuMP to MathOptInterface
 
 In the third step, JuMP converts the functional form of the problem, that is,
 `nonalgebraic_knapsack`, into the MathOptInterface API:
@@ -269,7 +269,7 @@ julia> function highs_knapsack(c, w, b)
            if Highs_getModelStatus(model) != kHighsModelStatusOptimal
                error("Not solved correctly")
            end
-           x = fill(NaN, 2)
+           x = fill(NaN, n)
            Highs_getSolution(model, x, C_NULL, C_NULL, C_NULL)
            Highs_destroy(model)
            return x
@@ -281,7 +281,7 @@ julia> highs_knapsack([1.0, 2.0], [0.5, 0.5], 1.25)
  0.0
  2.0
 ```
-We've now gone from a algebraic model that looked identical to the mathematical
+We've now gone from an algebraic model that looked identical to the mathematical
 model we started with, to a verbose function that uses HiGHS-specific
 functionality.
 

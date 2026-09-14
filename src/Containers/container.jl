@@ -29,7 +29,7 @@ Create a container of type `C` with index names `names`, indices `indices` and
 values at given indices given by `f`.
 
 If the method with `names` is not specialized on `Type{C}`, it falls back to
-calling  `container(f, indices, c)` for backwards compatibility with containers
+calling `container(f, indices, c)` for backwards compatibility with containers
 not supporting index names.
 
 ## Example

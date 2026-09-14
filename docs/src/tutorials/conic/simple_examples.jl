@@ -46,7 +46,7 @@ import Test
 # For more details, see [Goemans1995](@cite).
 
 """
-    svd_cholesky(X::AbstractMatrix, rtol)
+    svd_cholesky(X::AbstractMatrix)
 
 Return the matrix `U` of the Cholesky decomposition of `X` as `U' * U`.
 Note that we do not use the `LinearAlgebra.cholesky` function because it
@@ -58,7 +58,7 @@ We use the convention `U' * U` instead of `U * U'` to be consistent with
 """
 function svd_cholesky(X::AbstractMatrix)
     F = LinearAlgebra.svd(X)
-    ## We now have `X ≈ `F.U * D² * F.U'` where:
+    ## We now have `X ≈ F.U * D² * F.U'` where:
     D = LinearAlgebra.Diagonal(sqrt.(F.S))
     ## So `X ≈ U' * U` where `U` is:
     return (F.U * D)'
@@ -273,7 +273,7 @@ example_correlation_problem()
 # ```math
 #     D[a, b] \leq ||f(a) - f(b)|| \leq c \; D[a, b]
 # ```
-# for all edges ``(a, b)`` in the graph, where ``D[a, b]`` is the distance in the graph metric space.
+# for all pairs of vertices ``(a, b)``, where ``D[a, b]`` is the distance in the graph metric space.
 #
 # Any embedding ``f`` can be characterized by a Gram matrix ``Q``, which is PSD and
 # such that
@@ -286,7 +286,7 @@ example_correlation_problem()
 # ```math
 #     D[a, b]^2 \leq Q[a, a] + Q[b, b] - 2 Q[a, b] \leq c^2 \; D[a, b]^2
 # ```
-# for all edges ``(a, b)`` in the graph and minimize ``c^2``,
+# for all pairs of vertices ``(a, b)`` and minimize ``c^2``,
 # which gives us the SDP formulation below.
 # Since we may choose any point to be the origin, we fix the first vertex at 0.
 #
@@ -340,7 +340,7 @@ example_minimum_distortion()
 # of a graph, also known as Lovász's theta-function, is a number that
 # lies between two important and related numbers that are computationally
 # hard to determine, namely the chromatic and clique numbers of the graph.
-# It is possible however to efficient compute the Lovász number as the
+# It is possible however to efficiently compute the Lovász number as the
 # optimal value of a semidefinite program.
 
 # Consider the pentagon graph:

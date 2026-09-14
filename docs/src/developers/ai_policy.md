@@ -41,7 +41,7 @@ identified (see [Disclosure](@ref)) and polished AI summary.
 All code in JuMP-related repositories is released under an open source license
 (the exact license depends on the repository). Contributors license their code
 under the same license. That means contributors must own the copyright of any
-code you submit. It is your responsibility to not infringe on others copyright.
+code you submit. It is your responsibility to not infringe on others' copyright.
 We will reject any pull requests where the copyright is in question.
 
 ## Disclosure

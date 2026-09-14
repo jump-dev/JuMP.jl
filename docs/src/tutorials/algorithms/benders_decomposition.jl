@@ -209,7 +209,7 @@ monolithic_solution = optimal_flows(value.(y))
 # variables, and the constraints involving only `x`, and the terms in the
 # objective containing only `x`. We also need an initial lower bound on the
 # cost-to-go variable `θ`. One valid lower bound is to assume that we do not pay
-# for opening arcs, and there is flow all the arcs.
+# for opening arcs, and there is flow on all the arcs.
 
 M = -sum(G)
 first_stage_model = Model(HiGHS.Optimizer)
@@ -257,7 +257,7 @@ MAXIMUM_ITERATIONS = 100
 # And a way to check if the lower and upper bounds are close-enough to
 # terminate:
 
-ABSOLUTE_OPTIMALITY_GAP = 1e-6
+RELATIVE_OPTIMALITY_GAP = 1e-6
 
 # Now we're ready to iterate Benders decomposition:
 
@@ -271,7 +271,7 @@ for k in 1:MAXIMUM_ITERATIONS
     upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
     gap = abs(upper_bound - lower_bound) / abs(upper_bound)
     print_iteration(k, lower_bound, upper_bound, gap)
-    if gap < ABSOLUTE_OPTIMALITY_GAP
+    if gap < RELATIVE_OPTIMALITY_GAP
         println("Terminating with the optimal solution")
         break
     end
@@ -383,7 +383,7 @@ callback_solution == monolithic_solution
 # Our implementation of the iterative method has a problem: every time we need
 # to solve the second-stage, we must rebuild it from scratch. This is expensive,
 # and it can be the bottleneck in the solution process. We can improve our
-# implementation by using re-using the second-stage problem between solves.
+# implementation by re-using the second-stage problem between solves.
 
 # First, we create our first-stage problem as usual:
 
@@ -434,7 +434,7 @@ for k in 1:MAXIMUM_ITERATIONS
     upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
     gap = abs(upper_bound - lower_bound) / abs(upper_bound)
     print_iteration(k, lower_bound, upper_bound, gap)
-    if gap < ABSOLUTE_OPTIMALITY_GAP
+    if gap < RELATIVE_OPTIMALITY_GAP
         println("Terminating with the optimal solution")
         break
     end
@@ -533,7 +533,7 @@ for k in 1:MAXIMUM_ITERATIONS
         upper_bound = (objective_value(first_stage_model) - value(θ)) + ret.obj
         gap = abs(upper_bound - lower_bound) / abs(upper_bound)
         print_iteration(k, lower_bound, upper_bound, gap)
-        if gap < ABSOLUTE_OPTIMALITY_GAP
+        if gap < RELATIVE_OPTIMALITY_GAP
             println("Terminating with the optimal solution")
             break
         end

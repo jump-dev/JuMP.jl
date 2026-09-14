@@ -463,7 +463,7 @@ And data, a 3×5 Matrix{Int64}:
     What happened here? Although we know that `set` contains `1:3`, at compile
     time the `typeof(set)` is a `UnitRange{Int}`. Therefore, Julia can't prove
     that the range starts at `1` (it only finds this out at runtime), and it
-    defaults to a  `DenseAxisArray`. The case where we explicitly wrote
+    defaults to a `DenseAxisArray`. The case where we explicitly wrote
     `i = 1:3` worked because the macro can "see" the `1` at compile time.
 
 However, if you know that the indices do form an `Array`, you can force the

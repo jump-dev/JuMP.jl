@@ -153,7 +153,7 @@ _isfinite(x) = true
 """
     VariableInfo{S,T,U,V}
 
-A struct by JuMP internally when creating variables. This may also be used by
+A struct used by JuMP internally when creating variables. This may also be used by
 JuMP extensions to create new types of variables.
 
 See also: [`ScalarVariable`](@ref).
@@ -506,7 +506,7 @@ function delete(model::GenericModel, variable_ref::GenericVariableRef)
             The variable reference you are trying to delete does not belong \
             to the model.
 
-            Use `owner_model(con_ref)` to find which model owns the variable, then \
+            Use `owner_model(variable_ref)` to find which model owns the variable, then \
             delete it from that model.
             """,
         )
@@ -555,7 +555,7 @@ function delete(
             """
             A variable reference you are trying to delete does not belong to the model.
 
-            Use `owner_model(con_ref)` to check which model owns each variable, \
+            Use `owner_model(variable_ref)` to check which model owns each variable, \
             then delete it from that model.
             """,
         )
@@ -568,7 +568,7 @@ end
 """
     is_valid(model::GenericModel, variable_ref::GenericVariableRef)
 
-Return `true` if `variable` refers to a valid variable in `model`.
+Return `true` if `variable_ref` refers to a valid variable in `model`.
 
 ## Example
 
@@ -970,7 +970,7 @@ end
 """
     has_upper_bound(v::GenericVariableRef)
 
-Return `true` if `v` has a upper bound. If `true`, the upper bound can be
+Return `true` if `v` has an upper bound. If `true`, the upper bound can be
 queried with [`upper_bound`](@ref).
 
 See also [`UpperBoundRef`](@ref), [`upper_bound`](@ref),
@@ -1900,7 +1900,7 @@ end
 
 """
     VariableInSetRef(x::AbstractJuMPScalar)
-    VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar}})
+    VariableInSetRef(x::AbstractArray{<:AbstractJuMPScalar})
 
 Return the constraint reference associated with `x` when it is constrained on
 creation.
@@ -2150,7 +2150,7 @@ end
     value(v::GenericVariableRef; result = 1)
 
 Return the value of variable `v` associated with result index `result` of the
-most-recent returned by the solver.
+most-recent solution returned by the solver.
 
 Use [`primal_status`](@ref) to check if a result exists before asking for values.
 
@@ -2362,17 +2362,17 @@ end
 """
     VariableConstrainedOnCreation <: AbstractVariable
 
-Variable `scalar_variables` constrained to belong to `set`.
+Variable `scalar_variable` constrained to belong to `set`.
 
 Adding this variable can be understood as doing:
 ```julia
 function JuMP.add_variable(
     model::GenericModel,
     variable::VariableConstrainedOnCreation,
-    names,
+    name,
 )
     var_ref = add_variable(model, variable.scalar_variable, name)
-    add_constraint(model, VectorConstraint(var_ref, variable.set))
+    add_constraint(model, ScalarConstraint(var_ref, variable.set))
     return var_ref
 end
 ```
@@ -2446,7 +2446,7 @@ function JuMP.add_variable(
 end
 ```
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
-instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [`MOI.add_constrained_variables`](@ref)
 for the difference between adding the variables with `MOI.add_constrained_variables`
 and adding them with `MOI.add_variables` and adding the constraint separately.
 """
@@ -3082,7 +3082,7 @@ end
         F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
     }
 
-Set multiple coefficient of `variables` in the constraints `constraints` to
+Set multiple coefficients of `variables` in the constraints `constraints` to
 `coeffs`.
 
 ## Concrete types
@@ -3203,8 +3203,8 @@ end
 """
     set_normalized_coefficient(
         constraint::ConstraintRef,
-        variable_1:GenericVariableRef,
-        variable_2:GenericVariableRef,
+        variable_1::GenericVariableRef,
+        variable_2::GenericVariableRef,
         value::Number,
     )
 
@@ -3260,8 +3260,8 @@ end
 """
     set_normalized_coefficient(
         constraints::AbstractVector{<:ConstraintRef},
-        variables_1:AbstractVector{<:GenericVariableRef},
-        variables_2:AbstractVector{<:GenericVariableRef},
+        variables_1::AbstractVector{<:GenericVariableRef},
+        variables_2::AbstractVector{<:GenericVariableRef},
         values::AbstractVector{<:Number},
     )
 

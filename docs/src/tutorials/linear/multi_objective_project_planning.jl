@@ -54,7 +54,7 @@ import Test
 
 # We study how to optimize the project schedule for building a house. There are
 # many tasks that need to be completed to build the house. Each task has a given
-# duration and a number staff required to perform it. Some tasks can be
+# duration and a number of staff required to perform it. Some tasks can be
 # accelerated (for a fixed cost per day) by hiring 20% more people (rounding
 # up). Tasks have a precedence order. Here's the data we're going to use:
 
@@ -205,7 +205,7 @@ function plot_solution(; result::Int)
         color = permutedims(colors),
         linewidth = 0,
         legend = false,
-        title = "makespan = $(obj[1]), cost = €$(obj[2])k, people =$(obj[3])",
+        title = "makespan = $(obj[1]), cost = €$(obj[2])k, people = $(obj[3])",
         xlabel = "Time",
         ylabel = "Task",
         yticks = (1.5:19.5, 'A':'S'),

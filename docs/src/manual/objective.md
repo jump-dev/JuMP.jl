@@ -308,7 +308,7 @@ julia> @objective(model, Min, [obj1, -obj2])
 
 Defining your objectives as expressions allows flexibility in how you can solve
 variations of the same problem, with some objectives removed and constrained to
-be no worse that a fixed value.
+be no worse than a fixed value.
 
 ```jldoctest
 julia> model = Model();

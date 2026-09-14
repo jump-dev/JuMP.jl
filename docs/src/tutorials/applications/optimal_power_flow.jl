@@ -8,15 +8,16 @@
 # This tutorial formulates and solves an alternating current optimal power flow
 # (AC-OPF) problem using JuMP's support for complex-valued decision variables.
 # It then derives a semidefinite relaxation of the nonlinear problem and
-# tightens it with second-order cone constraints to obtain a lower bound on the
-# globally optimal objective.
+# adds the second-order cone constraints implied by its 2×2 minors to obtain a
+# lower bound on the globally optimal objective.
 #
 # **Learning intentions:**
 # * Formulate AC optimal power flow using complex-valued decision variables
-#   and express power balance as a linear constraint over the bus admittance matrix
+#   and express power balance as a quadratic constraint using the bus admittance
+#   matrix
 # * Derive a semidefinite relaxation of the nonlinear problem by lifting voltages
 #   into a Hermitian PSD matrix with [`HermitianPSDCone`](@ref)
-# * Tighten the SDP relaxation with second-order cone constraints derived from
+# * Add to the SDP relaxation the second-order cone constraints implied by the
 #   2×2 minors of the lifted matrix using [`RotatedSecondOrderCone`](@ref)
 
 # For another example of modeling with complex decision variables, see the
@@ -30,7 +31,7 @@
 #     (known as a _branch model_) where it is easier to work with flow
 #     constraints. A general approach is provided by
 #     [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
-#     an open-source framework to a broad range of power flow model formulations
+#     an open-source framework for a broad range of power flow model formulations
 #     along with utilities for working with detailed network data.
 
 # ## Required packages
@@ -89,7 +90,7 @@ Q_Demand = SparseArrays.sparsevec([5, 7, 9], [18, 21, 30], N)
 S_Demand = P_Demand + im * Q_Demand
 
 # The key decision variables are the real power injections ``P^G`` and reactive
-# power injections ``Q^G``over the allowed range of the generators. All other
+# power injections ``Q^G`` over the allowed range of the generators. All other
 # buses must restrict their generation variables to 0. On the other hand, these
 # non-generator nodes have a fixed  real and reactive power demand, denoted
 # ``P^D`` and ``Q^D`` respectively (these are fixed at 0 in the case of
@@ -355,7 +356,7 @@ E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 # semidefinite programming approach.
 
 # We will make use of complex voltages and relax
-# ``W = V V^*`` to;
+# ``W = V V^*`` to:
 # ```math
 # W \succeq V V^*,
 # ```
