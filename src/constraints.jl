@@ -1099,12 +1099,7 @@ function set_normalized_rhs(
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
     model = owner_model(con_ref)
-    MOI.set(
-        model,
-        MOI.ConstraintSet(),
-        con_ref,
-        S(convert(T, value)),
-    )
+    MOI.set(model, MOI.ConstraintSet(), con_ref, S(convert(T, value)))
     model.is_model_dirty = true
     return
 end
