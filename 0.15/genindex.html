@@ -1,0 +1,71 @@
+<!DOCTYPE html><HTML class="no-js" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Index — JuMP -- Julia for Mathematical Optimization 0.15 documentation</title><link href="_static/css/theme.css" rel="stylesheet" type="text/css"/><link href="index.html" rel="top" title="JuMP -- Julia for Mathematical Optimization 0.15 documentation"/><script src="_static/js/modernizr.min.js"></script><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body class="wy-body-for-nav" role="document"><div class="wy-grid-for-nav"><nav class="wy-nav-side" data-toggle="wy-nav-shift"><div class="wy-side-scroll"><div class="wy-side-nav-search"><a class="icon icon-home" href="index.html"> JuMP -- Julia for Mathematical Optimization
+          
+
+          
+          </a><div class="version">
+                0.15
+              </div><div role="search"><form action="search.html" class="wy-form" id="rtd-search-form" method="get"><input name="q" placeholder="Search docs" type="text"/><input name="check_keywords" type="hidden" value="yes"/><input name="area" type="hidden" value="default"/></form></div></div><div aria-label="main navigation" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation"><ul><li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li><li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start Guide</a></li><li class="toctree-l1"><a class="reference internal" href="refmodel.html">Models</a></li><li class="toctree-l1"><a class="reference internal" href="refvariable.html">Variables</a></li><li class="toctree-l1"><a class="reference internal" href="refexpr.html">Expressions and Constraints</a></li><li class="toctree-l1"><a class="reference internal" href="probmod.html">Problem Modification</a></li><li class="toctree-l1"><a class="reference internal" href="callbacks.html">Solver Callbacks</a></li><li class="toctree-l1"><a class="reference internal" href="nlp.html">Nonlinear Modeling</a></li></ul></div></div></nav><section class="wy-nav-content-wrap" data-toggle="wy-nav-shift"><nav aria-label="top navigation" class="wy-nav-top" role="navigation"><i class="fa fa-bars" data-toggle="wy-nav-top"></i><a href="index.html">JuMP -- Julia for Mathematical Optimization</a></nav><div class="wy-nav-content"><div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation"><ul class="wy-breadcrumbs"><li><a href="index.html">Docs</a> »</li><li></li><li class="wy-breadcrumbs-aside"></li></ul><hr/></div><div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main"><div itemprop="articleBody"><h1 id="index">Index</h1><div class="genindex-jumpbox"></div></div></div><footer><hr/><div role="contentinfo"><p>
+        © Copyright 2016, Miles Lubin, Iain Dunning, and Joey Huchette.
+
+    </p></div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer></div></div></section></div><script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.15',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script><script src="_static/jquery.js" type="text/javascript"></script><script src="_static/underscore.js" type="text/javascript"></script><script src="_static/doctools.js" type="text/javascript"></script><script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script><script src="_static/js/theme.js" type="text/javascript"></script><script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script><script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><script async="" src="https://www.google-analytics.com/analytics.js"></script></body></HTML>

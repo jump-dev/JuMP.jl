@@ -1,0 +1,107 @@
+/* Token colors for the JuliaSyntax highlighter (`julia-*` classes).
+ * Loaded after the theme CSS. One palette block per theme; light is the :root
+ * default. Colors approximate each theme's syntax palette. */
+
+:root {
+  --jl-keyword: #d73a49;
+  --jl-string: #032f62;
+  --jl-comment: #6a737d;
+  --jl-number: #005cc5;
+  --jl-macro: #6f42c1;
+  --jl-operator: var(--jl-function);
+  --jl-function: #4078f2;
+  --jl-type: #c18401;
+}
+html.theme--documenter-dark {
+  --jl-keyword: #ff7b72;
+  --jl-string: #a5d6ff;
+  --jl-comment: #8b949e;
+  --jl-number: #79c0ff;
+  --jl-macro: #d2a8ff;
+  --jl-function: #61afef;
+  --jl-type: #e5c07b;
+}
+html.theme--catppuccin-latte {
+  --jl-keyword: #8839ef;
+  --jl-string: #40a02b;
+  --jl-comment: #8c8fa1;
+  --jl-number: #fe640b;
+  --jl-macro: #1e66f5;
+  --jl-function: #1e66f5;
+  --jl-type: #df8e1d;
+}
+html.theme--catppuccin-frappe {
+  --jl-keyword: #ca9ee6;
+  --jl-string: #a6d189;
+  --jl-comment: #737994;
+  --jl-number: #ef9f76;
+  --jl-macro: #8caaee;
+  --jl-function: #8caaee;
+  --jl-type: #e5c890;
+}
+html.theme--catppuccin-macchiato {
+  --jl-keyword: #c6a0f6;
+  --jl-string: #a6da95;
+  --jl-comment: #6e738d;
+  --jl-number: #f5a97f;
+  --jl-macro: #8aadf4;
+  --jl-function: #8aadf4;
+  --jl-type: #eed49f;
+}
+html.theme--catppuccin-mocha {
+  --jl-keyword: #cba6f7;
+  --jl-string: #a6e3a1;
+  --jl-comment: #6c7086;
+  --jl-number: #fab387;
+  --jl-macro: #89b4fa;
+  --jl-function: #89b4fa;
+  --jl-type: #f9e2af;
+}
+
+/* iOS Safari's text autosizer inflates the font of wide text blocks — which
+ * the line-numbers markup (per-line `display: block` spans in a
+ * `width: max-content` container) looks like, unlike the single inline flow of
+ * stock Documenter code blocks. The Documenter themes set only the unprefixed
+ * `text-size-adjust: 100%`, which iOS ignores, so pin it here. */
+pre {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* `code` (not `pre code`) so the reference-tooltip signatures — bare <code>
+ * elements, see ref-popup.js — are colored too. The julia-* classes are only
+ * ever emitted by this plugin, so the wider scope cannot clash. */
+code .julia-keyword { color: var(--jl-keyword); }
+code .julia-string { color: var(--jl-string); }
+code .julia-comment { color: var(--jl-comment); font-style: italic; }
+code .julia-number { color: var(--jl-number); }
+code .julia-macro { color: var(--jl-macro); }
+code .julia-symbol { color: var(--jl-macro); }
+code .julia-operator { color: var(--jl-operator); }
+code .julia-function,
+code .julia-funcall { color: var(--jl-function); }
+code .julia-builtin { color: var(--jl-function); font-weight: 600; }
+code .julia-type { color: var(--jl-type); }
+
+/* REPL prompt (julia>, help?>, …) — green, following the Julia REPL convention. */
+:root { --jl-prompt: #2e8b57; }
+html.theme--documenter-dark { --jl-prompt: #56d364; }
+html.theme--catppuccin-latte { --jl-prompt: #40a02b; }
+html.theme--catppuccin-frappe { --jl-prompt: #a6d189; }
+html.theme--catppuccin-macchiato { --jl-prompt: #a6da95; }
+html.theme--catppuccin-mocha { --jl-prompt: #a6e3a1; }
+pre code .julia-prompt { color: var(--jl-prompt); font-weight: 700; }
+
+/* Reference links: soft dotted underline, solid while the pointer is inside
+ * the code block. */
+pre code a.julia-ref {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 2px;
+}
+pre:hover code a.julia-ref {
+  text-decoration-style: solid;
+  text-decoration-color: currentColor;
+}

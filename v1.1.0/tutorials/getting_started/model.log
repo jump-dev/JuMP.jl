@@ -1,0 +1,26 @@
+* Solver : HiGHS
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has duals          : true
+  Message from the solver:
+  "kHighsModelStatusOptimal"
+
+* Candidate solution
+  Objective value      : 2.05000e+02
+  Objective bound      : 0.00000e+00
+  Dual objective value : 2.05000e+02
+  Primal solution :
+    x : 1.50000e+01
+    y : 1.25000e+00
+  Dual solution :
+    c1 : 2.50000e-01
+    c2 : 1.50000e+00
+
+* Work counters
+  Solve time (sec)   : 3.15428e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
