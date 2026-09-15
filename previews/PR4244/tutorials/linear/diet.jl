@@ -85,7 +85,7 @@ end
 foods = CSV.read(food_csv_filename, DataFrames.DataFrame)
 
 # Here, ``F`` is `foods.name` and ``c_f`` is `foods.cost`. (We're also playing
-# a bit loose the term "macro-nutrient" by including calories and sodium.)
+# a bit loose with the term "macro-nutrient" by including calories and sodium.)
 
 # We also need our minimum and maximum limits:
 
@@ -172,7 +172,7 @@ end
 table = Containers.rowtable(value, x; header = [:food, :quantity])
 solution = DataFrames.DataFrame(table)
 
-# This makes it easy to perform analyses our solution:
+# This makes it easy to perform analyses of our solution:
 
 filter!(row -> row.quantity > 0.0, solution)
 

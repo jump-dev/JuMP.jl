@@ -46,7 +46,7 @@ N = length(generators)
 model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variables(model, begin
-    generators[i].min <= g[i=1:N] <= generators[i].max
+    0 <= g[i=1:N] <= generators[i].max
     0 <= w <= 200
     dispatch[i=1:N], Bin
 end)

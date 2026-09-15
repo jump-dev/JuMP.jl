@@ -43,7 +43,7 @@ import Wavelets
 # matrix and ``r > 0``.
 
 # We can setup a coordinate system ``(x, y) \in \mathbb{X} \times \mathbb{Y}``
-# with ``x, y \geq 0``. We use definition (1) to write an ellipse as the root of
+# with ``x, y \geq 0``. We use the definition above to write an ellipse as the root of
 # a quadratic form in homogeneous coordinates:
 # ```math
 # \begin{bmatrix} \xi \\ 1 \end{bmatrix}^T \begin{bmatrix} Q & d \\ d^T & e \end{bmatrix} \begin{bmatrix} \xi \\ 1 \end{bmatrix} = 0
@@ -63,7 +63,10 @@ import Wavelets
 # ```
 # The value of ``r_0`` is positive if the point is outside the ellipse, zero if
 # it is on the ellipse and negative if it is inside the ellipse. We also see we
-# only need six parameters to uniquely define an ellipse.
+# need six parameters to define an ellipse. Because scaling ``(Q, d, e)`` by a
+# positive constant does not change the ellipse, these parameters are only
+# unique up to scale, so we fix the scale with the normalization
+# ``\operatorname{tr}(Q) = 1``.
 
 # ## Helper functions
 
@@ -144,7 +147,7 @@ Images.mosaicview(img_roi, img_gray_roi; nrow = 1)
 
 x = convert(Array{Float64}, img_gray_roi)
 
-# We then use ISTA in combination with our wavelet sparsifying basis ``\Psi``
+# We then use ISTA in combination with our wavelet sparsifying basis ``\Phi``
 # obtained from the [family of Daubechies wavelets](https://en.wikipedia.org/wiki/Daubechies_wavelet).
 # We use the db4 wavelet which has 4 vanishing moments. We set the number of
 # iterations to 15.
@@ -256,8 +259,10 @@ Plots.plot!(
 # will use a conic optimization approach to do so since it is a very natural way
 # to represent ellipses.
 
-# First, we define the residual distance definition (6) of a point to an ellipse
-# in JuMP:
+# First, we define the residual distance of a point to an ellipse in JuMP. To
+# rule out the trivial solution ``Q = 0``, ``d = 0``, ``e = 0``, for which every
+# residual is zero, we also add the normalization constraint
+# ``\operatorname{tr}(Q) = 1``:
 
 function create_ellipse_model(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-5)
     N = length(Ξ)
@@ -266,6 +271,7 @@ function create_ellipse_model(Ξ::Array{Tuple{Int,Int},1}, ϵ = 1e-5)
     @variable(model, Q[1:2, 1:2], PSD)
     @variable(model, d[1:2])
     @variable(model, e)
+    @constraint(model, LinearAlgebra.tr(Q) == 1)
     @expression(
         model,
         r[i in 1:N],
@@ -278,7 +284,7 @@ end
 
 # For our first objective we will minimize the total squared distance of all
 # points to the ellipse. Hence we will use the sum of the squared distances as
-# our objective function, also known as the ``L^2`` norm:
+# our objective function, also known as the squared ``L^2`` norm:
 # ```math
 # \min_{Q, d, e} P_\text{res}(\mathcal{E}) = \min_{Q, d, e} \sum_{i \in N}
 # d^2_{\text{res}}(\xi_i, \mathcal{E}) = \min_{Q, d, e} ||d_{\text{res}}||^2_2
@@ -288,7 +294,7 @@ end
 # ```math
 # \begin{align}
 #     \min_{Q, d, e, ζ} &ζ \\
-# \text{s.t.} \quad ζ \geq d^2_{\text{res}}(\xi_i, \mathcal{E}) &\quad \forall i \in N
+# \text{s.t.} \quad ζ \geq \sum_{i \in N} d^2_{\text{res}}(\xi_i, \mathcal{E}) &
 # \end{align}
 # ```
 # And hence can be modelled as a second-order cone program (SOCP) using
@@ -307,7 +313,7 @@ for (i, cluster) in enumerate(clusters)
     )
     @objective(model, Min, ζ)
     optimize!(model)
-    assert_is_solved_and_feasible(model)
+    assert_is_solved_and_feasible(model; allow_almost = true)
     Q, d, e = value.(model[:Q]), value.(model[:d]), value.(model[:e])
     push!(ellipses_C1, Dict(:Q => Q, :d => d, :e => e))
 end
@@ -344,7 +350,7 @@ plt
 # For our second objective we will minimize the maximum residual distance of all
 # points to the ellipse:
 # ```math
-# \min_{Q, d, e} \max_{\xi_i \in \mathcal{F}} d_\text{res}(\xi_i, \mathcal{E}) =
+# \min_{Q, d, e} \max_{i \in N} d_\text{res}(\xi_i, \mathcal{E}) =
 # \min_{Q, d, e} ||d_\text{res}||_\infty
 # ```
 

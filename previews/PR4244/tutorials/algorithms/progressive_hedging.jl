@@ -58,7 +58,7 @@ import Printf
 # iterations (the dual residual).
 
 # ``\rho`` can be optionally updated between iterations. How to do so is an open
-# question. There is a large literature on different updates strategies.
+# question. There is a large literature on different update strategies.
 
 # In this tutorial we use parameters for $\rho$, $w$, and $\bar{x}$ to
 # efficiently modify each scenario's subproblem between PH iterations.
@@ -156,7 +156,7 @@ x̄
 # ## Progressive Hedging with an adaptive penalty parameter
 
 # You can also make the penalty parameter $\rho$ adaptive. How to do so is an
-# open question. There is a large literature on different updates strategies.
+# open question. There is a large literature on different update strategies.
 # One approach is to increase $\rho$ if the primal residual is much larger than
 # the dual residual, and to decrease $\rho$ if the dual residual is much larger
 # than the primal residual.

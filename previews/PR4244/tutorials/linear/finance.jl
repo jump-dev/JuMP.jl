@@ -141,7 +141,7 @@ bid_items = [[1], [2], [3 4], [1 3], [2 4], [1 3 4]]
 auction = Model(HiGHS.Optimizer)
 @variable(auction, y[1:6], Bin)
 @objective(auction, Max, sum(y' .* bid_values))
-for i in 1:6
+for i in 1:4
     @constraint(auction, sum(y[j] for j in 1:6 if i in bid_items[j]) <= 1)
 end
 optimize!(auction)

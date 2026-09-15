@@ -32,16 +32,16 @@ import Test
 
 # ## Formulation
 
-# The network multi-commondity flow problem is an extension of the
+# The network multi-commodity flow problem is an extension of
 # [The multi-commodity flow problem](@ref), where instead of having a bipartite
-# graph of supply and demand nodes, the graph can contains a set of nodes,
-# $i \in \mathcal{N}$ , which each have a (potentially zero) supply capacity,
-# $u^s_{i,p}$, and (potentially zero) a demand, $d_{i,p}$ for each commodity
-# $p \in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
+# graph of supply and demand nodes, the graph can contain a set of nodes,
+# $i \in \mathcal{N}$, which each have a (potentially zero) supply capacity,
+# $u^s_{i,p}$, a supply cost, $c^s_{i,p}$, and a (potentially zero) demand,
+# $d_{i,p}$, for each commodity $p \in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
 # which have a shipment cost $c^x_{i,j,p}$ and a total flow capacity of
 # $u^x_{i,j}$.
 
-# Our take is to choose an optimal supply for each node $s_{i,p}$, as well as
+# Our task is to choose an optimal supply for each node $s_{i,p}$, as well as
 # the optimal transshipment $x_{i,j,p}$ that minimizes the total cost.
 
 # The mathematical formulation is:

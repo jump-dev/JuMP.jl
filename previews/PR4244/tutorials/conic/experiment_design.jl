@@ -77,9 +77,9 @@ Random.seed!(1234)
 # solution can be found by ignoring, or relaxing, the constraint that the
 # $m_{i}$ are integers.
 
-# Let $\lambda_{i}=m_{i} / m,$ which is the fraction of the total number of
-# experiments for which $a_{j}=v_{i},$ or the relative frequency of experiment
-# $i$. We can express the error covariance in terms of $\lambda_{i}$ as:
+# Let $\lambda_{i}=m_{i} / m,$ which is the fraction of the experiments that
+# are of type $i$, or the relative frequency of experiment $i$. We can express
+# the error covariance in terms of $\lambda_{i}$ as:
 
 # ```math
 # E=\frac{1}{m}\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1}
@@ -103,7 +103,7 @@ Random.seed!(1234)
 
 q = 4 # dimension of estimate space
 p = 8 # number of experimental vectors
-n_max = 3 # upper bound on lambda
+n_max = 3 # upper bound on the number of each experiment
 n = 12
 
 V = randn(q, p)
@@ -168,7 +168,7 @@ value.(np)
 
 # ```math
 # \begin{aligned}
-# \min & t \\
+# \max & t \\
 # \text{subject to} & \sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T} \succeq t I \\
 # & \lambda \succeq 0 \\
 # & \mathbf{1}^{T} \lambda=1

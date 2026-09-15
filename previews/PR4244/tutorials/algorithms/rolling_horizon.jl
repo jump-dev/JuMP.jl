@@ -54,7 +54,7 @@ import Plots
 # The model is a simplified model of a power system's operations with battery
 # storage.
 #
-# We model the system of a set of time-steps $t \in 1,\ldots,T$, where each time
+# We model the system over a set of time-steps $t \in 1,\ldots,T$, where each time
 # step is a period of one hour.
 #
 # There are five types of decision variables in the model:
@@ -113,7 +113,7 @@ optimization_window = 48;
 
 # **Move Forward**: this value defines how many periods (for example, hours) we
 # will move forward to optimize the next optimization window. For this example,
-# we set the default value in 24 hours, meaning we will move one day ahead each
+# we set the default value to 24 hours, meaning we will move one day ahead each
 # time.
 
 move_forward = 24;

@@ -87,7 +87,7 @@ import HiGHS
 0.1 * 3 == 0.3
 
 # !!! tip
-#     Read the [Guidelines for numerical issues](https://www.gurobi.com/documentation/9.5/refman/guidelines_for_numerical_i.html)
+#     Read the [Guidelines for numerical issues](https://docs.gurobi.com/projects/optimizer/en/current/concepts/numericguide.html)
 #     section of the Gurobi documentation, along with the
 #     [Debugging numerical problems](https://yalmip.github.io/inside/debuggingnumerics/)
 #     section of the YALMIP documentation.
@@ -185,7 +185,7 @@ termination_status(model)
 # or [`LOCALLY_INFEASIBLE`](@ref).
 
 # A termination status of [`INFEASIBLE_OR_UNBOUNDED`](@ref) means that the
-# solver could not prove if the solver was infeasible or unbounded, only that
+# solver could not prove if the model was infeasible or unbounded, only that
 # the model does not have a finite feasible optimal solution.
 
 # Nonlinear optimizers such as Ipopt may return the status [`LOCALLY_INFEASIBLE`](@ref).
@@ -352,8 +352,8 @@ termination_status(model)
 # If there are too many variables to add bounds to, or there are too many terms
 # to examine by hand, another strategy is to create a new variable with a large
 # upper bound (if maximizing, lower bound if minimizing) and a constraint that
-# the variable must be less-than or equal to the expression of the objective
-# function. For example:
+# the variable must be less-than or equal to (if maximizing, greater-than or
+# equal to if minimizing) the expression of the objective function. For example:
 
 model = Model(HiGHS.Optimizer);
 set_silent(model)
@@ -387,7 +387,7 @@ end
 #    is no easy fix for this, other than choosing a different solver or
 #    reformulating your model.
 # 2. JuMP builds the problem slowly, and even if you wait a while, the solver
-#    may ever start running or displaying output.
+#    may never start running or displaying output.
 
 # This section explains how to debug the second case.
 

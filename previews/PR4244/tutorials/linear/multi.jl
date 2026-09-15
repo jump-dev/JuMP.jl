@@ -34,7 +34,7 @@ const DBInterface = SQLite.DBInterface
 
 # ## Formulation
 
-# The multi-commondity flow problem is a simple extension of
+# The multi-commodity flow problem is a simple extension of
 # [The transportation problem](@ref) to multiple types of products. Briefly, we
 # start with the formulation of the transportation problem:
 # ```math

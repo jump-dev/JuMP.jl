@@ -155,7 +155,7 @@ model = Model();
 # ## Boolean operators
 
 # Binary variables can be used to construct logical operators. Here are some
-# example.
+# examples.
 
 # ### Or
 

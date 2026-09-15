@@ -99,7 +99,7 @@ function solve_lower_level(x...)
     return objective_value(model), value.(y)
 end
 
-# The next function takes a value of ``x`` and returns the optimal lower-level
+# The function above takes a value of ``x`` and returns the optimal lower-level
 # objective-value and the optimal response ``y``. The reason why we need both
 # the objective and the optimal ``y`` will be made clear shortly, but for now
 # let us define:
@@ -163,7 +163,7 @@ y
 # ## Improving performance
 
 # Our solution approach works, but it has a performance problem: every time
-# we need to compute the value, gradient, or Hessian of ``V``, we have to
+# we need to compute the value or gradient of ``V``, we have to
 # re-solve the lower-level optimization problem. This is wasteful, because we
 # will often call the function and gradient at the same point, and so solving
 # the problem twice with the same input repeats work unnecessarily.
@@ -186,8 +186,8 @@ function _update_if_needed(cache::Cache, x...)
     return
 end
 
-# Then, we define cached versions of out three functions which call
-# `_updated_if_needed` and return values from the cache.
+# Then, we define cached versions of our two functions which call
+# `_update_if_needed` and return values from the cache.
 
 function cached_f(cache::Cache, x...)
     _update_if_needed(cache, x...)
@@ -218,7 +218,7 @@ optimize!(model)
 assert_is_solved_and_feasible(model)
 solution_summary(model)
 
-# an we can check we get the same objective value:
+# and we can check we get the same objective value:
 
 objective_value(model)
 
@@ -238,11 +238,11 @@ barrier_iterations(model)
 #
 # Let ``f(x, y)`` be the objective function, then:
 # ```math
-# \nabla V^2_{xx}(x) = \nabla^2_{xx}f(x, y^*) + \nabla^2_{xy}f(x, y^*) \cdot \frac{d y^*}{d x}
+# \nabla^2_{xx} V(x) = \nabla^2_{xx}f(x, y^*) + \nabla^2_{xy}f(x, y^*) \cdot \frac{d y^*}{d x}
 # ```
 # It is easy to compute ``\nabla^2_{xx} f`` and ``\nabla^2_{xy} f`` by hand.
 # Computing ``\frac{d y^*}{d x}`` (the derivative of the optimal solution ``y^*``
-# with respect to the input ``x``) is tricker. However, JuMP has a package,
+# with respect to the input ``x``) is trickier. However, JuMP has a package,
 # [DiffOpt.jl](@ref) which can do this for us.
 
 function solve_lower_level_with_sensitivity(x...)

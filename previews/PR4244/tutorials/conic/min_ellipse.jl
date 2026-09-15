@@ -15,7 +15,7 @@
 # * Represent the log-determinant objective using [`MOI.LogDetConeSquare`](@ref)
 #   as a conic constraint, and maximise it as a proxy for ellipse area
 # * Recover the ellipse parameters from the optimal PSD matrix solution and
-#   verify them against the known analytic answer
+#   check them against reference values
 
 # ## Formulation
 
@@ -41,7 +41,7 @@
 #     (P q - \tau_i b_i)^\top &   -1 - \tau_i c_i   &  (P q)^\top \\
 #                 0           &          (P q)      & - P^2       \\
 # \end{bmatrix}
-# \preceq 0 \text{ (PSD) } &  i=1, \ldots, m
+# \preceq 0 &  i=1, \ldots, m
 # \end{aligned}
 # ```
 # with helper variables ``\tau``.
@@ -59,7 +59,7 @@ import Test
 # ## Data
 
 # First, define the ``m`` input ellipses (here ``m = 6``), parameterized as
-# ``x^T A_i x + 2 b_i^T x + c \leq 0``:
+# ``x^T A_i x + 2 b_i^T x + c_i \leq 0``:
 
 struct Ellipse
     A::Matrix{Float64}
@@ -121,8 +121,10 @@ for (i, ellipse) in enumerate(ellipses)
     @constraint(model, LinearAlgebra.Symmetric(X) <= 0, PSDCone())
 end
 
-# We cannot directly represent the objective ``\log(\det(P))``, so we introduce
-# the conic reformulation:
+# We cannot directly represent the objective ``\log(\det(P))``. Because
+# ``\log(\det(P^2)) = 2\log(\det(P))`` has the same maximizer, we instead
+# maximize ``\log(\det(P^2))`` using the conic reformulation. Note that this
+# means the objective value is twice ``\log(\det(P))``:
 
 @variable(model, log_det_P)
 @constraint(model, [log_det_P; 1; vec(P²)] in MOI.LogDetConeSquare(n))

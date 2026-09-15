@@ -14,8 +14,7 @@
 #   forbids interleaving solution queries with model modifications
 # * Set primal and dual warm-starts using [`set_start_value`](@ref) and
 #   [`set_dual_start_value`](@ref) to reduce iterations on repeated solves
-# * Handle solvers that do not support warm-starts gracefully using a
-#   `try`-`catch` around each constraint type
+# * Handle solvers that do not support some parts of the starting solution
 
 # ## Required packages
 
@@ -88,7 +87,7 @@ optimize!(model)
 # Some solvers do not support setting some parts of the starting solution, for
 # example, they may support only `set_start_value` for variables.
 
-# If you encounter an `UnsupportedSupported` attribute error for
+# If you encounter an [`MOI.UnsupportedAttribute`](@ref) error for
 # [`MOI.VariablePrimalStart`](@ref), [`MOI.ConstraintPrimalStart`](@ref), or
 # [`MOI.ConstraintDualStart`](@ref), comment out the corresponding part of the
 # `set_optimal_start_values` function.

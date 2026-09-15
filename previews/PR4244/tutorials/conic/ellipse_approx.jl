@@ -92,7 +92,7 @@ plot = Plots.scatter(
 
 # ## JuMP formulation
 
-# Now let's build and the JuMP model. We'll compute ``D`` and ``c`` after the
+# Now let's build the JuMP model. We'll compute ``D`` and ``c`` after the
 # solve.
 
 model = Model(Clarabel.Optimizer)
@@ -178,12 +178,12 @@ print_active_bridges(model)
 #    [`MOI.VectorAffineFunction`](@ref) in [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
 #    `@constraint(model, Z >= 0, PSDCone())`.
 #
-#  * Replacing the [`MOI.VectorOfVariables`](@ref) in [`MOI.PositiveSemidefiniteConeSquare`](@ref)
+#  * Replacing the [`MOI.VectorAffineFunction`](@ref) in [`MOI.PositiveSemidefiniteConeSquare`](@ref)
 #    constraint `[s z'; z Z] >= 0, PSDCone()` with the
 #    [`MOI.VectorAffineFunction`](@ref) in [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
 #    `@constraint(model, LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone())`.
 #
-#  * Replacing the [`MOI.ScalarAffineFunction`](@ref) in [`MOI.GreaterThan`](@ref)
+#  * Replacing the [`MOI.ScalarAffineFunction`](@ref) in [`MOI.LessThan`](@ref)
 #    constraints with the vectorized equivalent of
 #    [`MOI.VectorAffineFunction`](@ref) in [`MOI.Nonnegatives`](@ref)
 #
@@ -249,7 +249,7 @@ assert_is_solved_and_feasible(model)
 Test.@test isapprox(D, value.(Z); atol = 1e-3)
 solve_time_2 = solve_time(model)
 
-# This formulation gives the much smaller graph:
+# This formulation gives an even smaller graph:
 
 print_active_bridges(model)
 

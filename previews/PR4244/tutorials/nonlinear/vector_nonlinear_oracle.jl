@@ -172,7 +172,7 @@ value(x)
 
 # Like the Jacobian, we need the sparsity structure and a function to compute
 # the non-zeros. Importantly, because the Hessian is symmetric, we need to pass
-# only the upper triangular values.
+# only one of each pair of off-diagonal values (here, the upper triangle).
 
 hessian_lagrangian_structure = [(1, 1), (2, 2), (2, 3), (3, 3)]
 

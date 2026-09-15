@@ -73,7 +73,7 @@ b = [1, -1, 0, 0, 0]
 shortest_path = Model(HiGHS.Optimizer)
 set_silent(shortest_path)
 @variable(shortest_path, x[1:n, 1:n], Bin)
-## Arcs with zero cost are not a part of the path as they do no exist
+## Arcs with zero cost are not a part of the path as they do not exist
 @constraint(shortest_path, [i = 1:n, j = 1:n; G[i, j] == 0], x[i, j] == 0)
 ## Flow conservation constraint
 @constraint(shortest_path, [i = 1:n], sum(x[i, :]) - sum(x[:, i]) == b[i])
@@ -96,15 +96,15 @@ value.(x)
 
 # Mathematically, we want to find a set of person-object pairs
 # $(1, j_{1}),..., (n, j_{n})$ from $A$ such that the objects $j_{1},...,j_{n}$
-# are all distinct, and the total benefit $\sum_{i=1}^{y} a_{ij_{i}}$ is
+# are all distinct, and the total benefit $\sum_{i=1}^{n} a_{ij_{i}}$ is
 # maximized.
 
 # ```math
 # \begin{aligned}
 # \max && \sum_{(i,j) \in A} a_{i,j} \times y_{i,j} \\
-# s.t. && \sum_{\{j|(i,j) \in A\}} y_{i,j} = 1 && \forall i = \{1,2....n\} \\
-# && \sum_{\{i|(i,j) \in A\}} y_{i,j} = 1 && \forall j = \{1,2....n\} \\
-# && y_{i,j} \in \{0,1\} && \forall (i,j) \in \{1,2...k\}
+# s.t. && \sum_{\{j|(i,j) \in A\}} y_{i,j} = 1 && \forall i \in \{1,2....n\} \\
+# && \sum_{\{i|(i,j) \in A\}} y_{i,j} = 1 && \forall j \in \{1,2....n\} \\
+# && y_{i,j} \in \{0,1\} && \forall (i,j) \in A
 # \end{aligned}
 # ```
 
