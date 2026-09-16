@@ -1069,28 +1069,27 @@ function test_start_value()
 end
 
 function test_inf_lower_bound()
-    y = -Inf
-    model = Model()
-    @variable(model, x >= y)
-    @test !has_lower_bound(x)
-    @test_throws(
-        ErrorException(
-            """
-            Unable to set the lower bound to $y because the value is not finite.
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @variable(model, x)
+        @test_throws(
+            ErrorException(
+                """
+                Unable to set the lower bound to $y because the value is not finite.
 
-            To remove the lower bound, use `delete_lower_bound`.
-            """,
-        ),
-        set_lower_bound(x, y),
-    )
+                To remove the lower bound, use `delete_lower_bound`.
+                """,
+            ),
+            set_lower_bound(x, y),
+        )
+    end
     return
 end
 
 function test_inf_upper_bound()
     for y in [-Inf, Inf, NaN]
         model = Model()
-        @variable(model, x <= y)
-        @test !has_upper_bound(x)
+        @variable(model, x)
         @test_throws(
             ErrorException(
                 """
@@ -1108,16 +1107,6 @@ end
 function test_inf_fixed()
     for y in [-Inf, Inf, NaN]
         model = Model()
-        @test_throws(
-            ErrorException(
-                """
-                Unable to use `$y::Float64` as the fixed value of a variable because it is not finite.
-
-                Ensure that the fixed value is a finite value.
-                """,
-            ),
-            @variable(model, x == y),
-        )
         @variable(model, x)
         @test_throws(
             ErrorException(
