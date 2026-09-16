@@ -1973,6 +1973,16 @@ function test_non_finite_bounds()
     @test_throws(
         ErrorException(
             """
+            Unable to use `-Inf::Float64` as the fixed value of a variable because it is not finite.
+
+            Ensure that the fixed value is a finite value.
+            """,
+        ),
+        @variable(model, x == -Inf),
+    )
+    @test_throws(
+        ErrorException(
+            """
             Unable to use `-Inf::Float64` as the upper bound of a variable because it is not finite.
 
             Ensure that the upper bound is a finite value.
