@@ -1454,17 +1454,7 @@ function test_assert_is_solved_and_feasible()
             """
             The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
-            solution_summary(; result = 1, verbose = false)
-            ├ solver_name          : Mock
-            ├ Termination
-            │ ├ termination_status : OPTIMAL
-            │ ├ result_count       : 1
-            │ └ raw_status         : failed
-            └ Solution (result = 1)
-              ├ primal_status        : FEASIBLE_POINT
-              ├ dual_status          : NO_SOLUTION
-              ├ objective_value      : 0.00000e+00
-              └ dual_objective_value : 0.00000e+00
+            $(sprint(show, solution_summary(model)))
             """,
         ),
         assert_is_solved_and_feasible(model; dual = true),
@@ -1474,10 +1464,7 @@ function test_assert_is_solved_and_feasible()
             """
             The model was not solved correctly. Here is the output of `solution_summary` to help debug why this happened:
 
-            solution_summary(; result = 2, verbose = false)
-            └ Solution (result = 2)
-              ├ primal_status        : NO_SOLUTION
-              └ dual_status          : NO_SOLUTION
+            $(sprint(show, solution_summary(model; result = 2)))
             """,
         ),
         assert_is_solved_and_feasible(model; dual = true, result = 2),
