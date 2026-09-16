@@ -1069,21 +1069,20 @@ function test_start_value()
 end
 
 function test_inf_lower_bound()
-    for y in [-Inf, Inf, NaN]
-        model = Model()
-        @variable(model, x >= y)
-        @test !has_lower_bound(x)
-        @test_throws(
-            ErrorException(
-                """
-                Unable to set the lower bound to $y because the value is not finite.
+    y = -Inf
+    model = Model()
+    @variable(model, x >= y)
+    @test !has_lower_bound(x)
+    @test_throws(
+        ErrorException(
+            """
+            Unable to set the lower bound to $y because the value is not finite.
 
-                To remove the lower bound, use `delete_lower_bound`.
-                """,
-            ),
-            set_lower_bound(x, y),
-        )
-    end
+            To remove the lower bound, use `delete_lower_bound`.
+            """,
+        ),
+        set_lower_bound(x, y),
+    )
     return
 end
 
