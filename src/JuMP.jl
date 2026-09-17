@@ -986,7 +986,7 @@ y
 julia> lower_bound(x)
 2.0
 
-julia> x === y
+julia> x == y
 true
 ```
 
