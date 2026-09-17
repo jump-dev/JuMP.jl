@@ -1040,7 +1040,7 @@ function add_constraint(
     name::String = "",
 )
     con = model_convert(model, con)
-    func = _moi_function_with_model_check(model, con)
+    func = moi_function(model, con)
     set = moi_set(con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.

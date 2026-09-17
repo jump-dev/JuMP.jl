@@ -288,7 +288,7 @@ function set_objective_function(
     model::GenericModel,
     func::Union{AbstractJuMPScalar,AbstractVector{<:AbstractJuMPScalar}},
 )
-    set_objective_function(model, _moi_function_with_model_check(model, func))
+    set_objective_function(model, moi_function(model, func))
     return
 end
 
