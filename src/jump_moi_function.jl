@@ -216,9 +216,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     end
     # There are two reasons we might reach here:
     #  1. The function `f` has no `AbstractJuMPScalar` terms, like
-    #     `NonlinearExpr(:+, Any[0.0])`. In this case, `model === nothing`. It
-    #     doesn't matter that we pass `(model, ` below, because no method will
-    #     exist and we will fallback to the single argument method.
+    #     `NonlinearExpr(:+, Any[0.0])`. In this case, `model === nothing`, and
+    #     we use the single-argument method below.
     #  2. The function `f` contains terms from a JuMP extension, for example
     #     InfiniteOpt. We call the two-argument version in case they have
     #     implemented it.
@@ -228,7 +227,11 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
         else
-            ret.args[i] = moi_function(model, f.args[i])
+            ret.args[i] = if isnothing(model)
+                moi_function(f.args[i])
+            else
+                moi_function(model, f.args[i])
+            end
         end
     end
     while !isempty(stack)
@@ -239,7 +242,11 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
             else
-                child.args[j] = moi_function(model, arg.args[j])
+                child.args[j] = if isnothing(model)
+                    moi_function(arg.args[j])
+                else
+                    moi_function(model, arg.args[j])
+                end
             end
         end
     end

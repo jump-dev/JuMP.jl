@@ -891,7 +891,7 @@ function constraint_object(
     return ScalarConstraint(jump_function(model, f), s)
 end
 
-function check_belongs_to_model(con::ScalarConstraint, model)
+function check_belongs_to_model(con::ScalarConstraint, model::AbstractModel)
     check_belongs_to_model(con.func, model)
     return
 end
@@ -991,7 +991,7 @@ function constraint_object(
     return VectorConstraint(jump_function(model, f), s, con_ref.shape)
 end
 
-function check_belongs_to_model(con::VectorConstraint, model)
+function check_belongs_to_model(con::VectorConstraint, model::AbstractModel)
     check_belongs_to_model(con.func, model)
     return
 end
@@ -1017,7 +1017,7 @@ function _moi_add_constraint(
     return MOI.add_constraint(model, f, s)
 end
 
-function check_belongs_to_model(f::AbstractVector, model)
+function check_belongs_to_model(f::AbstractVector, model::AbstractModel)
     for func in f
         check_belongs_to_model(func, model)
     end
