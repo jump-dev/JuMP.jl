@@ -385,9 +385,7 @@ function moi_function(
     model::GenericModel,
     f::AbstractVector{<:GenericNonlinearExpr},
 )
-    return MOI.VectorNonlinearFunction([
-        moi_function(model, row) for row in f
-    ],)
+    return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f],)
 end
 
 function jump_function_type(
