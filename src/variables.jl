@@ -143,13 +143,6 @@ function _VariableInfoExpr(;
     )
 end
 
-# It isn't sufficient to use `isfinite` below, because some bounds are given as
-# matrices. As a fallback, we define `_isfinite`, because overloading `isfinite`
-# would be type piracy.
-_isfinite(x::Number) = isfinite(x)
-
-_isfinite(x) = true
-
 _is_typemax(x::Real) = x == typemax(x)
 
 _is_typemax(x) = false
