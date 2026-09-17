@@ -51,8 +51,7 @@ julia> moi_function(model, f)
 function moi_function end
 
 # Default fallbacks for backwards compatibility. The first argument `model` was
-# introduced in JuMP@1.31.0. Objects that do not contain JuMP scalars do not
-# require an ownership check.
+# introduced in JuMP@1.31.0.
 moi_function(model, f) = moi_function(f)
 
 function moi_function(model, f::AbstractJuMPScalar)
