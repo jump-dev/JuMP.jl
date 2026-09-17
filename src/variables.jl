@@ -150,6 +150,14 @@ _isfinite(x::Number) = isfinite(x)
 
 _isfinite(x) = true
 
+_is_typemax(x::Real) = x == typemax(x)
+
+_is_typemax(x) = false
+
+_is_typemin(x::Real) = x == typemin(x)
+
+_is_typemin(x) = false
+
 """
     VariableInfo{S,T,U,V}
 
@@ -181,22 +189,13 @@ struct VariableInfo{S,T,U,V}
         binary::Bool,
         integer::Bool,
     ) where {S,T,U,V}
-        if has_lb && !_isfinite(lower_bound)
+        if has_lb && _is_typemin(lower_bound)
             has_lb = false
             lower_bound = NaN
         end
-        if has_ub && !_isfinite(upper_bound)
+        if has_ub && _is_typemax(upper_bound)
             has_ub = false
             upper_bound = NaN
-        end
-        if has_fix && !_isfinite(fixed_value)
-            error(
-                """
-                Unable to fix variable to $fixed_value because the value is not finite.
-
-                Use a finite value instead.
-                """,
-            )
         end
         return new{typeof(lower_bound),typeof(upper_bound),U,V}(
             has_lb,
@@ -2297,11 +2296,23 @@ function _moi_add_variable(
     return x
 end
 
-_to_value(::Type{T}, value::T, ::String) where {T} = value
+function _to_value(::Type{T}, value::T, msg::String) where {T}
+    if !isfinite(value)
+        error(
+            """
+            Unable to use `$value::$(typeof(value))` as the $msg of a variable \
+            because it is not finite.
+
+            Ensure that the $msg is a finite value.
+            """,
+        )
+    end
+    return value
+end
 
 function _to_value(::Type{T}, value, msg::String) where {T}
     try
-        return convert(T, value)
+        return _to_value(T, convert(T, value), msg)
     catch
         error(
             """
