@@ -382,8 +382,6 @@ it belongs to a different model.
 """
 function check_belongs_to_model end
 
-check_belongs_to_model(::Any, ::AbstractModel) = nothing
-
 function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     if owner_model(v) !== model
         throw(VariableNotOwned(v))

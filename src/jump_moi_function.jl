@@ -23,16 +23,19 @@ function moi_function_type end
     moi_function(model::GenericModel, x::AbstractJuMPScalar)
     moi_function(model::GenericModel, x::AbstractArray{<:AbstractJuMPScalar})
 
-Check that `x` belongs to `model`, then return the MathOptInterface equivalent.
-Specialized methods may fuse the ownership check and conversion into a single
-traversal.
+Check that `x` belongs to `model`, then return the MathOptInterface equivalent
+of the function `x`.
+
+This is equivalent to calling `check_belongs_to_model(x, model)` followed by
+`moi_function(x)`, but some methods may fuse the ownership check and conversion
+into a single function call, and some types do not support the single-argument
+    [`moi_function`](@ref).
 
 See also: [`jump_function`](@ref).
 
 !!! compat
-    The `model` argument was added in JuMP v1.31. To maintain backwards
-    compatibility, the two-argument method falls back to `moi_function(x)`.
-    New functions should use the two-argument version.
+    The `model` argument was added in JuMP v1.31.  New functions should use the
+    two-argument version.
 
 ## Example
 
@@ -226,12 +229,10 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
+        elseif model === nothing
+            ret.args[i] = moi_function(f.args[i])
         else
-            ret.args[i] = if isnothing(model)
-                moi_function(f.args[i])
-            else
-                moi_function(model, f.args[i])
-            end
+            ret.args[i] = moi_function(model, f.args[i])
         end
     end
     while !isempty(stack)
@@ -241,12 +242,10 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         for j in length(arg.args):-1:1
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
+            elseif model === nothing
+                child.args[j] = moi_function(arg.args[j])
             else
-                child.args[j] = if isnothing(model)
-                    moi_function(arg.args[j])
-                else
-                    moi_function(model, arg.args[j])
-                end
+                child.args[j] = moi_function(model, arg.args[j])
             end
         end
     end
@@ -385,7 +384,7 @@ function moi_function(
     model::GenericModel,
     f::AbstractVector{<:GenericNonlinearExpr},
 )
-    return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f],)
+    return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f])
 end
 
 function jump_function_type(
@@ -474,6 +473,8 @@ jump_function(constraint::AbstractConstraint) = constraint.func
 # Base.Number
 
 moi_function(x::Number) = x
+
+check_belongs_to_model(::Number, ::AbstractModel) = nothing
 
 jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
 
