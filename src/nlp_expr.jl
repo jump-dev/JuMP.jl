@@ -623,31 +623,6 @@ function owner_model(expr::GenericNonlinearExpr)
     return nothing
 end
 
-function check_belongs_to_model(
-    expr::GenericNonlinearExpr,
-    model::AbstractModel,
-)
-    # TODO: Consider keeping an `IdDict` of visited expressions so that aliases
-    # are checked only once. This traversal treats the expression as a tree, so
-    # repeatedly aliased subexpressions can cause the work to grow
-    # exponentially in the depth of the expression, even though the underlying
-    # expression is a much smaller DAG. This is not urgent because JuMP's
-    # internal conversion path checks ownership while converting and caches
-    # aliases; this method is now used only when a user calls it directly.
-    stack = Any[expr]
-    while !isempty(stack)
-        child = pop!(stack)
-        if child isa GenericNonlinearExpr
-            for arg in child.args
-                push!(stack, arg)
-            end
-        elseif child isa AbstractJuMPScalar
-            check_belongs_to_model(child, model)
-        end
-    end
-    return
-end
-
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)::MOI.Nonlinear.Model
     data = nlp.constraints[index(c)]

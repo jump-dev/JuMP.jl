@@ -61,6 +61,31 @@ function moi_function(model, f)
 end
 
 """
+    check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
+
+Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of `x` is not
+`model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> check_belongs_to_model(x, model)
+
+julia> model_2 = Model();
+
+julia> check_belongs_to_model(x, model_2)
+ERROR: VariableNotOwned{VariableRef}(x): the variable x cannot be used in this model because
+it belongs to a different model.
+[...]
+```
+"""
+function check_belongs_to_model end
+
+"""
     jump_function_type(model::AbstractModel, ::Type{T}) where {T}
 
 Given an MathOptInterface object type `T`, return the JuMP equivalent.
@@ -107,6 +132,13 @@ moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
 
 moi_function(variable::AbstractVariableRef) = index(variable)
 
+function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
+    if owner_model(v) !== model
+        throw(VariableNotOwned(v))
+    end
+    return
+end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VariableIndex},
@@ -128,6 +160,13 @@ function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
 end
 
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
+
+function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
+    for variable in keys(a.terms)
+        check_belongs_to_model(variable, model)
+    end
+    return
+end
 
 function jump_function_type(
     ::GenericModel{T},
@@ -153,6 +192,15 @@ end
 
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
+end
+
+function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
+    check_belongs_to_model(q.aff, model)
+    for variable_pair in keys(q.terms)
+        check_belongs_to_model(variable_pair.a, model)
+        check_belongs_to_model(variable_pair.b, model)
+    end
+    return
 end
 
 function jump_function_type(
@@ -250,6 +298,31 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         end
     end
     return ret
+end
+
+function check_belongs_to_model(
+    expr::GenericNonlinearExpr,
+    model::AbstractModel,
+)
+    # TODO: Consider keeping an `IdDict` of visited expressions so that aliases
+    # are checked only once. This traversal treats the expression as a tree, so
+    # repeatedly aliased subexpressions can cause the work to grow
+    # exponentially in the depth of the expression, even though the underlying
+    # expression is a much smaller DAG. This is not urgent because JuMP's
+    # internal conversion path checks ownership while converting and caches
+    # aliases; this method is now used only when a user calls it directly.
+    stack = Any[expr]
+    while !isempty(stack)
+        child = pop!(stack)
+        if child isa GenericNonlinearExpr
+            for arg in child.args
+                push!(stack, arg)
+            end
+        elseif child isa AbstractJuMPScalar
+            check_belongs_to_model(child, model)
+        end
+    end
+    return
 end
 
 function jump_function_type(
@@ -462,6 +535,11 @@ function moi_function(model, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
+function check_belongs_to_model(con::AbstractConstraint, model::AbstractModel)
+    check_belongs_to_model(jump_function(con), model)
+    return
+end
+
 """
     jump_function(constraint::AbstractConstraint)
 
@@ -507,4 +585,11 @@ function moi_function(x::AbstractArray{AbstractJuMPScalar})
         ```
         """,
     )
+end
+
+function check_belongs_to_model(f::AbstractArray, model::AbstractModel)
+    for func in f
+        check_belongs_to_model(func, model)
+    end
+    return
 end
