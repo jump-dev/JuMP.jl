@@ -747,13 +747,6 @@ function value(a::GenericAffExpr; result::Int = 1)
     end
 end
 
-function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
-    for variable in keys(a.terms)
-        check_belongs_to_model(variable, model)
-    end
-    return
-end
-
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model. The verification is done in `check_belongs_to_model` which
 # should be called before calling `MOI.ScalarAffineFunction`.

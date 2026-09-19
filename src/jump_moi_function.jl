@@ -23,14 +23,19 @@ function moi_function_type end
     moi_function(model::GenericModel, x::AbstractJuMPScalar)
     moi_function(model::GenericModel, x::AbstractArray{<:AbstractJuMPScalar})
 
-Given a JuMP object `x`, return the MathOptInterface equivalent.
+Check that `x` belongs to `model`, then return the MathOptInterface equivalent
+of the function `x`.
+
+This is equivalent to calling `check_belongs_to_model(x, model)` followed by
+`moi_function(x)`, but some methods may fuse the ownership check and conversion
+into a single function call, and some types do not support the single-argument
+    [`moi_function`](@ref).
 
 See also: [`jump_function`](@ref).
 
 !!! compat
-    The `model` argument was added in JuMP v1.31. To maintain backwards
-    compatibility, there is a default fallback for `moi_function(x)`. New
-    functions should use the two-argument version.
+    The `model` argument was added in JuMP v1.31.  New functions should use the
+    two-argument version.
 
 ## Example
 
@@ -48,9 +53,41 @@ julia> moi_function(model, f)
 """
 function moi_function end
 
-# A default fallback for backwards compatibility. The first argument `model` was
+# Default fallback for backwards compatibility. The first argument `model` was
 # introduced in JuMP@1.31.0.
+function moi_function(model::GenericModel, f)
+    check_belongs_to_model(f, model)
+    return moi_function(f)
+end
+
+# Plasmo combines variables from multiple models, so
+# check_belongs_to_model(owner_model(f), f) may not work.
 moi_function(model, f) = moi_function(f)
+
+"""
+    check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
+
+Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of `x` is not
+`model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> check_belongs_to_model(x, model)
+
+julia> model_2 = Model();
+
+julia> check_belongs_to_model(x, model_2)
+ERROR: VariableNotOwned{VariableRef}(x): the variable x cannot be used in this model because
+it belongs to a different model.
+[...]
+```
+"""
+function check_belongs_to_model end
 
 """
     jump_function_type(model::AbstractModel, ::Type{T}) where {T}
@@ -99,6 +136,13 @@ moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
 
 moi_function(variable::AbstractVariableRef) = index(variable)
 
+function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
+    if owner_model(v) !== model
+        throw(VariableNotOwned(v))
+    end
+    return
+end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VariableIndex},
@@ -120,6 +164,13 @@ function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
 end
 
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
+
+function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
+    for variable in keys(a.terms)
+        check_belongs_to_model(variable, model)
+    end
+    return
+end
 
 function jump_function_type(
     ::GenericModel{T},
@@ -145,6 +196,15 @@ end
 
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
+end
+
+function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
+    check_belongs_to_model(q.aff, model)
+    for variable_pair in keys(q.terms)
+        check_belongs_to_model(variable_pair.a, model)
+        check_belongs_to_model(variable_pair.b, model)
+    end
+    return
 end
 
 function jump_function_type(
@@ -211,9 +271,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     end
     # There are two reasons we might reach here:
     #  1. The function `f` has no `AbstractJuMPScalar` terms, like
-    #     `NonlinearExpr(:+, Any[0.0])`. In this case, `model === nothing`. It
-    #     doesn't matter that we pass `(model, ` below, because no method will
-    #     exist and we will fallback to the single argument method.
+    #     `NonlinearExpr(:+, Any[0.0])`. In this case, `model === nothing`, and
+    #     we use the single-argument method below.
     #  2. The function `f` contains terms from a JuMP extension, for example
     #     InfiniteOpt. We call the two-argument version in case they have
     #     implemented it.
@@ -222,6 +281,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
+        elseif model === nothing
+            ret.args[i] = moi_function(f.args[i])
         else
             ret.args[i] = moi_function(model, f.args[i])
         end
@@ -233,12 +294,39 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         for j in length(arg.args):-1:1
             if arg.args[j] isa GenericNonlinearExpr{V}
                 push!(stack, (child, j, arg.args[j]))
+            elseif model === nothing
+                child.args[j] = moi_function(arg.args[j])
             else
                 child.args[j] = moi_function(model, arg.args[j])
             end
         end
     end
     return ret
+end
+
+function check_belongs_to_model(
+    expr::GenericNonlinearExpr,
+    model::AbstractModel,
+)
+    # TODO: Consider keeping an `IdDict` of visited expressions so that aliases
+    # are checked only once. This traversal treats the expression as a tree, so
+    # repeatedly aliased subexpressions can cause the work to grow
+    # exponentially in the depth of the expression, even though the underlying
+    # expression is a much smaller DAG. This is not urgent because JuMP's
+    # internal conversion path checks ownership while converting and caches
+    # aliases; this method is now used only when a user calls it directly.
+    stack = Any[expr]
+    while !isempty(stack)
+        child = pop!(stack)
+        if child isa GenericNonlinearExpr
+            for arg in child.args
+                push!(stack, arg)
+            end
+        elseif child isa AbstractJuMPScalar
+            check_belongs_to_model(child, model)
+        end
+    end
+    return
 end
 
 function jump_function_type(
@@ -369,6 +457,13 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
     return MOI.VectorNonlinearFunction(f)
 end
 
+function moi_function(
+    model::GenericModel,
+    f::AbstractVector{<:GenericNonlinearExpr},
+)
+    return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f])
+end
+
 function jump_function_type(
     ::GenericModel{T},
     ::Type{MOI.VectorNonlinearFunction},
@@ -444,6 +539,15 @@ function moi_function(model, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
+function moi_function(model::GenericModel, constraint::AbstractConstraint)
+    return moi_function(model, jump_function(constraint))
+end
+
+function check_belongs_to_model(con::AbstractConstraint, model::AbstractModel)
+    check_belongs_to_model(jump_function(con), model)
+    return
+end
+
 """
     jump_function(constraint::AbstractConstraint)
 
@@ -455,6 +559,8 @@ jump_function(constraint::AbstractConstraint) = constraint.func
 # Base.Number
 
 moi_function(x::Number) = x
+
+check_belongs_to_model(::Number, ::AbstractModel) = nothing
 
 jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
 
@@ -487,4 +593,11 @@ function moi_function(x::AbstractArray{AbstractJuMPScalar})
         ```
         """,
     )
+end
+
+function check_belongs_to_model(f::AbstractArray, model::AbstractModel)
+    for func in f
+        check_belongs_to_model(func, model)
+    end
+    return
 end

@@ -891,11 +891,6 @@ function constraint_object(
     return ScalarConstraint(jump_function(model, f), s)
 end
 
-function check_belongs_to_model(con::ScalarConstraint, model)
-    check_belongs_to_model(con.func, model)
-    return
-end
-
 """
     struct VectorConstraint
 
@@ -991,11 +986,6 @@ function constraint_object(
     return VectorConstraint(jump_function(model, f), s, con_ref.shape)
 end
 
-function check_belongs_to_model(con::VectorConstraint, model)
-    check_belongs_to_model(con.func, model)
-    return
-end
-
 function _moi_add_constraint(
     model::MOI.ModelLike,
     f::F,
@@ -1017,13 +1007,6 @@ function _moi_add_constraint(
     return MOI.add_constraint(model, f, s)
 end
 
-function check_belongs_to_model(f::AbstractVector, model)
-    for func in f
-        check_belongs_to_model(func, model)
-    end
-    return
-end
-
 """
     add_constraint(
         model::GenericModel,
@@ -1040,8 +1023,8 @@ function add_constraint(
     name::String = "",
 )
     con = model_convert(model, con)
-    check_belongs_to_model(con, model)
-    func, set = moi_function(model, con), moi_set(con)
+    func = moi_function(model, con)
+    set = moi_set(con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     cindex = _moi_add_constraint(

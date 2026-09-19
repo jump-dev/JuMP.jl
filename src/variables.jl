@@ -357,38 +357,6 @@ function Base.showerror(io::IO, err::VariableNotOwned)
     )
 end
 
-"""
-    check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
-
-Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of `x` is not
-`model`.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> check_belongs_to_model(x, model)
-
-julia> model_2 = Model();
-
-julia> check_belongs_to_model(x, model_2)
-ERROR: VariableNotOwned{VariableRef}(x): the variable x cannot be used in this model because
-it belongs to a different model.
-[...]
-```
-"""
-function check_belongs_to_model end
-
-function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
-    if owner_model(v) !== model
-        throw(VariableNotOwned(v))
-    end
-    return
-end
-
 Base.iszero(::GenericVariableRef) = false
 
 function Base.copy(v::GenericVariableRef{T}) where {T}
