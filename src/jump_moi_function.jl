@@ -55,10 +55,14 @@ function moi_function end
 
 # Default fallback for backwards compatibility. The first argument `model` was
 # introduced in JuMP@1.31.0.
-function moi_function(model, f)
+function moi_function(model::GenericModel, f)
     check_belongs_to_model(f, model)
     return moi_function(f)
 end
+
+# Plasmo combines variables from multiple models, so
+# check_belongs_to_model(owner_model(f), f) may not work.
+moi_function(model, f) = moi_function(f)
 
 """
     check_belongs_to_model(x::AbstractJuMPScalar, model::AbstractModel)
@@ -532,6 +536,10 @@ function moi_function(constraint::AbstractConstraint)
 end
 
 function moi_function(model, constraint::AbstractConstraint)
+    return moi_function(model, jump_function(constraint))
+end
+
+function moi_function(model::GenericModel, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
