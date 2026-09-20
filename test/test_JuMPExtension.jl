@@ -34,7 +34,11 @@ function test_nonlinear_moi_function_extension_dispatch()
     g = JuMP.GenericNonlinearExpr{V}(:+, Any[x, scalar, f])
     expected = JuMP.MOI.ScalarNonlinearFunction(
         :+,
-        Any[JuMP.index(x), 1.0, JuMP.MOI.ScalarNonlinearFunction(:sin, Any[1.0])],
+        Any[
+            JuMP.index(x),
+            1.0,
+            JuMP.MOI.ScalarNonlinearFunction(:sin, Any[1.0]),
+        ],
     )
     Test.@test JuMP.moi_function(g) ≈ expected
     return
