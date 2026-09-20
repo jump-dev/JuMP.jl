@@ -25,6 +25,14 @@ JuMP.owner_model(x::TwoArgumentVariable) = x.model
 
 JuMP.moi_function(::JuMPExtension.MyModel, ::TwoArgumentVariable) = 1.0
 
+function test_constraint_moi_function_extension_dispatch()
+    model = JuMPExtension.MyModel()
+    constraint =
+        JuMP.ScalarConstraint(TwoArgumentVariable(model), JuMP.MOI.EqualTo(0.0))
+    Test.@test JuMP.moi_function(model, constraint) == 1.0
+    return
+end
+
 function test_nonlinear_moi_function_extension_dispatch()
     model = JuMPExtension.MyModel()
     JuMP.@variable(model, x)
