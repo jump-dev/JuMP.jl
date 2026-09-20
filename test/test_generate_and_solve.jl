@@ -213,6 +213,7 @@ function test_generate_solve_QCQP()
         () -> MOI.Utilities.MockOptimizer(
             MOI.Utilities.Model{Float64}();
             eval_objective_value = false,
+            eval_dual_objective_value = false,
         ),
     )
     optimize!(m)
@@ -220,6 +221,7 @@ function test_generate_solve_QCQP()
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.RawStatusString(), "solver specific string")
     MOI.set(mock, MOI.ObjectiveValue(), -1.0)
+    MOI.set(mock, MOI.DualObjectiveValue(), 5.0)
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
