@@ -283,6 +283,14 @@ function test_bridges_direct()
     return
 end
 
+function test_model_type_aliases()
+    @test GenericModel <: JuMP.ModelImpl
+    @test GenericVariableRef<:(JuMP.VariableRefImpl{T} where {T<:Real})
+    @test Model === GenericModel{Float64}
+    @test VariableRef === GenericVariableRef{Float64}
+    return
+end
+
 function test_direct_generic_model()
     opt = () -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{BigFloat}())
     model = direct_generic_model(BigFloat, optimizer_with_attributes(opt))

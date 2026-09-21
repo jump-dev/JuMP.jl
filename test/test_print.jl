@@ -637,25 +637,28 @@ Subject to
     io_test(
         MIME("text/plain"),
         model_1,
-        """
-        A JuMP Model
-        ├ solver: none
-        ├ objective_sense: MAX_SENSE
-        │ └ objective_function_type: $(GenericAffExpr{Float64,VariableType})
-        ├ num_variables: 13
-        ├ num_constraints: 24
-        │ ├ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeTriangle: 2
-        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeSquare: 2
-        │ ├ $(Vector{GenericAffExpr{Float64,VariableType}}) in MOI.SecondOrderCone: 1
-        │ ├ $VariableType in MOI.EqualTo{Float64}: 1
-        │ ├ $VariableType in MOI.GreaterThan{Float64}: 4
-        │ ├ $VariableType in MOI.LessThan{Float64}: 4
-        │ ├ $VariableType in MOI.Integer: 4
-        │ └ $VariableType in MOI.ZeroOne: 4
-        └ Names registered in the model
-          └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""";
+        sprint(
+            MOI.Utilities.print_with_acronym,
+            """
+A JuMP Model
+├ solver: none
+├ objective_sense: MAX_SENSE
+│ └ objective_function_type: $(GenericAffExpr{Float64,VariableType})
+├ num_variables: 13
+├ num_constraints: 24
+│ ├ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeTriangle: 2
+│ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeSquare: 2
+│ ├ $(Vector{GenericAffExpr{Float64,VariableType}}) in MOI.SecondOrderCone: 1
+│ ├ $VariableType in MOI.EqualTo{Float64}: 1
+│ ├ $VariableType in MOI.GreaterThan{Float64}: 4
+│ ├ $VariableType in MOI.LessThan{Float64}: 4
+│ ├ $VariableType in MOI.Integer: 4
+│ └ $VariableType in MOI.ZeroOne: 4
+└ Names registered in the model
+  └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""",
+        );
         repl = :show,
     )
 
@@ -707,17 +710,20 @@ Subject to
     io_test(
         MIME("text/plain"),
         model_2,
-        """
-        A JuMP Model
-        ├ solver: none
-        ├ objective_sense: FEASIBILITY_SENSE
-        ├ num_variables: 2
-        ├ num_constraints: 3
-        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $VariableType in MOI.Integer: 1
-        │ └ $VariableType in MOI.ZeroOne: 1
-        └ Names registered in the model
-          └ :x, :y""";
+        sprint(
+            MOI.Utilities.print_with_acronym,
+            """
+A JuMP Model
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 2
+├ num_constraints: 3
+│ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $VariableType in MOI.Integer: 1
+│ └ $VariableType in MOI.ZeroOne: 1
+└ Names registered in the model
+  └ :x, :y""",
+        );
         repl = :show,
     )
 
@@ -1157,7 +1163,7 @@ function test_show_objective_summary()
     @variable(model, x)
     @objective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
-          "Objective function type: JuMP.VariableRef\n"
+          "Objective function type: $(typeof(x))\n"
     @NLobjective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
           "Objective function type: Nonlinear\n"

@@ -283,7 +283,7 @@ struct VariableRefImpl{T,M<:ModelImpl{T}} <: AbstractVariableRef
     index::MOI.VariableIndex
 end
 
-const GenericVariableRef{T} = VariableRefImpl{T,GenericModel{T}}
+const GenericVariableRef{T<:Real} = VariableRefImpl{T,GenericModel{T}}
 const VariableRef = GenericVariableRef{Float64}
 
 function VariableRefImpl{T}(

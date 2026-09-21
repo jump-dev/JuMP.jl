@@ -1238,7 +1238,8 @@ struct NoOptimizer <: Exception end
 
 # Throws an error if `optimize!` has not been called, that is, if there is no
 # optimizer attached or if the termination status is `MOI.OPTIMIZE_NOT_CALLED`.
-function _moi_get_result(model::MOI.ModelLike, args...)
+# Specialize the forwarded arguments so trimming retains the result getter.
+function _moi_get_result(model::MOI.ModelLike, args::Vararg{Any,N}) where {N}
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
     end

@@ -185,7 +185,7 @@ mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike} <: AbstractModel
     subexpressions::WeakKeyDict{Any,MOI.ScalarNonlinearFunction}
 end
 
-const GenericModel{T} = ModelImpl{T,MOI.ModelLike}
+const GenericModel{T<:Real} = ModelImpl{T,MOI.ModelLike}
 
 value_type(::Type{<:ModelImpl{T}}) where {T} = T
 

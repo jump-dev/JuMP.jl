@@ -1,0 +1,8 @@
+[deps]
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+
+[compat]
+HiGHS = "1"
+JuMP = "1"
+julia = "1.13"
