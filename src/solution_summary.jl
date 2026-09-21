@@ -85,7 +85,7 @@ solution_summary(; result = 1, verbose = false)
 ```
 """
 function solution_summary(
-    model::GenericModel{T};
+    model::ModelImpl{T};
     result::Int = 1,
     verbose::Bool = false,
 ) where {T}

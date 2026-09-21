@@ -55,7 +55,7 @@ function moi_function end
 
 # Default fallback for backwards compatibility. The first argument `model` was
 # introduced in JuMP@1.31.0.
-function moi_function(model::GenericModel, f)
+function moi_function(model::ModelImpl, f)
     check_belongs_to_model(f, model)
     return moi_function(f)
 end
@@ -144,17 +144,17 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
 end
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.VariableIndex},
 ) where {T}
-    return GenericVariableRef{T}
+    return variable_ref_type(model)
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     variable::MOI.VariableIndex,
 ) where {T}
-    return GenericVariableRef{T}(model, variable)
+    return variable_ref_type(model)(model, variable)
 end
 
 # MOI.ScalarAffineFunction
@@ -173,19 +173,19 @@ function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
 end
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.ScalarAffineFunction{C}},
 ) where {C,T}
     S = promote_type(C, T)
-    return GenericAffExpr{S,GenericVariableRef{T}}
+    return GenericAffExpr{S,variable_ref_type(model)}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::MOI.ScalarAffineFunction{C},
 ) where {C,T}
     S = promote_type(C, T)
-    return GenericAffExpr{S,GenericVariableRef{T}}(model, f)
+    return GenericAffExpr{S,variable_ref_type(model)}(model, f)
 end
 
 # MOI.ScalarQuadraticFunction
@@ -208,25 +208,25 @@ function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
 end
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.ScalarQuadraticFunction{C}},
 ) where {C,T}
-    return GenericQuadExpr{promote_type(T, C),GenericVariableRef{T}}
+    return GenericQuadExpr{promote_type(T, C),variable_ref_type(model)}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::MOI.ScalarQuadraticFunction{C},
 ) where {C,T}
     S = promote_type(T, C)
-    return GenericQuadExpr{S,GenericVariableRef{T}}(model, f)
+    return GenericQuadExpr{S,variable_ref_type(model)}(model, f)
 end
 
 # MOI.ScalarNonlinearFunction
 
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
-function moi_function(model::GenericModel, f::GenericNonlinearExpr{V}) where {V}
+function moi_function(model::ModelImpl, f::GenericNonlinearExpr{V}) where {V}
     if (cache = get(model.subexpressions, f, nothing)) !== nothing
         return cache
     end
@@ -264,7 +264,7 @@ end
 # example, this method was used by Plasmo.jl.
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     model = owner_model(f)
-    if model isa GenericModel
+    if model isa ModelImpl
         # If `f` has a `GenericModel` as its owner, redirect to the two-arg
         # vesion so that we can cache common subexpressions.
         return moi_function(model, f)
@@ -330,13 +330,13 @@ function check_belongs_to_model(
 end
 
 function jump_function_type(
-    model::GenericModel,
+    model::ModelImpl,
     ::Type{<:MOI.ScalarNonlinearFunction},
 )
     return GenericNonlinearExpr{variable_ref_type(typeof(model))}
 end
 
-function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
+function jump_function(model::ModelImpl, f::MOI.ScalarNonlinearFunction)
     V = variable_ref_type(typeof(model))
     ret = GenericNonlinearExpr{V}(f.head, Any[])
     stack = Tuple{GenericNonlinearExpr,Any}[]
@@ -369,18 +369,18 @@ function moi_function(variables::Vector{<:AbstractVariableRef})
 end
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.VectorOfVariables},
 ) where {T}
-    return Vector{GenericVariableRef{T}}
+    return Vector{variable_ref_type(model)}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     variables::MOI.VectorOfVariables,
 ) where {T}
-    return GenericVariableRef{T}[
-        GenericVariableRef{T}(model, v) for v in variables.variables
+    return variable_ref_type(model)[
+        variable_ref_type(model)(model, v) for v in variables.variables
     ]
 end
 
@@ -393,26 +393,26 @@ end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.VectorAffineFunction{C}},
 ) where {C,T}
     S = promote_type(C, T)
-    return Vector{GenericAffExpr{S,GenericVariableRef{T}}}
+    return Vector{GenericAffExpr{S,variable_ref_type(model)}}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::MOI.VectorAffineFunction{C},
 ) where {T,C}
     S = promote_type(C, T)
-    ret = GenericAffExpr{S,GenericVariableRef{T}}[]
+    ret = GenericAffExpr{S,variable_ref_type(model)}[]
     for scalar_f in MOIU.eachscalar(f)
-        g = GenericAffExpr{S,GenericVariableRef{T}}(scalar_f.constant)
+        g = GenericAffExpr{S,variable_ref_type(model)}(scalar_f.constant)
         for t in scalar_f.terms
             add_to_expression!(
                 g,
                 t.coefficient,
-                GenericVariableRef(model, t.variable),
+                VariableRefImpl(model, t.variable),
             )
         end
         push!(ret, g)
@@ -429,20 +429,20 @@ end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.VectorQuadraticFunction{C}},
 ) where {C,T}
     S = promote_type(T, C)
-    return Vector{GenericQuadExpr{S,GenericVariableRef{T}}}
+    return Vector{GenericQuadExpr{S,variable_ref_type(model)}}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::MOI.VectorQuadraticFunction{C},
 ) where {C,T}
     S = promote_type(T, C)
-    return GenericQuadExpr{S,GenericVariableRef{T}}[
-        GenericQuadExpr{S,GenericVariableRef{T}}(model, f) for
+    return GenericQuadExpr{S,variable_ref_type(model)}[
+        GenericQuadExpr{S,variable_ref_type(model)}(model, f) for
         f in MOIU.eachscalar(f)
     ]
 end
@@ -458,31 +458,31 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
 end
 
 function moi_function(
-    model::GenericModel,
+    model::ModelImpl,
     f::AbstractVector{<:GenericNonlinearExpr},
 )
     return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f])
 end
 
 function jump_function_type(
-    ::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{MOI.VectorNonlinearFunction},
 ) where {T}
-    return Vector{GenericNonlinearExpr{GenericVariableRef{T}}}
+    return Vector{GenericNonlinearExpr{variable_ref_type(model)}}
 end
 
 function jump_function(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::MOI.VectorNonlinearFunction,
 ) where {T}
-    return GenericNonlinearExpr{GenericVariableRef{T}}[
+    return GenericNonlinearExpr{variable_ref_type(model)}[
         jump_function(model, fi) for fi in MOI.Utilities.eachscalar(f)
     ]
 end
 
 # MOI.Nonlinear.Expression
 
-function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
+function jump_function(model::ModelImpl, expr::MOI.Nonlinear.Expression)
     V = variable_ref_type(typeof(model))
     nlp = nonlinear_model(model)::MOI.Nonlinear.Model
     parsed = Vector{Any}(undef, length(expr.nodes))
@@ -539,7 +539,7 @@ function moi_function(model, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
-function moi_function(model::GenericModel, constraint::AbstractConstraint)
+function moi_function(model::ModelImpl, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
@@ -562,7 +562,7 @@ moi_function(x::Number) = x
 
 check_belongs_to_model(::Number, ::AbstractModel) = nothing
 
-jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
+jump_function(::ModelImpl{T}, x::Number) where {T} = convert(T, x)
 
 # Base.AbstractArray
 

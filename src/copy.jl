@@ -42,7 +42,7 @@ reference of the copied model can be obtained by indexing the map with the
 reference of the corresponding reference of the original model.
 """
 struct GenericReferenceMap{T}
-    model::GenericModel{T}
+    model::ModelImpl{T}
     index_map::MOIU.IndexMap
 end
 
@@ -53,8 +53,8 @@ Base.getindex(::GenericReferenceMap, x::Number) = x
 Base.getindex(::GenericReferenceMap, x::AbstractString) = x
 Base.getindex(::GenericReferenceMap, x::Symbol) = x
 
-function Base.getindex(map::GenericReferenceMap, vref::GenericVariableRef)
-    return GenericVariableRef(map.model, map.index_map[index(vref)])
+function Base.getindex(map::GenericReferenceMap, vref::VariableRefImpl)
+    return VariableRefImpl(map.model, map.index_map[index(vref)])
 end
 
 function Base.getindex(map::GenericReferenceMap, cref::ConstraintRef)
@@ -148,7 +148,7 @@ cref : x = 2
 ```
 """
 function copy_model(
-    model::GenericModel{T};
+    model::ModelImpl{T};
     filter_constraints::Union{Nothing,Function} = nothing,
 ) where {T}
     if mode(model) == DIRECT
@@ -328,7 +328,7 @@ Subject to
  c2 : x ≤ 1
 ```
 """
-function copy_conflict(model::GenericModel)
+function copy_conflict(model::ModelImpl)
     function filter_constraints(cref::ConstraintRef)
         status = MOI.get(model, MOI.ConstraintConflictStatus(), cref)
         return status != MOI.NOT_IN_CONFLICT
@@ -341,7 +341,7 @@ end
 # Calling `deepcopy` over a JuMP model is not supported, nor planned to be
 # supported, because it would involve making a deep copy of the underlying
 # solver (behind a C pointer).
-function Base.deepcopy(::GenericModel)
+function Base.deepcopy(::ModelImpl)
     return error(
         """
         `deepcopy` is not supported for `JuMP.GenericModel` because the underlying
@@ -352,7 +352,7 @@ function Base.deepcopy(::GenericModel)
     )
 end
 
-function MOI.copy_to(dest::MOI.ModelLike, src::GenericModel)
+function MOI.copy_to(dest::MOI.ModelLike, src::ModelImpl)
     nlp = nonlinear_model(src)
     if nlp !== nothing
         # Re-set the NLP block in-case things have changed since last
@@ -368,7 +368,7 @@ function MOI.copy_to(dest::MOI.ModelLike, src::GenericModel)
     return MOI.copy_to(dest, backend(src))
 end
 
-function MOI.copy_to(dest::GenericModel, src::MOI.ModelLike)
+function MOI.copy_to(dest::ModelImpl, src::MOI.ModelLike)
     index_map = MOI.copy_to(backend(dest), src)
     if MOI.NLPBlock() in MOI.get(src, MOI.ListOfModelAttributesSet())
         block = MOI.get(src, MOI.NLPBlock())

@@ -127,14 +127,14 @@ function value_type(::Type{T}) where {T}
     )
 end
 
-mutable struct GenericModel{T<:Real} <: AbstractModel
+mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike} <: AbstractModel
     # !!! note
     #     When adding new fields to this struct, you must also update
     #     `Base.empty!(::GenericModel)`.
 
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
-    moi_backend::MOI.ModelLike
+    moi_backend::B
 
     # List of shapes of constraints that are not `ScalarShape` or `VectorShape`.
     shapes::Dict{MOI.ConstraintIndex,AbstractShape}
@@ -185,9 +185,11 @@ mutable struct GenericModel{T<:Real} <: AbstractModel
     subexpressions::WeakKeyDict{Any,MOI.ScalarNonlinearFunction}
 end
 
-value_type(::Type{GenericModel{T}}) where {T} = T
+const GenericModel{T} = ModelImpl{T,MOI.ModelLike}
 
-function Base.getproperty(model::GenericModel, name::Symbol)
+value_type(::Type{<:ModelImpl{T}}) where {T} = T
+
+function Base.getproperty(model::ModelImpl, name::Symbol)
     if name == :nlp_data
         error(
             """
@@ -239,7 +241,7 @@ julia> typeof(model)
 GenericModel{BigFloat}
 ```
 """
-function GenericModel{T}(
+function ModelImpl{T,MOI.ModelLike}(
     @nospecialize(optimizer_factory = nothing);
     kwargs...,
 ) where {T<:Real}
@@ -282,8 +284,16 @@ function direct_generic_model(
     value_type::Type{T},
     backend::MOI.ModelLike;
 ) where {T<:Real}
+    return _direct_generic_model(T, MOI.ModelLike, backend)
+end
+
+function _direct_generic_model(
+    ::Type{T},
+    ::Type{B},
+    backend::MOI.ModelLike,
+) where {T<:Real,B<:MOI.ModelLike}
     @assert MOI.is_empty(backend)
-    return GenericModel{T}(
+    return ModelImpl{T,B}(
         backend,
         Dict{MOI.ConstraintIndex,AbstractShape}(),
         Set{Any}(),
@@ -385,6 +395,9 @@ julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer); add_bridges = false);
 """
 const Model = GenericModel{Float64}
 
+concrete_direct_model(backend::B) where {B<:MOI.ModelLike} =
+    _direct_generic_model(Float64, B, backend)
+
 """
     direct_model(backend::MOI.ModelLike)
 
@@ -459,7 +472,7 @@ function direct_model(factory::MOI.OptimizerWithAttributes)
     return direct_model(optimizer)
 end
 
-Base.broadcastable(model::GenericModel) = Ref(model)
+Base.broadcastable(model::ModelImpl) = Ref(model)
 
 """
     backend(model::GenericModel)
@@ -509,7 +522,7 @@ julia> index(x)
 MOI.VariableIndex(1)
 ```
 """
-backend(model::GenericModel) = model.moi_backend
+backend(model::ModelImpl) = model.moi_backend
 
 """
     unsafe_backend(model::GenericModel)
@@ -612,7 +625,7 @@ julia> index(x)
 MOI.VariableIndex(1)
 ```
 """
-unsafe_backend(model::GenericModel) = unsafe_backend(backend(model))
+unsafe_backend(model::ModelImpl) = unsafe_backend(backend(model))
 
 function unsafe_backend(model::MOIU.CachingOptimizer)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
@@ -655,7 +668,7 @@ julia> mode(model)
 AUTOMATIC::ModelMode = 0
 ```
 """
-function mode(model::GenericModel)
+function mode(model::ModelImpl)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_mode`) to improve performance.
     return _moi_mode(backend(model))
@@ -690,12 +703,12 @@ julia> set_string_names_on_creation(model)
 false
 ```
 """
-function set_string_names_on_creation(model::GenericModel, value::Bool)
+function set_string_names_on_creation(model::ModelImpl, value::Bool)
     model.set_string_names_on_creation = value
     return
 end
 
-function set_string_names_on_creation(model::GenericModel)
+function set_string_names_on_creation(model::ModelImpl)
     return model.set_string_names_on_creation
 end
 
@@ -733,7 +746,7 @@ julia> bridge_constraints(model)
 false
 ```
 """
-function bridge_constraints(model::GenericModel)
+function bridge_constraints(model::ModelImpl)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_bridge_constraints`) to improve performance.
     return _moi_bridge_constraints(backend(model))
@@ -798,7 +811,7 @@ julia> add_bridge(
 ```
 """
 function add_bridge(
-    model::GenericModel{S},
+    model::ModelImpl{S},
     BT::Type{<:MOI.Bridges.AbstractBridge};
     coefficient_type::Type{T} = S,
 ) where {S,T}
@@ -843,7 +856,7 @@ julia> remove_bridge(
 ```
 """
 function remove_bridge(
-    model::GenericModel{S},
+    model::ModelImpl{S},
     BT::Type{<:MOI.Bridges.AbstractBridge};
     coefficient_type::Type{T} = S,
 ) where {T,S}
@@ -884,13 +897,13 @@ For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M.
 (2020).  "MathOptInterface: a data structure for mathematical optimization
 problems." URL: [https://arxiv.org/abs/2002.03447](https://arxiv.org/abs/2002.03447)
 """
-function print_bridge_graph(io::IO, model::GenericModel)
+function print_bridge_graph(io::IO, model::ModelImpl)
     return _moi_call_bridge_function(backend(model)) do m
         return MOI.Bridges.print_graph(io, m)
     end
 end
 
-print_bridge_graph(model::GenericModel) = print_bridge_graph(Base.stdout, model)
+print_bridge_graph(model::ModelImpl) = print_bridge_graph(Base.stdout, model)
 
 """
     print_active_bridges([io::IO = stdout,] model::GenericModel)
@@ -898,7 +911,7 @@ print_bridge_graph(model::GenericModel) = print_bridge_graph(Base.stdout, model)
 Print a list of the variable, constraint, and objective bridges that are
 currently used in the model.
 """
-function print_active_bridges(io::IO, model::GenericModel)
+function print_active_bridges(io::IO, model::ModelImpl)
     return _moi_call_bridge_function(backend(model)) do m
         return MOI.Bridges.print_active_bridges(io, m)
     end
@@ -909,7 +922,7 @@ end
 
 Print a list of bridges required for an objective function of type `F`.
 """
-function print_active_bridges(io::IO, model::GenericModel, ::Type{F}) where {F}
+function print_active_bridges(io::IO, model::ModelImpl, ::Type{F}) where {F}
     return _moi_call_bridge_function(backend(model)) do m
         return MOI.Bridges.print_active_bridges(io, m, moi_function_type(F))
     end
@@ -927,7 +940,7 @@ Print a list of bridges required for a constraint of type `F`-in-`S`.
 """
 function print_active_bridges(
     io::IO,
-    model::GenericModel,
+    model::ModelImpl,
     F::Type,
     S::Type{<:MOI.AbstractSet},
 )
@@ -947,7 +960,7 @@ Print a list of bridges required to add a variable constrained to the set `S`.
 """
 function print_active_bridges(
     io::IO,
-    model::GenericModel,
+    model::ModelImpl,
     S::Type{<:MOI.AbstractSet},
 )
     return _moi_call_bridge_function(backend(model)) do m
@@ -955,7 +968,7 @@ function print_active_bridges(
     end
 end
 
-function print_active_bridges(model::GenericModel, args...)
+function print_active_bridges(model::ModelImpl, args...)
     return print_active_bridges(Base.stdout, model, args...)
 end
 
@@ -1016,7 +1029,7 @@ julia> isempty(model)
 true
 ```
 """
-function Base.empty!(model::GenericModel)::GenericModel
+function Base.empty!(model::ModelImpl)::ModelImpl
     # The method changes the Model object to, basically, the state it was when
     # created (if the optimizer was already pre-configured).
     MOI.empty!(model.moi_backend)
@@ -1066,7 +1079,7 @@ julia> isempty(model)
 false
 ```
 """
-function Base.isempty(model::GenericModel)
+function Base.isempty(model::ModelImpl)
     return MOI.is_empty(model.moi_backend) &&
            isempty(model.shapes) &&
            model.nlp_model === nothing &&
@@ -1101,7 +1114,7 @@ Dict{Symbol, Any} with 1 entry:
   :x => VariableRef[x[1], x[2]]
 ```
 """
-object_dictionary(model::GenericModel) = model.obj_dict
+object_dictionary(model::ModelImpl) = model.obj_dict
 
 """
     unregister(model::GenericModel, key::Symbol)
@@ -1223,7 +1236,7 @@ ERROR: NoOptimizer()
 [...]
 ```
 """
-set_optimize_hook(model::GenericModel, f) = (model.optimize_hook = f)
+set_optimize_hook(model::ModelImpl, f) = (model.optimize_hook = f)
 
 """
     AbstractJuMPScalar <: MutableArithmetics.AbstractMutable

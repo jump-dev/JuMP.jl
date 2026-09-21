@@ -10,11 +10,11 @@ See [`lp_sensitivity_report`](@ref).
 """
 struct SensitivityReport{T}
     rhs::Dict{ConstraintRef,Tuple{T,T}}
-    objective::Dict{GenericVariableRef{T},Tuple{T,T}}
+    objective::Dict{VariableRefImpl{T},Tuple{T,T}}
 end
 
 Base.getindex(s::SensitivityReport, c::ConstraintRef) = s.rhs[c]
-Base.getindex(s::SensitivityReport, x::GenericVariableRef) = s.objective[x]
+Base.getindex(s::SensitivityReport, x::VariableRefImpl) = s.objective[x]
 
 """
     lp_sensitivity_report(model::GenericModel{T}; atol::T = Base.rtoldefault(T))::SensitivityReport{T} where {T}
@@ -77,7 +77,7 @@ The lower bound of `x` can decrease by -Inf or increase by 3.0.
 ```
 """
 function lp_sensitivity_report(
-    model::GenericModel{T};
+    model::ModelImpl{T};
     atol::T = Base.rtoldefault(T),
 ) where {T}
     if !_is_lp(model)
@@ -146,7 +146,7 @@ function lp_sensitivity_report(
 
     report = SensitivityReport(
         Dict{ConstraintRef,Tuple{T,T}}(),
-        Dict{GenericVariableRef{T},Tuple{T,T}}(),
+        Dict{VariableRefImpl{T},Tuple{T,T}}(),
     )
 
     ###
@@ -333,8 +333,8 @@ end
 
 Return `true` if `model` is a linear program.
 """
-function _is_lp(model::GenericModel)
-    AffType = Union{GenericVariableRef,GenericAffExpr}
+function _is_lp(model::ModelImpl)
+    AffType = Union{VariableRefImpl,GenericAffExpr}
     if !(objective_function_type(model) <: AffType)
         return false
     end
@@ -354,7 +354,7 @@ end
 
 See [`lp_matrix_data`](@ref) instead.
 """
-function _standard_form_matrix(model::GenericModel{T}) where {T}
+function _standard_form_matrix(model::ModelImpl{T}) where {T}
     matrix = lp_matrix_data(model)
     I = SparseArrays.spdiagm(fill(-one(T), length(matrix.affine_constraints)))
     return (
@@ -371,7 +371,7 @@ _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _convert_nonbasic_status(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
 _convert_nonbasic_status(::Any) = MOI.NONBASIC
 
-function _try_get_constraint_basis_status(model::GenericModel, constraint)
+function _try_get_constraint_basis_status(model::ModelImpl, constraint)
     try
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
     catch
@@ -386,7 +386,7 @@ function _try_get_constraint_basis_status(model::GenericModel, constraint)
     end
 end
 
-function _try_get_variable_basis_status(model::GenericModel, variable)
+function _try_get_variable_basis_status(model::ModelImpl, variable)
     try
         return MOI.get(model, MOI.VariableBasisStatus(), variable)
     catch
@@ -406,7 +406,7 @@ _nonbasic_at_lower(::Any) = MOI.BASIC
 _nonbasic_at_upper(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _nonbasic_at_upper(::Any) = MOI.BASIC
 
-function _standard_form_basis(model::GenericModel, std_form)
+function _standard_form_basis(model::ModelImpl, std_form)
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))

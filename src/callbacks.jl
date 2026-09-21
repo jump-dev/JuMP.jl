@@ -42,7 +42,7 @@ julia> optimize!(model)
 Status is: CALLBACK_NODE_STATUS_INTEGER
 ```
 """
-function callback_node_status(cb_data, model::GenericModel)
+function callback_node_status(cb_data, model::ModelImpl)
     # TODO(odow):
     # MOI defines `is_set_by_optimize(::CallbackNodeStatus) = true`.
     # This causes problems for JuMP because it checks the termination_status to
@@ -95,7 +95,7 @@ julia> optimize!(model)
 Solution is: 10.0
 ```
 """
-function callback_value(cb_data, x::GenericVariableRef)
+function callback_value(cb_data, x::VariableRefImpl)
     # TODO(odow):
     # MOI defines `is_set_by_optimize(::CallbackVariablePrimal) = true`.
     # This causes problems for JuMP because it checks the termination_status to
@@ -119,7 +119,7 @@ function callback_value(cb_data, expr::Union{GenericAffExpr,GenericQuadExpr})
 end
 
 function MOI.submit(
-    model::GenericModel,
+    model::ModelImpl,
     cb::MOI.LazyConstraint,
     con::ScalarConstraint,
 )
@@ -127,15 +127,15 @@ function MOI.submit(
     return MOI.submit(backend(model), cb, f, con.set)
 end
 
-function MOI.submit(model::GenericModel, cb::MOI.UserCut, con::ScalarConstraint)
+function MOI.submit(model::ModelImpl, cb::MOI.UserCut, con::ScalarConstraint)
     f = moi_function(model, con.func)
     return MOI.submit(backend(model), cb, f, con.set)
 end
 
 function MOI.submit(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     cb::MOI.HeuristicSolution,
-    variables::Vector{GenericVariableRef{T}},
+    variables::Vector{<:VariableRefImpl{T}},
     values::Vector{<:Real},
 ) where {T}
     return MOI.submit(

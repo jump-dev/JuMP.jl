@@ -18,6 +18,17 @@ import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
 
+function test_concrete_model_variable_constraint_filter()
+    model = JuMP.concrete_direct_model(MOI.Utilities.Model{Float64}())
+    @variable(model, x >= 0, Int)
+    row = @constraint(model, 2x <= 1)
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 3
+    @test num_constraints(model; count_variable_in_set_constraints = false) == 1
+    @test length(all_constraints(model; include_variable_in_set_constraints = true)) == 3
+    @test all_constraints(model; include_variable_in_set_constraints = false) == [row]
+    return
+end
+
 function _test_constraint_name_util(constraint, s_name, F::Type, S::Type)
     @test s_name == @inferred name(constraint)
     model = constraint.model
