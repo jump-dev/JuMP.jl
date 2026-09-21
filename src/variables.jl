@@ -286,8 +286,12 @@ end
 const GenericVariableRef{T} = VariableRefImpl{T,GenericModel{T}}
 const VariableRef = GenericVariableRef{Float64}
 
-VariableRefImpl{T}(model::M, index::MOI.VariableIndex) where {T,M<:ModelImpl{T}} =
-    VariableRefImpl{T,M}(model, index)
+function VariableRefImpl{T}(
+    model::M,
+    index::MOI.VariableIndex,
+) where {T,M<:ModelImpl{T}}
+    return VariableRefImpl{T,M}(model, index)
+end
 
 value_type(::Type{<:VariableRefImpl{T}}) where {T} = T
 
@@ -409,10 +413,7 @@ julia> coefficient(x[1], x[2])
 0.0
 ```
 """
-function coefficient(
-    v1::VariableRefImpl{T},
-    v2::VariableRefImpl{T},
-) where {T}
+function coefficient(v1::VariableRefImpl{T}, v2::VariableRefImpl{T}) where {T}
     if v1 == v2
         return one(T)
     else
@@ -510,10 +511,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(
-    model::ModelImpl,
-    variable_refs::Vector{<:VariableRefImpl},
-)
+function delete(model::ModelImpl, variable_refs::Vector{<:VariableRefImpl})
     if any(model !== owner_model(v) for v in variable_refs)
         error(
             """
@@ -589,8 +587,9 @@ function VariableRefImpl{T}(model::ModelImpl{T}) where {T}
     return VariableRefImpl{T}(model, index)
 end
 
-VariableRefImpl{T,M}(model::M) where {T,M<:ModelImpl{T}} =
-    VariableRefImpl{T}(model)
+function VariableRefImpl{T,M}(model::M) where {T,M<:ModelImpl{T}}
+    return VariableRefImpl{T}(model)
+end
 
 """
     GenericVariableRef{T}(c::ConstraintRef)
@@ -620,9 +619,11 @@ function VariableRefImpl{T}(
     return VariableRefImpl{T}(owner_model(c), vi)
 end
 
-VariableRefImpl{T,M}(
+function VariableRefImpl{T,M}(
     c::ConstraintRef{M,<:MOI.ConstraintIndex{MOI.VariableIndex}},
-) where {T,M<:ModelImpl{T}} = VariableRefImpl{T}(c)
+) where {T,M<:ModelImpl{T}}
+    return VariableRefImpl{T}(c)
+end
 
 # Name setter/getters
 # These functions need to be implemented for all `AbstractVariableRef`s

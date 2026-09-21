@@ -747,12 +747,7 @@ function GenericQuadExpr{C,V}(
         if v1 == v2
             coef /= 2
         end
-        add_to_expression!(
-            quad,
-            coef,
-            V(m, v1),
-            V(m, v2),
-        )
+        add_to_expression!(quad, coef, V(m, v1), V(m, v2))
     end
     return quad
 end

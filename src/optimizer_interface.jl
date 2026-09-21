@@ -846,10 +846,7 @@ function raw_status(model::ModelImpl)
     return MOI.get(model, MOI.RawStatusString())
 end
 
-function MOI.get(
-    model::ModelImpl,
-    attr::Union{MOI.PrimalStatus,MOI.DualStatus},
-)
+function MOI.get(model::ModelImpl, attr::Union{MOI.PrimalStatus,MOI.DualStatus})
     if model.is_model_dirty && mode(model) != DIRECT
         return MOI.NO_SOLUTION
     end
@@ -1389,10 +1386,7 @@ function get_attribute(model::ModelImpl, attr::MOI.AbstractModelAttribute)
     return MOI.get(model, attr)
 end
 
-function get_attribute(
-    x::VariableRefImpl,
-    attr::MOI.AbstractVariableAttribute,
-)
+function get_attribute(x::VariableRefImpl, attr::MOI.AbstractVariableAttribute)
     return MOI.get(owner_model(x), attr, x)
 end
 
@@ -1725,9 +1719,7 @@ julia> optimizer_index(x)
 MOI.VariableIndex(1)
 ```
 """
-function optimizer_index(
-    x::Union{VariableRefImpl,ConstraintRef{<:ModelImpl}},
-)
+function optimizer_index(x::Union{VariableRefImpl,ConstraintRef{<:ModelImpl}})
     return _moi_optimizer_index(backend(owner_model(x)), index(x))
 end
 
