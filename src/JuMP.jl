@@ -395,8 +395,9 @@ julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer); add_bridges = false);
 """
 const Model = GenericModel{Float64}
 
-concrete_direct_model(backend::B) where {B<:MOI.ModelLike} =
-    _direct_generic_model(Float64, B, backend)
+function concrete_direct_model(backend::B) where {B<:MOI.ModelLike}
+    return _direct_generic_model(Float64, B, backend)
+end
 
 """
     direct_model(backend::MOI.ModelLike)

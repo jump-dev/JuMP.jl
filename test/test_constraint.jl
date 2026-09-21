@@ -24,8 +24,11 @@ function test_concrete_model_variable_constraint_filter()
     row = @constraint(model, 2x <= 1)
     @test num_constraints(model; count_variable_in_set_constraints = true) == 3
     @test num_constraints(model; count_variable_in_set_constraints = false) == 1
-    @test length(all_constraints(model; include_variable_in_set_constraints = true)) == 3
-    @test all_constraints(model; include_variable_in_set_constraints = false) == [row]
+    @test length(
+        all_constraints(model; include_variable_in_set_constraints = true),
+    ) == 3
+    @test all_constraints(model; include_variable_in_set_constraints = false) ==
+          [row]
     return
 end
 

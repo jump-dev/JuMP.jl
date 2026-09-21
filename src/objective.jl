@@ -166,10 +166,7 @@ Stacktrace:
 [...]
 ```
 """
-function dual_objective_value(
-    model::ModelImpl{T};
-    result::Int = 1,
-)::T where {T}
+function dual_objective_value(model::ModelImpl{T}; result::Int = 1)::T where {T}
     return MOI.get(model, MOI.DualObjectiveValue(result))
 end
 
