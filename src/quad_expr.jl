@@ -32,7 +32,7 @@ julia> expr = 2.0 * x[1] * x[2]
 
 julia> expr.terms
 OrderedCollections.OrderedDict{UnorderedPair{VariableRef}, Float64} with 1 entry:
-  UnorderedPair{VariableRef}(x[1], x[2]) => 2.0
+  UnorderedPair(x[1], x[2]) => 2.0
 ```
 """
 struct UnorderedPair{T}
@@ -84,8 +84,8 @@ julia> expr.aff
 
 julia> expr.terms
 OrderedCollections.OrderedDict{UnorderedPair{VariableRef}, Float64} with 2 entries:
-  UnorderedPair{VariableRef}(x[1], x[1]) => 2.0
-  UnorderedPair{VariableRef}(x[1], x[2]) => 1.0
+  UnorderedPair(x[1], x[1]) => 2.0
+  UnorderedPair(x[1], x[2]) => 1.0
 ```
 """
 mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar

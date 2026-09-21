@@ -10,6 +10,78 @@
 
 Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 
+# Julia has a bug: when a type has 2 alias, instead of just printing the most
+# specific one, it just print none of them, see
+# https://github.com/JuliaLang/julia/issues/41034
+# Both Model and GenericModel{Float64} alias ModelImpl, so Julia just print
+# ModelImpl. The same applies to VariableRef.
+# So we need this as a workaround.
+function _show_public_type_name(io::IO, name::Symbol)
+    from = get(io, :module, Main)
+    if !get(io, :compact, false) && (
+        from === nothing ||
+        !isdefined(from, name) ||
+        getfield(from, name) !== getfield(@__MODULE__, name)
+    )
+        print(io, "JuMP.")
+    end
+    return print(io, name)
+end
+
+function _show_model_type(io, type, alias, generic, wrapper)
+    if type === wrapper
+        return _show_public_type_name(io, generic)
+    elseif type isa UnionAll
+        # show(io, type) has a more specific method below
+        # invoke with Tuple{IO,Type} specifically asks for the
+        # generic method.
+        return invoke(show, Tuple{IO,Type}, io, type)
+    end
+    T = type.parameters[1]
+    if T === Float64 && get(io, :compact, true)
+        return _show_public_type_name(io, alias)
+    end
+    _show_public_type_name(io, generic)
+    print(io, "{")
+    show(io, T)
+    return print(io, "}")
+end
+
+function _show_model_type_alias(io, type, alias)
+    if type !== alias
+        return show(io, type)
+    end
+    show(IOContext(io, :compact => true), type)
+    if !get(io, :compact, false)
+        printstyled(io, " (alias for "; color = :light_black)
+        show(IOContext(io, :compact => false), type)
+        printstyled(io, ")"; color = :light_black)
+    end
+    return
+end
+
+function Base.show(io::IO, type::Type{<:GenericModel})
+    return _show_model_type(io, type, :Model, :GenericModel, GenericModel)
+end
+
+function Base.show(io::IO, type::Type{<:GenericVariableRef})
+    return _show_model_type(
+        io,
+        type,
+        :VariableRef,
+        :GenericVariableRef,
+        GenericVariableRef,
+    )
+end
+
+function Base.show(io::IO, ::MIME"text/plain", type::Type{<:GenericModel})
+    return _show_model_type_alias(io, type, Model)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", type::Type{<:GenericVariableRef})
+    return _show_model_type_alias(io, type, VariableRef)
+end
+
 struct _LatexModel{T<:AbstractModel}
     model::T
 end
