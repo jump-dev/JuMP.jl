@@ -20,7 +20,7 @@ struct LPMatrixData{T}
     sense::MOI.OptimizationSense
     integers::Vector{Int}
     binaries::Vector{Int}
-    variables::Vector{GenericVariableRef{T}}
+    variables::Vector{<:VariableRefImpl{T}}
     affine_constraints::Vector{ConstraintRef}
     variable_constraints::Vector{ConstraintRef}
 end
@@ -119,7 +119,7 @@ julia> data.sense
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function lp_matrix_data(model::GenericModel{T}) where {T}
+function lp_matrix_data(model::ModelImpl{T}) where {T}
     variables = all_variables(model)
     columns = Dict(var => i for (i, var) in enumerate(variables))
     n = length(columns)
@@ -166,15 +166,16 @@ _bounds(s::MOI.EqualTo{T}) where {T} = (s.value, s.value)
 _bounds(s::MOI.Interval{T}) where {T} = (s.lower, s.upper)
 
 function _fill_standard_form(
-    model::GenericModel{T},
-    ::Type{GenericVariableRef{T}},
+    model::ModelImpl{T},
+    ::Type{V},
     ::Type{S},
     cache::Any,
 ) where {
     T,
+    V<:VariableRefImpl{T},
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T},MOI.Interval{T}},
 }
-    for c in all_constraints(model, GenericVariableRef{T}, S)
+    for c in all_constraints(model, V, S)
         push!(cache.bound_constraints, c)
         c_obj = constraint_object(c)
         i = cache.variable_to_column[c_obj.func]
@@ -186,12 +187,12 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::GenericModel{T},
-    ::Type{GenericVariableRef{T}},
+    model::ModelImpl{T},
+    ::Type{V},
     ::Type{MOI.Integer},
     cache::Any,
-) where {T}
-    for c in all_constraints(model, GenericVariableRef{T}, MOI.Integer)
+) where {T,V<:VariableRefImpl{T}}
+    for c in all_constraints(model, V, MOI.Integer)
         c_obj = constraint_object(c)
         push!(cache.integers, cache.variable_to_column[c_obj.func])
     end
@@ -199,12 +200,12 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::GenericModel{T},
-    ::Type{GenericVariableRef{T}},
+    model::ModelImpl{T},
+    ::Type{V},
     ::Type{MOI.ZeroOne},
     cache::Any,
-) where {T}
-    for c in all_constraints(model, GenericVariableRef{T}, MOI.ZeroOne)
+) where {T,V<:VariableRefImpl{T}}
+    for c in all_constraints(model, V, MOI.ZeroOne)
         c_obj = constraint_object(c)
         push!(cache.binaries, cache.variable_to_column[c_obj.func])
     end
@@ -212,13 +213,13 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     ::Type{F},
     ::Type{S},
     cache::Any,
 ) where {
     T,
-    F<:GenericAffExpr{T,GenericVariableRef{T}},
+    F<:GenericAffExpr{T,<:VariableRefImpl{T}},
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T},MOI.Interval{T}},
 }
     for c in all_constraints(model, F, S)
@@ -240,7 +241,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    ::GenericModel{T},
+    ::ModelImpl{T},
     ::Type{F},
     ::Type{S},
     ::Any,
@@ -256,8 +257,8 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::GenericModel{T},
-    ::Type{GenericVariableRef{T}},
+    model::ModelImpl{T},
+    ::Type{<:VariableRefImpl{T}},
     cache::Any,
 ) where {T}
     cache.c[cache.variable_to_column[objective_function(model)]] = one(T)
@@ -266,8 +267,8 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::GenericModel{T},
-    ::Type{GenericAffExpr{T,GenericVariableRef{T}}},
+    model::ModelImpl{T},
+    ::Type{<:GenericAffExpr{T,<:VariableRefImpl{T}}},
     cache::Any,
 ) where {T}
     f = objective_function(model)
@@ -278,7 +279,7 @@ function _fill_standard_form(
     return
 end
 
-function _fill_standard_form(::GenericModel{T}, ::Type{F}, ::Any) where {T,F}
+function _fill_standard_form(::ModelImpl{T}, ::Type{F}, ::Any) where {T,F}
     return error(
         """
         Unsupported objective type in `lp_matrix_data`: $F.

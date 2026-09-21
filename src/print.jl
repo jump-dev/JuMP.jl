@@ -213,7 +213,7 @@ julia> name(model)
 """
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
-function name(model::GenericModel)
+function name(model::ModelImpl)
     if MOI.supports(backend(model), MOI.Name())
         ret = MOI.get(model, MOI.Name())
         if !isempty(ret)
@@ -239,7 +239,7 @@ julia> name(model)
 "My Model"
 ```
 """
-function set_name(model::GenericModel, name::AbstractString)
+function set_name(model::ModelImpl, name::AbstractString)
     MOI.set(model, MOI.Name(), name)
     return
 end
@@ -279,7 +279,7 @@ function _print_summary(io::IO, model::AbstractModel)
     return
 end
 
-function _print_summary(io::IO, model::GenericModel{T}) where {T}
+function _print_summary(io::IO, model::ModelImpl{T}) where {T}
     println(io, name(model))
     if T != Float64
         println(io, "├ value_type: ", T)
@@ -353,7 +353,7 @@ julia> show_objective_function_summary(stdout, model)
 Objective function type: AffExpr
 ```
 """
-function show_objective_function_summary(io::IO, model::GenericModel)
+function show_objective_function_summary(io::IO, model::ModelImpl)
     nlobj = _nlp_objective_function(model)
     print(io, "Objective function type: ")
     if nlobj === nothing
@@ -384,7 +384,7 @@ julia> show_constraints_summary(stdout, model)
 `VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint
 ```
 """
-function show_constraints_summary(io::IO, model::GenericModel)
+function show_constraints_summary(io::IO, model::ModelImpl)
     for (F, S) in list_of_constraint_types(model)
         n = num_constraints(model, F, S)
         println(io, "`$F`-in-`$S`: $n constraint", _plural(n))
@@ -416,7 +416,7 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 """
-function show_backend_summary(io::IO, model::GenericModel)
+function show_backend_summary(io::IO, model::ModelImpl)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
     if model_mode == MANUAL || model_mode == AUTOMATIC
@@ -593,7 +593,7 @@ julia> objective_function_string(MIME("text/plain"), model)
 "2 x"
 ```
 """
-function objective_function_string(mode, model::GenericModel)
+function objective_function_string(mode, model::ModelImpl)
     nlobj = _nlp_objective_function(model)
     if nlobj === nothing
         return function_string(mode, objective_function(model))
@@ -623,7 +623,7 @@ Return a string representation of the nonlinear constraint `c` belonging to
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_constraint_string(
-    model::GenericModel,
+    model::ModelImpl,
     mode::MIME,
     c::MOI.Nonlinear.ConstraintIndex,
 )
@@ -659,7 +659,7 @@ julia> constraints_string(MIME("text/plain"), model)
  "x ≥ 0"
 ```
 """
-function constraints_string(mode, model::GenericModel)
+function constraints_string(mode, model::ModelImpl)
     strings = String[
         constraint_string(mode, cref; in_math_mode = true) for
         (F, S) in list_of_constraint_types(model) for
@@ -686,7 +686,7 @@ Return a string representation of the nonlinear expression `c` belonging to
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_expr_string(
-    model::GenericModel,
+    model::ModelImpl,
     mode::MIME,
     c::MOI.Nonlinear.Expression,
 )
@@ -710,7 +710,7 @@ end
 _replace_expr_terms(::Any, ::Any, expr::Any) = expr
 
 function _replace_expr_terms(model, ::Any, x::MOI.VariableIndex)
-    return GenericVariableRef(model, x)
+    return VariableRefImpl(model, x)
 end
 
 # By default, JuMP will print NonlinearExpression objects with some preamble and
@@ -718,7 +718,7 @@ end
 # print `subexpression[i]`. To create this behavior, we create a new object and
 # overload `Base.show`, and we replace any ExpressionIndex with this new type.
 struct _NonlinearExpressionIO
-    model::GenericModel
+    model::ModelImpl
     mode::MIME
     value::Int
 end
@@ -736,7 +736,7 @@ end
 
 # We do a similar thing for nonlinear parameters.
 struct _NonlinearParameterIO
-    model::GenericModel
+    model::ModelImpl
     mode::MIME
     value::Int
 end
@@ -774,7 +774,7 @@ end
 
 _nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
-function _nl_subexpression_string(mode::MIME, model::GenericModel)
+function _nl_subexpression_string(mode::MIME, model::ModelImpl)
     nlp_model = nonlinear_model(model)
     strings = String[]
     if nlp_model === nothing
@@ -809,11 +809,11 @@ julia> anonymous_name(MIME("text/plain"), x)
 """
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
-function anonymous_name(::MIME"text/plain", x::GenericVariableRef)
+function anonymous_name(::MIME"text/plain", x::VariableRefImpl)
     return "_[$(index(x).value)]"
 end
 
-function anonymous_name(::MIME"text/latex", x::GenericVariableRef)
+function anonymous_name(::MIME"text/latex", x::VariableRefImpl)
     return "{\\_}_{$(index(x).value)}"
 end
 

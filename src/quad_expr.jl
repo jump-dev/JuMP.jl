@@ -40,6 +40,14 @@ struct UnorderedPair{T}
     b::T
 end
 
+function Base.show(io::IO, pair::UnorderedPair)
+    print(io, "UnorderedPair(")
+    show(io, pair.a)
+    print(io, ", ")
+    show(io, pair.b)
+    return print(io, ")")
+end
+
 Base.hash(p::UnorderedPair, h::UInt) = hash(hash(p.a) + hash(p.b), h)
 function Base.isequal(p1::UnorderedPair, p2::UnorderedPair)
     return (p1.a == p2.a && p1.b == p2.b) || (p1.a == p2.b && p1.b == p2.a)
@@ -712,8 +720,8 @@ function _moi_quadratic_term(t::Tuple)
 end
 
 function MOI.ScalarQuadraticFunction(
-    q::GenericQuadExpr{C,GenericVariableRef{T}},
-) where {C,T}
+    q::GenericQuadExpr{C,<:VariableRefImpl},
+) where {C}
     _assert_isfinite(q)
     qterms = MOI.ScalarQuadraticTerm{C}[
         _moi_quadratic_term(t) for t in quad_terms(q)
@@ -722,12 +730,12 @@ function MOI.ScalarQuadraticFunction(
     return MOI.ScalarQuadraticFunction(qterms, moi_aff.terms, moi_aff.constant)
 end
 
-function GenericQuadExpr{C,GenericVariableRef{T}}(
-    m::GenericModel{T},
+function GenericQuadExpr{C,V}(
+    m::ModelImpl,
     f::MOI.ScalarQuadraticFunction,
-) where {C,T}
-    quad = GenericQuadExpr{C,GenericVariableRef{T}}(
-        GenericAffExpr{C,GenericVariableRef{T}}(
+) where {C,V<:VariableRefImpl}
+    quad = GenericQuadExpr{C,V}(
+        GenericAffExpr{C,V}(
             m,
             MOI.ScalarAffineFunction(f.affine_terms, f.constant),
         ),
@@ -742,8 +750,8 @@ function GenericQuadExpr{C,GenericVariableRef{T}}(
         add_to_expression!(
             quad,
             coef,
-            GenericVariableRef{T}(m, v1),
-            GenericVariableRef{T}(m, v2),
+            V(m, v1),
+            V(m, v2),
         )
     end
     return quad
@@ -773,8 +781,8 @@ function _fill_vqf!(
 end
 
 function MOI.VectorQuadraticFunction(
-    quads::Vector{GenericQuadExpr{C,GenericVariableRef{T}}},
-) where {C,T}
+    quads::Vector{<:GenericQuadExpr{C,<:VariableRefImpl}},
+) where {C}
     num_quadratic_terms = sum(quad -> length(quad_terms(quad)), quads)
     quadratic_terms =
         Vector{MOI.VectorQuadraticTerm{C}}(undef, num_quadratic_terms)
