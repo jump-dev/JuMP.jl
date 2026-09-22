@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Standard form · JuMP</title><meta name="title" content="Standard form · JuMP"/><meta property="og:title" content="Standard form · JuMP"/><meta property="twitter:title" content="Standard form · JuMP"/><meta name="description" content="Documentation for JuMP."/><meta property="og:description" content="Documentation for JuMP."/><meta property="twitter:description" content="Documentation for JuMP."/><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.048/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.4/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs (Ctrl + /)"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should you use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../../tutorials/getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../tutorials/linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../../tutorials/linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../../tutorials/linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../../tutorials/linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../../tutorials/linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../../tutorials/linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../../tutorials/linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../../tutorials/linear/multi_objective_knapsack/">Multi-objective knapsack</a></li><li><a class="tocitem" href="../../../tutorials/linear/multi_objective_examples/">Simple multi-objective examples</a></li><li><a class="tocitem" href="../../../tutorials/linear/knapsack/">The knapsack problem example</a></li><li><a class="tocitem" href="../../../tutorials/linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../../tutorials/linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../../tutorials/linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../../tutorials/linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../../tutorials/linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../../tutorials/linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../../tutorials/linear/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../tutorials/linear/constraint_programming/">Constraint programming</a></li><li><a class="tocitem" href="../../../tutorials/linear/mip_duality/">Computing the duals of a mixed-integer program</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/portfolio/">Portfolio optimization</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/nested_problems/">Nested optimization problems</a></li><li><a class="tocitem" href="../../../tutorials/nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../tutorials/conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../../tutorials/conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../../tutorials/conic/simple_examples/">Simple semidefinite programming examples</a></li><li><a class="tocitem" href="../../../tutorials/conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../../tutorials/conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../../tutorials/conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../../tutorials/conic/ellipse_approx/">Ellipsoid approximation</a></li><li><a class="tocitem" href="../../../tutorials/conic/quantum_discrimination/">Quantum state discrimination</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../../tutorials/algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../../tutorials/algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li><li><a class="tocitem" href="../../../tutorials/algorithms/parallelism/">Parallelism</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../tutorials/applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../../tutorials/applications/web_app/">Serving web apps</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../../../manual/complex/">Complex number support</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li><li><a class="tocitem" href="../../../developers/release_process/">Release process</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Solvers</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../packages/solvers/">Introduction</a></li><li><a class="tocitem" href="../../../packages/AmplNLWriter/">jump-dev/AmplNLWriter.jl</a></li><li><a class="tocitem" href="../../../packages/BARON/">jump-dev/BARON.jl</a></li><li><a class="tocitem" href="../../../packages/CPLEX/">jump-dev/CPLEX.jl</a></li><li><a class="tocitem" href="../../../packages/CSDP/">jump-dev/CSDP.jl</a></li><li><a class="tocitem" href="../../../packages/Cbc/">jump-dev/Cbc.jl</a></li><li><a class="tocitem" href="../../../packages/Clp/">jump-dev/Clp.jl</a></li><li><a class="tocitem" href="../../../packages/Dualization/">jump-dev/Dualization.jl</a></li><li><a class="tocitem" href="../../../packages/ECOS/">jump-dev/ECOS.jl</a></li><li><a class="tocitem" href="../../../packages/GLPK/">jump-dev/GLPK.jl</a></li><li><a class="tocitem" href="../../../packages/Gurobi/">jump-dev/Gurobi.jl</a></li><li><a class="tocitem" href="../../../packages/HiGHS/">jump-dev/HiGHS.jl</a></li><li><a class="tocitem" href="../../../packages/Ipopt/">jump-dev/Ipopt.jl</a></li><li><a class="tocitem" href="../../../packages/KNITRO/">jump-dev/KNITRO.jl</a></li><li><a class="tocitem" href="../../../packages/MiniZinc/">jump-dev/MiniZinc.jl</a></li><li><a class="tocitem" href="../../../packages/MosekTools/">jump-dev/MosekTools.jl</a></li><li><a class="tocitem" href="../../../packages/MultiObjectiveAlgorithms/">jump-dev/MultiObjectiveAlgorithms.jl</a></li><li><a class="tocitem" href="../../../packages/Pajarito/">jump-dev/Pajarito.jl</a></li><li><a class="tocitem" href="../../../packages/Pavito/">jump-dev/Pavito.jl</a></li><li><a class="tocitem" href="../../../packages/Penopt/">jump-dev/Penopt.jl</a></li><li><a class="tocitem" href="../../../packages/SCS/">jump-dev/SCS.jl</a></li><li><a class="tocitem" href="../../../packages/SDPA/">jump-dev/SDPA.jl</a></li><li><a class="tocitem" href="../../../packages/SDPNAL/">jump-dev/SDPNAL.jl</a></li><li><a class="tocitem" href="../../../packages/SDPT3/">jump-dev/SDPT3.jl</a></li><li><a class="tocitem" href="../../../packages/SeDuMi/">jump-dev/SeDuMi.jl</a></li><li><a class="tocitem" href="../../../packages/Xpress/">jump-dev/Xpress.jl</a></li><li><a class="tocitem" href="../../../packages/PATHSolver/">chkwon/PATHSolver.jl</a></li><li><a class="tocitem" href="../../../packages/NEOSServer/">odow/NEOSServer.jl</a></li><li><a class="tocitem" href="../../../packages/SCIP/">scipopt/SCIP.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">Extensions</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../packages/extensions/">Introduction</a></li><li><a class="tocitem" href="../../../packages/DiffOpt/">jump-dev/DiffOpt.jl</a></li><li><a class="tocitem" href="../../../packages/ParametricOptInterface/">jump-dev/ParametricOptInterface.jl</a></li><li><a class="tocitem" href="../../../packages/PolyJuMP/">jump-dev/PolyJuMP.jl</a></li><li><a class="tocitem" href="../../../packages/SumOfSquares/">jump-dev/SumOfSquares.jl</a></li><li><a class="tocitem" href="../../../packages/SDDP/">odow/SDDP.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9" type="checkbox" checked/><label class="tocitem" for="menuitem-9"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-1" type="checkbox"/><label class="tocitem" for="menuitem-9-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-2" type="checkbox"/><label class="tocitem" for="menuitem-9-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-3" type="checkbox"/><label class="tocitem" for="menuitem-9-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../manual/models/">Models</a></li><li><a class="tocitem" href="../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-4" type="checkbox"/><label class="tocitem" for="menuitem-9-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../background/duality/">Duality</a></li><li><a class="tocitem" href="../../background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-5" type="checkbox" checked/><label class="tocitem" for="menuitem-9-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>Standard form</a><ul class="internal"><li><a class="tocitem" href="#Functions"><span>Functions</span></a></li><li><a class="tocitem" href="#Scalar-functions"><span>Scalar functions</span></a></li><li><a class="tocitem" href="#Vector-functions"><span>Vector functions</span></a></li><li><a class="tocitem" href="#Sets"><span>Sets</span></a></li><li><a class="tocitem" href="#Scalar-sets"><span>Scalar sets</span></a></li><li><a class="tocitem" href="#Vector-sets"><span>Vector sets</span></a></li><li><a class="tocitem" href="#Constraint-programming-sets"><span>Constraint programming sets</span></a></li><li><a class="tocitem" href="#Matrix-sets"><span>Matrix sets</span></a></li></ul></li><li><a class="tocitem" href="../models/">Models</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li><li><a class="tocitem" href="../modification/">Modifications</a></li><li><a class="tocitem" href="../nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-6-1" type="checkbox"/><label class="tocitem" for="menuitem-9-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-2" type="checkbox"/><label class="tocitem" for="menuitem-9-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-3" type="checkbox"/><label class="tocitem" for="menuitem-9-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-4" type="checkbox"/><label class="tocitem" for="menuitem-9-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-5" type="checkbox"/><label class="tocitem" for="menuitem-9-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../release_notes/">Release notes</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MathOptInterface</a></li><li><a class="is-disabled">API Reference</a></li><li class="is-active"><a href>Standard form</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Standard form</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/moi/reference/standard_form.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Standard-form"><a class="docs-heading-anchor" href="#Standard-form">Standard form</a><a id="Standard-form-1"></a><a class="docs-heading-anchor-permalink" href="#Standard-form" title="Permalink"></a></h1><h2 id="Functions"><a class="docs-heading-anchor" href="#Functions">Functions</a><a id="Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Functions" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractFunction" href="#MathOptInterface.AbstractFunction"><code>MathOptInterface.AbstractFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AbstractFunction</code></pre><p>Abstract supertype for function objects.</p><p><strong>Required methods</strong></p><p>All functions must implement:</p><ul><li><code>Base.copy</code></li><li><code>Base.isapprox</code></li><li><a href="#MathOptInterface.constant"><code>constant</code></a></li></ul><p>Abstract subtypes of <code>AbstractFunction</code> may require additional methods to be implemented.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.output_dimension" href="#MathOptInterface.output_dimension"><code>MathOptInterface.output_dimension</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">output_dimension(f::AbstractFunction)</code></pre><p>Return 1 if <code>f</code> is an <a href="#MathOptInterface.AbstractScalarFunction"><code>AbstractScalarFunction</code></a>, or the number of output components if <code>f</code> is an <a href="#MathOptInterface.AbstractVectorFunction"><code>AbstractVectorFunction</code></a>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.constant" href="#MathOptInterface.constant"><code>MathOptInterface.constant</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">constant(f::AbstractFunction[, ::Type{T}]) where {T}</code></pre><p>Returns the constant term of a scalar-valued function, or the constant vector of a vector-valued function.</p><p>If <code>f</code> is untyped and <code>T</code> is provided, returns <code>zero(T)</code>.</p></div></section><section><div><pre><code class="language-julia hljs">constant(set::Union{EqualTo,GreaterThan,LessThan,Parameter})</code></pre><p>Returns the constant term of the set <code>set</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; MOI.constant(MOI.GreaterThan(1.0))
+1.0
+
+julia&gt; MOI.constant(MOI.LessThan(2.5))
+2.5
+
+julia&gt; MOI.constant(MOI.EqualTo(3))
+3
+
+julia&gt; MOI.constant(MOI.Parameter(4.5))
+4.5</code></pre></div></section></article><h2 id="Scalar-functions"><a class="docs-heading-anchor" href="#Scalar-functions">Scalar functions</a><a id="Scalar-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Scalar-functions" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractScalarFunction" href="#MathOptInterface.AbstractScalarFunction"><code>MathOptInterface.AbstractScalarFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">abstract type AbstractScalarFunction &lt;: AbstractFunction</code></pre><p>Abstract supertype for scalar-valued <a href="#MathOptInterface.AbstractFunction"><code>AbstractFunction</code></a>s.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VariableIndex" href="#MathOptInterface.VariableIndex"><code>MathOptInterface.VariableIndex</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VariableIndex</code></pre><p>A type-safe wrapper for <code>Int64</code> for use in referencing variables in a model. To allow for deletion, indices need not be consecutive.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ScalarAffineTerm" href="#MathOptInterface.ScalarAffineTerm"><code>MathOptInterface.ScalarAffineTerm</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ScalarAffineTerm{T}(coefficient::T, variable::VariableIndex) where {T}</code></pre><p>Represents the scalar-valued term <code>coefficient * variable</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.ScalarAffineTerm(2.0, x)
+MathOptInterface.ScalarAffineTerm{Float64}(2.0, MOI.VariableIndex(1))</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ScalarAffineFunction" href="#MathOptInterface.ScalarAffineFunction"><code>MathOptInterface.ScalarAffineFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ScalarAffineFunction{T}(terms::ScalarAffineTerm{T}, constant::T) where {T}</code></pre><p>Represents the scalar-valued affine function <span>$a^\top x + b$</span>, where:</p><ul><li><span>$a^\top x$</span> is represented by the vector of <a href="#MathOptInterface.ScalarAffineTerm"><code>ScalarAffineTerm</code></a>s</li><li><span>$b$</span> is a scalar <code>constant::T</code></li></ul><p><strong>Duplicates</strong></p><p>Duplicate variable indices in <code>terms</code> are accepted, and the corresponding coefficients are summed together.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1)
+MOI.VariableIndex(1)
+
+julia&gt; terms = [MOI.ScalarAffineTerm(2.0, x), MOI.ScalarAffineTerm(3.0, x)]
+2-element Vector{MathOptInterface.ScalarAffineTerm{Float64}}:
+ MathOptInterface.ScalarAffineTerm{Float64}(2.0, MOI.VariableIndex(1))
+ MathOptInterface.ScalarAffineTerm{Float64}(3.0, MOI.VariableIndex(1))
+
+julia&gt; f = MOI.ScalarAffineFunction(terms, 4.0)
+4.0 + 2.0 MOI.VariableIndex(1) + 3.0 MOI.VariableIndex(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ScalarQuadraticTerm" href="#MathOptInterface.ScalarQuadraticTerm"><code>MathOptInterface.ScalarQuadraticTerm</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ScalarQuadraticTerm{T}(
+    coefficient::T,
+    variable_1::VariableIndex,
+    variable_2::VariableIndex,
+) where {T}</code></pre><p>Represents the scalar-valued term <span>$c x_i x_j$</span> where <span>$c$</span> is <code>coefficient</code>, <span>$x_i$</span> is <code>variable_1</code> and <span>$x_j$</span> is <code>variable_2</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.ScalarQuadraticTerm(2.0, x, x)
+MathOptInterface.ScalarQuadraticTerm{Float64}(2.0, MOI.VariableIndex(1), MOI.VariableIndex(1))</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ScalarQuadraticFunction" href="#MathOptInterface.ScalarQuadraticFunction"><code>MathOptInterface.ScalarQuadraticFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ScalarQuadraticFunction{T}(
+    quadratic_terms::Vector{ScalarQuadraticTerm{T}},
+    affine_terms::Vector{ScalarAffineTerm{T}},
+    constant::T,
+) wher {T}</code></pre><p>The scalar-valued quadratic function <span>$\frac{1}{2}x^\top Q x + a^\top x + b$</span>, where:</p><ul><li><span>$Q$</span> is the symmetric matrix given by the vector of <a href="#MathOptInterface.ScalarQuadraticTerm"><code>ScalarQuadraticTerm</code></a>s</li><li><span>$a^\top x$</span> is a sparse vector given by the vector of <a href="#MathOptInterface.ScalarAffineTerm"><code>ScalarAffineTerm</code></a>s</li><li><span>$b$</span> is the scalar <code>constant::T</code>.</li></ul><p><strong>Duplicates</strong></p><p>Duplicate indices in <code>quadratic_terms</code> or <code>affine_terms</code> are accepted, and the corresponding coefficients are summed together.</p><p>In <code>quadratic_terms</code>, &quot;mirrored&quot; indices, <code>(q, r)</code> and <code>(r, q)</code> where <code>r</code> and <code>q</code> are <a href="#MathOptInterface.VariableIndex"><code>VariableIndex</code></a>es, are considered duplicates; only one needs to be specified.</p><p><strong>The 0.5 factor</strong></p><p>Coupled with the interpretation of mirrored indices, the <code>0.5</code> factor in front of the <span>$Q$</span> matrix is a common source of bugs.</p><p>As a rule, to represent <span>$a * x^2 + b * x * y$</span>:</p><ul><li>The coefficient <span>$a$</span> in front of squared variables (diagonal elements in <span>$Q$</span>) must be doubled when creating a <a href="#MathOptInterface.ScalarQuadraticTerm"><code>ScalarQuadraticTerm</code></a></li><li>The coefficient <span>$b$</span> in front of off-diagonal elements in <span>$Q$</span> should be left as <span>$b$</span>, be cause the mirrored index <span>$b * y * x$</span> will be implicitly added.</li></ul><p><strong>Example</strong></p><p>To represent the function <span>$f(x, y) = 2 * x^2 + 3 * x * y + 4 * x + 5$</span>, do:</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1);
+
+julia&gt; y = MOI.VariableIndex(2);
+
+julia&gt; constant = 5.0;
+
+julia&gt; affine_terms = [MOI.ScalarAffineTerm(4.0, x)];
+
+julia&gt; quadratic_terms = [
+           MOI.ScalarQuadraticTerm(4.0, x, x),  # Note the changed coefficient
+           MOI.ScalarQuadraticTerm(3.0, x, y),
+       ]
+2-element Vector{MathOptInterface.ScalarQuadraticTerm{Float64}}:
+ MathOptInterface.ScalarQuadraticTerm{Float64}(4.0, MOI.VariableIndex(1), MOI.VariableIndex(1))
+ MathOptInterface.ScalarQuadraticTerm{Float64}(3.0, MOI.VariableIndex(1), MOI.VariableIndex(2))
+
+julia&gt; f = MOI.ScalarQuadraticFunction(quadratic_terms, affine_terms, constant)
+5.0 + 4.0 MOI.VariableIndex(1) + 2.0 MOI.VariableIndex(1)² + 3.0 MOI.VariableIndex(1)*MOI.VariableIndex(2)</code></pre></div></section></article><h2 id="Vector-functions"><a class="docs-heading-anchor" href="#Vector-functions">Vector functions</a><a id="Vector-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Vector-functions" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractVectorFunction" href="#MathOptInterface.AbstractVectorFunction"><code>MathOptInterface.AbstractVectorFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">abstract type AbstractVectorFunction &lt;: AbstractFunction</code></pre><p>Abstract supertype for vector-valued <a href="#MathOptInterface.AbstractFunction"><code>AbstractFunction</code></a>s.</p><p><strong>Required methods</strong></p><p>All subtypes of <code>AbstractVectorFunction</code> must implement:</p><ul><li><a href="#MathOptInterface.output_dimension"><code>output_dimension</code></a></li></ul></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VectorOfVariables" href="#MathOptInterface.VectorOfVariables"><code>MathOptInterface.VectorOfVariables</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VectorOfVariables(variables::Vector{VariableIndex}) &lt;: AbstractVectorFunction</code></pre><p>The vector-valued function <code>f(x) = variables</code>, where <code>variables</code> is a subset of <a href="#MathOptInterface.VariableIndex"><code>VariableIndex</code></a>es in the model.</p><p>The list of <code>variables</code> may contain duplicates.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex.(1:2)
+2-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+
+julia&gt; f = MOI.VectorOfVariables([x[1], x[2], x[1]])
+┌                    ┐
+│MOI.VariableIndex(1)│
+│MOI.VariableIndex(2)│
+│MOI.VariableIndex(1)│
+└                    ┘
+
+julia&gt; MOI.output_dimension(f)
+3</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VectorAffineTerm" href="#MathOptInterface.VectorAffineTerm"><code>MathOptInterface.VectorAffineTerm</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VectorAffineTerm{T}(
+    output_index::Int64,
+    scalar_term::ScalarAffineTerm{T},
+) where {T}</code></pre><p>A <code>VectorAffineTerm</code> is a <code>scalar_term</code> that appears in the <code>output_index</code> row of the vector-valued <a href="#MathOptInterface.VectorAffineFunction"><code>VectorAffineFunction</code></a> or <a href="#MathOptInterface.VectorQuadraticFunction"><code>VectorQuadraticFunction</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1);
+
+julia&gt; MOI.VectorAffineTerm(Int64(2), MOI.ScalarAffineTerm(3.0, x))
+MathOptInterface.VectorAffineTerm{Float64}(2, MathOptInterface.ScalarAffineTerm{Float64}(3.0, MOI.VariableIndex(1)))</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VectorAffineFunction" href="#MathOptInterface.VectorAffineFunction"><code>MathOptInterface.VectorAffineFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VectorAffineFunction{T}(
+    terms::Vector{VectorAffineTerm{T}},
+    constants::Vector{T},
+) where {T}</code></pre><p>The vector-valued affine function <span>$A x + b$</span>, where:</p><ul><li><span>$A x$</span> is the sparse matrix given by the vector of <a href="#MathOptInterface.VectorAffineTerm"><code>VectorAffineTerm</code></a>s</li><li><span>$b$</span> is the vector <code>constants</code></li></ul><p><strong>Duplicates</strong></p><p>Duplicate indices in the <span>$A$</span> are accepted, and the corresponding coefficients are summed together.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1);
+
+julia&gt; terms = [
+           MOI.VectorAffineTerm(Int64(1), MOI.ScalarAffineTerm(2.0, x)),
+           MOI.VectorAffineTerm(Int64(2), MOI.ScalarAffineTerm(3.0, x)),
+       ];
+
+julia&gt; f = MOI.VectorAffineFunction(terms, [4.0, 5.0])
+┌                              ┐
+│4.0 + 2.0 MOI.VariableIndex(1)│
+│5.0 + 3.0 MOI.VariableIndex(1)│
+└                              ┘
+
+julia&gt; MOI.output_dimension(f)
+2</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VectorQuadraticTerm" href="#MathOptInterface.VectorQuadraticTerm"><code>MathOptInterface.VectorQuadraticTerm</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VectorQuadraticTerm{T}(
+    output_index::Int64,
+    scalar_term::ScalarQuadraticTerm{T},
+) where {T}</code></pre><p>A <code>VectorQuadraticTerm</code> is a <a href="#MathOptInterface.ScalarQuadraticTerm"><code>ScalarQuadraticTerm</code></a> <code>scalar_term</code> that appears in the <code>output_index</code> row of the vector-valued <a href="#MathOptInterface.VectorQuadraticFunction"><code>VectorQuadraticFunction</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1);
+
+julia&gt; MOI.VectorQuadraticTerm(Int64(2), MOI.ScalarQuadraticTerm(3.0, x, x))
+MathOptInterface.VectorQuadraticTerm{Float64}(2, MathOptInterface.ScalarQuadraticTerm{Float64}(3.0, MOI.VariableIndex(1), MOI.VariableIndex(1)))</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.VectorQuadraticFunction" href="#MathOptInterface.VectorQuadraticFunction"><code>MathOptInterface.VectorQuadraticFunction</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">VectorQuadraticFunction{T}(
+    quadratic_terms::Vector{VectorQuadraticTerm{T}},
+    affine_terms::Vector{VectorAffineTerm{T}},
+    constants::Vector{T},
+) where {T}</code></pre><p>The vector-valued quadratic function with i<code>th</code> component (&quot;output index&quot;) defined as <span>$\frac{1}{2}x^\top Q_i x + a_i^\top x + b_i$</span>, where:</p><ul><li><span>$\frac{1}{2}x^\top Q_i x$</span> is the symmetric matrix given by the <a href="#MathOptInterface.VectorQuadraticTerm"><code>VectorQuadraticTerm</code></a> elements in <code>quadratic_terms</code> with <code>output_index == i</code></li><li><span>$a_i^\top x$</span> is the sparse vector given by the <a href="#MathOptInterface.VectorAffineTerm"><code>VectorAffineTerm</code></a> elements in <code>affine_terms</code> with <code>output_index == i</code></li><li><span>$b_i$</span> is a scalar given by <code>constants[i]</code></li></ul><p><strong>Duplicates</strong></p><p>Duplicate indices in <code>quadratic_terms</code> and <code>affine_terms</code> with the same <code>output_index</code> are handled in the same manner as duplicates in <a href="#MathOptInterface.ScalarQuadraticFunction"><code>ScalarQuadraticFunction</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; x = MOI.VariableIndex(1);
+
+julia&gt; y = MOI.VariableIndex(2);
+
+julia&gt; constants = [4.0, 5.0];
+
+julia&gt; affine_terms = [
+           MOI.VectorAffineTerm(Int64(1), MOI.ScalarAffineTerm(2.0, x)),
+           MOI.VectorAffineTerm(Int64(2), MOI.ScalarAffineTerm(3.0, x)),
+       ];
+
+julia&gt; quad_terms = [
+        MOI.VectorQuadraticTerm(Int64(1), MOI.ScalarQuadraticTerm(2.0, x, x)),
+        MOI.VectorQuadraticTerm(Int64(2), MOI.ScalarQuadraticTerm(3.0, x, y)),
+           ];
+
+julia&gt; f = MOI.VectorQuadraticFunction(quad_terms, affine_terms, constants)
+┌                                                                              ┐
+│4.0 + 2.0 MOI.VariableIndex(1) + 1.0 MOI.VariableIndex(1)²                    │
+│5.0 + 3.0 MOI.VariableIndex(1) + 3.0 MOI.VariableIndex(1)*MOI.VariableIndex(2)│
+└                                                                              ┘
+
+julia&gt; MOI.output_dimension(f)
+2</code></pre></div></section></article><h2 id="Sets"><a class="docs-heading-anchor" href="#Sets">Sets</a><a id="Sets-1"></a><a class="docs-heading-anchor-permalink" href="#Sets" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractSet" href="#MathOptInterface.AbstractSet"><code>MathOptInterface.AbstractSet</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AbstractSet</code></pre><p>Abstract supertype for set objects used to encode constraints.</p><p><strong>Required methods</strong></p><p>For sets of type <code>S</code> with <code>isbitstype(S) == false</code>, you must implement:</p><ul><li><code>Base.copy(set::S)</code></li><li><code>Base.:(==)(x::S, y::S)</code></li></ul><p>Subtypes of <code>AbstractSet</code> such as <a href="#MathOptInterface.AbstractScalarSet"><code>AbstractScalarSet</code></a> and <a href="#MathOptInterface.AbstractVectorSet"><code>AbstractVectorSet</code></a> may prescribe additional required methods.</p><p><strong>Optional methods</strong></p><p>You may optionally implement:</p><ul><li><a href="#MathOptInterface.dual_set"><code>dual_set</code></a></li><li><a href="#MathOptInterface.dual_set_type"><code>dual_set_type</code></a></li></ul><p><strong>Note for developers</strong></p><p>When creating a new set, the set struct must not contain any <a href="#MathOptInterface.VariableIndex"><code>VariableIndex</code></a> or <a href="../constraints/#MathOptInterface.ConstraintIndex"><code>ConstraintIndex</code></a> objects.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractScalarSet" href="#MathOptInterface.AbstractScalarSet"><code>MathOptInterface.AbstractScalarSet</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AbstractScalarSet</code></pre><p>Abstract supertype for subsets of <span>$\mathbb{R}$</span>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractVectorSet" href="#MathOptInterface.AbstractVectorSet"><code>MathOptInterface.AbstractVectorSet</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AbstractVectorSet</code></pre><p>Abstract supertype for subsets of <span>$\mathbb{R}^n$</span> for some <span>$n$</span>.</p><p><strong>Required methods</strong></p><p>All <code>AbstractVectorSet</code>s of type <code>S</code> must implement:</p><ul><li><a href="#MathOptInterface.dimension"><code>dimension</code></a>, unless the dimension is stored in the <code>set.dimension</code> field</li><li><a href="../../submodules/Utilities/reference/#MathOptInterface.Utilities.set_dot"><code>Utilities.set_dot</code></a>, unless the dot product between two vectors in the set is equivalent to <code>LinearAlgebra.dot</code>.</li></ul></div></section></article><h3 id="Utilities"><a class="docs-heading-anchor" href="#Utilities">Utilities</a><a id="Utilities-1"></a><a class="docs-heading-anchor-permalink" href="#Utilities" title="Permalink"></a></h3><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.dimension" href="#MathOptInterface.dimension"><code>MathOptInterface.dimension</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">dimension(set::AbstractSet)</code></pre><p>Return the <a href="#MathOptInterface.output_dimension"><code>output_dimension</code></a> that an <a href="#MathOptInterface.AbstractFunction"><code>AbstractFunction</code></a> should have to be used with the set <code>set</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; MOI.dimension(MOI.Reals(4))
+4
+
+julia&gt; MOI.dimension(MOI.LessThan(3.0))
+1
+
+julia&gt; MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(2))
+3</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.dual_set" href="#MathOptInterface.dual_set"><code>MathOptInterface.dual_set</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">dual_set(set::AbstractSet)</code></pre><p>Return the dual set of <code>set</code>, that is the dual cone of the set. This follows the definition of duality discussed in <a href="../../background/duality/#Duality">Duality</a>.</p><p>See <a href="https://en.wikipedia.org/wiki/Dual_cone_and_polar_cone">Dual cone</a> for more information.</p><p>If the dual cone is not defined it returns an error.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; MOI.dual_set(MOI.Reals(4))
+MathOptInterface.Zeros(4)
+
+julia&gt; MOI.dual_set(MOI.SecondOrderCone(5))
+MathOptInterface.SecondOrderCone(5)
+
+julia&gt; MOI.dual_set(MOI.ExponentialCone())
+MathOptInterface.DualExponentialCone()</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.dual_set_type" href="#MathOptInterface.dual_set_type"><code>MathOptInterface.dual_set_type</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">dual_set_type(S::Type{&lt;:AbstractSet})</code></pre><p>Return the type of dual set of sets of type <code>S</code>, as returned by <a href="#MathOptInterface.dual_set"><code>dual_set</code></a>. If the dual cone is not defined it returns an error.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; MOI.dual_set_type(MOI.Reals)
+MathOptInterface.Zeros
+
+julia&gt; MOI.dual_set_type(MOI.SecondOrderCone)
+MathOptInterface.SecondOrderCone
+
+julia&gt; MOI.dual_set_type(MOI.ExponentialCone)
+MathOptInterface.DualExponentialCone</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.constant-Tuple{MathOptInterface.EqualTo}" href="#MathOptInterface.constant-Tuple{MathOptInterface.EqualTo}"><code>MathOptInterface.constant</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">constant(set::Union{EqualTo,GreaterThan,LessThan,Parameter})</code></pre><p>Returns the constant term of the set <code>set</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; MOI.constant(MOI.GreaterThan(1.0))
+1.0
+
+julia&gt; MOI.constant(MOI.LessThan(2.5))
+2.5
+
+julia&gt; MOI.constant(MOI.EqualTo(3))
+3
+
+julia&gt; MOI.constant(MOI.Parameter(4.5))
+4.5</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.supports_dimension_update" href="#MathOptInterface.supports_dimension_update"><code>MathOptInterface.supports_dimension_update</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">supports_dimension_update(S::Type{&lt;:MOI.AbstractVectorSet})</code></pre><p>Return a <code>Bool</code> indicating whether the elimination of any dimension of <code>n</code>-dimensional sets of type <code>S</code> give an <code>n-1</code>-dimensional set <code>S</code>. By default, this function returns <code>false</code> so it should only be implemented for sets that supports dimension update.</p><p>For instance, <code>supports_dimension_update(MOI.Nonnegatives)</code> is <code>true</code> because the elimination of any dimension of the <code>n</code>-dimensional nonnegative orthant gives the <code>n-1</code>-dimensional nonnegative orthant. However <code>supports_dimension_update(MOI.ExponentialCone)</code> is <code>false</code>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.update_dimension" href="#MathOptInterface.update_dimension"><code>MathOptInterface.update_dimension</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">update_dimension(s::AbstractVectorSet, new_dim::Int)</code></pre><p>Returns a set with the dimension modified to <code>new_dim</code>.</p></div></section></article><h2 id="Scalar-sets"><a class="docs-heading-anchor" href="#Scalar-sets">Scalar sets</a><a id="Scalar-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Scalar-sets" title="Permalink"></a></h2><p>List of recognized scalar sets.</p><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.GreaterThan" href="#MathOptInterface.GreaterThan"><code>MathOptInterface.GreaterThan</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GreaterThan{T&lt;:Real}(lower::T)</code></pre><p>The set <span>$[lower, \infty) \subseteq \mathbb{R}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.GreaterThan(0.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.GreaterThan{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.LessThan" href="#MathOptInterface.LessThan"><code>MathOptInterface.LessThan</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">LessThan{T&lt;:Real}(upper::T)</code></pre><p>The set <span>$(-\infty, upper] \subseteq \mathbb{R}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.LessThan(2.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.LessThan{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.EqualTo" href="#MathOptInterface.EqualTo"><code>MathOptInterface.EqualTo</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">EqualTo{T&lt;:Number}(value::T)</code></pre><p>The set containing the single point <span>$\{value\} \subseteq \mathbb{R}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.EqualTo(2.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.EqualTo{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Interval" href="#MathOptInterface.Interval"><code>MathOptInterface.Interval</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Interval{T&lt;:Real}(lower::T, upper::T)</code></pre><p>The interval <span>$[lower, upper] \subseteq \mathbb{R} \cup \{-\infty, +\infty\}$</span>.</p><p>If <code>lower</code> or <code>upper</code> is <code>-Inf</code> or <code>Inf</code>, respectively, the set is interpreted as a one-sided interval.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.Interval(1.0, 2.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Integer" href="#MathOptInterface.Integer"><code>MathOptInterface.Integer</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Integer()</code></pre><p>The set of integers, <span>$\mathbb{Z}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.Integer())
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ZeroOne" href="#MathOptInterface.ZeroOne"><code>MathOptInterface.ZeroOne</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ZeroOne()</code></pre><p>The set <span>$\{0, 1\}$</span>.</p><p>Variables belonging to the <code>ZeroOne</code> set are also known as &quot;binary&quot; variables.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.ZeroOne())
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Semicontinuous" href="#MathOptInterface.Semicontinuous"><code>MathOptInterface.Semicontinuous</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Semicontinuous{T&lt;:Real}(lower::T, upper::T)</code></pre><p>The set <span>$\{0\} \cup [lower, upper]$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.Semicontinuous(2.0, 3.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Semicontinuous{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Semiinteger" href="#MathOptInterface.Semiinteger"><code>MathOptInterface.Semiinteger</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Semiinteger{T&lt;:Real}(lower::T, upper::T)</code></pre><p>The set <span>$\{0\} \cup \{lower, lower+1, \ldots, upper-1, upper\}$</span>.</p><p>Note that if <code>lower</code> and <code>upper</code> are not equivalent to an integer, then the solver may throw an error, or it may round up <code>lower</code> and round down <code>upper</code> to the nearest integers.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; MOI.add_constraint(model, x, MOI.Semiinteger(2.0, 3.0))
+MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Semiinteger{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Parameter" href="#MathOptInterface.Parameter"><code>MathOptInterface.Parameter</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Parameter{T&lt;:Number}(value::T)</code></pre><p>The set containing the single point <span>$\{value\} \subseteq \mathbb{R}$</span>.</p><p>The <code>Parameter</code> set is conceptually similar to the <a href="#MathOptInterface.EqualTo"><code>EqualTo</code></a> set, except that a variable constrained to the <code>Parameter</code> set cannot have other constraints added to it, and the <code>Parameter</code> set can never be deleted. Thus, solvers are free to treat the variable as a constant, and they need not add it as a decision variable to the model.</p><p>Because of this behavior, you must add parameters using <a href="../variables/#MathOptInterface.add_constrained_variable"><code>add_constrained_variable</code></a>, and solvers should declare <a href="../variables/#MathOptInterface.supports_add_constrained_variable"><code>supports_add_constrained_variable</code></a> and not <a href="../constraints/#MathOptInterface.supports_constraint"><code>supports_constraint</code></a> for the <code>Parameter</code> set.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; p, ci = MOI.add_constrained_variable(model, MOI.Parameter(2.5))
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Parameter{Float64}}(1))
+
+julia&gt; MOI.set(model, MOI.ConstraintSet(), ci, MOI.Parameter(3.0))
+
+julia&gt; MOI.get(model, MOI.ConstraintSet(), ci)
+MathOptInterface.Parameter{Float64}(3.0)</code></pre></div></section></article><h2 id="Vector-sets"><a class="docs-heading-anchor" href="#Vector-sets">Vector sets</a><a id="Vector-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Vector-sets" title="Permalink"></a></h2><p>List of recognized vector sets.</p><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Reals" href="#MathOptInterface.Reals"><code>MathOptInterface.Reals</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Reals(dimension::Int)</code></pre><p>The set <span>$\mathbb{R}^{dimension}$</span> (containing all points) of non-negative dimension <code>dimension</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Reals(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Reals}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Zeros" href="#MathOptInterface.Zeros"><code>MathOptInterface.Zeros</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Zeros(dimension::Int)</code></pre><p>The set <span>$\{ 0 \}^{dimension}$</span> (containing only the origin) of non-negative dimension <code>dimension</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Zeros(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Zeros}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Nonnegatives" href="#MathOptInterface.Nonnegatives"><code>MathOptInterface.Nonnegatives</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Nonnegatives(dimension::Int)</code></pre><p>The nonnegative orthant <span>$\{ x \in \mathbb{R}^{dimension} : x \ge 0 \}$</span> of non-negative dimension <code>dimension</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Nonnegatives(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Nonnegatives}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Nonpositives" href="#MathOptInterface.Nonpositives"><code>MathOptInterface.Nonpositives</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Nonpositives(dimension::Int)</code></pre><p>The nonpositive orthant <span>$\{ x \in \mathbb{R}^{dimension} : x \le 0 \}$</span> of non-negative dimension <code>dimension</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Nonpositives(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Nonpositives}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.NormInfinityCone" href="#MathOptInterface.NormInfinityCone"><code>MathOptInterface.NormInfinityCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">NormInfinityCone(dimension::Int)</code></pre><p>The <span>$\ell_\infty$</span>-norm cone <span>$\{ (t,x) \in \mathbb{R}^{dimension} : t \ge \lVert x \rVert_\infty = \max_i \lvert x_i \rvert \}$</span> of dimension <code>dimension</code>.</p><p>The <code>dimension</code> must be at least <code>1</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([t; x]), MOI.NormInfinityCone(4))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.NormInfinityCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.NormOneCone" href="#MathOptInterface.NormOneCone"><code>MathOptInterface.NormOneCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">NormOneCone(dimension::Int)</code></pre><p>The <span>$\ell_1$</span>-norm cone <span>$\{ (t,x) \in \mathbb{R}^{dimension} : t \ge \lVert x \rVert_1 = \sum_i \lvert x_i \rvert \}$</span> of dimension <code>dimension</code>.</p><p>The <code>dimension</code> must be at least <code>1</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([t; x]), MOI.NormOneCone(4))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.NormOneCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.SecondOrderCone" href="#MathOptInterface.SecondOrderCone"><code>MathOptInterface.SecondOrderCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SecondOrderCone(dimension::Int)</code></pre><p>The second-order cone (or Lorenz cone or <span>$\ell_2$</span>-norm cone) <span>$\{ (t,x) \in \mathbb{R}^{dimension} : t \ge \lVert x \rVert_2 \}$</span> of dimension <code>dimension</code>.</p><p>The <code>dimension</code> must be at least <code>1</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([t; x]), MOI.SecondOrderCone(4))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.SecondOrderCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.RotatedSecondOrderCone" href="#MathOptInterface.RotatedSecondOrderCone"><code>MathOptInterface.RotatedSecondOrderCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">RotatedSecondOrderCone(dimension::Int)</code></pre><p>The rotated second-order cone <span>$\{ (t,u,x) \in \mathbb{R}^{dimension} : 2tu \ge \lVert x \rVert_2^2, t,u \ge 0 \}$</span> of dimension <code>dimension</code>.</p><p>The <code>dimension</code> must be at least <code>2</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; u = MOI.add_variable(model)
+MOI.VariableIndex(2)
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; u; x]),
+           MOI.RotatedSecondOrderCone(5),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.RotatedSecondOrderCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.GeometricMeanCone" href="#MathOptInterface.GeometricMeanCone"><code>MathOptInterface.GeometricMeanCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GeometricMeanCone(dimension::Int)</code></pre><p>The geometric mean cone <span>$\{ (t,x) \in \mathbb{R}^{n+1} : x \ge 0, t \le \sqrt[n]{x_1 x_2 \cdots x_n} \}$</span>, where <code>dimension = n + 1 &gt;= 2</code>.</p><p><strong>Duality note</strong></p><p>The dual of the geometric mean cone is <span>$\{ (u, v) \in \mathbb{R}^{n+1} : u \le 0, v \ge 0, -u \le n \sqrt[n]{\prod_i v_i} \}$</span>, where <code>dimension = n + 1 &gt;= 2</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; x]),
+           MOI.GeometricMeanCone(4),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.GeometricMeanCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.ExponentialCone" href="#MathOptInterface.ExponentialCone"><code>MathOptInterface.ExponentialCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ExponentialCone()</code></pre><p>The 3-dimensional exponential cone <span>$\{ (x,y,z) \in \mathbb{R}^3 : y \exp (x/y) \le z, y &gt; 0 \}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.ExponentialCone())
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.ExponentialCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.DualExponentialCone" href="#MathOptInterface.DualExponentialCone"><code>MathOptInterface.DualExponentialCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">DualExponentialCone()</code></pre><p>The 3-dimensional dual exponential cone <span>$\{ (u,v,w) \in \mathbb{R}^3 : -u \exp (v/u) \le \exp(1) w, u &lt; 0 \}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.DualExponentialCone())
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.DualExponentialCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.PowerCone" href="#MathOptInterface.PowerCone"><code>MathOptInterface.PowerCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">PowerCone{T&lt;:Real}(exponent::T)</code></pre><p>The 3-dimensional power cone <span>$\{ (x,y,z) \in \mathbb{R}^3 : x^{exponent} y^{1-exponent} \ge |z|, x \ge 0, y \ge 0 \}$</span> with parameter <code>exponent</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.PowerCone(0.5))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PowerCone{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.DualPowerCone" href="#MathOptInterface.DualPowerCone"><code>MathOptInterface.DualPowerCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">DualPowerCone{T&lt;:Real}(exponent::T)</code></pre><p>The 3-dimensional power cone <span>$\{ (u,v,w) \in \mathbb{R}^3 : (\frac{u}{exponent})^{exponent} (\frac{v}{1-exponent})^{1-exponent} \ge |w|, u \ge 0, v \ge 0 \}$</span> with parameter <code>exponent</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.DualPowerCone(0.5))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.DualPowerCone{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.RelativeEntropyCone" href="#MathOptInterface.RelativeEntropyCone"><code>MathOptInterface.RelativeEntropyCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">RelativeEntropyCone(dimension::Int)</code></pre><p>The relative entropy cone <span>$\{ (u, v, w) \in \mathbb{R}^{1+2n} : u \ge \sum_{i=1}^n w_i \log(\frac{w_i}{v_i}), v_i \ge 0, w_i \ge 0 \}$</span>, where <code>dimension = 2n + 1 &gt;= 1</code>.</p><p><strong>Duality note</strong></p><p>The dual of the relative entropy cone is <span>$\{ (u, v, w) \in \mathbb{R}^{1+2n} : \forall i, w_i \ge u (\log (\frac{u}{v_i}) - 1), v_i \ge 0, u &gt; 0 \}$</span> of dimension <code>dimension</code><span>${}=2n+1$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; u = MOI.add_variable(model);
+
+julia&gt; v = MOI.add_variables(model, 3);
+
+julia&gt; w = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([u; v; w]),
+           MOI.RelativeEntropyCone(7),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.RelativeEntropyCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.NormSpectralCone" href="#MathOptInterface.NormSpectralCone"><code>MathOptInterface.NormSpectralCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">NormSpectralCone(row_dim::Int, column_dim::Int)</code></pre><p>The epigraph of the matrix spectral norm (maximum singular value function) <span>$\{ (t, X) \in \mathbb{R}^{1 + row_dim \times column_dim} : t \ge \sigma_1(X) \}$</span>, where <span>$\sigma_i$</span> is the <span>$i$</span>th singular value of the matrix <span>$X$</span> of non-negative row dimension <code>row_dim</code> and column dimension <code>column_dim</code>.</p><p>The matrix X is vectorized by stacking the columns, matching the behavior of Julia&#39;s <code>vec</code> function.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = reshape(MOI.add_variables(model, 6), 2, 3)
+2×3 Matrix{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)  MOI.VariableIndex(4)  MOI.VariableIndex(6)
+ MOI.VariableIndex(3)  MOI.VariableIndex(5)  MOI.VariableIndex(7)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; vec(X)]),
+           MOI.NormSpectralCone(2, 3),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.NormSpectralCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.NormNuclearCone" href="#MathOptInterface.NormNuclearCone"><code>MathOptInterface.NormNuclearCone</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">NormNuclearCone(row_dim::Int, column_dim::Int)</code></pre><p>The epigraph of the matrix nuclear norm (sum of singular values function) <span>$\{ (t, X) \in \mathbb{R}^{1 + row_dim \times column_dim} : t \ge \sum_i \sigma_i(X) \}$</span>, where <span>$\sigma_i$</span> is the <span>$i$</span>th singular value of the matrix <span>$X$</span> of non-negative row dimension <code>row_dim</code> and column dimension <code>column_dim</code>.</p><p>The matrix X is vectorized by stacking the columns, matching the behavior of Julia&#39;s <code>vec</code> function.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = reshape(MOI.add_variables(model, 6), 2, 3)
+2×3 Matrix{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)  MOI.VariableIndex(4)  MOI.VariableIndex(6)
+ MOI.VariableIndex(3)  MOI.VariableIndex(5)  MOI.VariableIndex(7)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; vec(X)]),
+           MOI.NormNuclearCone(2, 3),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.NormNuclearCone}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.SOS1" href="#MathOptInterface.SOS1"><code>MathOptInterface.SOS1</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SOS1{T&lt;:Real}(weights::Vector{T})</code></pre><p>The set corresponding to the Special Ordered Set (SOS) constraint of Type I.</p><p>Of the variables in the set, at most one can be nonzero.</p><p>The <code>weights</code> induce an ordering of the variables such that the <em>k</em>th element in the set corresponds to the <em>k</em>th weight in <code>weights</code>. Solvers may use these weights to improve the efficiency of the solution process, but the ordering does not change the set of feasible solutions.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables(x),
+           MOI.SOS1([1.0, 3.0, 2.5]),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.SOS1{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.SOS2" href="#MathOptInterface.SOS2"><code>MathOptInterface.SOS2</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SOS2{T&lt;:Real}(weights::Vector{T})</code></pre><p>The set corresponding to the Special Ordered Set (SOS) constraint of Type II.</p><p>The <code>weights</code> induce an ordering of the variables such that the <em>k</em>th element in the set corresponds to the <em>k</em>th weight in <code>weights</code>. Therefore, the weights must be unique.</p><p>Of the variables in the set, at most two can be nonzero, and if two are nonzero, they must be adjacent in the ordering of the set.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables(x),
+           MOI.SOS2([1.0, 3.0, 2.5]),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.SOS2{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Indicator" href="#MathOptInterface.Indicator"><code>MathOptInterface.Indicator</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Indicator{A&lt;:ActivationCondition,S&lt;:AbstractScalarSet}(set::S)</code></pre><p>The set corresponding to an indicator constraint.</p><p>When <code>A</code> is <code>ACTIVATE_ON_ZERO</code>, this means: <span>$\{(y, x) \in \{0, 1\} \times \mathbb{R}^n : y = 0 \implies x \in set\}$</span></p><p>When <code>A</code> is <code>ACTIVATE_ON_ONE</code>, this means: <span>$\{(y, x) \in \{0, 1\} \times \mathbb{R}^n : y = 1 \implies x \in set\}$</span></p><p><strong>Notes</strong></p><p>Most solvers expect that the first row of the function is interpretable as a variable index <code>x_i</code> (e.g., <code>1.0 * x + 0.0</code>). An error will be thrown if this is not the case.</p><p><strong>Example</strong></p><p>The constraint <span>$\{(y, x) \in \{0, 1\} \times \mathbb{R}^2 : y = 1 \implies x_1 + x_2 \leq 9 \}$</span> is defined as</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 2)
+2-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+
+julia&gt; y, _ = MOI.add_constrained_variable(model, MOI.ZeroOne())
+(MOI.VariableIndex(3), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(3))
+
+julia&gt; f = MOI.VectorAffineFunction(
+           [
+               MOI.VectorAffineTerm(1, MOI.ScalarAffineTerm(1.0, y)),
+               MOI.VectorAffineTerm(2, MOI.ScalarAffineTerm(1.0, x[1])),
+               MOI.VectorAffineTerm(2, MOI.ScalarAffineTerm(1.0, x[2])),
+           ],
+           [0.0, 0.0],
+       )
+┌                                                         ┐
+│0.0 + 1.0 MOI.VariableIndex(3)                           │
+│0.0 + 1.0 MOI.VariableIndex(1) + 1.0 MOI.VariableIndex(2)│
+└                                                         ┘
+
+julia&gt; s = MOI.Indicator{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(9.0))
+MathOptInterface.Indicator{MathOptInterface.ACTIVATE_ON_ONE, MathOptInterface.LessThan{Float64}}(MathOptInterface.LessThan{Float64}(9.0))
+
+julia&gt; MOI.add_constraint(model, f, s)
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.Indicator{MathOptInterface.ACTIVATE_ON_ONE, MathOptInterface.LessThan{Float64}}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Complements" href="#MathOptInterface.Complements"><code>MathOptInterface.Complements</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Complements(dimension::Base.Integer)</code></pre><p>The set corresponding to a mixed complementarity constraint.</p><p>Complementarity constraints should be specified with an <a href="#MathOptInterface.AbstractVectorFunction"><code>AbstractVectorFunction</code></a>-in-<code>Complements(dimension)</code> constraint.</p><p>The dimension of the vector-valued function <code>F</code> must be <code>dimension</code>. This defines a complementarity constraint between the scalar function <code>F[i]</code> and the variable in <code>F[i + dimension/2]</code>. Thus, <code>F[i + dimension/2]</code> must be interpretable as a single variable <code>x_i</code> (e.g., <code>1.0 * x + 0.0</code>), and <code>dimension</code> must be even.</p><p>The mixed complementarity problem consists of finding <code>x_i</code> in the interval <code>[lb, ub]</code> (i.e., in the set <code>Interval(lb, ub)</code>), such that the following holds:</p><ol><li><code>F_i(x) == 0</code> if <code>lb_i &lt; x_i &lt; ub_i</code></li><li><code>F_i(x) &gt;= 0</code> if <code>lb_i == x_i</code></li><li><code>F_i(x) &lt;= 0</code> if <code>x_i == ub_i</code></li></ol><p>Classically, the bounding set for <code>x_i</code> is <code>Interval(0, Inf)</code>, which recovers: <code>0 &lt;= F_i(x) ⟂ x_i &gt;= 0</code>, where the <code>⟂</code> operator implies <code>F_i(x) * x_i = 0</code>.</p><p><strong>Example</strong></p><p>The problem:</p><pre><code class="nohighlight hljs">x -in- Interval(-1, 1)
+[-4 * x - 3, x] -in- Complements(2)</code></pre><p>defines the mixed complementarity problem where the following holds:</p><ol><li><code>-4 * x - 3 == 0</code> if <code>-1 &lt; x &lt; 1</code></li><li><code>-4 * x - 3 &gt;= 0</code> if <code>x == -1</code></li><li><code>-4 * x - 3 &lt;= 0</code> if <code>x == 1</code></li></ol><p>There are three solutions:</p><ol><li><code>x = -3/4</code> with <code>F(x) = 0</code></li><li><code>x = -1</code> with <code>F(x) = 1</code></li><li><code>x = 1</code> with <code>F(x) = -7</code></li></ol><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x, _ = MOI.add_constrained_variable(model, MOI.Interval(-1.0, 1.0));
+
+julia&gt; MOI.add_constraint(
+            model,
+            MOI.Utilities.vectorize([-4.0 * x - 3.0, x]),
+            MOI.Complements(2),
+        )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.Complements}(1)</code></pre><p>The function <code>F</code> can also be defined in terms of single variables. For example, the problem:</p><pre><code class="nohighlight hljs">[x_3, x_4] -in- Nonnegatives(2)
+[x_1, x_2, x_3, x_4] -in- Complements(4)</code></pre><p>defines the complementarity problem where <code>0 &lt;= x_1 ⟂ x_3 &gt;= 0</code> and <code>0 &lt;= x_2 ⟂ x_4 &gt;= 0</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 4);
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x[3:4]), MOI.Nonnegatives(2))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Nonnegatives}(1)
+
+julia&gt; MOI.add_constraint(
+            model,
+            MOI.VectorOfVariables(x),
+            MOI.Complements(4),
+        )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Complements}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.HyperRectangle" href="#MathOptInterface.HyperRectangle"><code>MathOptInterface.HyperRectangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">HyperRectangle(lower::Vector{T}, upper::Vector{T}) where {T}</code></pre><p>The set <span>$\{x \in \bar{\mathbb{R}}^d: x_i \in [lower_i, upper_i] \forall i=1,\ldots,d\}$</span>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3)
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables(x),
+           MOI.HyperRectangle(zeros(3), ones(3)),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.HyperRectangle{Float64}}(1)</code></pre></div></section></article><h2 id="Constraint-programming-sets"><a class="docs-heading-anchor" href="#Constraint-programming-sets">Constraint programming sets</a><a id="Constraint-programming-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Constraint-programming-sets" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AllDifferent" href="#MathOptInterface.AllDifferent"><code>MathOptInterface.AllDifferent</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">AllDifferent(dimension::Int)</code></pre><p>The set <span>$\{x \in \mathbb{Z}^{d}\}$</span> such that no two elements in <span>$x$</span> take the same value and <code>dimension = d</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>all_different</code> in MiniZinc, and is sometimes also called <code>distinct</code>.</p><p><strong>Example</strong></p><p>To enforce <code>x[1] != x[2]</code> AND <code>x[1] != x[3]</code> AND <code>x[2] != x[3]</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.AllDifferent(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.AllDifferent}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.BinPacking" href="#MathOptInterface.BinPacking"><code>MathOptInterface.BinPacking</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">BinPacking(c::T, w::Vector{T}) where {T}</code></pre><p>The set <span>$\{x \in \mathbb{Z}^d\}$</span> where <code>d = length(w)</code>, such that each item <code>i</code> in <code>1:d</code> of weight <code>w[i]</code> is put into bin <code>x[i]</code>, and the total weight of each bin does not exceed <code>c</code>.</p><p>There are additional assumptions that the capacity, <code>c</code>, and the weights, <code>w</code>, must all be non-negative.</p><p>The bin numbers depend on the bounds of <code>x</code>, so they may be something other than the integers <code>1:d</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>bin_packing</code> in MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; bins = MOI.add_variables(model, 5)
+5-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+ MOI.VariableIndex(4)
+ MOI.VariableIndex(5)
+
+julia&gt; weights = Float64[1, 1, 2, 2, 3]
+5-element Vector{Float64}:
+ 1.0
+ 1.0
+ 2.0
+ 2.0
+ 3.0
+
+julia&gt; MOI.add_constraint.(model, bins, MOI.Integer())
+5-element Vector{MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}}:
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(2)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(3)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(4)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(5)
+
+julia&gt; MOI.add_constraint.(model, bins, MOI.Interval(4.0, 6.0))
+5-element Vector{MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}}:
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(1)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(2)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(3)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(4)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Interval{Float64}}(5)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(bins), MOI.BinPacking(3.0, weights))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.BinPacking{Float64}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Circuit" href="#MathOptInterface.Circuit"><code>MathOptInterface.Circuit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Circuit(dimension::Int)</code></pre><p>The set <span>$\{x \in \{1..d\}^d\}$</span> that constraints <span>$x$</span> to be a circuit, such that <span>$x_i = j$</span> means that <span>$j$</span> is the successor of <span>$i$</span>, and <code>dimension = d</code>.</p><p>Graphs with multiple independent circuits, such as <code>[2, 1, 3]</code> and <code>[2, 1, 4, 3]</code>, are not valid.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>circuit</code> in MiniZinc, and it is equivalent to forming a (potentially sub-optimal) tour in the travelling salesperson problem.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Circuit(3))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Circuit}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.CountAtLeast" href="#MathOptInterface.CountAtLeast"><code>MathOptInterface.CountAtLeast</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CountAtLeast(n::Int, d::Vector{Int}, set::Set{Int})</code></pre><p>The set <span>$\{x \in \mathbb{Z}^{d_1 + d_2 + \ldots d_N}\}$</span>, where <code>x</code> is partitioned into <code>N</code> subsets (<span>$\{x_1,  \ldots, x_{d_1}\}$</span>, <span>$\{x_{d_1 + 1},  \ldots, x_{d_1 + d_2}\}$</span> and so on), and at least <span>$n$</span> elements of each subset take one of the values in <code>set</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>at_least</code> in MiniZinc.</p><p><strong>Example</strong></p><p>To ensure that <code>3</code> appears at least once in each of the subsets <code>{a, b}</code> and <code>{b, c}</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; a, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1))
+
+julia&gt; b, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(2), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(2))
+
+julia&gt; c, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(3), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(3))
+
+julia&gt; x, d, set = [a, b, b, c], [2, 2], [3]
+(MathOptInterface.VariableIndex[MOI.VariableIndex(1), MOI.VariableIndex(2), MOI.VariableIndex(2), MOI.VariableIndex(3)], [2, 2], [3])
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.CountAtLeast(1, d, Set(set)))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.CountAtLeast}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.CountBelongs" href="#MathOptInterface.CountBelongs"><code>MathOptInterface.CountBelongs</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CountBelongs(dimenson::Int, set::Set{Int})</code></pre><p>The set <span>$\{(n, x) \in \mathbb{Z}^{1+d}\}$</span>, such that <code>n</code> elements of the vector <code>x</code> take on of the values in <code>set</code> and <code>dimension = 1 + d</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>among</code> by MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; n, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1))
+
+julia&gt; x = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+ MOI.VariableIndex(4)
+
+julia&gt; set = Set([3, 4, 5])
+Set{Int64} with 3 elements:
+  5
+  4
+  3
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([n; x]), MOI.CountBelongs(4, set))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.CountBelongs}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.CountDistinct" href="#MathOptInterface.CountDistinct"><code>MathOptInterface.CountDistinct</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CountDistinct(dimension::Int)</code></pre><p>The set <span>$\{(n, x) \in \mathbb{Z}^{1+d}\}$</span>, such that the number of distinct values in <code>x</code> is <code>n</code> and <code>dimension = 1 + d</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>nvalues</code> in MiniZinc.</p><p><strong>Example</strong></p><p>To model:</p><ul><li>if <code>n == 1</code>`<code>, then</code>x[1] == x[2] == x[3]`</li><li>if <code>n == 2</code>, then<ul><li><code>x[1] == x[2] != x[3]</code> or</li><li><code>x[1] != x[2] == x[3]</code> or</li><li><code>x[1] == x[3] != x[2]</code></li></ul></li><li>if <code>n == 3</code>, then <code>x[1] != x[2]</code>, <code>x[2] != x[3]</code> and <code>x[3] != x[1]</code></li></ul><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; n, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1))
+
+julia&gt; x = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+ MOI.VariableIndex(4)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(vcat(n, x)), MOI.CountDistinct(4))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.CountDistinct}(1)</code></pre><p><strong>Relationship to AllDifferent</strong></p><p>When the first element is <code>d</code>, <code>CountDistinct</code> is equivalent to an <a href="#MathOptInterface.AllDifferent"><code>AllDifferent</code></a> constraint.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.CountGreaterThan" href="#MathOptInterface.CountGreaterThan"><code>MathOptInterface.CountGreaterThan</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CountGreaterThan(dimension::Int)</code></pre><p>The set <span>$\{(c, y, x) \in \mathbb{Z}^{1+1+d}\}$</span>, such that <code>c</code> is strictly greater than the number of occurances of <code>y</code> in <code>x</code> and <code>dimension = 1 + 1 + d</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>count_gt</code> in MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; c, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1))
+
+julia&gt; y, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(2), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(2))
+
+julia&gt; x = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(3)
+ MOI.VariableIndex(4)
+ MOI.VariableIndex(5)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([c; y; x]), MOI.CountGreaterThan(5))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.CountGreaterThan}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Cumulative" href="#MathOptInterface.Cumulative"><code>MathOptInterface.Cumulative</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Cumulative(dimension::Int)</code></pre><p>The set <span>$\{(s, d, r, b) \in \mathbb{Z}^{3n+1}\}$</span>, representing the <code>cumulative</code> global constraint, where <code>n == length(s) == length(r) == length(b)</code> and <code>dimension = 3n + 1</code>.</p><p><code>Cumulative</code> requires that a set of tasks given by start times <span>$s$</span>, durations <span>$d$</span>, and resource requirements <span>$r$</span>, never requires more than the global resource bound <span>$b$</span> at any one time.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>cumulative</code> in MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; s = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+
+julia&gt; d = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(4)
+ MOI.VariableIndex(5)
+ MOI.VariableIndex(6)
+
+julia&gt; r = [MOI.add_constrained_variable(model, MOI.Integer())[1] for _ in 1:3]
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(7)
+ MOI.VariableIndex(8)
+ MOI.VariableIndex(9)
+
+julia&gt; b, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(10), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(10))
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([s; d; r; b]), MOI.Cumulative(10))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Cumulative}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Path" href="#MathOptInterface.Path"><code>MathOptInterface.Path</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Path(from::Vector{Int}, to::Vector{Int})</code></pre><p>Given a graph comprised of a set of nodes <code>1..N</code> and a set of arcs <code>1..E</code> represented by an edge from node <code>from[i]</code> to node <code>to[i]</code>, <code>Path</code> constrains the set <span>$(s, t, ns, es) \in (1..N)\times(1..E)\times\{0,1\}^N\times\{0,1\}^E$</span>, to form subgraph that is a path from node <code>s</code> to node <code>t</code>, where node <code>n</code> is in the path if <code>ns[n]</code> is <code>1</code>, and edge <code>e</code> is in the path if <code>es[e]</code> is <code>1</code>.</p><p>The path must be acyclic, and it must traverse all nodes <code>n</code> for which <code>ns[n]</code> is <code>1</code>, and all edges <code>e</code> for which <code>es[e]</code> is <code>1</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>path</code> in MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; N, E = 4, 5
+(4, 5)
+
+julia&gt; from = [1, 1, 2, 2, 3]
+5-element Vector{Int64}:
+ 1
+ 1
+ 2
+ 2
+ 3
+
+julia&gt; to = [2, 3, 3, 4, 4]
+5-element Vector{Int64}:
+ 2
+ 3
+ 3
+ 4
+ 4
+
+julia&gt; s, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(1))
+
+julia&gt; t, _ = MOI.add_constrained_variable(model, MOI.Integer())
+(MOI.VariableIndex(2), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}(2))
+
+julia&gt; ns = MOI.add_variables(model, N)
+4-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(3)
+ MOI.VariableIndex(4)
+ MOI.VariableIndex(5)
+ MOI.VariableIndex(6)
+
+julia&gt; MOI.add_constraint.(model, ns, MOI.ZeroOne())
+4-element Vector{MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}}:
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(3)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(4)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(5)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(6)
+
+julia&gt; es = MOI.add_variables(model, E)
+5-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(7)
+ MOI.VariableIndex(8)
+ MOI.VariableIndex(9)
+ MOI.VariableIndex(10)
+ MOI.VariableIndex(11)
+
+julia&gt; MOI.add_constraint.(model, es, MOI.ZeroOne())
+5-element Vector{MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}}:
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(7)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(8)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(9)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(10)
+ MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(11)
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables([s; t; ns; es]), MOI.Path(from, to))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Path}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Reified" href="#MathOptInterface.Reified"><code>MathOptInterface.Reified</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Reified(set::AbstractSet)</code></pre><p>The constraint <span>$[z; f(x)] \in Reified(S)$</span> ensures that <span>$f(x) \in S$</span> if and only if <span>$z == 1$</span>, where <span>$z \in \{0, 1\}$</span>.</p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
+MOIU.UniversalFallback{MOIU.Model{Float64}}
+fallback for MOIU.Model{Float64}
+
+julia&gt; z, _ = MOI.add_constrained_variable(model, MOI.ZeroOne())
+(MOI.VariableIndex(1), MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}(1))
+
+julia&gt; x = MOI.add_variable(model)
+MOI.VariableIndex(2)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.Utilities.vectorize([z, 2.0 * x]),
+           MOI.Reified(MOI.GreaterThan(1.0)),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.Reified{MathOptInterface.GreaterThan{Float64}}}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.Table" href="#MathOptInterface.Table"><code>MathOptInterface.Table</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Table(table::Matrix{T}) where {T}</code></pre><p>The set <span>$\{x \in \mathbb{R}^d\}$</span> where <code>d = size(table, 2)</code>, such that <code>x</code> belongs to one row of <code>table</code>. That is, there exists some <code>j</code> in <code>1:size(table, 1)</code>, such that <code>x[i] = table[j, i]</code> for all <code>i=1:size(table, 2)</code>.</p><p><strong>Also known as</strong></p><p>This constraint is called <code>table</code> in MiniZinc.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; x = MOI.add_variables(model, 3)
+3-element Vector{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(1)
+ MOI.VariableIndex(2)
+ MOI.VariableIndex(3)
+
+julia&gt; table = Float64[1 1 0; 0 1 1; 1 0 1; 1 1 1]
+4×3 Matrix{Float64}:
+ 1.0  1.0  0.0
+ 0.0  1.0  1.0
+ 1.0  0.0  1.0
+ 1.0  1.0  1.0
+
+julia&gt; MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Table(table))
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.Table{Float64}}(1)</code></pre></div></section></article><h2 id="Matrix-sets"><a class="docs-heading-anchor" href="#Matrix-sets">Matrix sets</a><a id="Matrix-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Matrix-sets" title="Permalink"></a></h2><p>Matrix sets are vectorized to be subtypes of <a href="#MathOptInterface.AbstractVectorSet"><code>AbstractVectorSet</code></a>.</p><p>For sets of symmetric matrices, storing both the <code>(i, j)</code> and <code>(j, i)</code> elements is redundant. Use the <a href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>AbstractSymmetricMatrixSetTriangle</code></a> set to represent only the vectorization of the upper triangular part of the matrix.</p><p>When the matrix of expressions constrained to be in the set is not symmetric, and hence additional constraints are needed to force the equality of the <code>(i, j)</code> and <code>(j, i)</code> elements, use the <a href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>AbstractSymmetricMatrixSetSquare</code></a> set.</p><p>The <a href="../../submodules/Bridges/list_of_bridges/#MathOptInterface.Bridges.Constraint.SquareBridge"><code>Bridges.Constraint.SquareBridge</code></a> can transform a set from the square form to the <a href="#MathOptInterface.triangular_form"><code>triangular_form</code></a> by adding appropriate constraints if the <code>(i, j)</code> and <code>(j, i)</code> expressions are different.</p><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractSymmetricMatrixSetTriangle" href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>MathOptInterface.AbstractSymmetricMatrixSetTriangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">abstract type AbstractSymmetricMatrixSetTriangle &lt;: AbstractVectorSet end</code></pre><p>Abstract supertype for subsets of the (vectorized) cone of symmetric matrices, with <a href="#MathOptInterface.side_dimension"><code>side_dimension</code></a> rows and columns. The entries of the upper-right triangular part of the matrix are given column by column (or equivalently, the entries of the lower-left triangular part are given row by row). A vectorized cone of <a href="#MathOptInterface.dimension"><code>dimension</code></a> <span>$n$</span> corresponds to a square matrix with side dimension <span>$\sqrt{1/4 + 2 n} - 1/2$</span>. (Because a <span>$d \times d$</span> matrix has <span>$d(d + 1) / 2$</span> elements in the upper or lower triangle.)</p><p><strong>Example</strong></p><p>The matrix</p><p class="math-container">\[\begin{bmatrix}
+  1 &amp; 2 &amp; 4\\
+  2 &amp; 3 &amp; 5\\
+  4 &amp; 5 &amp; 6
+\end{bmatrix}\]</p><p>has <a href="#MathOptInterface.side_dimension"><code>side_dimension</code></a> 3 and vectorization <span>$(1, 2, 3, 4, 5, 6)$</span>.</p><p><strong>Note</strong></p><p>Two packed storage formats exist for symmetric matrices, the respective orders of the entries are:</p><ul><li>upper triangular column by column (or lower triangular row by row);</li><li>lower triangular column by column (or upper triangular row by row).</li></ul><p>The advantage of the first format is the mapping between the <code>(i, j)</code> matrix indices and the <code>k</code> index of the vectorized form. It is simpler and does not depend on the side dimension of the matrix. Indeed,</p><ul><li>the entry of matrix indices <code>(i, j)</code> has vectorized index <code>k = div((j - 1) * j, 2) + i</code> if <span>$i \leq j$</span> and <code>k = div((i - 1) * i, 2) + j</code> if <span>$j \leq i$</span>;</li><li>and the entry with vectorized index <code>k</code> has matrix indices <code>i = div(1 + isqrt(8k - 7), 2)</code> and <code>j = k - div((i - 1) * i, 2)</code> or <code>j = div(1 + isqrt(8k - 7), 2)</code> and <code>i = k - div((j - 1) * j, 2)</code>.</li></ul><p><strong>Duality note</strong></p><p>The scalar product for the symmetric matrix in its vectorized form is the sum of the pairwise product of the diagonal entries plus twice the sum of the pairwise product of the upper diagonal entries; see [p. 634, 1]. This has important consequence for duality.</p><p>Consider for example the following problem (<a href="#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>PositiveSemidefiniteConeTriangle</code></a> is a subtype of <a href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>AbstractSymmetricMatrixSetTriangle</code></a>)</p><p class="math-container">\[\begin{align*}
+    &amp; \max_{x \in \mathbb{R}} &amp; x
+    \\
+    &amp; \;\;\text{s.t.} &amp;
+    (1, -x, 1) &amp; \in \text{PositiveSemidefiniteConeTriangle}(2).
+\end{align*}\]</p><p>The dual is the following problem</p><p class="math-container">\[\begin{align*}
+    &amp; \min_{x \in \mathbb{R}^3} &amp; y_1 + y_3
+    \\
+    &amp; \;\;\text{s.t.} &amp; 2y_2 &amp; = 1\\
+    &amp; &amp; y &amp; \in \text{PositiveSemidefiniteConeTriangle}(2).
+\end{align*}\]</p><p>Why do we use <span>$2y_2$</span> in the dual constraint instead of <span>$y_2$</span> ? The reason is that <span>$2y_2$</span> is the scalar product between <span>$y$</span> and the symmetric matrix whose vectorized form is <span>$(0, 1, 0)$</span>. Indeed, with our modified scalar products we have</p><p class="math-container">\[\langle
+(0, 1, 0),
+(y_1, y_2, y_3)
+\rangle
+=
+\mathrm{trace}
+\begin{pmatrix}
+  0 &amp; 1\\
+  1 &amp; 0
+\end{pmatrix}
+\begin{pmatrix}
+  y_1 &amp; y_2\\
+  y_2 &amp; y_3
+\end{pmatrix}
+= 2y_2.\]</p><p><strong>References</strong></p><p>[1] Boyd, S. and Vandenberghe, L.. <em>Convex optimization</em>. Cambridge university     press, 2004.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.AbstractSymmetricMatrixSetSquare" href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>MathOptInterface.AbstractSymmetricMatrixSetSquare</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">abstract type AbstractSymmetricMatrixSetSquare &lt;: AbstractVectorSet end</code></pre><p>Abstract supertype for subsets of the (vectorized) cone of symmetric matrices, with <a href="#MathOptInterface.side_dimension"><code>side_dimension</code></a> rows and columns. The entries of the matrix are given column by column (or equivalently, row by row). The matrix is both constrained to be symmetric and to have its <a href="#MathOptInterface.triangular_form"><code>triangular_form</code></a> belong to the corresponding set. That is, if the functions in entries <span>$(i, j)$</span> and <span>$(j, i)$</span> are different, then a constraint will be added to make sure that the entries are equal.</p><p><strong>Example</strong></p><p><a href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>PositiveSemidefiniteConeSquare</code></a> is a subtype of <a href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>AbstractSymmetricMatrixSetSquare</code></a> and constraining the matrix</p><p class="math-container">\[\begin{bmatrix}
+  1 &amp; -y\\
+  -z &amp; 0\\
+\end{bmatrix}\]</p><p>to be symmetric positive semidefinite can be achieved by constraining the vector <span>$(1, -z, -y, 0)$</span> (or <span>$(1, -y, -z, 0)$</span>) to belong to the <code>PositiveSemidefiniteConeSquare(2)</code>. It both constrains <span>$y = z$</span> and <span>$(1, -y, 0)$</span> (or <span>$(1, -z, 0)$</span>) to be in <code>PositiveSemidefiniteConeTriangle(2)</code>, since <code>triangular_form(PositiveSemidefiniteConeSquare)</code> is <code>PositiveSemidefiniteConeTriangle</code>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.side_dimension" href="#MathOptInterface.side_dimension"><code>MathOptInterface.side_dimension</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">side_dimension(
+    set::Union{
+        AbstractSymmetricMatrixSetTriangle,
+        AbstractSymmetricMatrixSetSquare,
+    },
+)</code></pre><p>Side dimension of the matrices in <code>set</code>.</p><p><strong>Convention</strong></p><p>By convention, the side dimension should be stored in the <code>side_dimension</code> field. If this is not the case for a subtype of <a href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>AbstractSymmetricMatrixSetTriangle</code></a>, you must implement this method.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.triangular_form" href="#MathOptInterface.triangular_form"><code>MathOptInterface.triangular_form</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">triangular_form(S::Type{&lt;:AbstractSymmetricMatrixSetSquare})
+triangular_form(set::AbstractSymmetricMatrixSetSquare)</code></pre><p>Return the <a href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>AbstractSymmetricMatrixSetTriangle</code></a> corresponding to the vectorization of the upper triangular part of matrices in the <a href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>AbstractSymmetricMatrixSetSquare</code></a> set.</p></div></section></article><p>List of recognized matrix sets.</p><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.PositiveSemidefiniteConeTriangle" href="#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MathOptInterface.PositiveSemidefiniteConeTriangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">PositiveSemidefiniteConeTriangle(side_dimension::Int) &lt;: AbstractSymmetricMatrixSetTriangle</code></pre><p>The (vectorized) cone of symmetric positive semidefinite matrices, with non-negative <code>side_dimension</code> rows and columns.</p><p>See <a href="#MathOptInterface.AbstractSymmetricMatrixSetTriangle"><code>AbstractSymmetricMatrixSetTriangle</code></a> for more details on the vectorized form.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.PositiveSemidefiniteConeSquare" href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>MathOptInterface.PositiveSemidefiniteConeSquare</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">PositiveSemidefiniteConeSquare(side_dimension::Int) &lt;: AbstractSymmetricMatrixSetSquare</code></pre><p>The cone of symmetric positive semidefinite matrices, with non-negative side length <code>side_dimension</code>.</p><p>See <a href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>AbstractSymmetricMatrixSetSquare</code></a> for more details on the vectorized form.</p><p>The entries of the matrix are given column by column (or equivalently, row by row).</p><p>The matrix is both constrained to be symmetric and to be positive semidefinite. That is, if the functions in entries <span>$(i, j)$</span> and <span>$(j, i)$</span> are different, then a constraint will be added to make sure that the entries are equal.</p><p><strong>Example</strong></p><p>Constraining the matrix</p><p class="math-container">\[\begin{bmatrix}
+  1 &amp; -y\\
+  -z &amp; 0\\
+\end{bmatrix}\]</p><p>to be symmetric positive semidefinite can be achieved by constraining the vector <span>$(1, -z, -y, 0)$</span> (or <span>$(1, -y, -z, 0)$</span>) to belong to the <code>PositiveSemidefiniteConeSquare(2)</code>.</p><p>It both constrains <span>$y = z$</span> and <span>$(1, -y, 0)$</span> (or <span>$(1, -z, 0)$</span>) to be in <code>PositiveSemidefiniteConeTriangle(2)</code>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.HermitianPositiveSemidefiniteConeTriangle" href="#MathOptInterface.HermitianPositiveSemidefiniteConeTriangle"><code>MathOptInterface.HermitianPositiveSemidefiniteConeTriangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">HermitianPositiveSemidefiniteConeTriangle(side_dimension::Int) &lt;: AbstractVectorSet</code></pre><p>The (vectorized) cone of Hermitian positive semidefinite matrices, with non-negative <code>side_dimension</code> rows and columns.</p><p>Becaue the matrix is Hermitian, the diagonal elements are real, and the complex-valued lower triangular entries are obtained as the conjugate of corresponding upper triangular entries.</p><p><strong>Vectorization format</strong></p><p>The vectorized form starts with real part of the entries of the upper triangular part of the matrix, given column by column as explained in <a href="#MathOptInterface.AbstractSymmetricMatrixSetSquare"><code>AbstractSymmetricMatrixSetSquare</code></a>.</p><p>It is then followed by the imaginary part of the off-diagonal entries of the upper triangular part, also given column by column.</p><p>For example, the matrix</p><p class="math-container">\[\begin{bmatrix}
+  1 &amp; 2 + 7im &amp; 4 + 8im\\
+  2 - 7im &amp; 3 &amp; 5 + 9im\\
+  4 - 8im &amp; 5 - 9im &amp; 6
+\end{bmatrix}\]</p><p>has <a href="#MathOptInterface.side_dimension"><code>side_dimension</code></a> 3 and is represented as the vector <span>$[1, 2, 3, 4, 5, 6, 7, 8, 9]$</span>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.LogDetConeTriangle" href="#MathOptInterface.LogDetConeTriangle"><code>MathOptInterface.LogDetConeTriangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">LogDetConeTriangle(side_dimension::Int)</code></pre><p>The log-determinant cone <span>$\{ (t, u, X) \in \mathbb{R}^{2 + d(d+1)/2} : t \le u \log(\det(X/u)), u &gt; 0 \}$</span>, where the matrix <code>X</code> is represented in the same symmetric packed format as in the <code>PositiveSemidefiniteConeTriangle</code>.</p><p>The non-negative argument <code>side_dimension</code> is the side dimension of the matrix <code>X</code>, i.e., its number of rows or columns.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; X]),
+           MOI.LogDetConeTriangle(2),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.LogDetConeTriangle}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.LogDetConeSquare" href="#MathOptInterface.LogDetConeSquare"><code>MathOptInterface.LogDetConeSquare</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">LogDetConeSquare(side_dimension::Int)</code></pre><p>The log-determinant cone <span>$\{ (t, u, X) \in \mathbb{R}^{2 + d^2} : t \le u \log(\det(X/u)), X \text{ symmetric}, u &gt; 0 \}$</span>, where the matrix <code>X</code> is represented in the same format as in the <a href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>PositiveSemidefiniteConeSquare</code></a>.</p><p>Similarly to <a href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>PositiveSemidefiniteConeSquare</code></a>, constraints are added to ensure that <code>X</code> is symmetric.</p><p>The non-negative argument <code>side_dimension</code> is the side dimension of the matrix <code>X</code>, i.e., its number of rows or columns.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = reshape(MOI.add_variables(model, 4), 2, 2)
+2×2 Matrix{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)  MOI.VariableIndex(4)
+ MOI.VariableIndex(3)  MOI.VariableIndex(5)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; vec(X)]),
+           MOI.LogDetConeSquare(2),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.LogDetConeSquare}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.RootDetConeTriangle" href="#MathOptInterface.RootDetConeTriangle"><code>MathOptInterface.RootDetConeTriangle</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">RootDetConeTriangle(side_dimension::Int)</code></pre><p>The root-determinant cone <span>$\{ (t, X) \in \mathbb{R}^{1 + d(d+1)/2} : t \le \det(X)^{1/d} \}$</span>, where the matrix <code>X</code> is represented in the same symmetric packed format as in the <a href="#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>PositiveSemidefiniteConeTriangle</code></a>.</p><p>The non-negative argument <code>side_dimension</code> is the side dimension of the matrix <code>X</code>, i.e., its number of rows or columns.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = MOI.add_variables(model, 3);
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; X]),
+           MOI.RootDetConeTriangle(2),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.RootDetConeTriangle}(1)</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="MathOptInterface.RootDetConeSquare" href="#MathOptInterface.RootDetConeSquare"><code>MathOptInterface.RootDetConeSquare</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">RootDetConeSquare(side_dimension::Int)</code></pre><p>The root-determinant cone <span>$\{ (t, X) \in \mathbb{R}^{1 + d^2} : t \le \det(X)^{1/d}, X \text{ symmetric} \}$</span>, where the matrix <code>X</code> is represented in the same format as <a href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>PositiveSemidefiniteConeSquare</code></a>.</p><p>Similarly to <a href="#MathOptInterface.PositiveSemidefiniteConeSquare"><code>PositiveSemidefiniteConeSquare</code></a>, constraints are added to ensure that <code>X</code> is symmetric.</p><p>The non-negative argument <code>side_dimension</code> is the side dimension of the matrix <code>X</code>, i.e., its number of rows or columns.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; import MathOptInterface as MOI
+
+julia&gt; model = MOI.Utilities.Model{Float64}()
+MOIU.Model{Float64}
+
+julia&gt; t = MOI.add_variable(model)
+MOI.VariableIndex(1)
+
+julia&gt; X = reshape(MOI.add_variables(model, 4), 2, 2)
+2×2 Matrix{MathOptInterface.VariableIndex}:
+ MOI.VariableIndex(2)  MOI.VariableIndex(4)
+ MOI.VariableIndex(3)  MOI.VariableIndex(5)
+
+julia&gt; MOI.add_constraint(
+           model,
+           MOI.VectorOfVariables([t; vec(X)]),
+           MOI.RootDetConeSquare(2),
+       )
+MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.RootDetConeSquare}(1)</code></pre></div></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../background/naming_conventions/">« Naming conventions</a><a class="docs-footer-nextpage" href="../models/">Models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.28.0-DEV on <span class="colophon-date" title="Wednesday 3 May 2023 03:42">Wednesday 3 May 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

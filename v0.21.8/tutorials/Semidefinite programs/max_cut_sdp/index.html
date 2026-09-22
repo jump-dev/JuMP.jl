@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SDP relaxations: max-cut · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview', {'page': location.pathname + location.search + location.hash});
+</script><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="JuMP logo"/></a><div class="docs-package-name"><span class="docs-autofit">JuMP</span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Mixed-integer linear programs/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/diet/">The diet problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/finance/">Finance</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/network_flows/">Network Flows</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox" checked/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../experiment_design/">Experiment Design</a></li><li class="is-active"><a class="tocitem" href>SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Semidefinite programs</a></li><li class="is-active"><a href>SDP relaxations: max-cut</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>SDP relaxations: max-cut</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Semidefinite programs/max_cut_sdp.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SDP-relaxations:-max-cut"><a class="docs-heading-anchor" href="#SDP-relaxations:-max-cut">SDP relaxations: max-cut</a><a id="SDP-relaxations:-max-cut-1"></a><a class="docs-heading-anchor-permalink" href="#SDP-relaxations:-max-cut" title="Permalink"></a></h1><p>Solves a semidefinite programming relaxation of the MAXCUT graph problem:</p><pre><code class="language-none">max   0.25 * L•X
+s.t.  diag(X) == e
+      X ≽ 0</code></pre><p>Where <code>L</code> is the weighted graph Laplacian. Uses this relaxation to generate a solution to the original MAXCUT problem using the method from the paper:</p><p>Goemans, M. X., &amp; Williamson, D. P. (1995). Improved approximation algorithms for maximum cut and satisfiability problems using semidefinite programming. Journal of the ACM (JACM), 42(6), 1115-1145.</p><pre><code class="language-julia">using JuMP
+import LinearAlgebra
+import Random
+import SCS
+import Test
+
+function solve_max_cut_sdp(num_vertex, weights)
+    # Calculate the (weighted) Lapacian of the graph: L = D - W.
+    laplacian = LinearAlgebra.diagm(0 =&gt; weights * ones(num_vertex)) - weights
+    # Solve the SDP relaxation
+    model = Model(SCS.Optimizer)
+    set_silent(model)
+    @variable(model, X[1:num_vertex, 1:num_vertex], PSD)
+    @objective(model, Max, 1 / 4 * LinearAlgebra.dot(laplacian, X))
+    @constraint(model, LinearAlgebra.diag(X) .== 1)
+    optimize!(model)
+    # Compute the Cholesky factorization of X, i.e., X = V^T V.
+    opt_X = LinearAlgebra.Hermitian(value.(X), :U)  # Tell Julia its PSD.
+    factorization = LinearAlgebra.cholesky(opt_X, Val(true); check = false)
+    V = (factorization.P * factorization.L)&#39;
+    # Normalize columns.
+    for i in 1:num_vertex
+        V[:, i] ./= LinearAlgebra.norm(V[:, i])
+    end
+    # Generate random vector on unit sphere.
+    Random.seed!(num_vertex)
+    r = rand(num_vertex)
+    r /= LinearAlgebra.norm(r)
+    # Iterate over vertices, and assign each vertex to a side of cut.
+    cut = ones(num_vertex)
+    for i in 1:num_vertex
+        if LinearAlgebra.dot(r, V[:, i]) &lt;= 0
+            cut[i] = -1
+        end
+    end
+
+    return cut, 0.25 * sum(laplacian .* (cut * cut&#39;))
+end
+
+function example_max_cut_sdp()
+    #   [1] --- 5 --- [2]
+    #
+    # Solution:
+    #  (S, S′)  = ({1}, {2})
+    cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
+    Test.@test cut[1] != cut[2]
+    #   [1] --- 5 --- [2]
+    #    |  \          |
+    #    |    \        |
+    #    7      6      1
+    #    |        \    |
+    #    |          \  |
+    #   [3] --- 1 --- [4]
+    #
+    # Solution:
+    #  (S, S′)  = ({1}, {2, 3, 4})
+    W = [0.0 5.0 7.0 6.0;
+         5.0 0.0 0.0 1.0;
+         7.0 0.0 0.0 1.0;
+         6.0 1.0 1.0 0.0]
+    cut, cutval = solve_max_cut_sdp(4, W)
+    Test.@test cut[1] != cut[2]
+    Test.@test cut[2] == cut[3] == cut[4]
+    #   [1] --- 1 --- [2]
+    #    |             |
+    #    |             |
+    #    5             9
+    #    |             |
+    #    |             |
+    #   [3] --- 2 --- [4]
+    #
+    # Solution:
+    #  (S, S′)  = ({1, 4}, {2, 3})
+    W = [0.0 1.0 5.0 0.0;
+         1.0 0.0 0.0 9.0;
+         5.0 0.0 0.0 2.0;
+         0.0 9.0 2.0 0.0]
+    cut, cutval = solve_max_cut_sdp(4, W)
+    Test.@test cut[1] == cut[4]
+    Test.@test cut[2] == cut[3]
+    Test.@test cut[1] != cut[2]
+    return
+end
+
+example_max_cut_sdp()</code></pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Semidefinite programs/max_cut_sdp.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../experiment_design/">« Experiment Design</a><a class="docs-footer-nextpage" href="../min_distortion/">The minimum distortion problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 8 May 2021 23:27">Saturday 8 May 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
