@@ -2272,14 +2272,12 @@ end
 function _to_value(::Type{T}, value::T, msg::String) where {T}
     if !isfinite(value)
         type_name = sprint(io -> show(io, typeof(value)))
-        error(
-            """
-            Unable to use `$value::$type_name` as the $msg of a variable \
-            because it is not finite.
+        error("""
+              Unable to use `$value::$type_name` as the $msg of a variable \
+              because it is not finite.
 
-            Ensure that the $msg is a finite value.
-            """,
-        )
+              Ensure that the $msg is a finite value.
+              """)
     end
     return value
 end
