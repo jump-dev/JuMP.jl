@@ -11,9 +11,9 @@
 using JuMP
 import HiGHS
 
-function @main(args::Vector{String})
+function solve_lp(optimize_hook::H) where {H}
     optimizer = HiGHS.Optimizer()
-    model = JuMP.concrete_direct_model(optimizer)
+    model = JuMP.concrete_direct_model(optimizer; optimize_hook)
     @assert backend(model) === optimizer
     set_silent(model)
     @variable(model, 0 <= x <= 1)
@@ -26,5 +26,16 @@ function @main(args::Vector{String})
     @assert isapprox(value(x), 1.0; atol = 1e-8)
     @assert isapprox(value(y), 2.0; atol = 1e-8)
     @assert isapprox(objective_value(model), 4.0; atol = 1e-8)
+    return
+end
+
+function @main(args::Vector{String})
+    solve_lp(nothing)
+    hook_called = Ref(false)
+    solve_lp() do model
+        hook_called[] = true
+        return optimize!(model; ignore_optimize_hook = true)
+    end
+    @assert hook_called[]
     return 0
 end

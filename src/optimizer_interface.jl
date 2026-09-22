@@ -641,72 +641,71 @@ end
 # TODO: These errors could also be thrown in MOI.add_constraint or MOI.set() if
 # the solver is attached. Currently we catch only the more common case. More
 # generally JuMP is missing a translation layer from MOI errors to JuMP errors.
-_rethrow_moi_error(err) = rethrow(err)
+@inline function _rethrow_moi_error(err)
+    if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
+        return error(
+            """
+            The solver does not support nonlinear problems (that is, \
+            `@NLobjective` and `@NLconstraint`).
 
-function _rethrow_moi_error(::MOI.UnsupportedAttribute{MOI.NLPBlock})
-    return error(
-        """
-        The solver does not support nonlinear problems (that is, \
-        `@NLobjective` and `@NLconstraint`).
+            Use a solver that supports nonlinear optimization, or reformulate \
+            the problem as a linear or quadratic model.
+            """,
+        )
+    elseif err isa MOI.LowerBoundAlreadySet
+        return error(
+            """
+            The model contains a variable for which multiple lower bounds have been
+            set. Each variable can have at most one lower bound.
 
-        Use a solver that supports nonlinear optimization, or reformulate \
-        the problem as a linear or quadratic model.
-        """,
-    )
-end
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
 
-function _rethrow_moi_error(::MOI.LowerBoundAlreadySet)
-    return error(
-        """
-        The model contains a variable for which multiple lower bounds have been
-        set. Each variable can have at most one lower bound.
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
 
-        This error can occur if you have added a bounded variable in `@variable`
-        and then added a constraint on the variable using `@constraint`.
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x >= 0)
+            @constraint(model, [x] in Nonnegatives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonnegatives())
+            ```
+            """,
+        )
+    elseif err isa MOI.UpperBoundAlreadySet
+        return error(
+            """
+            The model contains a variable for which multiple upper bounds have been
+            set. Each variable can have at most one upper bound.
 
-        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
 
-        Here is an example:
-        ```julia
-        model = Model()
-        @variable(model, x >= 0)
-        @constraint(model, [x] in Nonnegatives())
-        # Rewrite as
-        @constraint(model, [1.0 * x] in Nonnegatives())
-        ```
-        """,
-    )
-end
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
 
-function _rethrow_moi_error(::MOI.UpperBoundAlreadySet)
-    return error(
-        """
-        The model contains a variable for which multiple upper bounds have been
-        set. Each variable can have at most one upper bound.
-
-        This error can occur if you have added a bounded variable in `@variable`
-        and then added a constraint on the variable using `@constraint`.
-
-        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
-
-        Here is an example:
-        ```julia
-        model = Model()
-        @variable(model, x <= 1)
-        @constraint(model, [x] in Nonpositives())
-        # Rewrite as
-        @constraint(model, [1.0 * x] in Nonpositives())
-        ```
-        """,
-    )
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x <= 1)
+            @constraint(model, [x] in Nonpositives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonpositives())
+            ```
+            """,
+        )
+    end
+    return rethrow(err)
 end
 
 function _uses_new_nonlinear_interface(model)
-    if objective_function_type(model) <: GenericNonlinearExpr
+    moi_backend = backend(model)
+    if MOI.get(moi_backend, MOI.ObjectiveFunctionType()) <:
+       MOI.ScalarNonlinearFunction
         return true
     end
-    for (F, S) in list_of_constraint_types(model)
-        if F <: GenericNonlinearExpr
+    for (F, S) in MOI.get(moi_backend, MOI.ListOfConstraintTypesPresent())
+        if F <: MOI.ScalarNonlinearFunction
             return true
         end
     end

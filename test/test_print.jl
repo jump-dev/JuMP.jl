@@ -1185,10 +1185,17 @@ function test_show_public_model_type_aliases()
         show_type(plain, c),
         "2-element Vector{ConstraintRef{Model,",
     )
-    concrete = JuMP.ModelImpl{Float64,MOI.Utilities.Model{Float64}}
-    concrete_ref = JuMP.VariableRefImpl{Float64,concrete}
-    @test occursin("ModelImpl", show_type(concrete))
-    @test occursin("VariableRefImpl", show_type(concrete_ref))
+    for hook in (nothing, model -> nothing)
+        concrete_model = concrete_direct_model(
+            MOI.Utilities.Model{Float64}();
+            optimize_hook = hook,
+        )
+        concrete = typeof(concrete_model)
+        concrete_ref = variable_ref_type(concrete_model)
+        @test occursin("ModelImpl", show_type(concrete))
+        @test occursin("VariableRefImpl", show_type(concrete_ref))
+        @test endswith(show_type(concrete), ", $(show_type(typeof(hook)))}")
+    end
     return
 end
 
