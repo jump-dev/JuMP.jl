@@ -288,7 +288,6 @@ function set_objective_function(
     model::GenericModel,
     func::Union{AbstractJuMPScalar,AbstractVector{<:AbstractJuMPScalar}},
 )
-    check_belongs_to_model(func, model)
     set_objective_function(model, moi_function(model, func))
     return
 end

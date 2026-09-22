@@ -15,6 +15,65 @@ import Test
 
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
+JuMP.index(x::JuMPExtension.MyVariableRef) = JuMP.MOI.VariableIndex(x.idx)
+
+struct TwoArgumentVariable <: JuMP.AbstractVariableRef
+    model::JuMPExtension.MyModel
+end
+
+JuMP.owner_model(x::TwoArgumentVariable) = x.model
+
+JuMP.moi_function(::JuMPExtension.MyModel, ::TwoArgumentVariable) = 1.0
+
+function test_constraint_moi_function_extension_dispatch()
+    model = JuMPExtension.MyModel()
+    constraint =
+        JuMP.ScalarConstraint(TwoArgumentVariable(model), JuMP.MOI.EqualTo(0.0))
+    Test.@test JuMP.moi_function(model, constraint) == 1.0
+    return
+end
+
+function test_nonlinear_moi_function_extension_dispatch()
+    model = JuMPExtension.MyModel()
+    JuMP.@variable(model, x)
+    scalar = TwoArgumentVariable(model)
+    V = typeof(x)
+    f = JuMP.GenericNonlinearExpr{V}(:sin, Any[scalar])
+    g = JuMP.GenericNonlinearExpr{V}(:+, Any[x, scalar, f])
+    expected = JuMP.MOI.ScalarNonlinearFunction(
+        :+,
+        Any[
+            JuMP.index(x),
+            1.0,
+            JuMP.MOI.ScalarNonlinearFunction(:sin, Any[1.0]),
+        ],
+    )
+    Test.@test JuMP.moi_function(g) ≈ expected
+    return
+end
+
+function test_nonlinear_moi_function_multiple_models()
+    model_1 = JuMPExtension.MyModel()
+    model_2 = JuMPExtension.MyModel()
+    JuMP.@variable(model_1, x)
+    JuMP.@variable(model_2, y)
+    # Extensions such as Plasmo convert expressions spanning multiple models.
+    # Cover leaves both at the root and inside nested nonlinear expressions.
+    f = JuMP.GenericNonlinearExpr(:+, Any[x, y, sin(y), 1.0])
+    expected = JuMP.MOI.ScalarNonlinearFunction(
+        :+,
+        Any[
+            JuMP.index(x),
+            JuMP.index(y),
+            JuMP.MOI.ScalarNonlinearFunction(:sin, Any[JuMP.index(y)]),
+            1.0,
+        ],
+    )
+    Test.@test JuMP.moi_function(f) ≈ expected
+    Test.@test JuMP.moi_function(model_1, f) ≈ expected
+    return
+end
+
 # Test printing of models of type `ModelType` for which the model is stored in
 # its JuMP form, for example, as `AbstractVariable`s and `AbstractConstraint`s.
 # This is used by `JuMPExtension` but can also be used by external packages such

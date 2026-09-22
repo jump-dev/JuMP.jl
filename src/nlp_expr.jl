@@ -623,24 +623,6 @@ function owner_model(expr::GenericNonlinearExpr)
     return nothing
 end
 
-function check_belongs_to_model(
-    expr::GenericNonlinearExpr,
-    model::AbstractModel,
-)
-    stack = Any[expr]
-    while !isempty(stack)
-        child = pop!(stack)
-        if child isa GenericNonlinearExpr
-            for arg in child.args
-                push!(stack, arg)
-            end
-        elseif child isa AbstractJuMPScalar
-            check_belongs_to_model(child, model)
-        end
-    end
-    return
-end
-
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)::MOI.Nonlinear.Model
     data = nlp.constraints[index(c)]
