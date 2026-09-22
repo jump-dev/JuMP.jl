@@ -127,7 +127,7 @@ function value_type(::Type{T}) where {T}
     )
 end
 
-mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike} <: AbstractModel
+mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike,H} <: AbstractModel
     # !!! note
     #     When adding new fields to this struct, you must also update
     #     `Base.empty!(::GenericModel)`.
@@ -148,7 +148,7 @@ mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike} <: AbstractModel
 
     # Hook into a solve call...function of the form f(m::GenericModel; kwargs...),
     # where kwargs get passed along to subsequent solve calls.
-    optimize_hook::Any
+    optimize_hook::H
 
     # TODO: Document.
     nlp_model::Union{Nothing,MOI.Nonlinear.Model}
@@ -185,28 +185,6 @@ mutable struct ModelImpl{T<:Real,B<:MOI.ModelLike} <: AbstractModel
     subexpressions::WeakKeyDict{Any,MOI.ScalarNonlinearFunction}
 end
 
-const GenericModel{T<:Real} = ModelImpl{T,MOI.ModelLike}
-
-value_type(::Type{<:ModelImpl{T}}) where {T} = T
-
-function Base.getproperty(model::ModelImpl, name::Symbol)
-    if name == :nlp_data
-        error(
-            """
-            The internal field `.nlp_data` was removed from `Model` in JuMP v1.2.0.
-
-            If you encountered this message without accessing `model.nlp_data` directly, \
-            it means you are using a package that is incompatible with your installed \
-            version of JuMP. As a temporary fix, install a compatible version with \
-            `import Pkg; Pkg.pkg"add JuMP@1.1"`, then restart Julia for the changes to \
-            take effect. You should also open a GitHub issue for the package you are \
-            using so that it can be fixed for future users.
-            """,
-        )
-    end
-    return getfield(model, name)
-end
-
 """
     GenericModel{T}([optimizer_factory]; kwargs...) where {T<:Real}
 
@@ -241,7 +219,29 @@ julia> typeof(model)
 GenericModel{BigFloat}
 ```
 """
-function ModelImpl{T,MOI.ModelLike}(
+const GenericModel{T<:Real} = ModelImpl{T,MOI.ModelLike,Any}
+
+value_type(::Type{<:ModelImpl{T}}) where {T} = T
+
+function Base.getproperty(model::ModelImpl, name::Symbol)
+    if name == :nlp_data
+        error(
+            """
+            The internal field `.nlp_data` was removed from `Model` in JuMP v1.2.0.
+
+            If you encountered this message without accessing `model.nlp_data` directly, \
+            it means you are using a package that is incompatible with your installed \
+            version of JuMP. As a temporary fix, install a compatible version with \
+            `import Pkg; Pkg.pkg"add JuMP@1.1"`, then restart Julia for the changes to \
+            take effect. You should also open a GitHub issue for the package you are \
+            using so that it can be fixed for future users.
+            """,
+        )
+    end
+    return getfield(model, name)
+end
+
+function ModelImpl{T,MOI.ModelLike,Any}(
     @nospecialize(optimizer_factory = nothing);
     kwargs...,
 ) where {T<:Real}
@@ -284,20 +284,22 @@ function direct_generic_model(
     value_type::Type{T},
     backend::MOI.ModelLike;
 ) where {T<:Real}
-    return _direct_generic_model(T, MOI.ModelLike, backend)
+    return _direct_generic_model(T, MOI.ModelLike, Any, backend, nothing)
 end
 
 function _direct_generic_model(
     ::Type{T},
     ::Type{B},
+    ::Type{H},
     backend::MOI.ModelLike,
-) where {T<:Real,B<:MOI.ModelLike}
+    optimize_hook::H,
+) where {T<:Real,B<:MOI.ModelLike,H}
     @assert MOI.is_empty(backend)
-    return ModelImpl{T,B}(
+    return ModelImpl{T,B,H}(
         backend,
         Dict{MOI.ConstraintIndex,AbstractShape}(),
         Set{Any}(),
-        nothing,
+        optimize_hook,
         nothing,
         Dict{Symbol,Any}(),
         0,
@@ -395,8 +397,19 @@ julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer); add_bridges = false);
 """
 const Model = GenericModel{Float64}
 
-function concrete_direct_model(backend::B) where {B<:MOI.ModelLike}
-    return _direct_generic_model(Float64, B, backend)
+"""
+    concrete_direct_model(backend::MOI.ModelLike; optimize_hook = nothing)
+
+Create a direct `Float64` model with concrete backend and optimize-hook types.
+Unlike [`direct_model`](@ref), the hook type is fixed at construction. Omit
+`optimize_hook` to create a model without a hook, or pass a callable whose type
+can be specialized when compiling the model.
+"""
+function concrete_direct_model(
+    backend::B;
+    optimize_hook::H = nothing,
+) where {B<:MOI.ModelLike,H}
+    return _direct_generic_model(Float64, B, H, backend, optimize_hook)
 end
 
 """

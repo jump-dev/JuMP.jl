@@ -273,16 +273,16 @@ Base.abs2(v::AbstractVariableRef) = v^2
 
 Base.isreal(::AbstractVariableRef) = true
 
-"""
-    GenericVariableRef{T} <: AbstractVariableRef
-
-Holds a reference to the model and the corresponding MOI.VariableIndex.
-"""
 struct VariableRefImpl{T,M<:ModelImpl{T}} <: AbstractVariableRef
     model::M
     index::MOI.VariableIndex
 end
 
+"""
+    GenericVariableRef{T} <: AbstractVariableRef
+
+Holds a reference to the model and the corresponding MOI.VariableIndex.
+"""
 const GenericVariableRef{T<:Real} = VariableRefImpl{T,GenericModel{T}}
 const VariableRef = GenericVariableRef{Float64}
 
@@ -2271,9 +2271,10 @@ end
 
 function _to_value(::Type{T}, value::T, msg::String) where {T}
     if !isfinite(value)
+        type_name = sprint(io -> show(io, typeof(value)))
         error(
             """
-            Unable to use `$value::$(typeof(value))` as the $msg of a variable \
+            Unable to use `$value::$type_name` as the $msg of a variable \
             because it is not finite.
 
             Ensure that the $msg is a finite value.
@@ -2287,12 +2288,14 @@ function _to_value(::Type{T}, value, msg::String) where {T}
     try
         return _to_value(T, convert(T, value), msg)
     catch
+        value_and_type = "$value::$(sprint(io -> show(io, typeof(value))))"
+        type_name = sprint(io -> show(io, T))
         error(
             """
-            Unable to use `$value::$(typeof(value))` as the $msg of a variable \
-            because it is not convertible to type `$T`.
+            Unable to use `$value_and_type` as the $msg of a variable \
+            because it is not convertible to type `$type_name`.
 
-            Ensure the bound value is a numeric type compatible with `$T`.
+            Ensure the bound value is a numeric type compatible with `$type_name`.
             """,
         )
     end

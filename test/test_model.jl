@@ -210,6 +210,80 @@ function test_optimize_hook()
     return
 end
 
+struct _TestOptimizeHook
+    calls::Base.RefValue{Int}
+end
+
+function (hook::_TestOptimizeHook)(model; value = nothing)
+    hook.calls[] += 1
+    return model, value
+end
+
+function test_dynamic_optimize_hook()
+    for constructor in (
+        Model,
+        GenericModel{Float32},
+        () -> direct_model(MOIU.MockOptimizer(SimpleLPModel{Float64}())),
+    )
+        model = constructor()
+        @test fieldtype(typeof(model), :optimize_hook) === Any
+        hook = _TestOptimizeHook(Ref(0))
+        @test set_optimize_hook(model, hook) === hook
+        @test optimize!(model; value = :callable) === (model, :callable)
+        @test hook.calls[] == 1
+        replacement = (m; value = nothing) -> (m, value)
+        @test set_optimize_hook(model, replacement) === replacement
+        @test optimize!(model; value = :function) === (model, :function)
+        @test set_optimize_hook(model, nothing) === nothing
+        @test model.optimize_hook === nothing
+    end
+    return
+end
+
+function test_concrete_direct_model_without_optimize_hook()
+    optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
+    model = concrete_direct_model(optimizer)
+    @test backend(model) === optimizer
+    @test fieldtype(typeof(model), :moi_backend) === typeof(optimizer)
+    @test fieldtype(typeof(model), :optimize_hook) === Nothing
+    @test model.optimize_hook === nothing
+    @variable(model, x >= 0)
+    MOIU.set_mock_optimize!(optimizer, mock -> MOIU.mock_optimize!(mock, [2.0]))
+    @test optimize!(model) === nothing
+    @test termination_status(model) == MOI.OPTIMAL
+    @test value(x) == 2.0
+    return
+end
+
+function test_concrete_direct_model_optimize_hook()
+    hook_function = (model; value = nothing) -> (model, value)
+    for hook in (hook_function, _TestOptimizeHook(Ref(0)))
+        optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
+        model = concrete_direct_model(optimizer; optimize_hook = hook)
+        @test fieldtype(typeof(model), :moi_backend) === typeof(optimizer)
+        @test fieldtype(typeof(model), :optimize_hook) === typeof(hook)
+        @test model.optimize_hook === hook
+        @test optimize!(model; value = :typed) === (model, :typed)
+        @test !optimizer.optimize_called
+        if hook isa _TestOptimizeHook
+            @test hook.calls[] == 1
+            replacement = _TestOptimizeHook(Ref(0))
+            @test set_optimize_hook(model, replacement) === replacement
+            @test optimize!(model; value = :replacement) ===
+                  (model, :replacement)
+            @test replacement.calls[] == 1
+            @test hook.calls[] == 1
+        end
+        @test optimize!(model; ignore_optimize_hook = true) === nothing
+        @test optimizer.optimize_called
+        saved_hook = model.optimize_hook
+        empty!(model)
+        @test model.optimize_hook === saved_hook
+        @test optimize!(model; value = :after_empty) === (model, :after_empty)
+    end
+    return
+end
+
 function test_universal_fallback()
     m = Model()
     MOI.set(m, MOI.Test.UnknownModelAttribute(), 1)
@@ -288,6 +362,14 @@ function test_model_type_aliases()
     @test GenericVariableRef<:(JuMP.VariableRefImpl{T} where {T<:Real})
     @test Model === GenericModel{Float64}
     @test VariableRef === GenericVariableRef{Float64}
+    return
+end
+
+function test_model_docstrings()
+    for name in (:GenericModel, :GenericVariableRef, :concrete_direct_model)
+        # Documenter needs docs on the public binding, not only the aliased type.
+        @test haskey(Base.Docs.meta(JuMP), Base.Docs.Binding(JuMP, name))
+    end
     return
 end
 
