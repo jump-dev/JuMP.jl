@@ -84,8 +84,8 @@ mutable struct GenericNonlinearExpr{V<:AbstractVariableRef} <:
 
     function GenericNonlinearExpr{V}(
         head::Symbol,
-        args::Vararg{Any},
-    ) where {V<:AbstractVariableRef}
+        args::Vararg{Any,N},
+    ) where {V<:AbstractVariableRef,N}
         for arg in args
             _throw_if_not_real(arg)
             _throw_if_legacy_error(arg)
