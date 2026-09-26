@@ -443,7 +443,7 @@ end
 
 _add_or_set_macro_time(model::AbstractModel, key, value) = nothing
 
-function _add_or_set_macro_time(model::GenericModel, key, value)
+function _add_or_set_macro_time(model::ModelImpl, key, value)
     if model.enable_macro_timing
         model.macro_times[key] = get!(model.macro_times, key, 0.0) + value
     end
@@ -550,7 +550,7 @@ Total time inside macros: 5.33690e-02 seconds
   └ `@objective(model, Min, sum(x))`
 ```
 """
-function set_macro_timing(model::GenericModel, value::Bool)
+function set_macro_timing(model::ModelImpl, value::Bool)
     model.enable_macro_timing = value
     return
 end
@@ -595,7 +595,7 @@ Total time inside macros: 5.33690e-02 seconds
   └ `@objective(model, Min, sum(x))`
 ```
 """
-function print_macro_timing_summary(io::IO, model::GenericModel)
+function print_macro_timing_summary(io::IO, model::ModelImpl)
     total_time = sum(values(model.macro_times))
     times = sort!(collect(model.macro_times); by = last, rev = true)
     println(io, "Total time inside macros: ", _format_time(total_time))
@@ -611,7 +611,7 @@ function print_macro_timing_summary(io::IO, model::GenericModel)
     return
 end
 
-function print_macro_timing_summary(model::GenericModel)
+function print_macro_timing_summary(model::ModelImpl)
     return print_macro_timing_summary(stdout, model)
 end
 

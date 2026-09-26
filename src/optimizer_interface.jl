@@ -112,7 +112,7 @@ julia> set_optimizer_attribute(model, "max_iter", 100)
 ```
 """
 function set_optimizer_attributes(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     pairs::Pair...,
 )
     for (name, value) in pairs
@@ -177,7 +177,7 @@ julia> get_attribute(model, MOI.Silent())
 false
 ```
 """
-function set_silent(model::GenericModel)
+function set_silent(model::ModelImpl)
     MOI.set(model, MOI.Silent(), true)
     return
 end
@@ -208,7 +208,7 @@ julia> get_attribute(model, MOI.Silent())
 false
 ```
 """
-function unset_silent(model::GenericModel)
+function unset_silent(model::ModelImpl)
     MOI.set(model, MOI.Silent(), false)
     return
 end
@@ -242,12 +242,12 @@ julia> unset_time_limit_sec(model)
 julia> time_limit_sec(model)
 ```
 """
-function set_time_limit_sec(model::GenericModel, limit::Real)
+function set_time_limit_sec(model::ModelImpl, limit::Real)
     MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
     return
 end
 
-function set_time_limit_sec(model::GenericModel, ::Nothing)
+function set_time_limit_sec(model::ModelImpl, ::Nothing)
     return unset_time_limit_sec(model)
 end
 
@@ -277,7 +277,7 @@ julia> unset_time_limit_sec(model)
 julia> time_limit_sec(model)
 ```
 """
-function unset_time_limit_sec(model::GenericModel)
+function unset_time_limit_sec(model::ModelImpl)
     MOI.set(model, MOI.TimeLimitSec(), nothing)
     return
 end
@@ -310,7 +310,7 @@ julia> unset_time_limit_sec(model)
 julia> time_limit_sec(model)
 ```
 """
-function time_limit_sec(model::GenericModel)
+function time_limit_sec(model::ModelImpl)
     return MOI.get(model, MOI.TimeLimitSec())
 end
 
@@ -359,7 +359,7 @@ julia> solver_name(model)
 "SolverName() attribute not implemented by the optimizer."
 ```
 """
-function solver_name(model::GenericModel)
+function solver_name(model::ModelImpl)
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         return "No optimizer attached."
     end
@@ -391,7 +391,7 @@ Stacktrace:
 [...]
 ```
 """
-function error_if_direct_mode(model::GenericModel, func::Symbol)
+function error_if_direct_mode(model::ModelImpl, func::Symbol)
     if mode(model) == DIRECT
         error(
             """
@@ -414,7 +414,7 @@ Call `MOIU.reset_optimizer` on the backend of `model`.
 Cannot be called in direct mode.
 """
 function MOIU.reset_optimizer(
-    model::GenericModel,
+    model::ModelImpl,
     optimizer::MOI.AbstractOptimizer,
     ::Bool = true,
 )
@@ -430,7 +430,7 @@ Call `MOIU.reset_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.reset_optimizer(model::GenericModel)
+function MOIU.reset_optimizer(model::ModelImpl)
     error_if_direct_mode(model, :reset_optimizer)
     if MOI.Utilities.state(backend(model)) == MOI.Utilities.ATTACHED_OPTIMIZER
         MOIU.reset_optimizer(backend(model))
@@ -445,7 +445,7 @@ Call `MOIU.drop_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.drop_optimizer(model::GenericModel)
+function MOIU.drop_optimizer(model::ModelImpl)
     error_if_direct_mode(model, :drop_optimizer)
     MOIU.drop_optimizer(backend(model))
     return
@@ -458,7 +458,7 @@ Call `MOIU.attach_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.attach_optimizer(model::GenericModel)
+function MOIU.attach_optimizer(model::ModelImpl)
     error_if_direct_mode(model, :attach_optimizer)
     MOIU.attach_optimizer(backend(model))
     return
@@ -502,7 +502,7 @@ julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     @nospecialize(optimizer_constructor);
     add_bridges::Bool = true,
     kwargs...,
@@ -567,7 +567,7 @@ Hook called with foo = 2
 ```
 """
 function optimize!(
-    model::GenericModel;
+    model::ModelImpl;
     ignore_optimize_hook = (model.optimize_hook === nothing),
     # _differentiation_backend is deprecated. Remove in JuMP v2.0
     _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
@@ -641,72 +641,71 @@ end
 # TODO: These errors could also be thrown in MOI.add_constraint or MOI.set() if
 # the solver is attached. Currently we catch only the more common case. More
 # generally JuMP is missing a translation layer from MOI errors to JuMP errors.
-_rethrow_moi_error(err) = rethrow(err)
+@inline function _rethrow_moi_error(err)
+    if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
+        return error(
+            """
+            The solver does not support nonlinear problems (that is, \
+            `@NLobjective` and `@NLconstraint`).
 
-function _rethrow_moi_error(::MOI.UnsupportedAttribute{MOI.NLPBlock})
-    return error(
-        """
-        The solver does not support nonlinear problems (that is, \
-        `@NLobjective` and `@NLconstraint`).
+            Use a solver that supports nonlinear optimization, or reformulate \
+            the problem as a linear or quadratic model.
+            """,
+        )
+    elseif err isa MOI.LowerBoundAlreadySet
+        return error(
+            """
+            The model contains a variable for which multiple lower bounds have been
+            set. Each variable can have at most one lower bound.
 
-        Use a solver that supports nonlinear optimization, or reformulate \
-        the problem as a linear or quadratic model.
-        """,
-    )
-end
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
 
-function _rethrow_moi_error(::MOI.LowerBoundAlreadySet)
-    return error(
-        """
-        The model contains a variable for which multiple lower bounds have been
-        set. Each variable can have at most one lower bound.
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
 
-        This error can occur if you have added a bounded variable in `@variable`
-        and then added a constraint on the variable using `@constraint`.
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x >= 0)
+            @constraint(model, [x] in Nonnegatives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonnegatives())
+            ```
+            """,
+        )
+    elseif err isa MOI.UpperBoundAlreadySet
+        return error(
+            """
+            The model contains a variable for which multiple upper bounds have been
+            set. Each variable can have at most one upper bound.
 
-        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
+            This error can occur if you have added a bounded variable in `@variable`
+            and then added a constraint on the variable using `@constraint`.
 
-        Here is an example:
-        ```julia
-        model = Model()
-        @variable(model, x >= 0)
-        @constraint(model, [x] in Nonnegatives())
-        # Rewrite as
-        @constraint(model, [1.0 * x] in Nonnegatives())
-        ```
-        """,
-    )
-end
+            To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
 
-function _rethrow_moi_error(::MOI.UpperBoundAlreadySet)
-    return error(
-        """
-        The model contains a variable for which multiple upper bounds have been
-        set. Each variable can have at most one upper bound.
-
-        This error can occur if you have added a bounded variable in `@variable`
-        and then added a constraint on the variable using `@constraint`.
-
-        To fix, change the `@constraint` call by replacing `x` with `1.0 * x`.
-
-        Here is an example:
-        ```julia
-        model = Model()
-        @variable(model, x <= 1)
-        @constraint(model, [x] in Nonpositives())
-        # Rewrite as
-        @constraint(model, [1.0 * x] in Nonpositives())
-        ```
-        """,
-    )
+            Here is an example:
+            ```julia
+            model = Model()
+            @variable(model, x <= 1)
+            @constraint(model, [x] in Nonpositives())
+            # Rewrite as
+            @constraint(model, [1.0 * x] in Nonpositives())
+            ```
+            """,
+        )
+    end
+    return rethrow(err)
 end
 
 function _uses_new_nonlinear_interface(model)
-    if objective_function_type(model) <: GenericNonlinearExpr
+    moi_backend = backend(model)
+    if MOI.get(moi_backend, MOI.ObjectiveFunctionType()) <:
+       MOI.ScalarNonlinearFunction
         return true
     end
-    for (F, S) in list_of_constraint_types(model)
-        if F <: GenericNonlinearExpr
+    for (F, S) in MOI.get(moi_backend, MOI.ListOfConstraintTypesPresent())
+        if F <: MOI.ScalarNonlinearFunction
             return true
         end
     end
@@ -752,7 +751,7 @@ julia> get_attribute(model, MOI.ConflictStatus())
 CONFLICT_FOUND::ConflictStatusCode = 3
 ```
 """
-function compute_conflict!(model::GenericModel)
+function compute_conflict!(model::ModelImpl)
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
@@ -782,11 +781,11 @@ julia> termination_status(model)
 OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 ```
 """
-function termination_status(model::GenericModel)
+function termination_status(model::ModelImpl)
     return MOI.get(model, MOI.TerminationStatus())::MOI.TerminationStatusCode
 end
 
-function MOI.get(model::GenericModel, attr::MOI.TerminationStatus)
+function MOI.get(model::ModelImpl, attr::MOI.TerminationStatus)
     if model.is_model_dirty && mode(model) != DIRECT
         return MOI.OPTIMIZE_NOT_CALLED
     end
@@ -813,7 +812,7 @@ julia> result_count(model)
 0
 ```
 """
-function result_count(model::GenericModel)::Int
+function result_count(model::ModelImpl)::Int
     if termination_status(model) == MOI.OPTIMIZE_NOT_CALLED
         return 0
     end
@@ -839,17 +838,14 @@ julia> raw_status(model)
 "optimize not called"
 ```
 """
-function raw_status(model::GenericModel)
+function raw_status(model::ModelImpl)
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         return "optimize not called"
     end
     return MOI.get(model, MOI.RawStatusString())
 end
 
-function MOI.get(
-    model::GenericModel,
-    attr::Union{MOI.PrimalStatus,MOI.DualStatus},
-)
+function MOI.get(model::ModelImpl, attr::Union{MOI.PrimalStatus,MOI.DualStatus})
     if model.is_model_dirty && mode(model) != DIRECT
         return MOI.NO_SOLUTION
     end
@@ -881,7 +877,7 @@ julia> primal_status(model; result = 2)
 NO_SOLUTION::ResultStatusCode = 0
 ```
 """
-function primal_status(model::GenericModel; result::Int = 1)
+function primal_status(model::ModelImpl; result::Int = 1)
     return MOI.get(model, MOI.PrimalStatus(result))::MOI.ResultStatusCode
 end
 
@@ -909,7 +905,7 @@ julia> dual_status(model; result = 2)
 NO_SOLUTION::ResultStatusCode = 0
 ```
 """
-function dual_status(model::GenericModel; result::Int = 1)
+function dual_status(model::ModelImpl; result::Int = 1)
     return MOI.get(model, MOI.DualStatus(result))::MOI.ResultStatusCode
 end
 
@@ -983,7 +979,7 @@ false
 ```
 """
 function is_solved_and_feasible(
-    model::GenericModel;
+    model::ModelImpl;
     dual::Bool = false,
     allow_local::Bool = true,
     allow_almost::Bool = false,
@@ -1048,7 +1044,7 @@ Stacktrace:
 ```
 """
 function assert_is_solved_and_feasible(
-    model::GenericModel;
+    model::ModelImpl;
     result::Int = 1,
     kwargs...,
 )
@@ -1092,7 +1088,7 @@ julia> solve_time(model)
 1.0488089174032211e-5
 ```
 """
-function solve_time(model::GenericModel)
+function solve_time(model::ModelImpl)
     return MOI.get(model, MOI.SolveTimeSec())
 end
 
@@ -1123,7 +1119,7 @@ julia> simplex_iterations(model)
 0
 ```
 """
-function simplex_iterations(model::GenericModel)
+function simplex_iterations(model::ModelImpl)
     return MOI.get(model, MOI.SimplexIterations())
 end
 
@@ -1154,7 +1150,7 @@ julia> barrier_iterations(model)
 0
 ```
 """
-function barrier_iterations(model::GenericModel)
+function barrier_iterations(model::ModelImpl)
     return MOI.get(model, MOI.BarrierIterations())
 end
 
@@ -1184,7 +1180,7 @@ julia> node_count(model)
 0
 ```
 """
-function node_count(model::GenericModel)
+function node_count(model::ModelImpl)
     return MOI.get(model, MOI.NodeCount())
 end
 
@@ -1193,7 +1189,7 @@ end
 
 Return the value of the attribute `attr` from the model's MOI backend.
 """
-function MOI.get(model::GenericModel, attr::MOI.AbstractOptimizerAttribute)
+function MOI.get(model::ModelImpl, attr::MOI.AbstractOptimizerAttribute)
     return MOI.get(backend(model), attr)
 end
 
@@ -1241,7 +1237,8 @@ struct NoOptimizer <: Exception end
 
 # Throws an error if `optimize!` has not been called, that is, if there is no
 # optimizer attached or if the termination status is `MOI.OPTIMIZE_NOT_CALLED`.
-function _moi_get_result(model::MOI.ModelLike, args...)
+# Specialize the forwarded arguments so trimming retains the result getter.
+function _moi_get_result(model::MOI.ModelLike, args::Vararg{Any,N}) where {N}
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
     end
@@ -1262,7 +1259,7 @@ end
 
 Return the value of the attribute `attr` from the model's MOI backend.
 """
-function MOI.get(model::GenericModel, attr::MOI.AbstractModelAttribute)
+function MOI.get(model::ModelImpl, attr::MOI.AbstractModelAttribute)
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr)
     elseif model.is_model_dirty && mode(model) != DIRECT
@@ -1278,9 +1275,9 @@ function MOI.get(model::GenericModel, attr::MOI.AbstractModelAttribute)
 end
 
 function MOI.get(
-    model::GenericModel,
+    model::ModelImpl,
     attr::MOI.AbstractVariableAttribute,
-    v::GenericVariableRef,
+    v::VariableRefImpl,
 )
     check_belongs_to_model(v, model)
     if !MOI.is_set_by_optimize(attr)
@@ -1298,7 +1295,7 @@ function MOI.get(
 end
 
 function MOI.get(
-    model::GenericModel,
+    model::ModelImpl,
     attr::MOI.AbstractConstraintAttribute,
     cr::ConstraintRef,
 )
@@ -1317,22 +1314,22 @@ function MOI.get(
     return _moi_get_result(backend(model), attr, index(cr))
 end
 
-function MOI.set(m::GenericModel, attr::MOI.AbstractOptimizerAttribute, value)
+function MOI.set(m::ModelImpl, attr::MOI.AbstractOptimizerAttribute, value)
     m.is_model_dirty = true
     MOI.set(backend(m), attr, value)
     return
 end
 
-function MOI.set(m::GenericModel, attr::MOI.AbstractModelAttribute, value)
+function MOI.set(m::ModelImpl, attr::MOI.AbstractModelAttribute, value)
     m.is_model_dirty = true
     MOI.set(backend(m), attr, value)
     return
 end
 
 function MOI.set(
-    model::GenericModel,
+    model::ModelImpl,
     attr::MOI.AbstractVariableAttribute,
-    v::GenericVariableRef,
+    v::VariableRefImpl,
     value,
 )
     check_belongs_to_model(v, model)
@@ -1342,7 +1339,7 @@ function MOI.set(
 end
 
 function MOI.set(
-    model::GenericModel,
+    model::ModelImpl,
     attr::MOI.AbstractConstraintAttribute,
     cr::ConstraintRef,
     value,
@@ -1385,14 +1382,11 @@ julia> get_attribute(c, MOI.ConstraintName())
 "c"
 ```
 """
-function get_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute)
+function get_attribute(model::ModelImpl, attr::MOI.AbstractModelAttribute)
     return MOI.get(model, attr)
 end
 
-function get_attribute(
-    x::GenericVariableRef,
-    attr::MOI.AbstractVariableAttribute,
-)
+function get_attribute(x::VariableRefImpl, attr::MOI.AbstractVariableAttribute)
     return MOI.get(owner_model(x), attr, x)
 end
 
@@ -1436,14 +1430,14 @@ true
 ```
 """
 function get_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     attr::MOI.AbstractOptimizerAttribute,
 )
     return MOI.get(model, attr)
 end
 
 function get_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     name::String,
 )
     return get_attribute(model, MOI.RawOptimizerAttribute(name))
@@ -1451,7 +1445,7 @@ end
 
 # This method is needed for string types like String15 coming from a DataFrame.
 function get_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     name::AbstractString,
 )
     return get_attribute(model, String(name))
@@ -1507,7 +1501,7 @@ julia> set_attribute(c, MOI.ConstraintName(), "c_new")
 ```
 """
 function set_attribute(
-    model::GenericModel,
+    model::ModelImpl,
     attr::MOI.AbstractModelAttribute,
     value,
 )
@@ -1516,7 +1510,7 @@ function set_attribute(
 end
 
 function set_attribute(
-    x::GenericVariableRef,
+    x::VariableRefImpl,
     attr::MOI.AbstractVariableAttribute,
     value,
 )
@@ -1568,7 +1562,7 @@ julia> set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), false)
 ```
 """
 function set_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
@@ -1577,7 +1571,7 @@ function set_attribute(
 end
 
 function set_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     name::String,
     value,
 )
@@ -1587,7 +1581,7 @@ end
 
 # This method is needed for string types like String15 coming from a DataFrame.
 function set_attribute(
-    model::Union{GenericModel,MOI.OptimizerWithAttributes},
+    model::Union{ModelImpl,MOI.OptimizerWithAttributes},
     name::AbstractString,
     value,
 )
@@ -1633,9 +1627,9 @@ julia> set_attribute(model, "max_iter", 100)
 """
 function set_attributes(
     destination::Union{
-        GenericModel,
+        ModelImpl,
         MOI.OptimizerWithAttributes,
-        GenericVariableRef,
+        VariableRefImpl,
         ConstraintRef,
     },
     pairs::Pair...,
@@ -1725,9 +1719,7 @@ julia> optimizer_index(x)
 MOI.VariableIndex(1)
 ```
 """
-function optimizer_index(
-    x::Union{GenericVariableRef,ConstraintRef{<:GenericModel}},
-)
+function optimizer_index(x::Union{VariableRefImpl,ConstraintRef{<:ModelImpl}})
     return _moi_optimizer_index(backend(owner_model(x)), index(x))
 end
 
@@ -1791,13 +1783,13 @@ that returns a vector corresponding to the dual start of the constraints.
 The default is [`nonlinear_dual_start_value`](@ref).
 """
 function set_start_values(
-    model::GenericModel{T};
+    model::ModelImpl{T};
     variable_primal_start::Union{Nothing,Function} = value,
     constraint_primal_start::Union{Nothing,Function} = value,
     constraint_dual_start::Union{Nothing,Function} = dual,
     nonlinear_dual_start::Union{Nothing,Function} = nonlinear_dual_start_value,
 ) where {T}
-    variable_primal = Dict{GenericVariableRef{T},T}()
+    variable_primal = Dict{VariableRefImpl{T},T}()
     support_variable_primal = MOI.supports(
         backend(model),
         MOI.VariablePrimalStart(),

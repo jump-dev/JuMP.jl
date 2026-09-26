@@ -637,25 +637,28 @@ Subject to
     io_test(
         MIME("text/plain"),
         model_1,
-        """
-        A JuMP Model
-        ├ solver: none
-        ├ objective_sense: MAX_SENSE
-        │ └ objective_function_type: $(GenericAffExpr{Float64,VariableType})
-        ├ num_variables: 13
-        ├ num_constraints: 24
-        │ ├ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeTriangle: 2
-        │ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeSquare: 2
-        │ ├ $(Vector{GenericAffExpr{Float64,VariableType}}) in MOI.SecondOrderCone: 1
-        │ ├ $VariableType in MOI.EqualTo{Float64}: 1
-        │ ├ $VariableType in MOI.GreaterThan{Float64}: 4
-        │ ├ $VariableType in MOI.LessThan{Float64}: 4
-        │ ├ $VariableType in MOI.Integer: 4
-        │ └ $VariableType in MOI.ZeroOne: 4
-        └ Names registered in the model
-          └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""";
+        sprint(
+            MOI.Utilities.print_with_acronym,
+            """
+A JuMP Model
+├ solver: none
+├ objective_sense: MAX_SENSE
+│ └ objective_function_type: $(GenericAffExpr{Float64,VariableType})
+├ num_variables: 13
+├ num_constraints: 24
+│ ├ $(GenericAffExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeTriangle: 2
+│ ├ $(Vector{VariableType}) in MOI.PositiveSemidefiniteConeSquare: 2
+│ ├ $(Vector{GenericAffExpr{Float64,VariableType}}) in MOI.SecondOrderCone: 1
+│ ├ $VariableType in MOI.EqualTo{Float64}: 1
+│ ├ $VariableType in MOI.GreaterThan{Float64}: 4
+│ ├ $VariableType in MOI.LessThan{Float64}: 4
+│ ├ $VariableType in MOI.Integer: 4
+│ └ $VariableType in MOI.ZeroOne: 4
+└ Names registered in the model
+  └ :a, :a1, :b, :b1, :c, :c1, :con, :fi, :soc, :u, :x, :y, :z""",
+        );
         repl = :show,
     )
 
@@ -707,17 +710,20 @@ Subject to
     io_test(
         MIME("text/plain"),
         model_2,
-        """
-        A JuMP Model
-        ├ solver: none
-        ├ objective_sense: FEASIBILITY_SENSE
-        ├ num_variables: 2
-        ├ num_constraints: 3
-        │ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
-        │ ├ $VariableType in MOI.Integer: 1
-        │ └ $VariableType in MOI.ZeroOne: 1
-        └ Names registered in the model
-          └ :x, :y""";
+        sprint(
+            MOI.Utilities.print_with_acronym,
+            """
+A JuMP Model
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 2
+├ num_constraints: 3
+│ ├ $(GenericQuadExpr{Float64,VariableType}) in MOI.LessThan{Float64}: 1
+│ ├ $VariableType in MOI.Integer: 1
+│ └ $VariableType in MOI.ZeroOne: 1
+└ Names registered in the model
+  └ :x, :y""",
+        );
         repl = :show,
     )
 
@@ -1129,6 +1135,70 @@ function test_show_generic_model_bigfloat()
     return
 end
 
+function test_show_public_model_type_aliases()
+    function show_type(args...; context = ())
+        return sprint(
+            show,
+            args...;
+            context = (:module => @__MODULE__, context...),
+        )
+    end
+    plain = MIME("text/plain")
+    for (type, name, generic) in (
+        (Model, "Model", "GenericModel"),
+        (VariableRef, "VariableRef", "GenericVariableRef"),
+    )
+        @test show_type(type) == name
+        @test show_type(Vector{type}) == "Vector{$name}"
+        @test show_type(plain, type) == "$name (alias for $generic{Float64})"
+        @test show_type(plain, type; context = (:compact => true,)) == name
+        @test show_type(type; context = (:compact => false,)) ==
+              "$generic{Float64}"
+        @test show_type(type; context = (:module => nothing,)) == "JuMP.$name"
+    end
+    for (wrapper, name) in (
+        (GenericModel, "GenericModel"),
+        (GenericVariableRef, "GenericVariableRef"),
+    )
+        @test show_type(wrapper) == name
+        @test show_type(plain, wrapper) == name
+        for T in (Float32, BigFloat)
+            @test show_type(wrapper{T}) == "$name{$T}"
+            @test show_type(plain, wrapper{T}) == "$name{$T}"
+        end
+    end
+    for (type, expanded) in (
+        (AffExpr, "GenericAffExpr{Float64, GenericVariableRef{Float64}}"),
+        (QuadExpr, "GenericQuadExpr{Float64, GenericVariableRef{Float64}}"),
+        (NonlinearExpr, "GenericNonlinearExpr{GenericVariableRef{Float64}}"),
+    )
+        @test show_type(plain, type) ==
+              "$(show_type(type)) (alias for $expanded)"
+    end
+    @test show_type(plain, NonlinearConstraintRef{ScalarShape}) ==
+          "NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{GenericModel{Float64}, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})"
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, c, x .<= 1)
+    @test startswith(show_type(plain, x), "2-element Vector{VariableRef}:")
+    @test startswith(
+        show_type(plain, c),
+        "2-element Vector{ConstraintRef{Model,",
+    )
+    for hook in (nothing, model -> nothing)
+        concrete_model = concrete_direct_model(
+            MOI.Utilities.Model{Float64}();
+            optimize_hook = hook,
+        )
+        concrete = typeof(concrete_model)
+        concrete_ref = variable_ref_type(concrete_model)
+        @test occursin("ModelImpl", show_type(concrete))
+        @test occursin("VariableRefImpl", show_type(concrete_ref))
+        @test endswith(show_type(concrete), ", $(show_type(typeof(hook)))}")
+    end
+    return
+end
+
 function test_small_number_latex()
     model = Model()
     @variable(model, x)
@@ -1157,7 +1227,7 @@ function test_show_objective_summary()
     @variable(model, x)
     @objective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
-          "Objective function type: JuMP.VariableRef\n"
+          "Objective function type: $(typeof(x))\n"
     @NLobjective(model, Min, x)
     @test sprint(show_objective_function_summary, model) ==
           "Objective function type: Nonlinear\n"

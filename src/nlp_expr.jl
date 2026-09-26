@@ -84,8 +84,8 @@ mutable struct GenericNonlinearExpr{V<:AbstractVariableRef} <:
 
     function GenericNonlinearExpr{V}(
         head::Symbol,
-        args::Vararg{Any},
-    ) where {V<:AbstractVariableRef}
+        args::Vararg{Any,N},
+    ) where {V<:AbstractVariableRef,N}
         for arg in args
             _throw_if_not_real(arg)
             _throw_if_legacy_error(arg)
@@ -972,7 +972,7 @@ julia> op_f(2.0)
 ```
 """
 function add_nonlinear_operator(
-    model::GenericModel,
+    model::ModelImpl,
     dim::Int,
     f::Function,
     args::Vararg{Function,N};
@@ -1191,7 +1191,7 @@ julia> simplify(model, x / sin(x)^0)
 x
 ```
 """
-function simplify(model::GenericModel, f::AbstractJuMPScalar)
+function simplify(model::ModelImpl, f::AbstractJuMPScalar)
     g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(model, f))
     return jump_function(model, g)
 end
@@ -1239,16 +1239,16 @@ julia> derivative(model, sin(x)^y, y)
 ```
 """
 function derivative(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     f::AbstractJuMPScalar,
-    x::GenericVariableRef{T},
+    x::VariableRefImpl{T},
 ) where {T}
     df_dx =
         MOI.Nonlinear.SymbolicAD.derivative(moi_function(model, f), index(x))
     return jump_function(model, MOI.Nonlinear.SymbolicAD.simplify!(df_dx))
 end
 
-function derivative(f::AbstractJuMPScalar, x::GenericVariableRef)
+function derivative(f::AbstractJuMPScalar, x::VariableRefImpl)
     return derivative(owner_model(x), f, x)
 end
 
@@ -1288,14 +1288,14 @@ julia> ∇f[y]
 (sin(x) ^ y) * log(sin(x))
 ```
 """
-function gradient(model::GenericModel{T}, f::AbstractJuMPScalar) where {T}
+function gradient(model::ModelImpl{T}, f::AbstractJuMPScalar) where {T}
     g = moi_function(model, f)
-    ∇f = Dict{GenericVariableRef{T},Any}()
+    ∇f = Dict{VariableRefImpl{T},Any}()
     for xi in MOI.Nonlinear.SymbolicAD.variables(g)
         df_dx = MOI.Nonlinear.SymbolicAD.simplify!(
             MOI.Nonlinear.SymbolicAD.derivative(g, xi),
         )
-        ∇f[GenericVariableRef{T}(model, xi)] = jump_function(model, df_dx)
+        ∇f[VariableRefImpl{T}(model, xi)] = jump_function(model, df_dx)
     end
     return ∇f
 end

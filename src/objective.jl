@@ -37,7 +37,7 @@ julia> relative_gap(model)
 0.0
 ```
 """
-function relative_gap(model::GenericModel{T})::T where {T}
+function relative_gap(model::ModelImpl{T})::T where {T}
     return MOI.get(model, MOI.RelativeGap())
 end
 
@@ -74,7 +74,7 @@ julia> objective_bound(model)
 3.0
 ```
 """
-function objective_bound(model::GenericModel{T})::Union{T,Vector{T}} where {T}
+function objective_bound(model::ModelImpl{T})::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveBound())
 end
 
@@ -119,7 +119,7 @@ Stacktrace:
 ```
 """
 function objective_value(
-    model::GenericModel{T};
+    model::ModelImpl{T};
     result::Int = 1,
 )::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveValue(result))
@@ -166,10 +166,7 @@ Stacktrace:
 [...]
 ```
 """
-function dual_objective_value(
-    model::GenericModel{T};
-    result::Int = 1,
-)::T where {T}
+function dual_objective_value(model::ModelImpl{T}; result::Int = 1)::T where {T}
     return MOI.get(model, MOI.DualObjectiveValue(result))
 end
 
@@ -197,7 +194,7 @@ julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function objective_sense(model::GenericModel)
+function objective_sense(model::ModelImpl)
     return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
 end
 
@@ -227,7 +224,7 @@ julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
+function set_objective_sense(model::ModelImpl, sense::MOI.OptimizationSense)
     MOI.set(model, MOI.ObjectiveSense(), sense)
     return
 end
@@ -262,7 +259,7 @@ julia> objective_function(model)
 """
 function set_objective_function end
 
-function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
+function set_objective_function(model::ModelImpl, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(
@@ -285,14 +282,14 @@ function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
 end
 
 function set_objective_function(
-    model::GenericModel,
+    model::ModelImpl,
     func::Union{AbstractJuMPScalar,AbstractVector{<:AbstractJuMPScalar}},
 )
     set_objective_function(model, moi_function(model, func))
     return
 end
 
-function set_objective_function(model::GenericModel{T}, func::Real) where {T}
+function set_objective_function(model::ModelImpl{T}, func::Real) where {T}
     set_objective_function(
         model,
         MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], convert(T, func)),
@@ -374,7 +371,7 @@ julia> objective_function_type(model)
 AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
 ```
 """
-function objective_function_type(model::GenericModel)
+function objective_function_type(model::ModelImpl)
     return jump_function_type(
         model,
         MOI.get(backend(model), MOI.ObjectiveFunctionType()),
@@ -428,18 +425,18 @@ ERROR: InexactError: convert(MathOptInterface.VariableIndex, 1.0 + 2.0 MOI.Varia
 ```
 """
 function objective_function(
-    model::GenericModel,
+    model::ModelImpl,
     ::Type{F},
 ) where {F<:MOI.AbstractFunction}
     func = MOI.get(backend(model), MOI.ObjectiveFunction{F}())::F
     return jump_function(model, func)
 end
 
-function objective_function(model::GenericModel, ::Type{T}) where {T}
+function objective_function(model::ModelImpl, ::Type{T}) where {T}
     return objective_function(model, moi_function_type(T))
 end
 
-function objective_function(model::GenericModel)
+function objective_function(model::ModelImpl)
     F = MOI.get(backend(model), MOI.ObjectiveFunctionType())
     return objective_function(model, F)
 end
@@ -472,8 +469,8 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::GenericModel{T},
-    variable::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable::VariableRefImpl{T},
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -494,10 +491,10 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variable::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable::VariableRefImpl{T},
     coeff::T,
-    ::Type{GenericVariableRef{T}},
+    ::Type{<:VariableRefImpl{T}},
 ) where {T}
     current_obj = objective_function(model)
     if index(current_obj) == index(variable)
@@ -512,8 +509,8 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variable::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable::VariableRefImpl{T},
     coeff::T,
     ::Type{F},
 ) where {T,F}
@@ -556,8 +553,8 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::GenericModel{T},
-    variables::AbstractVector{<:GenericVariableRef{T}},
+    model::ModelImpl{T},
+    variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -582,13 +579,13 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variables::AbstractVector{<:GenericVariableRef{T}},
+    model::ModelImpl{T},
+    variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},
-    ::Type{GenericVariableRef{T}},
+    ::Type{<:VariableRefImpl{T}},
 ) where {T}
     new_objective = LinearAlgebra.dot(coeffs, variables)
-    current_obj = objective_function(model)::GenericVariableRef{T}
+    current_obj = objective_function(model)::VariableRefImpl{T}
     if !(current_obj in variables)
         add_to_expression!(new_objective, current_obj)
     end
@@ -597,8 +594,8 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variables::AbstractVector{<:GenericVariableRef{T}},
+    model::ModelImpl{T},
+    variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},
     ::Type{F},
 ) where {T,F}
@@ -642,9 +639,9 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::GenericModel{T},
-    variable_1::GenericVariableRef{T},
-    variable_2::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable_1::VariableRefImpl{T},
+    variable_2::VariableRefImpl{T},
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -665,9 +662,9 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variable_1::GenericVariableRef{T},
-    variable_2::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable_1::VariableRefImpl{T},
+    variable_2::VariableRefImpl{T},
     coeff::T,
     ::Type{F},
 ) where {T,F}
@@ -678,9 +675,9 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variable_1::GenericVariableRef{T},
-    variable_2::GenericVariableRef{T},
+    model::ModelImpl{T},
+    variable_1::VariableRefImpl{T},
+    variable_2::VariableRefImpl{T},
     coeff::T,
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}
@@ -729,9 +726,9 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::GenericModel{T},
-    variables_1::AbstractVector{<:GenericVariableRef{T}},
-    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    model::ModelImpl{T},
+    variables_1::AbstractVector{<:VariableRefImpl{T}},
+    variables_2::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -757,12 +754,12 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
+    model::ModelImpl{T},
     variables_1::AbstractVector{<:V},
     variables_2::AbstractVector{<:V},
     coeffs::AbstractVector{<:T},
     ::Type{F},
-) where {T,F,V<:GenericVariableRef{T}}
+) where {T,F,V<:VariableRefImpl{T}}
     new_obj = GenericQuadExpr{T,V}()
     add_to_expression!(new_obj, objective_function(model))
     for (c, x, y) in zip(coeffs, variables_1, variables_2)
@@ -773,9 +770,9 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::GenericModel{T},
-    variables_1::AbstractVector{<:GenericVariableRef{T}},
-    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    model::ModelImpl{T},
+    variables_1::AbstractVector{<:VariableRefImpl{T}},
+    variables_2::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}
