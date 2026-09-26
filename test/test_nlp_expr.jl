@@ -972,6 +972,32 @@ function test_nonlinear_operator_inferred()
     return
 end
 
+function test_extension_nonlinear_expr_varargs(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x)
+    args = (x, 2, 3.0, true, x + 1, x^2, sin(x))
+    expr = @inferred GenericNonlinearExpr{VariableRefType}(:+, args...)
+    @test expr.head === :+
+    @test expr.args isa Vector{Any}
+    @test length(expr.args) == length(args)
+    for i in eachindex(args)
+        @test expr.args[i] === args[i]
+    end
+    @test isempty((@inferred GenericNonlinearExpr{VariableRefType}(:+)).args)
+    vector_args = Any[args...]
+    @test GenericNonlinearExpr{VariableRefType}(:+, vector_args).args ===
+          vector_args
+    @test_throws ErrorException GenericNonlinearExpr{VariableRefType}(
+        :+,
+        x,
+        1 + 2im,
+    )
+    return
+end
+
 function test_generic_nonlinear_expr_infer_variable_type()
     model = Model()
     @variable(model, x)
