@@ -2422,4 +2422,20 @@ function test_check_belongs_to_model_vector()
     return
 end
 
+function test_sos_model_convert_sos1()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x[1:3])
+    c = @constraint(model, x in SOS1())
+    @test constraint_object(c).set == MOI.SOS1([1 // 1, 2 // 1, 3 // 1])
+    return
+end
+
+function test_sos_model_convert_sos2()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x[1:3])
+    c = @constraint(model, x in SOS2())
+    @test constraint_object(c).set == MOI.SOS2([1 // 1, 2 // 1, 3 // 1])
+    return
+end
+
 end  # module

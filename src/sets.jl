@@ -217,6 +217,11 @@ function moi_set(set::SOS1{T}, dim::Int) where {T}
     end
 end
 
+function model_convert(model::AbstractModel, set::MOI.SOS1)
+    T = value_type(typeof(model))
+    return MOI.SOS1{T}(convert(Vector{T}, set.weights))
+end
+
 """
     SOS2(weights = Real[])
 
@@ -277,6 +282,11 @@ function moi_set(set::SOS2{T}, dim::Int) where {T}
             """,
         )
     end
+end
+
+function model_convert(model::AbstractModel, set::MOI.SOS2)
+    T = value_type(typeof(model))
+    return MOI.SOS2{T}(convert(Vector{T}, set.weights))
 end
 
 """
@@ -342,7 +352,7 @@ x
 julia> print(model)
 Feasibility
 Subject to
- x ∈ MathOptInterface.Semicontinuous{Int64}(1, 2)
+ x ∈ MathOptInterface.Semicontinuous{Float64}(1.0, 2.0)
 ```
 """
 struct Semicontinuous{T} <: AbstractScalarSet
@@ -355,6 +365,11 @@ struct Semicontinuous{T} <: AbstractScalarSet
 end
 
 function moi_set(set::Semicontinuous{T}) where {T}
+    return MOI.Semicontinuous{T}(set.lower, set.upper)
+end
+
+function model_convert(model::AbstractModel, set::MOI.Semicontinuous)
+    T = value_type(typeof(model))
     return MOI.Semicontinuous{T}(set.lower, set.upper)
 end
 
@@ -378,7 +393,7 @@ x
 julia> print(model)
 Feasibility
 Subject to
- x ∈ MathOptInterface.Semiinteger{Int64}(3, 5)
+ x ∈ MathOptInterface.Semiinteger{Float64}(3.0, 5.0)
 ```
 """
 struct Semiinteger{T} <: AbstractScalarSet
@@ -391,6 +406,11 @@ struct Semiinteger{T} <: AbstractScalarSet
 end
 
 function moi_set(set::Semiinteger{T}) where {T}
+    return MOI.Semiinteger{T}(set.lower, set.upper)
+end
+
+function model_convert(model::AbstractModel, set::MOI.Semiinteger)
+    T = value_type(typeof(model))
     return MOI.Semiinteger{T}(set.lower, set.upper)
 end
 
