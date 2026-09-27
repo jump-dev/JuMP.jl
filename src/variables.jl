@@ -1815,6 +1815,16 @@ julia> has_lower_bound(x)
 true
 ```
 
+## Deletion
+
+Deleting a reference returned by [`VariableInSetRef`](@ref) is unsafe and
+solver-dependent. In most cases the reference is safe to delete, but in some
+cases the solver will throw an error.
+
+If a reference is deleted, [`is_variable_in_set`](@ref) will still return
+`true`. Use [`is_valid`](@ref) to check whether the reference returned by
+[`VariableInSetRef`](@ref) is still valid in the model.
+
 ## Example
 
 ```jldoctest
@@ -1901,6 +1911,16 @@ x integer
 julia> LowerBoundRef(x)
 x ≥ 0
 ```
+
+## Deletion
+
+Deleting a reference returned by [`VariableInSetRef`](@ref) is unsafe because
+the behavior is solver-dependent. In most cases the reference is safe to delete,
+but in some cases the solver will throw an error.
+
+If a reference is deleted, [`is_variable_in_set`](@ref) will still return
+`true`. Use [`is_valid`](@ref) to check whether the reference returned by
+[`VariableInSetRef`](@ref) is still valid in the model.
 
 ## Example
 
