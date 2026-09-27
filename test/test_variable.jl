@@ -1847,6 +1847,20 @@ function test_variable_in_set_HermitianPSDCone()
     return
 end
 
+function test_delete_VariableInSetRef()
+    model = Model()
+    @variable(model, x[1:2, 1:2], PSD)
+    @test is_variable_in_set(x)
+    c = VariableInSetRef(x)
+    @test is_valid(model, c)
+    delete(model, c)
+    @test is_variable_in_set(x)
+    @test !is_valid(model, c)
+    @test isempty(list_of_constraint_types(model))
+    @test num_variables(model) == 3
+    return
+end
+
 function test_direct_model_variable_in_set_Parameter()
     inner = MOIU.MockOptimizer(MOIU.Model{Float64}(); supports_names = false)
     model = direct_model(inner)

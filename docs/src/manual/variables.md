@@ -1352,10 +1352,6 @@ julia> x = @variable(model, [1:3], set = SecondOrderCone())
  _[3]
 ```
 
-!!! note
-    You cannot delete the constraint associated with a variable constrained on
-    creation.
-
 To check if a variable was constrained on creation, use [`is_variable_in_set`](@ref),
 and use [`VariableInSetRef`](@ref) to obtain the associated constraint reference:
 
