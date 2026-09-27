@@ -217,6 +217,11 @@ function moi_set(set::SOS1{T}, dim::Int) where {T}
     end
 end
 
+function model_convert(model::AbstractModel, set::MOI.SOS1)
+    T = value_type(typeof(model))
+    return MOI.SOS1{T}(convert(Vector{T}, set.weights))
+end
+
 """
     SOS2(weights = Real[])
 
@@ -277,6 +282,11 @@ function moi_set(set::SOS2{T}, dim::Int) where {T}
             """,
         )
     end
+end
+
+function model_convert(model::AbstractModel, set::MOI.SOS2)
+    T = value_type(typeof(model))
+    return MOI.SOS2{T}(convert(Vector{T}, set.weights))
 end
 
 """

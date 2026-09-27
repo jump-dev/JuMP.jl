@@ -2014,7 +2014,7 @@ function test_non_finite_bounds()
     return
 end
 
-function test_semiinteger_model_convert()
+function test_model_convert_semiinteger_float()
     model = Model()
     @variable(model, x in Semiinteger(2, 3))
     set = constraint_object(VariableInSetRef(x)).set
@@ -2023,12 +2023,44 @@ function test_semiinteger_model_convert()
     return
 end
 
-function test_semicontinuous_model_convert()
+function test_model_convert_semicontinuous_float()
     model = Model()
     @variable(model, x in Semicontinuous(2, 3))
     set = constraint_object(VariableInSetRef(x)).set
     @test set == MOI.Semicontinuous{Float64}(2.0, 3.0)
     @test set != MOI.Semicontinuous{Int}(2, 3)
+    return
+end
+
+function test_model_convert_semicontinuous()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x in Semicontinuous(4, 5))
+    c = VariableInSetRef(x)
+    @test constraint_object(c).set == MOI.Semicontinuous(4 // 1, 5 // 1)
+    return
+end
+
+function test_model_convert_semiinteger()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x in Semiinteger(4, 5))
+    c = VariableInSetRef(x)
+    @test constraint_object(c).set == MOI.Semiinteger(4 // 1, 5 // 1)
+    return
+end
+
+function test_model_convert_sos1()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x[1:3] in SOS1())
+    c = VariableInSetRef(x)
+    @test constraint_object(c).set == MOI.SOS1([1 // 1, 2 // 1, 3 // 1])
+    return
+end
+
+function test_model_convert_sos2()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x[1:3] in SOS2())
+    c = VariableInSetRef(x)
+    @test constraint_object(c).set == MOI.SOS2([1 // 1, 2 // 1, 3 // 1])
     return
 end
 

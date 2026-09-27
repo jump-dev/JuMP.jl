@@ -2359,6 +2359,16 @@ struct VariableConstrainedOnCreation{
     set::S
 end
 
+function model_convert(
+    model::AbstractModel,
+    variable::VariableConstrainedOnCreation,
+)
+    return VariableConstrainedOnCreation(
+        variable.scalar_variable,
+        model_convert(model, variable.set),
+    )
+end
+
 function add_variable(
     model::GenericModel{T},
     variable::VariableConstrainedOnCreation,
@@ -2446,6 +2456,17 @@ function VariablesConstrainedOnCreation(
         )
     end
     return VariablesConstrainedOnCreation(variables, set, VectorShape())
+end
+
+function model_convert(
+    model::AbstractModel,
+    variable::VariablesConstrainedOnCreation,
+)
+    return VariablesConstrainedOnCreation(
+        variable.scalar_variables,
+        model_convert(model, variable.set),
+        variable.shape,
+    )
 end
 
 function add_variable(
