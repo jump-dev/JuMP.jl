@@ -365,6 +365,17 @@ function model_convert(
     return model_convert.(model, x)
 end
 
+function model_convert(
+    model::AbstractModel,
+    variable::VariablesConstrainedOnCreation,
+)
+    return VariablesConstrainedOnCreation(
+        variable.scalar_variables,
+        model_convert(model, variable.set),
+        variable.shape,
+    )
+end
+
 _valid_model(::AbstractModel, ::Any) = nothing
 
 function _valid_model(m::M, name) where {M}
