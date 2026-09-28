@@ -240,9 +240,12 @@ function Base.:/(lhs::_Constant, rhs::GenericAffExpr)
 end
 
 function Base.:/(lhs::GenericAffExpr, rhs::GenericAffExpr)
-    if all(iszero, values(lhs.terms)) && all(iszero, values(rhs.terms))
+    if all(iszero, values(rhs.terms))
         result = zero(lhs)
         result.constant = lhs.constant / rhs.constant
+        for (var, coeff) in lhs.terms
+            result.terms[var] = coeff / rhs.constant
+        end
         return result
     end
     _throw_if_not_real(lhs)
