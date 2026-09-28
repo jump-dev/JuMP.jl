@@ -471,6 +471,25 @@ function Base.:+(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
     return GenericNonlinearExpr{variable_ref_type(x)}(:+, x, y)
 end
 
+function Base.:/(x::_Constant, y::GenericAffExpr)
+    if all(iszero, values(y.terms))
+        return x / y.constant
+    end
+    _throw_if_not_real(x)
+    _throw_if_not_real(y)
+    lhs = convert(Float64, _constant_to_number(x))
+    return GenericNonlinearExpr{variable_ref_type(y)}(:/, lhs, y)
+end
+
+function Base.:/(x::GenericAffExpr, y::GenericAffExpr)
+    if all(iszero, values(y.terms))
+        return x / y.constant
+    end
+    _throw_if_not_real(x)
+    _throw_if_not_real(y)
+    return GenericNonlinearExpr{variable_ref_type(x)}(:/, x, y)
+end
+
 function Base.:^(::Irrational{:ℯ}, y::AbstractJuMPScalar)
     # without this, ℯ^y becomes 2.718281828459045^y instead of exp(y)
     return exp(y)

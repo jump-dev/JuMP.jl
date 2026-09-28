@@ -1530,4 +1530,29 @@ function test_issue_4203()
     return model
 end
 
+function test_pr_4262()
+    model = Model()
+    @variable(model, x)
+    # Base.:/(x::_Constant, y::GenericAffExpr)
+    @test 5.0 / AffExpr(2.0) == 2.5
+    @test true / AffExpr(2.0) == 0.5
+    @test 1im / AffExpr(2.0) == 0.5im
+    @test_throws(
+        ErrorException(
+            """
+            Cannot build `GenericNonlinearExpr` because a term is complex-valued: `(0 + 1im)::Complex{$Int}`.
+
+            JuMP does not support complex-valued nonlinear expressions. Remove or replace the complex-valued term.
+            """,
+        ),
+        1im / (2 * x),
+    )
+    @test isequal_canonical(true / (2 * x), NonlinearExpr(:/, 1.0, 2 * x))
+    # Base.:/(x::GenericAffExpr, y::GenericAffExpr)
+    y = 2.0 * x + 1.0
+    @test isequal_canonical(y / AffExpr(2.0), 1.0 * x + 0.5)
+    @test isequal_canonical(y / (2 * x), NonlinearExpr(:/, y, 2 * x))
+    return
+end
+
 end  # module
