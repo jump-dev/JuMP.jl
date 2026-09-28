@@ -227,6 +227,29 @@ function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
     return map_coefficients(c -> c / rhs, lhs)
 end
 
+function Base.:/(lhs::_Constant, rhs::GenericAffExpr)
+    if all(iszero, values(rhs.terms))
+        result = zero(rhs)
+        result.constant = lhs / rhs.constant
+        return result
+    end
+    _throw_if_not_real(lhs)
+    _throw_if_not_real(rhs)
+    lhs = convert(Float64, _constant_to_number(lhs))
+    return GenericNonlinearExpr{variable_ref_type(rhs)}(:/, lhs, rhs)
+end
+
+function Base.:/(lhs::GenericAffExpr, rhs::GenericAffExpr)
+    if all(iszero, values(lhs.terms)) && all(iszero, values(rhs.terms))
+        result = zero(lhs)
+        result.constant = lhs.constant / rhs.constant
+        return result
+    end
+    _throw_if_not_real(lhs)
+    _throw_if_not_real(rhs)
+    return GenericNonlinearExpr{variable_ref_type(lhs)}(:/, lhs, rhs)
+end
+
 # We need an implementation for both Base.literal_pow and Base.:^ because of the
 # difference between `x^2` and `a = 2; x^a`.
 
