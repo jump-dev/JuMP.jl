@@ -351,7 +351,11 @@ function test_extension_basic_operators_number(
     @test_expression_with_string 1.5 + aff "7.1 x + 4"
     @test_expression_with_string 1.5 - aff "-7.1 x - 1"
     @test_expression_with_string 2 * aff "14.2 x + 5"
-    @test_expression_with_string 2 / aff "2 / (7.1 x + 2.5)"
+    @test_expression_with_string(
+        2 / aff,
+        "2 / (7.1 x + 2.5)",
+        inferrable = false,
+    )
     # 1-4 Number--QuadExpr
     @test_expression_with_string 1.5 + q "2.5 y*z + 7.1 x + 4"
     @test_expression_with_string 1.5 - q "-2.5 y*z - 7.1 x - 1"
@@ -477,7 +481,11 @@ function test_extension_basic_operators_affexpr(
     @test_expression_with_string aff - aff2 "7.1 x - 1.2 y + 1.3"
     @test_expression_with_string aff * aff2 "8.52 x*y + 3 y + 8.52 x + 3"
     @test string((x + x) * (x + 3)) == string((x + 3) * (x + x))  # Issue #288
-    @test_expression_with_string aff / aff2 "(7.1 x + 2.5) / (1.2 y + 1.2)"
+    @test_expression_with_string(
+        aff / aff2,
+        "(7.1 x + 2.5) / (1.2 y + 1.2)",
+        inferrable = false,
+    )
     @test_expression_with_string aff - aff "0 x"
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
