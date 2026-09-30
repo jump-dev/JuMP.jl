@@ -33,7 +33,7 @@
 #   solver settings to tighten them
 # * Use [`primal_feasibility_report`](@ref) to check whether a solution
 #   satisfies the original constraints within a given tolerance
-# 
+#
 # Optimization solvers can seem like magic black boxes that take in an algebraic
 # formulation of a problem and return a solution. It is tempting to treat their
 # solutions at face value, since we often have little ability to verify that the
@@ -199,18 +199,21 @@ report[LowerBoundRef(y)]
 # of the constraints, our optimal solution is very far from the theoretical
 # optimum.
 
-# We can "fix" our model by decreasing `eps_abs` and `eps_rel`, which SCS uses
-# to control the absolute and relative feasibility tolerances. Now the solver
-# finds the correct solution:
+# We can "fix" our model by decreasing `eps_abs`, which SCS uses to control the
+# absolute and relative feasibility tolerances. Now the solver finds the correct
+# solution:
 
-set_attribute(model, "eps_abs", 1e-5)
-set_attribute(model, "eps_rel", 1e-5)
+set_attribute(model, "eps_abs", 1e-6)
 optimize!(model)
 
 #-
 
 assert_is_solved_and_feasible(model)
 value(x[1])
+
+#-
+
+@assert isapprox(value(x[1]), 1 - n * ε / 2; atol = 1e-4)
 
 # ### Why you shouldn't use a small tolerance
 
