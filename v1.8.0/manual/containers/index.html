@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Containers · JuMP</title><meta name="title" content="Containers · JuMP"/><meta property="og:title" content="Containers · JuMP"/><meta property="twitter:title" content="Containers · JuMP"/><meta name="description" content="Documentation for JuMP."/><meta property="og:description" content="Documentation for JuMP."/><meta property="twitter:description" content="Documentation for JuMP."/><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img class="docs-light-only" src="../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../tutorials/getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../tutorials/getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../tutorials/getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../tutorials/getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../tutorials/linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../tutorials/linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../tutorials/linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../tutorials/linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../tutorials/linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../tutorials/linear/multi_objective_knapsack/">Multi-objective knapsack</a></li><li><a class="tocitem" href="../../tutorials/linear/multi_objective_examples/">Simple multi-objective examples</a></li><li><a class="tocitem" href="../../tutorials/linear/knapsack/">The knapsack problem example</a></li><li><a class="tocitem" href="../../tutorials/linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../tutorials/linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../tutorials/linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../tutorials/linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../tutorials/linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../tutorials/linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../tutorials/linear/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../tutorials/linear/constraint_programming/">Constraint programming</a></li><li><a class="tocitem" href="../../tutorials/linear/mip_duality/">Computing the duals of a mixed-integer program</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../../tutorials/nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorials/conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../tutorials/conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../tutorials/conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../tutorials/conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../tutorials/conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../tutorials/conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../tutorials/conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../tutorials/conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../tutorials/conic/min_ellipse/">Minimal ellipses</a></li><li><a class="tocitem" href="../../tutorials/conic/ellipse_approx/">Ellipsoid approximation</a></li><li><a class="tocitem" href="../../tutorials/conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../tutorials/algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../tutorials/algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../tutorials/applications/web_app/">Serving web apps</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../models/">Models</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li><li><a class="tocitem" href="../expressions/">Expressions</a></li><li><a class="tocitem" href="../objective/">Objectives</a></li><li class="is-active"><a class="tocitem" href>Containers</a><ul class="internal"><li><a class="tocitem" href="#Array"><span>Array</span></a></li><li><a class="tocitem" href="#DenseAxisArray"><span>DenseAxisArray</span></a></li><li><a class="tocitem" href="#SparseAxisArray"><span>SparseAxisArray</span></a></li><li><a class="tocitem" href="#Forcing-the-container-type"><span>Forcing the container type</span></a></li><li><a class="tocitem" href="#How-different-container-types-are-chosen"><span>How different container types are chosen</span></a></li></ul></li><li><a class="tocitem" href="../solutions/">Solutions</a></li><li><a class="tocitem" href="../nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../complex/">Complex number support</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../reference/models/">Models</a></li><li><a class="tocitem" href="../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/">Introduction</a></li><li><a class="tocitem" href="../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Containers</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Containers</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/manual/containers.md" title="Edit source on GitHub"><span class="docs-icon fas"></span></a><a class="docs-settings-button docs-navbar-link fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button docs-navbar-link fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Containers"><a class="docs-heading-anchor" href="#Containers">Containers</a><a id="Containers-1"></a><a class="docs-heading-anchor-permalink" href="#Containers" title="Permalink"></a></h1><p>JuMP provides specialized containers similar to <a href="https://github.com/JuliaArrays/AxisArrays.jl"><code>AxisArrays</code></a> that enable multi-dimensional arrays with non-integer indices.</p><p>These containers are created automatically by JuMP&#39;s macros. Each macro has the same basic syntax:</p><pre><code class="language-julia hljs">@macroname(model, name[key1=index1, index2; optional_condition], other stuff)</code></pre><p>The containers are generated by the <code>name[key1=index1, index2; optional_condition]</code> syntax. Everything else is specific to the particular macro.</p><p>Containers can be named, for example, <code>name[key=index]</code>, or unnamed, for example, <code>[key=index]</code>. We call unnamed containers <em>anonymous</em>.</p><p>We call the bits inside the square brackets and before the <code>;</code> the <em>index sets</em>. The index sets can be named, for example, <code>[i = 1:4]</code>, or they can be unnamed, for example, <code>[1:4]</code>.</p><p>We call the bit inside the square brackets and after the <code>;</code> the <em>condition</em>. Conditions are optional.</p><p>In addition to the standard JuMP macros like <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> and <a href="../../reference/constraints/#JuMP.@constraint"><code>@constraint</code></a>, which construct containers of variables and constraints respectively, you can use <a href="../../reference/containers/#JuMP.Containers.@container"><code>Containers.@container</code></a> to construct containers with arbitrary elements.</p><p>We will use this macro to explain the three types of containers that are natively supported by JuMP: <code>Array</code>, <a href="../../reference/containers/#JuMP.Containers.DenseAxisArray"><code>Containers.DenseAxisArray</code></a>, and <a href="../../reference/containers/#JuMP.Containers.SparseAxisArray"><code>Containers.SparseAxisArray</code></a>.</p><h2 id="Array"><a class="docs-heading-anchor" href="#Array">Array</a><a id="Array-1"></a><a class="docs-heading-anchor-permalink" href="#Array" title="Permalink"></a></h2><p>An <code>Array</code> is created when the index sets are rectangular and the index sets are of the form <code>1:n</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container(x[i = 1:2, j = 1:3], (i, j))
+2×3 Matrix{Tuple{Int64, Int64}}:
+ (1, 1)  (1, 2)  (1, 3)
+ (2, 1)  (2, 2)  (2, 3)</code></pre><p>The result is a normal Julia <code>Array</code>, so you can do all the usual things.</p><h3 id="Slicing"><a class="docs-heading-anchor" href="#Slicing">Slicing</a><a id="Slicing-1"></a><a class="docs-heading-anchor-permalink" href="#Slicing" title="Permalink"></a></h3><p>Arrays can be sliced</p><pre><code class="language-julia-repl hljs">julia&gt; x[:, 1]
+2-element Vector{Tuple{Int64, Int64}}:
+ (1, 1)
+ (2, 1)
+
+julia&gt; x[2, :]
+3-element Vector{Tuple{Int64, Int64}}:
+ (2, 1)
+ (2, 2)
+ (2, 3)</code></pre><h3 id="Looping"><a class="docs-heading-anchor" href="#Looping">Looping</a><a id="Looping-1"></a><a class="docs-heading-anchor-permalink" href="#Looping" title="Permalink"></a></h3><p>Use <code>eachindex</code> to loop over the elements:</p><pre><code class="language-julia-repl hljs">julia&gt; for key in eachindex(x)
+           println(x[key])
+       end
+(1, 1)
+(2, 1)
+(1, 2)
+(2, 2)
+(1, 3)
+(2, 3)</code></pre><h3 id="Get-the-index-sets"><a class="docs-heading-anchor" href="#Get-the-index-sets">Get the index sets</a><a id="Get-the-index-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Get-the-index-sets" title="Permalink"></a></h3><p>Use <code>axes</code> to obtain the index sets:</p><pre><code class="language-julia-repl hljs">julia&gt; axes(x)
+(Base.OneTo(2), Base.OneTo(3))</code></pre><h3 id="Broadcasting"><a class="docs-heading-anchor" href="#Broadcasting">Broadcasting</a><a id="Broadcasting-1"></a><a class="docs-heading-anchor-permalink" href="#Broadcasting" title="Permalink"></a></h3><p>Broadcasting over an Array returns an Array</p><pre><code class="language-julia-repl hljs">julia&gt; swap(x::Tuple) = (last(x), first(x))
+swap (generic function with 1 method)
+
+julia&gt; swap.(x)
+2×3 Matrix{Tuple{Int64, Int64}}:
+ (1, 1)  (2, 1)  (3, 1)
+ (1, 2)  (2, 2)  (3, 2)</code></pre><h3 id="Tables"><a class="docs-heading-anchor" href="#Tables">Tables</a><a id="Tables-1"></a><a class="docs-heading-anchor-permalink" href="#Tables" title="Permalink"></a></h3><p>Use <a href="../../reference/containers/#JuMP.Containers.rowtable"><code>Containers.rowtable</code></a> to convert the <code>Array</code> into a <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> compatible <code>Vector{&lt;:NamedTuple}</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; table = Containers.rowtable(x; header = [:I, :J, :value])
+6-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Int64, Tuple{Int64, Int64}}}}:
+ (I = 1, J = 1, value = (1, 1))
+ (I = 2, J = 1, value = (2, 1))
+ (I = 1, J = 2, value = (1, 2))
+ (I = 2, J = 2, value = (2, 2))
+ (I = 1, J = 3, value = (1, 3))
+ (I = 2, J = 3, value = (2, 3))</code></pre><p>Because it supports the <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> interface, you can pass it to any function which accepts a table as input:</p><pre><code class="language-julia-repl hljs">julia&gt; import DataFrames;
+
+julia&gt; DataFrames.DataFrame(table)
+6×3 DataFrame
+ Row │ I      J      value
+     │ Int64  Int64  Tuple…
+─────┼──────────────────────
+   1 │     1      1  (1, 1)
+   2 │     2      1  (2, 1)
+   3 │     1      2  (1, 2)
+   4 │     2      2  (2, 2)
+   5 │     1      3  (1, 3)
+   6 │     2      3  (2, 3)</code></pre><h2 id="DenseAxisArray"><a class="docs-heading-anchor" href="#DenseAxisArray">DenseAxisArray</a><a id="DenseAxisArray-1"></a><a class="docs-heading-anchor-permalink" href="#DenseAxisArray" title="Permalink"></a></h2><p>A <a href="../../reference/containers/#JuMP.Containers.DenseAxisArray"><code>Containers.DenseAxisArray</code></a> is created when the index sets are rectangular, but not of the form <code>1:n</code>. The index sets can be of any type.</p><pre><code class="language-julia-repl hljs">julia&gt; x = Containers.@container([i = 1:2, j = [:A, :B]], (i, j))
+2-dimensional DenseAxisArray{Tuple{Int64, Symbol},2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, [:A, :B]
+And data, a 2×2 Matrix{Tuple{Int64, Symbol}}:
+ (1, :A)  (1, :B)
+ (2, :A)  (2, :B)</code></pre><h3 id="Slicing-2"><a class="docs-heading-anchor" href="#Slicing-2">Slicing</a><a class="docs-heading-anchor-permalink" href="#Slicing-2" title="Permalink"></a></h3><p>DenseAxisArrays can be sliced</p><pre><code class="language-julia-repl hljs">julia&gt; x[:, :A]
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
+ (1, :A)
+ (2, :A)
+
+julia&gt; x[1, :]
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
+    Dimension 1, [:A, :B]
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
+ (1, :A)
+ (1, :B)</code></pre><h3 id="Looping-2"><a class="docs-heading-anchor" href="#Looping-2">Looping</a><a class="docs-heading-anchor-permalink" href="#Looping-2" title="Permalink"></a></h3><p>Use <code>eachindex</code> to loop over the elements:</p><pre><code class="language-julia-repl hljs">julia&gt; for key in eachindex(x)
+           println(x[key])
+       end
+(1, :A)
+(2, :A)
+(1, :B)
+(2, :B)</code></pre><h3 id="Get-the-index-sets-2"><a class="docs-heading-anchor" href="#Get-the-index-sets-2">Get the index sets</a><a class="docs-heading-anchor-permalink" href="#Get-the-index-sets-2" title="Permalink"></a></h3><p>Use <code>axes</code> to obtain the index sets:</p><pre><code class="language-julia-repl hljs">julia&gt; axes(x)
+(Base.OneTo(2), [:A, :B])</code></pre><h3 id="Broadcasting-2"><a class="docs-heading-anchor" href="#Broadcasting-2">Broadcasting</a><a class="docs-heading-anchor-permalink" href="#Broadcasting-2" title="Permalink"></a></h3><p>Broadcasting over a DenseAxisArray returns a DenseAxisArray</p><pre><code class="language-julia-repl hljs">julia&gt; swap(x::Tuple) = (last(x), first(x))
+swap (generic function with 1 method)
+
+julia&gt; swap.(x)
+2-dimensional DenseAxisArray{Tuple{Symbol, Int64},2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, [:A, :B]
+And data, a 2×2 Matrix{Tuple{Symbol, Int64}}:
+ (:A, 1)  (:B, 1)
+ (:A, 2)  (:B, 2)</code></pre><h3 id="Access-internal-data"><a class="docs-heading-anchor" href="#Access-internal-data">Access internal data</a><a id="Access-internal-data-1"></a><a class="docs-heading-anchor-permalink" href="#Access-internal-data" title="Permalink"></a></h3><p>Use <code>Array(x)</code> to copy the internal data array into a new <code>Array</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; Array(x)
+2×2 Matrix{Tuple{Int64, Symbol}}:
+ (1, :A)  (1, :B)
+ (2, :A)  (2, :B)</code></pre><p>To access the internal data without a copy, use <code>x.data</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; x.data
+2×2 Matrix{Tuple{Int64, Symbol}}:
+ (1, :A)  (1, :B)
+ (2, :A)  (2, :B)</code></pre><h3 id="Tables-2"><a class="docs-heading-anchor" href="#Tables-2">Tables</a><a class="docs-heading-anchor-permalink" href="#Tables-2" title="Permalink"></a></h3><p>Use <a href="../../reference/containers/#JuMP.Containers.rowtable"><code>Containers.rowtable</code></a> to convert the <code>DenseAxisArray</code> into a <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> compatible <code>Vector{&lt;:NamedTuple}</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; table = Containers.rowtable(x; header = [:I, :J, :value])
+4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+ (I = 1, J = :A, value = (1, :A))
+ (I = 2, J = :A, value = (2, :A))
+ (I = 1, J = :B, value = (1, :B))
+ (I = 2, J = :B, value = (2, :B))</code></pre><p>Because it supports the <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> interface, you can pass it to any function which accepts a table as input:</p><pre><code class="language-julia-repl hljs">julia&gt; import DataFrames;
+
+julia&gt; DataFrames.DataFrame(table)
+4×3 DataFrame
+ Row │ I      J       value
+     │ Int64  Symbol  Tuple…
+─────┼────────────────────────
+   1 │     1  A       (1, :A)
+   2 │     2  A       (2, :A)
+   3 │     1  B       (1, :B)
+   4 │     2  B       (2, :B)</code></pre><h2 id="SparseAxisArray"><a class="docs-heading-anchor" href="#SparseAxisArray">SparseAxisArray</a><a id="SparseAxisArray-1"></a><a class="docs-heading-anchor-permalink" href="#SparseAxisArray" title="Permalink"></a></h2><p>A <a href="../../reference/containers/#JuMP.Containers.SparseAxisArray"><code>Containers.SparseAxisArray</code></a> is created when the index sets are non-rectangular. This occurs in two circumstances:</p><p>An index depends on a prior index:</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container([i = 1:2, j = i:2], (i, j))
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Int64}, 2, Tuple{Int64, Int64}} with 3 entries:
+  [1, 1]  =  (1, 1)
+  [1, 2]  =  (1, 2)
+  [2, 2]  =  (2, 2)</code></pre><p>The <code>[indices; condition]</code> syntax is used:</p><pre><code class="language-julia-repl hljs">julia&gt; x = Containers.@container([i = 1:3, j = [:A, :B]; i &gt; 1], (i, j))
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 4 entries:
+  [2, A]  =  (2, :A)
+  [2, B]  =  (2, :B)
+  [3, A]  =  (3, :A)
+  [3, B]  =  (3, :B)</code></pre><p>Here we have the index sets <code>i = 1:3, j = [:A, :B]</code>, followed by <code>;</code>, and then a condition, which evaluates to <code>true</code> or <code>false</code>: <code>i &gt; 1</code>.</p><h3 id="Slicing-3"><a class="docs-heading-anchor" href="#Slicing-3">Slicing</a><a class="docs-heading-anchor-permalink" href="#Slicing-3" title="Permalink"></a></h3><p>Slicing is supported:</p><pre><code class="language-julia-repl hljs">julia&gt; y = x[:, :B]
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (2, :B)
+  [3]  =  (3, :B)</code></pre><h3 id="Looping-3"><a class="docs-heading-anchor" href="#Looping-3">Looping</a><a class="docs-heading-anchor-permalink" href="#Looping-3" title="Permalink"></a></h3><p>Use <code>eachindex</code> to loop over the elements:</p><pre><code class="language-julia-repl hljs">julia&gt; for key in eachindex(y)
+           println(y[key])
+       end
+(2, :B)
+(3, :B)</code></pre><h3 id="Broadcasting-3"><a class="docs-heading-anchor" href="#Broadcasting-3">Broadcasting</a><a class="docs-heading-anchor-permalink" href="#Broadcasting-3" title="Permalink"></a></h3><p>Broadcasting over a SparseAxisArray returns a SparseAxisArray</p><pre><code class="language-julia-repl hljs">julia&gt; swap(x::Tuple) = (last(x), first(x))
+swap (generic function with 1 method)
+
+julia&gt; swap.(y)
+JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (:B, 2)
+  [3]  =  (:B, 3)</code></pre><h3 id="Tables-3"><a class="docs-heading-anchor" href="#Tables-3">Tables</a><a class="docs-heading-anchor-permalink" href="#Tables-3" title="Permalink"></a></h3><p>Use <a href="../../reference/containers/#JuMP.Containers.rowtable"><code>Containers.rowtable</code></a> to convert the <code>SparseAxisArray</code> into a <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> compatible <code>Vector{&lt;:NamedTuple}</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; table = Containers.rowtable(x; header = [:I, :J, :value])
+4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+ (I = 3, J = :B, value = (3, :B))
+ (I = 2, J = :A, value = (2, :A))
+ (I = 2, J = :B, value = (2, :B))
+ (I = 3, J = :A, value = (3, :A))</code></pre><p>Because it supports the <a href="https://github.com/JuliaData/Tables.jl">Tables.jl</a> interface, you can pass it to any function which accepts a table as input:</p><pre><code class="language-julia-repl hljs">julia&gt; import DataFrames;
+
+julia&gt; DataFrames.DataFrame(table)
+4×3 DataFrame
+ Row │ I      J       value
+     │ Int64  Symbol  Tuple…
+─────┼────────────────────────
+   1 │     3  B       (3, :B)
+   2 │     2  A       (2, :A)
+   3 │     2  B       (2, :B)
+   4 │     3  A       (3, :A)</code></pre><h2 id="Forcing-the-container-type"><a class="docs-heading-anchor" href="#Forcing-the-container-type">Forcing the container type</a><a id="Forcing-the-container-type-1"></a><a class="docs-heading-anchor-permalink" href="#Forcing-the-container-type" title="Permalink"></a></h2><p>Pass <code>container = T</code> to use <code>T</code> as the container. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container([i = 1:2, j = 1:2], i + j, container = Array)
+2×2 Matrix{Int64}:
+ 2  3
+ 3  4
+
+julia&gt; Containers.@container([i = 1:2, j = 1:2], i + j, container = Dict)
+Dict{Tuple{Int64, Int64}, Int64} with 4 entries:
+  (1, 2) =&gt; 3
+  (1, 1) =&gt; 2
+  (2, 2) =&gt; 4
+  (2, 1) =&gt; 3</code></pre><p>You can also pass <code>DenseAxisArray</code> or <code>SparseAxisArray</code>.</p><h2 id="How-different-container-types-are-chosen"><a class="docs-heading-anchor" href="#How-different-container-types-are-chosen">How different container types are chosen</a><a id="How-different-container-types-are-chosen-1"></a><a class="docs-heading-anchor-permalink" href="#How-different-container-types-are-chosen" title="Permalink"></a></h2><p>If the compiler can prove <em>at compile time</em> that the index sets are rectangular, and indexed by a compact set of integers that start at <code>1</code>, <a href="../../reference/containers/#JuMP.Containers.@container"><code>Containers.@container</code></a> will return an array. This is the case if your index sets are visible to the macro as <code>1:n</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container([i=1:3, j=1:5], i + j)
+3×5 Matrix{Int64}:
+ 2  3  4  5  6
+ 3  4  5  6  7
+ 4  5  6  7  8</code></pre><p>or an instance of <code>Base.OneTo</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; set = Base.OneTo(3)
+Base.OneTo(3)
+
+julia&gt; Containers.@container([i=set, j=1:5], i + j)
+3×5 Matrix{Int64}:
+ 2  3  4  5  6
+ 3  4  5  6  7
+ 4  5  6  7  8</code></pre><p>If the compiler can prove that the index set is rectangular, but not necessarily of the form <code>1:n</code> at compile time, then a <a href="../../reference/containers/#JuMP.Containers.DenseAxisArray"><code>Containers.DenseAxisArray</code></a> will be constructed instead:</p><pre><code class="language-julia-repl hljs">julia&gt; set = 1:3
+1:3
+
+julia&gt; Containers.@container([i=set, j=1:5], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 1:3
+    Dimension 2, Base.OneTo(5)
+And data, a 3×5 Matrix{Int64}:
+ 2  3  4  5  6
+ 3  4  5  6  7
+ 4  5  6  7  8</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>What happened here? Although we know that <code>set</code> contains <code>1:3</code>, at compile time the <code>typeof(set)</code> is a <code>UnitRange{Int}</code>. Therefore, Julia can&#39;t prove that the range starts at <code>1</code> (it only finds this out at runtime), and it defaults to a  <code>DenseAxisArray</code>. The case where we explicitly wrote <code>i = 1:3</code> worked because the macro can &quot;see&quot; the <code>1</code> at compile time.</p></div></div><p>However, if you know that the indices do form an <code>Array</code>, you can force the container type with <code>container = Array</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; set = 1:3
+1:3
+
+julia&gt; Containers.@container([i=set, j=1:5], i + j, container = Array)
+3×5 Matrix{Int64}:
+ 2  3  4  5  6
+ 3  4  5  6  7
+ 4  5  6  7  8</code></pre><p>Here&#39;s another example with something similar:</p><pre><code class="language-julia-repl hljs">julia&gt; a = 1
+1
+
+julia&gt; Containers.@container([i=a:3, j=1:5], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 1:3
+    Dimension 2, Base.OneTo(5)
+And data, a 3×5 Matrix{Int64}:
+ 2  3  4  5  6
+ 3  4  5  6  7
+ 4  5  6  7  8
+
+julia&gt; Containers.@container([i=1:a, j=1:5], i + j)
+1×5 Matrix{Int64}:
+ 2  3  4  5  6</code></pre><p>Finally, if the compiler cannot prove that the index set is rectangular, a <a href="../../reference/containers/#JuMP.Containers.SparseAxisArray"><code>Containers.SparseAxisArray</code></a> will be created.</p><p>This occurs when some indices depend on a previous one:</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container([i=1:3, j=1:i], i + j)
+JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
+  [1, 1]  =  2
+  [2, 1]  =  3
+  [2, 2]  =  4
+  [3, 1]  =  4
+  [3, 2]  =  5
+  [3, 3]  =  6</code></pre><p>or if there is a condition on the index sets:</p><pre><code class="language-julia-repl hljs">julia&gt; Containers.@container([i = 1:5; isodd(i)], i^2)
+JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
+  [1]  =  1
+  [3]  =  9
+  [5]  =  25</code></pre><p>The condition can depend on multiple indices, the only requirement is that it is an expression that returns <code>true</code> or <code>false</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; condition(i, j) = isodd(i) &amp;&amp; iseven(j)
+condition (generic function with 1 method)
+
+julia&gt; Containers.@container([i = 1:2, j = 1:4; condition(i, j)], i + j)
+JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
+  [1, 2]  =  3
+  [1, 4]  =  5</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../objective/">« Objectives</a><a class="docs-footer-nextpage" href="../solutions/">Solutions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.28.0-DEV on <span class="colophon-date" title="Thursday 16 February 2023 02:21">Thursday 16 February 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Cutting stock · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview', {'page': location.pathname + location.search + location.hash});
+</script><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script data-main="../../../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" data-theme-name="documenter-dark" data-theme-primary-dark="" href="../../../assets/themes/documenter-dark.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-light" data-theme-primary="" href="../../../assets/themes/documenter-light.css" rel="stylesheet" type="text/css"/><script src="../../../assets/themeswap.js"></script><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img alt="JuMP logo" src="../../../assets/logo.png"/></a><div class="docs-package-name"><span class="docs-autofit">JuMP</span></div><form action="../../../search/" class="docs-search"><input class="docs-search-query" id="documenter-search-query" name="q" placeholder="Search docs" type="text"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input checked="" class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input checked="" class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li class="is-active"><a class="tocitem" href="">Cutting stock</a></li><li><a class="tocitem" href="../diet/">The diet problem</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../finance/">Finance</a></li><li><a class="tocitem" href="../geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../n-queens/">N-Queens</a></li><li><a class="tocitem" href="../network_flows/">Network Flows</a></li><li><a class="tocitem" href="../power_systems/">Power Systems</a></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Sudoku</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Mixed-integer linear programs</a></li><li class="is-active"><a href="">Cutting stock</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="">Cutting stock</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/cutting_stock_column_generation.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" href="#" id="documenter-settings-button" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" href="#" id="documenter-sidebar-button"></a></div></header><article class="content" id="documenter-page"><h1 id="Cutting-stock"><a class="docs-heading-anchor" href="#Cutting-stock">Cutting stock</a><a id="Cutting-stock-1"></a><a class="docs-heading-anchor-permalink" href="#Cutting-stock" title="Permalink"></a></h1><p>This example solves the cutting stock problem (sometimes also called the cutting rod problem) using a column-generation technique. It is based on <a href="https://doi.org/10.5281/zenodo.3329388">https://doi.org/10.5281/zenodo.3329388</a>.</p><p>Intuitively, this problem is about cutting large rolls of paper into smaller pieces. There is an exact demand of pieces to meet, and all rolls have the same size. The goal is to meet the demand while maximizing the profits (each paper roll has a fixed cost, each sold piece allows earning some money), which is roughly equivalent to using the smallest amount of rolls to cut (or, equivalently, to minimize the amount of paper waste).</p><p>This function takes five parameters:</p><ul><li><code>maxwidth</code>: the maximum width of a roll (or length of a rod)</li><li><code>widths</code>: an array of the requested widths</li><li><code>rollcost</code>: the cost of a complete roll</li><li><code>demand</code>: the demand, in number of pieces, for each width</li><li><code>prices</code>: the selling price for each width</li></ul><p>Mathematically, this problem might be formulated with two variables:</p><ul><li><code>x[i, j] ∈ ℕ</code>: the number of times the width <code>i</code> is cut out of the roll <code>j</code></li><li><code>y[j] ∈ 𝔹</code>: whether the roll <code>j</code> is used</li></ul><p>Several constraints are needed:</p><ul><li>the demand must be satisfied, for each width <code>i</code>: ∑j x[i, j] = demand[i]</li><li>the roll size cannot be exceed, for each roll <code>j</code> that is used: ∑i x[i, j] width[i] ≤ maxwidth y[j]</li></ul><p>If you want to implement this naïve model, you will need an upper bound on the number of rolls to use: the simplest one is to consider that each required width is cut from its own roll, i.e. <code>j</code> varies from 1 to ∑i demand[i].</p><p>This example prefers a more advanced technique to solve this problem: column generation.</p><p>It considers a different set of variables: patterns of width to cut a roll. The decisions then become the number of times each pattern is used (i.e. the number of rolls that are cut following this pattern).</p><p>The intelligence comes from the way these patterns are chosen: not all of them are considered, but only the "interesting" ones, within the master problem.</p><p>A "pricing" problem is used to decide whether a new pattern should be generated or not (it is implemented in the function <code>solve_pricing</code>). "Interesting" means, for a pattern, that the optimal solution may use this cutting pattern.</p><p>In more detail, the solving process is the following. First, a series of dumb patterns are generated (just one width per roll, repeated until the roll is completely cut). Then, the master problem is solved with these first patterns and its dual solution is passed on to the pricing problem. The latter decides if there is a new pattern to include in the formulation or not; if so, it returns it to the master problem. The master is solved again, the new dual variables are given to the pricing problem, until there is no more pattern to generate from the pricing problem: all "interesting" patterns have been generated, and the master can take its optimal decision.</p><p>In the implementation, the variables deciding how many times a pattern is chosen are called <code>θ</code>.</p><p>For more information on column-generation techniques applied on the cutting stock problem, you can see:</p><ul><li><a href="https://tel.archives-ouvertes.fr/tel-00011657/document">Integer programming column generation strategies for the cutting stock problem and its variants</a></li><li><a href="https://doi.org/10.5281/zenodo.3329388">Tackling the cutting stock problem</a></li></ul><p>This example uses the following packages:</p><pre><code class="language-julia">using JuMP
+import GLPK
+import SparseArrays</code></pre><p>The function <code>solve_pricing</code> implements the pricing problem for the function <code>example_cutting_stock</code>.</p><p>It takes, as input, the dual solution from the master problem and the cutting stock instance.</p><p>It outputs either a new cutting pattern, or <code>nothing</code> if no pattern could improve the current cost.</p><pre><code class="language-julia">function solve_pricing(
+    dual_demand_satisfaction, maxwidth, widths, rollcost, demand, prices
+)
+    reduced_costs = dual_demand_satisfaction + prices
+    n = length(reduced_costs)
+    # The actual pricing model.
+    submodel = Model(GLPK.Optimizer)
+    set_silent(submodel)
+    @variable(submodel, xs[1:n] &gt;= 0, Int)
+    @constraint(submodel, sum(xs .* widths) &lt;= maxwidth)
+    @objective(submodel, Max, sum(xs .* reduced_costs))
+    optimize!(submodel)
+    new_pattern = round.(Int, value.(xs))
+    net_cost = rollcost - sum(new_pattern .* (dual_demand_satisfaction .+ prices))
+    # If the net cost of this new pattern is nonnegative, no more patterns to add.
+    return net_cost &gt;= 0 ? nothing : new_pattern
+end
+
+function example_cutting_stock(; max_gen_cols::Int = 5_000)
+    maxwidth = 100.0
+    rollcost = 500.0
+    prices = [
+        167.0, 197.0, 281.0, 212.0, 225.0, 111.0, 93.0, 129.0, 108.0, 106.0,
+        55.0, 85.0, 66.0, 44.0, 47.0, 15.0, 24.0, 13.0, 16.0, 14.0,
+    ]
+    widths = [
+        75.0, 75.0, 75.0, 75.0, 75.0, 53.8, 53.0, 51.0, 50.2, 32.2,
+        30.8, 29.8, 20.1, 16.2, 14.5, 11.0, 8.6, 8.2, 6.6, 5.1,
+    ]
+    demand = [
+        38, 44, 30, 41, 36, 33, 36, 41, 35, 37,
+        44, 49, 37, 36, 42, 33, 47, 35, 49, 42,
+    ]
+    nwidths = length(prices)
+    n = length(widths)
+    ncols = length(widths)
+    # Initial set of patterns (stored in a sparse matrix: a pattern won't
+    # include many different cuts).
+    patterns = SparseArrays.spzeros(UInt16, n, ncols)
+    for i = 1:n
+        patterns[i, i] = min(
+            floor(Int, maxwidth / widths[i]), round(Int, demand[i])
+        )
+    end
+    # Write the master problem with this "reduced" set of patterns.
+    # Not yet integer variables: otherwise, the dual values may make no sense
+    # (actually, GLPK will yell at you if you're trying to get duals for
+    # integer problems).
+    m = Model(GLPK.Optimizer)
+    set_silent(m)
+    @variable(m, θ[1:ncols] &gt;= 0)
+    @objective(
+        m,
+        Min,
+        sum(
+            θ[p] * (rollcost - sum(patterns[j, p] * prices[j] for j = 1:n))
+            for p = 1:ncols
+        )
+    )
+    @constraint(
+        m,
+        demand_satisfaction[j=1:n],
+        sum(patterns[j, p] * θ[p] for p = 1:ncols) &gt;= demand[j]
+    )
+    # First solve of the master problem.
+    optimize!(m)
+    if termination_status(m) != MOI.OPTIMAL
+        warn("Master not optimal ($ncols patterns so far)")
+    end
+    # Then, generate new patterns, based on the dual information.
+    while ncols - n &lt;= max_gen_cols ## Generate at most max_gen_cols columns.
+        if ! has_duals(m)
+            break
+        end
+        new_pattern = solve_pricing(
+            dual.(demand_satisfaction),
+            maxwidth,
+            widths,
+            rollcost,
+            demand,
+            prices,
+        )
+        # No new pattern to add to the formulation: done!
+        if new_pattern === nothing
+            break
+        end
+        # Otherwise, add the new pattern to the master problem, recompute the
+        # duals, and go on waltzing one more time with the pricing problem.
+        ncols += 1
+        patterns = hcat(patterns, new_pattern)
+        # One new variable.
+        new_var = @variable(m, [ncols], base_name = "θ", lower_bound = 0)
+        push!(θ, new_var[ncols])
+        # Update the objective function.
+        set_objective_coefficient(
+            m,
+            θ[ncols],
+            rollcost - sum(patterns[j, ncols] * prices[j] for j = 1:n)
+        )
+        # Update the constraint number j if the new pattern impacts this production.
+        for j = 1:n
+            if new_pattern[j] &gt; 0
+                set_normalized_coefficient(
+                    demand_satisfaction[j], new_var[ncols], new_pattern[j]
+                )
+            end
+        end
+        # Solve the new master problem to update the dual variables.
+        optimize!(m)
+        if termination_status(m) != MOI.OPTIMAL
+            @warn("Master not optimal ($ncols patterns so far)")
+        end
+    end
+    # Finally, impose the master variables to be integer and resolve.
+    # To be exact, at each node in the branch-and-bound tree, we would need to
+    # restart the column generation process (just in case a new column would be
+    # interesting to add). This way, we only get an upper bound (a feasible
+    # solution).
+    set_integer.(θ)
+    optimize!(m)
+    if termination_status(m) != MOI.OPTIMAL
+        @warn("Final master not optimal ($ncols patterns)")
+        return
+    end
+    println("Final solution:")
+    for i = 1:length(θ)
+        if value(θ[i]) &gt; 0.5
+            println("$(round(Int, value(θ[i]))) units of pattern $(i)")
+        end
+    end
+    return
+end
+
+example_cutting_stock()</code></pre><pre class="documenter-example-output">Final solution:
+15 units of pattern 21
+26 units of pattern 22
+10 units of pattern 27
+33 units of pattern 28
+30 units of pattern 29
+44 units of pattern 30
+30 units of pattern 31
+26 units of pattern 32
+7 units of pattern 35
+23 units of pattern 36
+1 units of pattern 39
+34 units of pattern 41
+23 units of pattern 42
+2 units of pattern 43
+13 units of pattern 44
+9 units of pattern 45
+5 units of pattern 46
+3 units of pattern 47</pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/cutting_stock_column_generation.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../cannery/">« The cannery problem</a><a class="docs-footer-nextpage" href="../diet/">The diet problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label></p><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div><p></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 12 April 2021 08:50">Monday 12 April 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></HTML>

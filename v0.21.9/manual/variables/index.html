@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Variables · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img class="docs-light-only" src="../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../tutorials/Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../tutorials/Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../tutorials/Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../tutorials/Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../tutorials/Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/diet/">The diet problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/finance/">Finance</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/network_flows/">Network Flows</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../tutorials/Mixed-integer linear programs/urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../tutorials/Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../tutorials/Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../tutorials/Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../tutorials/Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../tutorials/Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../tutorials/Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../tutorials/Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../tutorials/Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../tutorials/Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox" checked/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../models/">Models</a></li><li class="is-active"><a class="tocitem" href>Variables</a><ul class="internal"><li><a class="tocitem" href="#What-is-a-JuMP-variable?"><span>What is a JuMP variable?</span></a></li><li><a class="tocitem" href="#Variable-bounds"><span>Variable bounds</span></a></li><li><a class="tocitem" href="#Variable-names"><span>Variable names</span></a></li><li><a class="tocitem" href="#Variable-containers"><span>Variable containers</span></a></li><li><a class="tocitem" href="#Integrality-utilities"><span>Integrality utilities</span></a></li><li><a class="tocitem" href="#Semidefinite-variables"><span>Semidefinite variables</span></a></li><li><a class="tocitem" href="#Anonymous-JuMP-variables"><span>Anonymous JuMP variables</span></a></li><li><a class="tocitem" href="#Variables-constrained-on-creation"><span>Variables constrained on creation</span></a></li><li><a class="tocitem" href="#User-defined-containers"><span>User-defined containers</span></a></li><li><a class="tocitem" href="#Delete-a-variable"><span>Delete a variable</span></a></li><li><a class="tocitem" href="#Listing-all-variables"><span>Listing all variables</span></a></li><li><a class="tocitem" href="#Start-values"><span>Start values</span></a></li><li><a class="tocitem" href="#variables"><span>The <code>@variables</code> macro</span></a></li></ul></li><li><a class="tocitem" href="../expressions/">Expressions</a></li><li><a class="tocitem" href="../objective/">Objectives</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li><li><a class="tocitem" href="../containers/">Containers</a></li><li><a class="tocitem" href="../solutions/">Solutions</a></li><li><a class="tocitem" href="../nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../reference/models/">Models</a></li><li><a class="tocitem" href="../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Variables</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Variables</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/manual/variables.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Variables"><a class="docs-heading-anchor" href="#Variables">Variables</a><a id="Variables-1"></a><a class="docs-heading-anchor-permalink" href="#Variables" title="Permalink"></a></h1><h2 id="What-is-a-JuMP-variable?"><a class="docs-heading-anchor" href="#What-is-a-JuMP-variable?">What is a JuMP variable?</a><a id="What-is-a-JuMP-variable?-1"></a><a class="docs-heading-anchor-permalink" href="#What-is-a-JuMP-variable?" title="Permalink"></a></h2><p>The term <em>variable</em> in mathematical optimization has many meanings. Here, we distinguish between the following three types of variables:</p><ol><li><em>optimization</em> variables, which are the mathematical <span>$x$</span> in the problem <span>$\max\{f_0(x) | f_i(x) \in S_i\}$</span>.</li><li><em>Julia</em> variables, which are bindings between a name and a value, for example <code>x = 1</code>. (See <a href="https://docs.julialang.org/en/v1.0.0/manual/variables/">here</a> for the Julia docs.)</li><li><em>JuMP</em> variables, which are instances of the <code>VariableRef</code> struct defined by JuMP that contains a reference to an optimization variable in a model. (Extra for experts: the <code>VariableRef</code> struct is a thin wrapper around a <code>MOI.VariableIndex</code>, and also contains a reference to the JuMP model.)</li></ol><p>To illustrate these three types of variables, consider the following JuMP code (the full syntax is explained below):</p><pre><code class="language-julia-repl hljs">julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x[1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><p>This code does three things:</p><ol><li>It adds two <em>optimization</em> variables to <code>model</code>.</li><li>It creates two <em>JuMP</em> variables that act as references to those optimization variables.</li><li>It binds those JuMP variables as a vector with two elements to the <em>Julia</em> variable <code>x</code>.</li></ol><p>To reduce confusion, we will attempt, where possible, to always refer to variables with their corresponding prefix.</p><p>JuMP variables can have attributes, such as names or an initial primal start value. We illustrate the name attribute in the following example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, y, base_name=&quot;decision variable&quot;)
+decision variable</code></pre><p>This code does four things:</p><ol><li>It adds one <em>optimization</em> variable to <code>model</code>.</li><li>It creates one <em>JuMP</em> variable that acts as a reference to that optimization variable.</li><li>It binds the JuMP variable to the Julia variable <code>y</code>.</li><li>It tells JuMP that the <em>name</em> attribute of this JuMP variable is &quot;decision variable&quot;. JuMP uses the value of <code>base_name</code> when it has to print the variable as a string.</li></ol><p>For example, when we print <code>y</code> at the REPL we get:</p><pre><code class="language-julia-repl hljs">julia&gt; y
+decision variable</code></pre><p>Because <code>y</code> is a Julia variable, we can bind it to a different value. For example, if we write:</p><pre><code class="language-julia-repl hljs">julia&gt; y = 1
+1</code></pre><p><code>y</code> is no longer a binding to a JuMP variable. This does not mean that the JuMP variable has been destroyed. It still exists and is still a reference to the same optimization variable. The binding can be reset by querying the model for the symbol <em>as it was written in the <code>@variable</code> macro</em>. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; model[:y]
+decision variable</code></pre><p>This act of looking up the JuMP variable by using the symbol is most useful when composing JuMP models across multiple functions, as illustrated by the following example:</p><pre><code class="language-julia hljs">function add_component_to_model(model::JuMP.Model)
+    x = model[:x]
+    # ... code that uses x
+end
+function build_model()
+    model = Model()
+    @variable(model, x)
+    add_component_to_model(model)
+end</code></pre><p>Now that we understand the difference between <em>optimization</em>, <em>JuMP</em>, and <em>Julia</em> variables, we can introduce more of the functionality of the <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> macro.</p><h2 id="Variable-bounds"><a class="docs-heading-anchor" href="#Variable-bounds">Variable bounds</a><a id="Variable-bounds-1"></a><a class="docs-heading-anchor-permalink" href="#Variable-bounds" title="Permalink"></a></h2><p>We have already seen the basic usage of the <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> macro. The next extension is to add lower- and upper-bounds to each optimization variable. This can be done as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x_free)
+x_free
+
+julia&gt; @variable(model, x_lower &gt;= 0)
+x_lower
+
+julia&gt; @variable(model, x_upper &lt;= 1)
+x_upper
+
+julia&gt; @variable(model, 2 &lt;= x_interval &lt;= 3)
+x_interval
+
+julia&gt; @variable(model, x_fixed == 4)
+x_fixed</code></pre><p>In the above examples, <code>x_free</code> represents an unbounded optimization variable, <code>x_lower</code> represents an optimization variable with a lower bound and so forth.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>When creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name of the variable must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:</p><pre><code class="language-julia hljs">@variable(model, 1 &lt;= x)  # works
+a = 1
+@variable(model, a &lt;= x)  # errors
+@variable(model, x &gt;= a)  # works</code></pre></div></div><h3 id="Check-if-a-variable-bound-exists"><a class="docs-heading-anchor" href="#Check-if-a-variable-bound-exists">Check if a variable bound exists</a><a id="Check-if-a-variable-bound-exists-1"></a><a class="docs-heading-anchor-permalink" href="#Check-if-a-variable-bound-exists" title="Permalink"></a></h3><p>We can query whether an optimization variable has a lower- or upper-bound via the <a href="../../reference/variables/#JuMP.has_lower_bound"><code>has_lower_bound</code></a> and <a href="../../reference/variables/#JuMP.has_upper_bound"><code>has_upper_bound</code></a> functions. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; has_lower_bound(x_free)
+false
+
+julia&gt; has_upper_bound(x_upper)
+true</code></pre><h3 id="Query-a-variable-bound"><a class="docs-heading-anchor" href="#Query-a-variable-bound">Query a variable bound</a><a id="Query-a-variable-bound-1"></a><a class="docs-heading-anchor-permalink" href="#Query-a-variable-bound" title="Permalink"></a></h3><p>If a variable has a lower or upper bound, we can query the value of it via the <a href="../../reference/variables/#JuMP.lower_bound"><code>lower_bound</code></a> and <a href="../../reference/variables/#JuMP.upper_bound"><code>upper_bound</code></a> functions. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; lower_bound(x_interval)
+2.0
+
+julia&gt; upper_bound(x_interval)
+3.0</code></pre><p>Querying the value of a bound that does not exist will result in an error.</p><h3 id="Set-variable-bounds-via-keyword"><a class="docs-heading-anchor" href="#Set-variable-bounds-via-keyword">Set variable bounds via keyword</a><a id="Set-variable-bounds-via-keyword-1"></a><a class="docs-heading-anchor-permalink" href="#Set-variable-bounds-via-keyword" title="Permalink"></a></h3><p>Instead of using the <code>&lt;=</code> and <code>&gt;=</code> syntax, we can also use the <code>lower_bound</code> and <code>upper_bound</code> keyword arguments. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x, lower_bound=1, upper_bound=2)
+x
+
+julia&gt; lower_bound(x)
+1.0</code></pre><h3 id="Set-variable-bounds-bounds-via-functions"><a class="docs-heading-anchor" href="#Set-variable-bounds-bounds-via-functions">Set variable bounds bounds via functions</a><a id="Set-variable-bounds-bounds-via-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Set-variable-bounds-bounds-via-functions" title="Permalink"></a></h3><p>Another option is to use the <a href="../../reference/variables/#JuMP.set_lower_bound"><code>set_lower_bound</code></a> and <a href="../../reference/variables/#JuMP.set_upper_bound"><code>set_upper_bound</code></a> functions. These can also be used to modify an existing variable bound. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x &gt;= 1)
+x
+
+julia&gt; lower_bound(x)
+1.0
+
+julia&gt; set_lower_bound(x, 2)
+
+julia&gt; lower_bound(x)
+2.0</code></pre><h3 id="Delete-a-variable-bound"><a class="docs-heading-anchor" href="#Delete-a-variable-bound">Delete a variable bound</a><a id="Delete-a-variable-bound-1"></a><a class="docs-heading-anchor-permalink" href="#Delete-a-variable-bound" title="Permalink"></a></h3><p>We can delete variable bounds using <a href="../../reference/variables/#JuMP.delete_lower_bound"><code>delete_lower_bound</code></a> and <a href="../../reference/variables/#JuMP.delete_upper_bound"><code>delete_upper_bound</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, 1 &lt;= x &lt;= 2)
+x
+
+julia&gt; lower_bound(x)
+1.0
+
+julia&gt; delete_lower_bound(x)
+
+julia&gt; has_lower_bound(x)
+false
+
+julia&gt; upper_bound(x)
+2.0
+
+julia&gt; delete_upper_bound(x)
+
+julia&gt; has_upper_bound(x)
+false</code></pre><h3 id="Create-a-fixed-variable"><a class="docs-heading-anchor" href="#Create-a-fixed-variable">Create a fixed variable</a><a id="Create-a-fixed-variable-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-fixed-variable" title="Permalink"></a></h3><p>In addition to upper and lower bounds, JuMP variables can also be fixed to a value using <a href="../../reference/variables/#JuMP.fix"><code>fix</code></a>. See also <a href="../../reference/variables/#JuMP.is_fixed"><code>is_fixed</code></a>, <a href="../../reference/variables/#JuMP.fix_value"><code>fix_value</code></a>, and <a href="../../reference/variables/#JuMP.unfix"><code>unfix</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x == 1)
+x
+
+julia&gt; is_fixed(x)
+true
+
+julia&gt; fix_value(x)
+1.0
+
+julia&gt; unfix(x)
+
+julia&gt; is_fixed(x)
+false</code></pre><p>Fixing a variable with existing bounds will throw an error. To delete the bounds prior to fixing, use <code>fix(variable, value; force = true)</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x &gt;= 1)
+x
+
+julia&gt; fix(x, 2)
+ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
+
+julia&gt; fix(x, 2; force = true)
+
+
+julia&gt; fix_value(x)
+2.0</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Use <a href="../../reference/variables/#JuMP.fix"><code>fix</code></a> instead of <code>@constraint(model, x == 2)</code>. The former modifies variable bounds, while the latter adds a new linear constraint to the problem.</p></div></div><h2 id="Variable-names"><a class="docs-heading-anchor" href="#Variable-names">Variable names</a><a id="Variable-names-1"></a><a class="docs-heading-anchor-permalink" href="#Variable-names" title="Permalink"></a></h2><p>The name, i.e. the value of the <code>MOI.VariableName</code> attribute, of a variable can be obtained by <a href="../../reference/variables/#JuMP.name-Tuple{VariableRef}"><code>JuMP.name(::JuMP.VariableRef)</code></a> and set by <a href="../../reference/variables/#JuMP.set_name-Tuple{VariableRef,String}"><code>JuMP.set_name(::JuMP.VariableRef, ::String)</code></a>.</p><p>The variable can also be retrieved from its name using <a href="../../reference/variables/#JuMP.variable_by_name"><code>JuMP.variable_by_name</code></a>.</p><h2 id="Variable-containers"><a class="docs-heading-anchor" href="#Variable-containers">Variable containers</a><a id="Variable-containers-1"></a><a class="docs-heading-anchor-permalink" href="#Variable-containers" title="Permalink"></a></h2><p>In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However, it is often useful to create collections of JuMP variables inside more complicated data structures.</p><p>JuMP provides a mechanism for creating three types of these data structures, which we refer to as <em>containers</em>. The three types are <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>You can read more about containers in the <a href="../containers/#Containers">Containers</a> section.</p></div></div><h3 id="Arrays"><a class="docs-heading-anchor" href="#Arrays">Arrays</a><a id="Arrays-1"></a><a class="docs-heading-anchor-permalink" href="#Arrays" title="Permalink"></a></h3><p>We have already seen the creation of an array of JuMP variables with the <code>x[1:2]</code> syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, 1:2])
+2×2 Array{VariableRef,2}:
+ x[1,1]  x[1,2]
+ x[2,1]  x[2,2]</code></pre><p>Arrays of JuMP variables can be indexed and sliced as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; x[1, 2]
+x[1,2]
+
+julia&gt; x[2, :]
+2-element Array{VariableRef,1}:
+ x[2,1]
+ x[2,2]</code></pre><p>Variable bounds can depend upon the indices:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=1:2, j=1:2] &gt;= 2i + j)
+2×2 Array{VariableRef,2}:
+ x[1,1]  x[1,2]
+ x[2,1]  x[2,2]
+
+julia&gt; lower_bound.(x)
+2×2 Array{Float64,2}:
+ 3.0  4.0
+ 5.0  6.0</code></pre><p>JuMP will form an <code>Array</code> of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore <code>x[1:b]</code> will create an <code>Array</code> of JuMP variables, but <code>x[a:b]</code> will not. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of <code>x[a:b]</code>), JuMP will create a <code>DenseAxisArray</code> instead.</p><h3 id="variable_jump_arrays"><a class="docs-heading-anchor" href="#variable_jump_arrays">DenseAxisArrays</a><a id="variable_jump_arrays-1"></a><a class="docs-heading-anchor-permalink" href="#variable_jump_arrays" title="Permalink"></a></h3><p>We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an <code>Array</code> of JuMP variables, JuMP will return a <code>DenseAxisArray</code>. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, [:A,:B]])
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, Symbol[:A, :B]
+And data, a 2×2 Array{VariableRef,2}:
+ x[1,A]  x[1,B]
+ x[2,A]  x[2,B]</code></pre><p>DenseAxisArrays can be indexed and sliced as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; x[1, :A]
+x[1,A]
+
+julia&gt; x[2, :]
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:A, :B]
+And data, a 2-element Array{VariableRef,1}:
+ x[2,A]
+ x[2,B]</code></pre><p>Similarly to the <code>Array</code> case, bounds can depend upon indices. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=2:3, j=1:2:3] &gt;= 0.5i + j)
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{VariableRef,2}:
+ x[2,1]  x[2,3]
+ x[3,1]  x[3,3]
+
+julia&gt; lower_bound.(x)
+2-dimensional DenseAxisArray{Float64,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{Float64,2}:
+ 2.0  4.0
+ 2.5  4.5</code></pre><h3 id="variable_sparseaxisarrays"><a class="docs-heading-anchor" href="#variable_sparseaxisarrays">SparseAxisArrays</a><a id="variable_sparseaxisarrays-1"></a><a class="docs-heading-anchor-permalink" href="#variable_sparseaxisarrays" title="Permalink"></a></h3><p>The third container type that JuMP natively supports is <code>SparseAxisArray</code>. These arrays are created when the indices do not form a rectangular set. For example, this applies when indices have a dependence upon previous indices (called <em>triangular indexing</em>). JuMP supports this as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=1:2, j=i:2])
+JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries:
+  [1, 1]  =  x[1,1]
+  [1, 2]  =  x[1,2]
+  [2, 2]  =  x[2,2]</code></pre><p>We can also conditionally create variables via a JuMP-specific syntax. This syntax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (<code>;</code>). For example:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[i=1:4; mod(i, 2)==0])
+JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
+  [2]  =  x[2]
+  [4]  =  x[4]</code></pre><p>Note that with many index dimensions and a large amount of sparsity, variable construction may be unnecessarily slow if the semi-colon syntax is naively applied. When using the semi-colon as a filter, JuMP iterates over <em>all</em> indices and evaluates the conditional for each combination. When this is undesired, the recommended work-around is to work directly with a list of tuples or create a dictionary. Consider the following examples:</p><pre><code class="language-jl hljs">N = 10
+S = [(1, 1, 1),(N, N, N)]
+# Slow. It evaluates conditional N^3 times.
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S])
+# Fast.
+@variable(model, x2[S])
+# Fast. Manually constructs a dictionary and fills it.
+x3 = Dict()
+for (i, j, k) in S
+    x3[i, j, k] = @variable(model)
+    # Optional, if you care about pretty printing:
+    set_name(x3[i, j, k], &quot;x[$i,$j,$k]&quot;)
+end</code></pre><h3 id="variable_forcing"><a class="docs-heading-anchor" href="#variable_forcing">Forcing the container type</a><a id="variable_forcing-1"></a><a class="docs-heading-anchor-permalink" href="#variable_forcing" title="Permalink"></a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a DenseAxisArray and a DenseAxisArray before a SparseAxisArray. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl hljs">julia&gt; A = 1:2
+1:2
+
+julia&gt; @variable(model, x[A])
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 1:2
+And data, a 2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><p>Since the value (and type) of <code>A</code> is unknown at parsing time, JuMP is unable to infer that <code>A</code> is a one-based integer range. Therefore, JuMP creates a <code>DenseAxisArray</code>, even though it could store these two variables in a standard one-dimensional <code>Array</code>.</p><p>We can share our knowledge that it is possible to store these JuMP variables as an array by setting the <code>container</code> keyword:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, y[A], container=Array)
+2-element Array{VariableRef,1}:
+ y[1]
+ y[2]</code></pre><p>JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note that choosing an invalid container type will throw an error.</p><h2 id="Integrality-utilities"><a class="docs-heading-anchor" href="#Integrality-utilities">Integrality utilities</a><a id="Integrality-utilities-1"></a><a class="docs-heading-anchor-permalink" href="#Integrality-utilities" title="Permalink"></a></h2><p>Adding integrality constraints to a model such as <code>@constraint(model, x in MOI.ZeroOne())</code> and <code>@constraint(model, x in MOI.Integer())</code> is a common operation. Therefore, JuMP supports two shortcuts for adding such constraints.</p><h3 id="Binary-(ZeroOne)-constraints"><a class="docs-heading-anchor" href="#Binary-(ZeroOne)-constraints">Binary (ZeroOne) constraints</a><a id="Binary-(ZeroOne)-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Binary-(ZeroOne)-constraints" title="Permalink"></a></h3><p>Binary optimization variables are constrained to the set <span>$x \in \{0, 1\}$</span>. (The <code>MOI.ZeroOne</code> set in MathOptInterface.) Binary optimization variables can be created in JuMP by passing <code>Bin</code> as an optional positional argument:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x, Bin)
+x</code></pre><p>We can check if an optimization variable is binary by calling <a href="../../reference/variables/#JuMP.is_binary"><code>is_binary</code></a> on the JuMP variable, and binary constraints can be removed with <a href="../../reference/variables/#JuMP.unset_binary"><code>unset_binary</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; is_binary(x)
+true
+
+julia&gt; unset_binary(x)
+
+julia&gt; is_binary(x)
+false</code></pre><p>Binary optimization variables can also be created by setting the <code>binary</code> keyword to <code>true</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x, binary=true)
+x</code></pre><h3 id="Integer-constraints"><a class="docs-heading-anchor" href="#Integer-constraints">Integer constraints</a><a id="Integer-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Integer-constraints" title="Permalink"></a></h3><p>Integer optimization variables are constrained to the set <span>$x \in \mathbb{Z}$</span>. (The <code>MOI.Integer</code> set in MathOptInterface.) Integer optimization variables can be created in JuMP by passing <code>Int</code> as an optional positional argument:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x, Int)
+x</code></pre><p>Integer optimization variables can also be created by setting the <code>integer</code> keyword to <code>true</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x, integer=true)
+x</code></pre><p>We can check if an optimization variable is integer by calling <a href="../../reference/variables/#JuMP.is_integer"><code>is_integer</code></a> on the JuMP variable, and integer constraints can be removed with <a href="../../reference/variables/#JuMP.unset_integer"><code>unset_integer</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; is_integer(x)
+true
+
+julia&gt; unset_integer(x)
+
+julia&gt; is_integer(x)
+false</code></pre><h3 id="Relaxing-integrality"><a class="docs-heading-anchor" href="#Relaxing-integrality">Relaxing integrality</a><a id="Relaxing-integrality-1"></a><a class="docs-heading-anchor-permalink" href="#Relaxing-integrality" title="Permalink"></a></h3><p>The <a href="../../reference/variables/#JuMP.relax_integrality"><code>relax_integrality</code></a> function relaxes all integrality constraints in the model, returning a function that can be called to undo the operation later on.</p><h2 id="Semidefinite-variables"><a class="docs-heading-anchor" href="#Semidefinite-variables">Semidefinite variables</a><a id="Semidefinite-variables-1"></a><a class="docs-heading-anchor-permalink" href="#Semidefinite-variables" title="Permalink"></a></h2><p>JuMP also supports modeling with semidefinite variables. A square symmetric matrix <span>$X$</span> is positive semidefinite if all eigenvalues are nonnegative. We can declare a matrix of JuMP variables to be positive semidefinite as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]</code></pre><p>or using the syntax for <a href="#Variables-constrained-on-creation">Variables constrained on creation</a>:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, 1:2] in PSDCone())
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]</code></pre><p>Note that <code>x</code> must be a square 2-dimensional <code>Array</code> of JuMP variables; it cannot be a DenseAxisArray or a SparseAxisArray. (See <a href="#Variable-containers">Variable containers</a>, above, for more on this.)</p><p>You can also impose a weaker constraint that the square matrix is only symmetric (instead of positive semidefinite) as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, 1:2], Symmetric)
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]</code></pre><p>You can impose a constraint that the square matrix is skew symmetric with <a href="../../reference/constraints/#JuMP.SkewSymmetricMatrixSpace"><code>SkewSymmetricMatrixSpace</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Array{GenericAffExpr{Float64,VariableRef},2}:
+ 0        x[1,2]
+ -x[1,2]  0</code></pre><h2 id="Anonymous-JuMP-variables"><a class="docs-heading-anchor" href="#Anonymous-JuMP-variables">Anonymous JuMP variables</a><a id="Anonymous-JuMP-variables-1"></a><a class="docs-heading-anchor-permalink" href="#Anonymous-JuMP-variables" title="Permalink"></a></h2><p>In all of the above examples, we have created <em>named</em> JuMP variables. However, it is also possible to create so called <em>anonymous</em> JuMP variables. To create an anonymous JuMP variable, we drop the name of the variable from the macro call. This means dropping the second positional argument if the JuMP variable is a scalar, or dropping the name before the square bracket (<code>[</code>) if a container is being created. For example:</p><pre><code class="language-julia-repl hljs">julia&gt; x = @variable(model)
+noname</code></pre><p>This shows how <code>@variable(model, x)</code> is really short for:</p><pre><code class="language-julia-repl hljs">julia&gt; x = model[:x] = @variable(model, base_name=&quot;x&quot;)
+x</code></pre><p>An <code>Array</code> of anonymous JuMP variables can be created as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; y = @variable(model, [i=1:2])
+2-element Array{VariableRef,1}:
+ noname
+ noname</code></pre><p>If necessary, you can store <code>x</code> in <code>model</code> as follows:</p><pre><code class="nohighlight hljs">julia&gt; model[:x] = x</code></pre><p>The <code>&lt;=</code> and <code>&gt;=</code> short-hand cannot be used to set bounds on anonymous JuMP variables. Instead, you should use the <code>lower_bound</code> and <code>upper_bound</code> keywords.</p><p>Passing the <code>Bin</code> and <code>Int</code> variable types are also invalid. Instead, you should use the <code>binary</code> and <code>integer</code> keywords.</p><p>Thus, the anonymous variant of <code>@variable(model, x[i=1:2] &gt;= i, Int)</code> is:</p><pre><code class="language-julia-repl hljs">julia&gt; x = @variable(model, [i=1:2], base_name=&quot;x&quot;, lower_bound=i, integer=true)
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><div class="admonition is-category-warn"><header class="admonition-header">Warn</header><div class="admonition-body"><p>Creating two named JuMP variables with the same name results in an error at runtime. Use anonymous variables as an alternative.</p></div></div><h2 id="Variables-constrained-on-creation"><a class="docs-heading-anchor" href="#Variables-constrained-on-creation">Variables constrained on creation</a><a id="Variables-constrained-on-creation-1"></a><a class="docs-heading-anchor-permalink" href="#Variables-constrained-on-creation" title="Permalink"></a></h2><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>When using JuMP in <a href="../models/#Direct-mode">Direct mode</a>, it may be required to constrain variables on creation instead of constraining free variables as the solver may only support variables constrained on creation. In <a href="../models/#Backends">Automatic and Manual modes</a>, both ways of adding constraints on variables are equivalent. Indeed, during the copy of the cache to the optimizer, the choice of the constraints on variables that are copied as variables constrained on creation does not depend on how it was added to the cache.</p></div></div><p>All uses of the <code>@variable</code> macro documented so far translate to a separate call for variable creation and adding of constraints.</p><p>For example, <code>@variable(model, x &gt;= 0, Int)</code>, is equivalent to:</p><pre><code class="language-julia hljs">@variable(model, x)
+set_lower_bound(x, 0.0)
+@constraint(model, x in MOI.Integer())</code></pre><p>Importantly, the bound and integrality constraints are added <em>after</em> the variable has been created.</p><p>However, some solvers require a constraining set <em>at creation time</em>. We say that these variables are <em>constrained on creation</em>.</p><p>Use <code>in</code> within <code>@variable</code> to access the special syntax for constraining variables on creation. For example, the following creates a vector of variables constrained on creation to belong to the <a href="../../reference/constraints/#JuMP.SecondOrderCone"><code>SecondOrderCone</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, y[1:3] in SecondOrderCone())
+3-element Array{VariableRef,1}:
+ y[1]
+ y[2]
+ y[3]</code></pre><p>For contrast, the more standard approach is as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, x in SecondOrderCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)</code></pre><p>The technical difference between the former and the latter is that the former calls <code>MOI.add_constrained_variables</code> while the latter calls <code>MOI.add_variables</code> and then <code>MOI.add_constraint</code>. This distinction is important only in <a href="../models/#Direct-mode">Direct mode</a>, depending on the solver being used. It&#39;s often not possible to delete the <a href="../../reference/constraints/#JuMP.SecondOrderCone"><code>SecondOrderCone</code></a> constraint if it was specified at variable creation time.</p><h3 id="The-set-keyword"><a class="docs-heading-anchor" href="#The-set-keyword">The <code>set</code> keyword</a><a id="The-set-keyword-1"></a><a class="docs-heading-anchor-permalink" href="#The-set-keyword" title="Permalink"></a></h3><p>An alternate syntax to <code>x in Set</code> is to use the <code>set</code> keyword of <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>. This is most useful when creating anonymous variables:</p><pre><code class="language-julia hljs">x = @variable(model, [1:2, 1:2], set = PSDCone())</code></pre><h2 id="User-defined-containers"><a class="docs-heading-anchor" href="#User-defined-containers">User-defined containers</a><a id="User-defined-containers-1"></a><a class="docs-heading-anchor-permalink" href="#User-defined-containers" title="Permalink"></a></h2><p>In the section <a href="#Variable-containers">Variable containers</a>, we explained how JuMP supports the efficient creation of collections of JuMP variables in three types of containers. However, users are also free to create collections of JuMP variables in their own data structures. For example, the following code creates a dictionary with symmetric matrices as the values:</p><pre><code class="language-julia-repl hljs">julia&gt; variables = Dict{Symbol, Array{VariableRef,2}}()
+Dict{Symbol,Array{VariableRef,2}} with 0 entries
+
+julia&gt; for key in [:A, :B]
+           global variables[key] = @variable(model, [1:2, 1:2])
+       end
+
+julia&gt; variables
+Dict{Symbol,Array{VariableRef,2}} with 2 entries:
+  :A =&gt; VariableRef[noname noname; noname noname]
+  :B =&gt; VariableRef[noname noname; noname noname]</code></pre><h2 id="Delete-a-variable"><a class="docs-heading-anchor" href="#Delete-a-variable">Delete a variable</a><a id="Delete-a-variable-1"></a><a class="docs-heading-anchor-permalink" href="#Delete-a-variable" title="Permalink"></a></h2><p>Use <a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a> to delete a variable from a model. Use <a href="../../reference/constraints/#JuMP.is_valid"><code>is_valid</code></a> to check if a variable belongs to a model and has not been deleted.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x)
+x
+
+julia&gt; is_valid(model, x)
+true
+
+julia&gt; delete(model, x)
+
+julia&gt; is_valid(model, x)
+false</code></pre><p>Deleting a variable does not unregister the symbolic reference from the model. Therefore, creating a new variable of the same name will throw an error:</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x)
+ERROR: An object of name x is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :x)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:x]`.
+[...]</code></pre><p>After calling <a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a>, call <a href="../../reference/models/#JuMP.unregister"><code>unregister</code></a> to remove the symbolic reference:</p><pre><code class="language-julia-repl hljs">julia&gt; unregister(model, :x)
+
+julia&gt; @variable(model, x)
+x</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p><a href="../../reference/constraints/#JuMP.delete"><code>delete</code></a> does not automatically <a href="../../reference/models/#JuMP.unregister"><code>unregister</code></a> because we do not distinguish between names that are automatically registered by JuMP macros, and names that are manually registered by the user by setting values in <a href="../../reference/models/#JuMP.object_dictionary"><code>object_dictionary</code></a>. In addition, deleting a variable and then adding a new variable of the same name is an easy way to introduce bugs into your code.</p></div></div><h2 id="Listing-all-variables"><a class="docs-heading-anchor" href="#Listing-all-variables">Listing all variables</a><a id="Listing-all-variables-1"></a><a class="docs-heading-anchor-permalink" href="#Listing-all-variables" title="Permalink"></a></h2><p>Use <a href="../../reference/variables/#JuMP.all_variables"><code>JuMP.all_variables</code></a> to obtain a list of all variables present in the model. This is useful for performing operations like:</p><ul><li>relaxing all integrality constraints in the model</li><li>setting the starting values for variables to the result of the last solve</li></ul><h2 id="Start-values"><a class="docs-heading-anchor" href="#Start-values">Start values</a><a id="Start-values-1"></a><a class="docs-heading-anchor-permalink" href="#Start-values" title="Permalink"></a></h2><p>There are two ways to provide a primal starting solution (also called MIP-start or a warmstart) for each variable:</p><ul><li>using the <code>start</code> keyword in the <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> macro</li><li>using <a href="../../reference/variables/#JuMP.set_start_value"><code>set_start_value</code></a></li></ul><p>The starting value of a variable can be queried using <a href="../../reference/variables/#JuMP.start_value"><code>start_value</code></a>. If no start value has been set, <a href="../../reference/variables/#JuMP.start_value"><code>start_value</code></a> will return <code>nothing</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @variable(model, x)
+x
+
+julia&gt; start_value(x)
+
+julia&gt; @variable(model, y, start = 1)
+y
+
+julia&gt; start_value(y)
+1.0
+
+julia&gt; set_start_value(y, 2)
+
+julia&gt; start_value(y)
+2.0</code></pre><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Prior to JuMP 0.19, the previous solution to a solve was automatically set as the new starting value. JuMP 0.19 no longer does this automatically. To reproduce the functionality, use:</p><pre><code class="language-julia hljs">set_start_value.(all_variables(model), value.(all_variables(model)))</code></pre></div></div><h2 id="variables"><a class="docs-heading-anchor" href="#variables">The <code>@variables</code> macro</a><a id="variables-1"></a><a class="docs-heading-anchor-permalink" href="#variables" title="Permalink"></a></h2><p>If you have many <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a> calls, JuMP provides the macro <a href="../../reference/variables/#JuMP.@variables"><code>@variables</code></a> that can improve readability:</p><pre><code class="language-julia-repl hljs">julia&gt; @variables(model, begin
+           x
+           y[i=1:2] &gt;= i, (start = i, base_name = &quot;Y_$i&quot;)
+           z, Bin
+       end)
+
+julia&gt; print(model)
+Feasibility
+Subject to
+ Y_1[1] ≥ 1.0
+ Y_2[2] ≥ 2.0
+ z binary</code></pre><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Keyword arguments must be contained within parentheses. (See the example above.)</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../models/">« Models</a><a class="docs-footer-nextpage" href="../expressions/">Expressions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.5 on <span class="colophon-date" title="Sunday 1 August 2021 01:56">Sunday 1 August 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

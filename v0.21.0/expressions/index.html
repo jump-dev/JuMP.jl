@@ -1,0 +1,152 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Expressions · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li class="current"><a class="toctext" href="">Expressions</a><ul class="internal"><li><a class="toctext" href="#Affine-expressions-1">Affine expressions</a></li><li><a class="toctext" href="#Quadratic-expressions-1">Quadratic expressions</a></li><li><a class="toctext" href="#Nonlinear-expressions-1">Nonlinear expressions</a></li><li><a class="toctext" href="#Reference-1">Reference</a></li></ul></li><li><a class="toctext" href="../objective/">Objective</a></li><li><a class="toctext" href="../constraints/">Constraints</a></li><li><a class="toctext" href="../containers/">Containers</a></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../solutions/">Query Solutions</a></li><li><a class="toctext" href="../nlp/">Nonlinear Modeling</a></li><li><a class="toctext" href="../callbacks/">Callbacks</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li><li><a class="toctext" href="../roadmap/">Development Roadmap</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Expressions</a></li></ul><a class="edit-page" href="https://github.com/JuliaOpt/JuMP.jl/blob/master/docs/src/expressions.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Expressions</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Expressions-1" id="Expressions-1">Expressions</a></h1><p>JuMP has three types of expressions: affine, quadratic, and nonlinear. These expressions can be inserted into constraints or into the objective. This is particularly useful if an expression is used in multiple places in the model.</p><h2><a class="nav-anchor" href="#Affine-expressions-1" id="Affine-expressions-1">Affine expressions</a></h2><p>There are four ways of constructing an affine expression in JuMP: with the <a href="#JuMP.@expression"><code>@expression</code></a> macro, with operator overloading, with the <code>AffExpr</code> constructor, and with <a href="#JuMP.add_to_expression!"><code>add_to_expression!</code></a>.</p><h3><a class="nav-anchor" href="#Macros-1" id="Macros-1">Macros</a></h3><p>The recommended way to create an affine expression is via the <a href="#JuMP.@expression"><code>@expression</code></a> macro.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = @expression(model, 2x + y - 1)
+
+# output
+
+2 x + y - 1</code></pre><p>This expression can be used in the objective or added to a constraint. For example:</p><pre><code class="language-julia">@objective(model, Min, 2 * ex - 1)
+objective_function(model)
+
+# output
+
+4 x + 2 y - 3</code></pre><p>Just like variables and constraints, named expressions can also be created. For example</p><pre><code class="language-julia">model = Model()
+@variable(model, x[i = 1:3])
+@expression(model, expr[i = 1:3], i * sum(x[j] for j in i:3))
+expr
+
+# output
+
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x[1] + x[2] + x[3]
+ 2 x[2] + 2 x[3]
+ 3 x[3]</code></pre><h3><a class="nav-anchor" href="#Operator-overloading-1" id="Operator-overloading-1">Operator overloading</a></h3><p>Expressions can also be created without macros. However, note that in some cases, this can be much slower that constructing an expression using macros.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = 2x + y - 1
+
+# output
+
+2 x + y - 1</code></pre><h3><a class="nav-anchor" href="#Constructors-1" id="Constructors-1">Constructors</a></h3><p>A third way to create an affine expression is by the <code>AffExpr</code> constructor. The first argument is the constant term, and the remaining arguments are variable-coefficient pairs.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = AffExpr(-1.0, x =&gt; 2.0, y =&gt; 1.0)
+
+# output
+
+2 x + y - 1</code></pre><h3><a class="nav-anchor" href="#add_to_expression!-1" id="add_to_expression!-1"><code>add_to_expression!</code></a></h3><p>The fourth way to create an affine expression is by using <a href="#JuMP.add_to_expression!"><code>add_to_expression!</code></a>. Compared to the operator overloading method, this approach is faster because it avoids constructing temporary objects. The <a href="#JuMP.@expression"><code>@expression</code></a> macro uses <a href="#JuMP.add_to_expression!"><code>add_to_expression!</code></a> behind-the-scenes.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = AffExpr(-1.0)
+add_to_expression!(ex, 2.0, x)
+add_to_expression!(ex, 1.0, y)
+
+# output
+
+2 x + y - 1</code></pre><h3><a class="nav-anchor" href="#Removing-zero-terms-1" id="Removing-zero-terms-1">Removing zero terms</a></h3><p>Use <a href="#JuMP.drop_zeros!"><code>drop_zeros!</code></a> to remove terms from an affine expression with a <code>0</code> coefficient.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @expression(model, ex, x + 1 - x)
+0 x + 1
+
+julia&gt; drop_zeros!(ex)
+
+julia&gt; ex
+1</code></pre><h2><a class="nav-anchor" href="#Quadratic-expressions-1" id="Quadratic-expressions-1">Quadratic expressions</a></h2><p>Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: macros, operator overloading, constructors, and <a href="#JuMP.add_to_expression!"><code>add_to_expression!</code></a>.</p><h3><a class="nav-anchor" href="#Macros-2" id="Macros-2">Macros</a></h3><p>The <a href="#JuMP.@expression"><code>@expression</code></a> macro can be used to create quadratic expressions by including quadratic terms.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
+
+# output
+
+x² + 2 y*x + y² + x + y - 1</code></pre><h3><a class="nav-anchor" href="#Operator-overloading-2" id="Operator-overloading-2">Operator overloading</a></h3><p>Operator overloading can also be used to create quadratic expressions. The same performance warning (discussed in the affine expression section) applies.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = x^2 + 2 * x * y + y^2 + x + y - 1
+
+# output
+
+x² + 2 x*y + y² + x + y - 1</code></pre><h3><a class="nav-anchor" href="#Constructors-2" id="Constructors-2">Constructors</a></h3><p>Quadratic expressions can also be created using the <code>QuadExpr</code> constructor. The first argument is an affine expression, and the remaining arguments are pairs, where the first term is a <code>JuMP.UnorderedPair</code> and the second term is the coefficient.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+aff_expr = AffExpr(-1.0, x =&gt; 1.0, y =&gt; 1.0)
+quad_expr = QuadExpr(aff_expr, UnorderedPair(x, x) =&gt; 1.0,
+                     UnorderedPair(x, y) =&gt; 2.0, UnorderedPair(y, y) =&gt; 1.0)
+
+# output
+
+x² + 2 x*y + y² + x + y - 1</code></pre><h3><a class="nav-anchor" href="#add_to_expression!-2" id="add_to_expression!-2"><code>add_to_expression!</code></a></h3><p>Finally, <a href="#JuMP.add_to_expression!"><code>add_to_expression!</code></a> can also be used to add quadratic terms.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@variable(model, y)
+ex = QuadExpr(x + y - 1.0)
+add_to_expression!(ex, 1.0, x, x)
+add_to_expression!(ex, 2.0, x, y)
+add_to_expression!(ex, 1.0, y, y)
+
+# output
+
+x² + 2 x*y + y² + x + y - 1</code></pre><h3><a class="nav-anchor" href="#Removing-zero-terms-2" id="Removing-zero-terms-2">Removing zero terms</a></h3><p>Use <a href="#JuMP.drop_zeros!"><code>drop_zeros!</code></a> to remove terms from a quadratic expression with a <code>0</code> coefficient.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @expression(model, ex, x^2 + x + 1 - x^2)
+0 x² + x + 1
+
+julia&gt; drop_zeros!(ex)
+
+julia&gt; ex
+x + 1</code></pre><h2><a class="nav-anchor" href="#Nonlinear-expressions-1" id="Nonlinear-expressions-1">Nonlinear expressions</a></h2><p>Nonlinear expressions can be constructed only using the <a href="../nlp/#JuMP.@NLexpression"><code>@NLexpression</code></a> macro and can be used only in <a href="../nlp/#JuMP.@NLobjective"><code>@NLobjective</code></a>, <a href="../nlp/#JuMP.@NLconstraint"><code>@NLconstraint</code></a>, and other <a href="../nlp/#JuMP.@NLexpression"><code>@NLexpression</code></a>s. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the <a href="../nlp/#Nonlinear-Modeling-1">Nonlinear Modeling</a> section.</p><h2><a class="nav-anchor" href="#Reference-1" id="Reference-1">Reference</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@expression" id="JuMP.@expression"><code>JuMP.@expression</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@expression(args...)</code></pre><p>Efficiently builds a linear or quadratic expression but does not add to model immediately. Instead, returns the expression which can then be inserted in other constraints. For example:</p><pre><code class="language-julia">@expression(m, shared, sum(i*x[i] for i=1:5))
+@constraint(m, shared + y &gt;= 5)
+@constraint(m, shared + z &lt;= 10)</code></pre><p>The <code>ref</code> accepts index sets in the same way as <code>@variable</code>, and those indices can be used in the construction of the expressions:</p><pre><code class="language-julia">@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))</code></pre><p>Anonymous syntax is also supported:</p><pre><code class="language-julia">expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.add_to_expression!" id="JuMP.add_to_expression!"><code>JuMP.add_to_expression!</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">add_to_expression!(expression, terms...)</code></pre><p>Updates <code>expression</code><em>in place</em> to <code>expression + (*)(terms...)</code>. This is typically much more efficient than <code>expression += (*)(terms...)</code>. For example, <code>add_to_expression!(expression, a, b)</code> produces the same result as <code>expression += a*b</code>, and <code>add_to_expression!(expression, a)</code> produces the same result as <code>expression += a</code>.</p><p>Only a few methods are defined, mostly for internal use, and only for the cases when (1) they can be implemented efficiently and (2) <code>expression</code> is capable of storing the result. For example, <code>add_to_expression!(::AffExpr, ::VariableRef, ::VariableRef)</code> is not defined because a <code>GenericAffExpr</code> cannot store the product of two variables.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.drop_zeros!" id="JuMP.drop_zeros!"><code>JuMP.drop_zeros!</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">drop_zeros!(expr::GenericAffExpr)</code></pre><p>Remove terms in the affine expression with <code>0</code> coefficients.</p></div></div><div><div><pre><code class="language-none">drop_zeros!(expr::GenericQuadExpr)</code></pre><p>Remove terms in the quadratic expression with <code>0</code> coefficients.</p></div></div></section><footer><hr/><a class="previous" href="../variables/"><span class="direction">Previous</span><span class="title">Variables</span></a><a class="next" href="../objective/"><span class="direction">Next</span><span class="title">Objective</span></a></footer></article></body></HTML>
