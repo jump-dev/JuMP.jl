@@ -135,6 +135,36 @@ function test_extension_flatten_nary_order_maintained(
     return
 end
 
+function test_extension_flatten_mixed_leaves(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x)
+    ExprType = GenericNonlinearExpr{VariableRefType}
+    leaves = Any[x, 2, 3.0, true, x+1, x^2, sin(x)]
+    nested = ExprType(:+, ExprType(:+, leaves...), x)
+    expression = ExprType(:+, 1, nested)
+    @test @inferred(flatten!(expression)) === expression
+    @test expression.head === :+
+    @test length(expression.args) == length(leaves) + 2
+    @test expression.args[1] === 1
+    @test all(a === b for (a, b) in zip(expression.args[2:(end-1)], leaves))
+    @test expression.args[end] === x
+    @test !JuMP._is_expr(expression, 1)
+    @test !JuMP._is_expr(2, :+)
+    expression = sin(ExprType(:*, ExprType(:*, x, 2), x))
+    @test @inferred(flatten!(expression)) === expression
+    @test expression.head === :sin
+    product = only(expression.args)
+    @test product.head === :*
+    @test length(product.args) == 3
+    @test product.args[1] === x
+    @test product.args[2] === 2
+    @test product.args[3] === x
+    return
+end
+
 function test_extension_zero_one(
     ModelType = Model,
     VariableRefType = VariableRef,

@@ -233,10 +233,11 @@ function moi_function(model::ModelImpl, f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
-        if f.args[i] isa GenericNonlinearExpr{V}
-            push!(stack, (ret, i, f.args[i]))
+        arg = f.args[i]
+        if arg isa GenericNonlinearExpr{V}
+            push!(stack, (ret, i, arg))
         else
-            ret.args[i] = moi_function(model, f.args[i])
+            ret.args[i] = moi_function(model, arg)
         end
     end
     while !isempty(stack)
@@ -248,10 +249,11 @@ function moi_function(model::ModelImpl, f::GenericNonlinearExpr{V}) where {V}
         child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
         parent.args[i] = child
         for j in length(arg.args):-1:1
-            if arg.args[j] isa GenericNonlinearExpr{V}
-                push!(stack, (child, j, arg.args[j]))
+            leaf = arg.args[j]
+            if leaf isa GenericNonlinearExpr{V}
+                push!(stack, (child, j, leaf))
             else
-                child.args[j] = moi_function(model, arg.args[j])
+                child.args[j] = moi_function(model, leaf)
             end
         end
         model.subexpressions[arg] = child
@@ -279,12 +281,13 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
     for i in length(f.args):-1:1
-        if f.args[i] isa GenericNonlinearExpr{V}
-            push!(stack, (ret, i, f.args[i]))
+        arg = f.args[i]
+        if arg isa GenericNonlinearExpr{V}
+            push!(stack, (ret, i, arg))
         elseif model === nothing
-            ret.args[i] = moi_function(f.args[i])
+            ret.args[i] = moi_function(arg)
         else
-            ret.args[i] = moi_function(model, f.args[i])
+            ret.args[i] = moi_function(model, arg)
         end
     end
     while !isempty(stack)
@@ -292,12 +295,13 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
         child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
         parent.args[i] = child
         for j in length(arg.args):-1:1
-            if arg.args[j] isa GenericNonlinearExpr{V}
-                push!(stack, (child, j, arg.args[j]))
+            leaf = arg.args[j]
+            if leaf isa GenericNonlinearExpr{V}
+                push!(stack, (child, j, leaf))
             elseif model === nothing
-                child.args[j] = moi_function(arg.args[j])
+                child.args[j] = moi_function(leaf)
             else
-                child.args[j] = moi_function(model, arg.args[j])
+                child.args[j] = moi_function(model, leaf)
             end
         end
     end

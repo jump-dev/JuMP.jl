@@ -540,13 +540,14 @@ sin((x²) * x * x)
 ```
 """
 function flatten!(expr::GenericNonlinearExpr{V}) where {V}
-    if !any(Base.Fix1(_needs_flatten, expr), expr.args)
+    if !_needs_flatten(expr)
         return expr
     end
     stack = Tuple{GenericNonlinearExpr{V},Int,GenericNonlinearExpr{V}}[]
     for i in 1:length(expr.args)
-        if _needs_flatten(expr, expr.args[i])
-            push!(stack, (expr, i, expr.args[i]))
+        arg = expr.args[i]
+        if _needs_flatten(expr, arg)
+            push!(stack, (expr, i, arg::GenericNonlinearExpr{V}))
         end
     end
     while !isempty(stack)
@@ -563,18 +564,23 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
             # Now we can put each child arg into the parent.
             for j in 1:m
                 parent_index = i + j - 1
-                if _needs_flatten(parent, arg.args[j])
+                child = arg.args[j]
+                if _needs_flatten(parent, child)
                     # The child needs flattening itself
-                    push!(stack, (parent, parent_index, arg.args[j]))
+                    push!(
+                        stack,
+                        (parent, parent_index, child::GenericNonlinearExpr{V}),
+                    )
                 else
-                    parent.args[parent_index] = arg.args[j]
+                    parent.args[parent_index] = child
                 end
             end
         else
             parent.args[i] = arg
             for j in 1:length(arg.args)
-                if _needs_flatten(arg, arg.args[j])
-                    push!(stack, (arg, j, arg.args[j]))
+                child = arg.args[j]
+                if _needs_flatten(arg, child)
+                    push!(stack, (arg, j, child::GenericNonlinearExpr{V}))
                 end
             end
         end
@@ -584,13 +590,24 @@ end
 
 flatten!(expr) = expr
 
-_is_expr(::Any, ::Any) = false
-_is_expr(x::GenericNonlinearExpr, op::Symbol) = x.head == op
+# Arguments are stored as `Any`, so inspect their type before accessing fields
+# instead of dispatching to a different method for every leaf type.
+@inline _is_expr(x, op) =
+    x isa GenericNonlinearExpr && op isa Symbol && x.head == op
 
-_needs_flatten(::GenericNonlinearExpr, ::Any) = false
+function _needs_flatten(expr::GenericNonlinearExpr)
+    for arg in expr.args
+        if _needs_flatten(expr, arg)
+            return true
+        end
+    end
+    return false
+end
 
-function _needs_flatten(parent::GenericNonlinearExpr, arg::GenericNonlinearExpr)
-    if _is_expr(parent, :+)
+@inline function _needs_flatten(parent::GenericNonlinearExpr, arg)
+    if !(arg isa GenericNonlinearExpr)
+        return false
+    elseif _is_expr(parent, :+)
         return _is_expr(arg, :+)
     elseif _is_expr(parent, :*)
         return _is_expr(arg, :*)
