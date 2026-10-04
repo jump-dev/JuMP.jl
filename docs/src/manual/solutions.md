@@ -84,7 +84,7 @@ solution_summary(; result = 1, verbose = false)
   ├ solve_time (sec)   : 5.93345e-04
   ├ simplex_iterations : 2
   ├ barrier_iterations : 0
-  └ node_count         : -1
+  └ node_count         : 0
 
 julia> solution_summary(model; verbose = true)
 solution_summary(; result = 1, verbose = true)
@@ -110,7 +110,7 @@ solution_summary(; result = 1, verbose = true)
   ├ solve_time (sec)   : 5.93345e-04
   ├ simplex_iterations : 2
   ├ barrier_iterations : 0
-  └ node_count         : -1
+  └ node_count         : 0
 ```
 
 ## Why did the solver stop?

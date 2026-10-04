@@ -1555,4 +1555,17 @@ function test_pr_4262()
     return
 end
 
+function test_extension_flatten_left_and_right(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:5])
+    y = log.(x)
+    f = +(y[1], +(y[2], +(y[3], +(y[4], y[5]))))
+    g = +(+(+(+(y[1], y[2]), y[3]), y[4]), y[5])
+    @test string(flatten!(f)) == string(flatten!(g))
+    return
+end
+
 end  # module
