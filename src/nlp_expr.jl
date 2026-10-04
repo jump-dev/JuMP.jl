@@ -543,38 +543,24 @@ function flatten!(expr::GenericNonlinearExpr{V}) where {V}
     if !any(Base.Fix1(_needs_flatten, expr), expr.args)
         return expr
     end
-    stack = Tuple{GenericNonlinearExpr{V},Int,GenericNonlinearExpr{V}}[]
-    for i in 1:length(expr.args)
-        if _needs_flatten(expr, expr.args[i])
-            push!(stack, (expr, i, expr.args[i]))
-        end
-    end
+    stack, substack = GenericNonlinearExpr{V}[expr], Any[]
     while !isempty(stack)
-        parent, i, arg = pop!(stack)
-        if parent.head in (:+, :*) && arg.head == parent.head
-            m, n = length(arg.args), length(parent.args)
-            # We're going to splice the `m` args of the child into
-            # `parent.args[i:i+m-1]`. To do so, extend the args to make space:
-            resize!(parent.args, n + (m - 1))
-            # and then shift the parent args along to make room:
-            for j in n:-1:(i+1)
-                parent.args[m+j-1] = parent.args[j]
-            end
-            # Now we can put each child arg into the parent.
-            for j in 1:m
-                parent_index = i + j - 1
-                if _needs_flatten(parent, arg.args[j])
-                    # The child needs flattening itself
-                    push!(stack, (parent, parent_index, arg.args[j]))
+        parent = pop!(stack)
+        if parent.head in (:+, :*)
+            append!(substack, Iterators.reverse(parent.args))
+            empty!(parent.args)
+            while !isempty(substack)
+                arg = pop!(substack)
+                if _needs_flatten(parent, arg)
+                    append!(substack, Iterators.reverse(arg.args))
                 else
-                    parent.args[parent_index] = arg.args[j]
+                    push!(parent.args, arg)
                 end
             end
         else
-            parent.args[i] = arg
-            for j in 1:length(arg.args)
-                if _needs_flatten(arg, arg.args[j])
-                    push!(stack, (arg, j, arg.args[j]))
+            for arg in parent.args
+                if _needs_flatten(parent, arg)
+                    push!(stack, arg)
                 end
             end
         end
