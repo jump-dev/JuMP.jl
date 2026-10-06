@@ -7,6 +7,17 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.32.1 (October 7, 2026)
+
+### Fixed
+
+ - Fixed irrational numbers in `VariableInfo` (#4266)
+ - Fixed performance of [`flatten!`](@ref) for large summations (#4264)
+
+### Other
+
+ - Added PENNON and PENSDP to Penopt solver installation row (#4265)
+
 ## Version v1.32.0 (September 30, 2026)
 
 ### Added
