@@ -63,9 +63,9 @@
 [Gurobi]
     rev = "v1.9.3"
 [HiGHS]
-    rev = "v1.25.4"
+    rev = "v1.26.0"
 [Hypatia]
-    rev = "v0.10.2"
+    rev = "v0.11.0"
     has_html = true
 [Ipopt]
     rev = "v1.16.0"
@@ -76,7 +76,7 @@
 [MathOptIIS]
     rev = "v0.2.0"
 [MathOptLazy]
-    rev = "v0.1.5"
+    rev = "v1.0.0"
 [MiniZinc]
     rev = "v0.3.16"
 [MosekTools]
@@ -102,7 +102,7 @@
     rev = "f674332f09b8f4c1216a9c4cf309fa27cbad9e1b"
     extension = true
 [PolyJuMP]
-    rev = "v0.8.2"
+    rev = "v0.8.3"
     extension = true
 [SCS]
     rev = "v2.7.0"
@@ -142,7 +142,7 @@
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "v0.10.3"
+    rev = "v0.10.4"
 [Clarabel]
     user = "oxfordcontrol"
     rev = "v0.11.1"
@@ -191,7 +191,7 @@
     rev = "v0.1.0"
 [Juniper]
     user = "lanl-ansi"
-    rev = "v0.9.4"
+    rev = "v0.9.5"
 [Loraine]
     user = "kocvara"
     rev = "v0.2.8"
@@ -211,7 +211,7 @@
     rev = "v0.2.0"
 [NLPModelsAlgencan]
     user = "pjssilva"
-    rev = "v0.10.2"
+    rev = "v0.10.3"
 [Optim]
     user = "JuliaNLSolvers"
     rev = "v2.3.2"
