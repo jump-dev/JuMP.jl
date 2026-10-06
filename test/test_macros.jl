@@ -3173,4 +3173,21 @@ function test_print_macro_timing_summary()
     return
 end
 
+function test_irrational_variable_data()
+    model = Model()
+    @variable(model, w == π)
+    @test is_fixed(w)
+    @test fix_value(w) === Float64(π)
+    @variable(model, x <= π)
+    @test has_upper_bound(x)
+    @test upper_bound(x) === Float64(π)
+    @variable(model, y >= π)
+    @test has_lower_bound(y)
+    @test lower_bound(y) === Float64(π)
+    @variable(model, z, start = π)
+    @test has_start_value(z)
+    @test start_value(z) === Float64(π)
+    return
+end
+
 end  # module

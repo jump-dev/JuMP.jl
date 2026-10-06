@@ -145,9 +145,13 @@ end
 
 _is_typemax(x::Real) = x == typemax(x)
 
+_is_typemax(::Irrational) = false
+
 _is_typemax(x) = false
 
 _is_typemin(x::Real) = x == typemin(x)
+
+_is_typemin(::Irrational) = false
 
 _is_typemin(x) = false
 
