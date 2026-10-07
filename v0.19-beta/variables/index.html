@@ -1,0 +1,274 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Variables · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../index.html"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../concepts/">Concepts</a></li><li class="current"><a class="toctext" href="">Variables</a><ul class="internal"><li><a class="toctext" href="#What-is-a-JuMP-variable?-1">What is a JuMP variable?</a></li><li><a class="toctext" href="#Variable-bounds-1">Variable bounds</a></li><li><a class="toctext" href="#Variable-containers-1">Variable containers</a></li><li><a class="toctext" href="#Integrality-shortcuts-1">Integrality shortcuts</a></li><li><a class="toctext" href="#Semidefinite-variables-1">Semidefinite variables</a></li><li><a class="toctext" href="#Anonymous-JuMP-variables-1">Anonymous JuMP variables</a></li><li><a class="toctext" href="#User-defined-containers-1">User-defined containers</a></li><li><a class="toctext" href="#Deleting-variables-1">Deleting variables</a></li><li><a class="toctext" href="#Reference-1">Reference</a></li></ul></li><li><a class="toctext" href="../expressions/">Expressions</a></li><li><a class="toctext" href="../objective/">Objective</a></li><li><a class="toctext" href="../constraints/">Constraints</a></li><li><a class="toctext" href="../containers/">Containers</a></li><li><a class="toctext" href="../names/">Names</a></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../nlp/">Nonlinear Modeling</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li><li><a class="toctext" href="../updating/">Updating Guide</a></li><li><a class="toctext" href="../howdoi/">How do I ...? (FAQ)</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Variables</a></li></ul><a class="edit-page" href="https://github.com/JuliaOpt/JuMP.jl/blob/master/docs/src/variables.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Variables</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Variables-1" id="Variables-1">Variables</a></h1><h2><a class="nav-anchor" href="#What-is-a-JuMP-variable?-1" id="What-is-a-JuMP-variable?-1">What is a JuMP variable?</a></h2><p>The term <em>variable</em> in mathematical optimization has many meanings. Here, we distinguish between the following three types of variables:</p><ol><li><em>optimization</em> variables, which are the mathematical <span>$x$</span> in the problem <span>$\max{f_0(x) | f_i(x) \in S_i}$</span>.</li><li><em>Julia</em> variables, which are bindings between a name and a value, for example <code>x = 1</code>. (See <a href="https://docs.julialang.org/en/v1.0.0/manual/variables/">here</a> for the Julia docs.)</li><li><em>JuMP</em> variables, which are instances of the <code>JuMP.VariableRef</code> struct defined by JuMP that contains a reference to an optimization variable in a model. (Extra for experts: the <code>VariableRef</code> struct is a thin wrapper around a <code>MOI.VariableIndex</code>, and also contains a reference to the JuMP model.)</li></ol><p>To illustrate these three types of variables, consider the following JuMP code (the full syntax is explained below):</p><pre><code class="language-julia-repl">julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x[1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><p>This code does three things:</p><ol><li>it adds two <em>optimization</em> variables to <code>model</code></li><li>it creates two <em>JuMP</em> variables that act as references to those optimization variables</li><li>it binds those JuMP variables as a vector with two elements to the <em>Julia</em> variable <code>x</code>.</li></ol><p>To reduce confusion, we will attempt, where possible, to always refer to variables with their corresponding prefix.</p><div class="admonition warn"><div class="admonition-title">Warn</div><div class="admonition-text"><p>Creating two JuMP variables with the same name results in an error at runtime.</p></div></div><p>JuMP variables can have attributes, such as names or an initial primal start value. We illustrate the name attribute in the following example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, y, base_name="decision variable")
+decision variable</code></pre><p>This code does four things:</p><ol><li>it adds one <em>optimization</em> variable to <code>model</code></li><li>it creates one <em>JuMP</em> variable that acts as a reference to that optimization variable</li><li>it binds the JuMP variable to the Julia variable <code>y</code></li><li>it tells JuMP that the <em>name</em> attribute of this JuMP variable is "decision</li></ol><p>variable". JuMP uses the value of <code>base_name</code> when it has to print the variable as a string.</p><p>For example, when we print <code>y</code> at the REPL we get:</p><pre><code class="language-julia-repl">julia&gt; y
+decision variable</code></pre><p>Because <code>y</code> is a Julia variable, we can bind it to a different value. For example, if we write:</p><pre><code class="language-julia-repl">julia&gt; y = 1
+1</code></pre><p><code>y</code> is no longer a binding to a JuMP variable. This does not mean that the JuMP variable has been destroyed. It still exists and is still a reference to the same optimization variable. The binding can be reset by querying the model for the symbol <em>as it was written in the <code>@variable</code> macro</em>. For example:</p><pre><code class="language-julia-repl">julia&gt; model[:y]
+decision variable</code></pre><p>This act of looking up the JuMP variable by using the symbol is most useful when composing JuMP models across multiple functions, as illustrated by the following example:</p><pre><code class="language-julia">function add_component_to_model(model::JuMP.Model)
+    x = model[:x]
+    # ... code that uses x
+end
+function build_model()
+    model = Model()
+    @variable(model, x)
+    add_component_to_model(model)
+end
+# TODO(@odow): add a section on looking up by string</code></pre><p>Now that we understand the difference between <em>optimization</em>, <em>JuMP</em>, and <em>Julia</em> variables, we can introduce more of the functionality of the <code>@variable</code> macro.</p><h2><a class="nav-anchor" href="#Variable-bounds-1" id="Variable-bounds-1">Variable bounds</a></h2><p>We have already seen the basic usage of the <code>@variable</code> macro. The next extension is to add lower- and upper-bounds to each optimization variable. This can be done as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x_free)
+x_free
+
+julia&gt; @variable(model, x_lower &gt;= 0)
+x_lower
+
+julia&gt; @variable(model, x_upper &lt;= 1)
+x_upper
+
+julia&gt; @variable(model, 2 &lt;= x_interval &lt;= 3)
+x_interval
+
+julia&gt; @variable(model, x_fixed == 4)
+x_fixed</code></pre><p>In the above examples, <code>x_free</code> represents an unbounded optimization variable, <code>x_lower</code> represents an optimization variable with a lower bound and so forth.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>When creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:</p><pre><code class="language-julia">@variable(model, 1 &lt;= x)  # works
+a = 1
+@variable(model, a &lt;= x)  # errors</code></pre></div></div><p>We can query whether an optimization variable has a lower- or upper-bound via the <code>JuMP.has_lower_bound</code> and <code>JuMP.has_upper_bound</code> functions. For example:</p><pre><code class="language-julia-repl">julia&gt; JuMP.has_lower_bound(x_free)
+false
+
+julia&gt; JuMP.has_upper_bound(x_upper)
+true</code></pre><p>If a variable has a lower or upper bound, we can query the value of it via the <code>JuMP.lower_bound</code> and <code>JuMP.upper_bound</code> functions. For example:</p><pre><code class="language-julia-repl">julia&gt; JuMP.lower_bound(x_interval)
+2.0
+
+julia&gt; JuMP.upper_bound(x_interval)
+3.0</code></pre><p>Querying the value of a bound that does not exist will result in an error.</p><p>Instead of using the <code>&lt;=</code> and <code>&gt;=</code> syntax, we can also use the <code>lower_bound</code> and <code>upper_bound</code> keyword arguments. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x, lower_bound=1, upper_bound=2)
+x
+
+julia&gt; JuMP.lower_bound(x)
+1.0</code></pre><p>Another option is to use the <code>JuMP.set_lower_bound</code> and <code>JuMP.set_upper_bound</code> functions. These can also be used to modify an existing variable bound. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x &gt;= 1)
+x
+
+julia&gt; JuMP.lower_bound(x)
+1.0
+
+julia&gt; JuMP.set_lower_bound(x, 2)
+
+julia&gt; JuMP.lower_bound(x)
+2.0</code></pre><p>We can delete variable bounds using <code>JuMP.delete_lower_bound</code> and <code>JuMP.delete_upper_bound</code>:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, 1 &lt;= x &lt;= 2)
+x
+
+julia&gt; JuMP.lower_bound(x)
+1.0
+
+julia&gt; JuMP.delete_lower_bound(x)
+
+julia&gt; JuMP.has_lower_bound(x)
+false
+
+julia&gt; JuMP.upper_bound(x)
+2.0
+
+julia&gt; JuMP.delete_upper_bound(x)
+
+julia&gt; JuMP.has_upper_bound(x)
+false</code></pre><p>In addition to upper and lower bounds, JuMP variables can also be fixed to a value.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x == 1)
+x
+
+julia&gt; JuMP.is_fixed(x)
+true
+
+julia&gt; JuMP.fix_value(x)
+1.0
+
+julia&gt; JuMP.unfix(x)
+
+julia&gt; JuMP.is_fixed(x)
+false</code></pre><p>Fixing a variable with existing bounds will throw an error. To delete the bounds prior to fixing, use <code>JuMP.fix(variable, value; force = true)</code>.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x &gt;= 1)
+x
+
+julia&gt; JuMP.fix(x, 2)
+ERROR: Unable to fix x to 2 because it has existing variable bounds. Consider calling `JuMP.fix(variable, value; force=true)` which will delete existing bounds before fixing the variable.
+
+julia&gt; JuMP.fix(x, 2; force = true)
+
+
+julia&gt; JuMP.fix_value(x)
+2.0</code></pre><h2><a class="nav-anchor" href="#Variable-containers-1" id="Variable-containers-1">Variable containers</a></h2><p>In the examples above, we have mostly created scalar variables. By scalar, we mean that the Julia variable is bound to exactly one JuMP variable. However,  it is often useful to create collections of JuMP variables inside more complicated datastructures.</p><p>JuMP provides a mechanism for creating three types of these datastructures, which we refer to as <em>containers</em>. The three types are <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><h3><a class="nav-anchor" href="#Arrays-1" id="Arrays-1">Arrays</a></h3><p>We have already seen the creation of an array of JuMP variables with the <code>x[1:2]</code> syntax. This can naturally be extended to create multi-dimensional arrays of JuMP variables. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, 1:2])
+2×2 Array{VariableRef,2}:
+ x[1,1]  x[1,2]
+ x[2,1]  x[2,2]</code></pre><p>Arrays of JuMP variables can be indexed and sliced as follows:</p><pre><code class="language-julia-repl">julia&gt; x[1, 2]
+x[1,2]
+
+julia&gt; x[2, :]
+2-element Array{VariableRef,1}:
+ x[2,1]
+ x[2,2]</code></pre><p>We can also name each index, and variable bounds can depend upon the indices:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2, j=1:2] &gt;= 2i + j)
+2×2 Array{VariableRef,2}:
+ x[1,1]  x[1,2]
+ x[2,1]  x[2,2]
+
+julia&gt; JuMP.lower_bound.(x)
+2×2 Array{Float64,2}:
+ 3.0  4.0
+ 5.0  6.0</code></pre><p>JuMP will form an <code>Array</code> of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore <code>x[1:b]</code> will create an <code>Array</code> of JuMP variables, but <code>x[a:b]</code> will not. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of <code>x[a:b]</code>), JuMP will create a <code>DenseAxisArray</code> instead.</p><h3><a class="nav-anchor" href="#variable_jump_arrays-1" id="variable_jump_arrays-1">DenseAxisArrays</a></h3><p>We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an <code>Array</code> of JuMP variables, JuMP will return a <code>DenseAxisArray</code>. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, [:A,:B]])
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
+    Dimension 1, 1:2
+    Dimension 2, Symbol[:A, :B]
+And data, a 2×2 Array{VariableRef,2}:
+ x[1,A]  x[1,B]
+ x[2,A]  x[2,B]</code></pre><p>DenseAxisArray's can be indexed and sliced as follows:</p><pre><code class="language-julia-repl">julia&gt; x[1, :A]
+x[1,A]
+
+julia&gt; x[2, :]
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:A, :B]
+And data, a 2-element Array{VariableRef,1}:
+ x[2,A]
+ x[2,B]</code></pre><p>Similarly to the <code>Array</code> case, the indices in a <code>DenseAxisArray</code> can be named, and the bounds can depend upon these names. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=2:3, j=1:2:3] &gt;= 0.5i + j)
+2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{VariableRef,2}:
+ x[2,1]  x[2,3]
+ x[3,1]  x[3,3]
+
+julia&gt; JuMP.lower_bound.(x)
+2-dimensional DenseAxisArray{Float64,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, 1:2:3
+And data, a 2×2 Array{Float64,2}:
+ 2.0  4.0
+ 2.5  4.5</code></pre><h3><a class="nav-anchor" href="#variable_sparseaxisarrays-1" id="variable_sparseaxisarrays-1">SparseAxisArrays</a></h3><p>The third datatype that JuMP supports the efficient creation of are <code>SparseAxisArray</code>s. These arrays are created when the indices do not form a rectangular set. One example is when indices have a dependence upon previous indices (called <em>triangular indexing</em>). JuMP supports this as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2, j=i:2])
+JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:
+  [1, 2]  =  x[1,2]
+  [2, 2]  =  x[2,2]
+  [1, 1]  =  x[1,1]</code></pre><p><code>x</code> is a standard Julia dictionary. Therefore, slicing cannot be performed.</p><p>We can also conditionally create variables via a JuMP-specific syntax. This sytax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (<code>;</code>). For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:4; mod(i, 2)==0])
+JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
+  [4]  =  x[4]
+  [2]  =  x[2]</code></pre><h3><a class="nav-anchor" href="#variable_forcing-1" id="variable_forcing-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a DenseAxisArray, and a DenseAxisArray before a dictionary. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
+1:2
+
+julia&gt; @variable(model, x[A])
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 1:2
+And data, a 2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><p>Since the value (and type) of <code>A</code> is unknown at compile time, JuMP is unable to infer that <code>A</code> is a one-based integer range. Therefore, JuMP creates a <code>DenseAxisArray</code>, even though it could store these two variables in a standard one-dimensional <code>Array</code>.</p><p>We can share our knowledge that it is possible to store these JuMP variables as an array by setting the <code>container</code> keyword:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, y[A], container=Array)
+2-element Array{VariableRef,1}:
+ y[1]
+ y[2]</code></pre><p>JuMP now creates a vector of JuMP variables, instead of a DenseAxisArray. Note that choosing an invalid container type will throw an error.</p><h2><a class="nav-anchor" href="#Integrality-shortcuts-1" id="Integrality-shortcuts-1">Integrality shortcuts</a></h2><p>Adding integrality constraints to a model such as <code>@constraint(model, x in MOI.ZeroOne())</code> and <code>@constraint(model, x in MOI.Integer())</code> is a common operation. Therefore, JuMP supports two shortcuts for adding such constraints.</p><h4><a class="nav-anchor" href="#Binary-(ZeroOne)-constraints-1" id="Binary-(ZeroOne)-constraints-1">Binary (ZeroOne) constraints</a></h4><p>Binary optimization variables are constrained to the set <span>$x \in {0, 1}$</span>. (The <code>MOI.ZeroOne</code> set in MathOptInterface.) Binary optimization variables can be created in JuMP by passing <code>Bin</code> as an optional positional argument:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x, Bin)
+x</code></pre><p>We can check if an optimization variable is binary by calling <code>JuMP.is_binary</code> on the JuMP variable:</p><pre><code class="language-julia-repl">julia&gt; JuMP.is_binary(x)
+true</code></pre><p>Binary optimization variables can also be created by setting the <code>binary</code> keyword to <code>true</code>.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x, binary=true)
+x</code></pre><h4><a class="nav-anchor" href="#Integer-constraints-1" id="Integer-constraints-1">Integer constraints</a></h4><p>Integer optimization variables are constrained to the set <span>$x \in \mathbb{Z}$</span>. (The <code>MOI.Integer</code> set in MathOptInterface.) Integer optimization variables can be created in JuMP by passing <code>Int</code> as an optional positional argument:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x, Int)
+x</code></pre><p>Integer optimization variables can also be created by setting the <code>integer</code> keyword to <code>true</code>.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x, integer=true)
+x</code></pre><p>We can check if an optimization variable is integer by calling <code>JuMP.is_integer</code> on the JuMP variable:</p><pre><code class="language-julia-repl">julia&gt; JuMP.is_integer(x)
+true</code></pre><h2><a class="nav-anchor" href="#Semidefinite-variables-1" id="Semidefinite-variables-1">Semidefinite variables</a></h2><p>JuMP also supports modeling with semidefinite variables. A square symmetric matrix <span>$X$</span> is positive semidefinite if all eigenvalues are nonnegative. We can declare a matrix of JuMP variables to be positive semidefinite as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]</code></pre><p>Note that <code>x</code> must be a square 2-dimensional <code>Array</code> of JuMP variables; it cannot be a JuMP array or a dictionary. (See <a href="#Variable-containers-1">Variable containers</a>, above, for more on this.)</p><p>You can also impose a slightly weaker constraint that the square matrix is only symmetric (instead of positive semidefinite) as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, 1:2], Symmetric)
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]</code></pre><h2><a class="nav-anchor" href="#Anonymous-JuMP-variables-1" id="Anonymous-JuMP-variables-1">Anonymous JuMP variables</a></h2><p>In all of the above examples, we have created <em>named</em> JuMP variables. However, it is also possible to create so called <em>anonymous</em> JuMP variables. To create an anonymous JuMP variable, we drop the name of the variable from the macro call. This means dropping the second positional argument if the JuMP variable is a scalar, or dropping the name before the square bracket (<code>[</code>) if a container is being created. For example:</p><pre><code class="language-julia-repl">julia&gt; x = @variable(model)
+noname</code></pre><p>This shows how <code>(model, x)</code> is really short for:</p><pre><code class="language-julia-repl">julia&gt; x = model[:x] = @variable(model, base_name="x")
+x</code></pre><p>An <code>Array</code> of anonymous JuMP variables can be created as follows:</p><pre><code class="language-julia-repl">julia&gt; y = @variable(model, [i=1:2])
+2-element Array{VariableRef,1}:
+ noname
+ noname</code></pre><p>If necessary, you can store <code>x</code> in <code>model</code> as follows:</p><pre><code class="language-none">julia&gt; model[:x] = x</code></pre><p>The <code>&lt;=</code> and <code>&gt;=</code> short-hand cannot be used to set bounds on anonymous JuMP variables. Instead, you should use the <code>lower_bound</code> and <code>upper_bound</code> keywords.</p><p>Passing the <code>Bin</code> and <code>Int</code> variable types are also invalid. Instead, you should use the <code>binary</code> and <code>integer</code> keywords.</p><p>Thus, the anonymous variant of <code>@variable(model, x[i=1:2] &gt;= i, Int)</code> is:</p><pre><code class="language-julia-repl">julia&gt; x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]</code></pre><h2><a class="nav-anchor" href="#User-defined-containers-1" id="User-defined-containers-1">User-defined containers</a></h2><p>In the section <a href="#Variable-containers-1">Variable containers</a>, we explained how JuMP supports the efficient creation of collections of JuMP variables in three types of containers. However, users are also free to create collections of JuMP variables in their own datastructures. For example, the following code creates a dictionary with symmetric matrices as the values:</p><pre><code class="language-julia-repl">julia&gt; variables = Dict{Symbol, Array{VariableRef,2}}()
+Dict{Symbol,Array{VariableRef,2}} with 0 entries
+
+julia&gt; for key in [:A, :B]
+           global variables[key] = @variable(model, [1:2, 1:2])
+       end
+
+julia&gt; variables
+Dict{Symbol,Array{VariableRef,2}} with 2 entries:
+  :A =&gt; VariableRef[noname noname; noname noname]
+  :B =&gt; VariableRef[noname noname; noname noname]</code></pre><h2><a class="nav-anchor" href="#Deleting-variables-1" id="Deleting-variables-1">Deleting variables</a></h2><p>JuMP supports the deletion of optimization variables.  To delete variables, we can use the <code>JuMP.delete</code> method. We can also check whether <code>x</code> is a valid JuMP variable in <code>model</code> using the <code>JuMP.is_valid</code> method:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x)
+x
+
+julia&gt; JuMP.is_valid(model, x)
+true
+
+julia&gt; JuMP.delete(model, x)
+
+julia&gt; JuMP.is_valid(model, x)
+false</code></pre><h2><a class="nav-anchor" href="#Reference-1" id="Reference-1">Reference</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@variable" id="JuMP.@variable"><code>JuMP.@variable</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-none">@variable(model, kwargs...)</code></pre><p>Add an <em>anonymous</em> (see <a href="../names/#Names-1">Names</a>) variable to the model <code>model</code> described by the keyword arguments <code>kwargs</code> and returns the variable.</p><pre><code class="language-none">@variable(model, expr, args..., kwargs...)</code></pre><p>Add a variable to the model <code>model</code> described by the expression <code>expr</code>, the positional arguments <code>args</code> and the keyword arguments <code>kwargs</code>. The expression <code>expr</code> can either be (note that in the following the symbol <code>&lt;=</code> can be used instead of <code>≤</code> and the symbol <code>&gt;=</code>can be used instead of <code>≥</code>)</p><ul><li>of the form <code>varexpr</code> creating variables described by <code>varexpr</code>;</li><li>of the form <code>varexpr ≤ ub</code> (resp. <code>varexpr ≥ lb</code>) creating variables described by <code>varexpr</code> with upper bounds given by <code>ub</code> (resp. lower bounds given by <code>lb</code>);</li><li>of the form <code>varexpr == value</code> creating variables described by <code>varexpr</code> with fixed values given by <code>value</code>; or</li><li>of the form <code>lb ≤ varexpr ≤ ub</code> or <code>ub ≥ varexpr ≥ lb</code> creating variables described by <code>varexpr</code> with lower bounds given by <code>lb</code> and upper bounds given by <code>ub</code>.</li></ul><p>The expression <code>varexpr</code> can either be</p><ul><li>of the form <code>varname</code> creating a scalar real variable of name <code>varname</code>;</li><li>of the form <code>varname[...]</code> or <code>[...]</code> creating a container of variables (see <a href="../containers/#Containers-in-macros-1">Containers in macros</a>.</li></ul><p>The recognized positional arguments in <code>args</code> are the following:</p><ul><li><code>Bin</code>: Sets the variable to be binary, i.e. either 0 or 1.</li><li><code>Int</code>: Sets the variable to be integer, i.e. one of ..., -2, -1, 0, 1, 2, ...</li><li><code>Symmetric</code>: Only available when creating a square matrix of variables, i.e. when <code>varexpr</code> is of the form <code>varname[1:n,1:n]</code> or <code>varname[i=1:n,j=1:n]</code>. It creates a symmetric matrix of variable, that is, it only creates a new variable for <code>varname[i,j]</code> with <code>i ≤ j</code> and sets <code>varname[j,i]</code> to the same variable as <code>varname[i,j]</code>.</li><li><code>PSD</code>: The square matrix of variable is both <code>Symmetric</code> and constrained to be positive semidefinite.</li></ul><p>The recognized keyword arguments in <code>kwargs</code> are the following:</p><ul><li><code>base_name</code>: Sets the name prefix used to generate variable names. It corresponds to the variable name for scalar variable, otherwise, the variable names are set to <code>base_name[...]</code> for each index <code>...</code> of the axes <code>axes</code>.</li><li><code>lower_bound</code>: Sets the value of the variable lower bound.</li><li><code>upper_bound</code>: Sets the value of the variable upper bound.</li><li><code>start</code>: Sets the variable starting value used as initial guess in optimization.</li><li><code>binary</code>: Sets whether the variable is binary or not.</li><li><code>integer</code>: Sets whether the variable is integer or not.</li><li><code>variable_type</code>: See the "Note for extending the variable macro" section below.</li><li><code>container</code>: Specify the container type, see <a href="../containers/#Containers-in-macros-1">Containers in macros</a>.</li></ul><p><strong>Examples</strong></p><p>The following are equivalent ways of creating a variable <code>x</code> of name <code>x</code> with lower bound 0:</p><pre><code class="language-julia"># Specify everything in `expr`
+@variable(model, x &gt;= 0)
+# Specify the lower bound using a keyword argument
+@variable(model, x, lower_bound=0)
+# Specify everything in `kwargs`
+x = @variable(model, base_name="x", lower_bound=0)</code></pre><p>The following are equivalent ways of creating a <code>DenseAxisArray</code> of index set <code>[:a, :b]</code> and with respective upper bounds 2 and 3 and names <code>x[a]</code> and `x[b].</p><pre><code class="language-julia">ub = Dict(:a =&gt; 2, :b =&gt; 3)
+# Specify everything in `expr`
+@variable(model, x[i=keys(ub)] &lt;= ub[i])
+# Specify the upper bound using a keyword argument
+@variable(model, x[i=keys(ub)], upper_bound=ub[i])</code></pre><p><strong>Note for extending the variable macro</strong></p><p>The single scalar variable or each scalar variable of the container are created using <code>add_variable(model, build_variable(_error, info, extra_args...; extra_kwargs...))</code> where</p><ul><li><code>model</code> is the model passed to the <code>@variable</code> macro;</li><li><code>_error</code> is an error function with a single <code>String</code> argument showing the <code>@variable</code> call in addition to the error message given as argument;</li><li><code>info</code> is the <code>VariableInfo</code> struct containing the information gathered in <code>expr</code>, the recognized keyword arguments (except <code>base_name</code> and <code>variable_type</code>) and the recognized positional arguments (except <code>Symmetric</code> and <code>PSD</code>);</li><li><code>extra_args</code> are the unrecognized positional arguments of <code>args</code> plus the value of the <code>variable_type</code> keyword argument if present. The <code>variable_type</code> keyword argument allows the user to pass a position argument to <code>build_variable</code> without the need to give a positional argument to <code>@variable</code>. In particular, this allows the user to give a positional argument to the <code>build_variable</code> call when using the anonymous single variable syntax <code>@variable(model, kwargs...)</code>; and</li><li><code>extra_kwargs</code> are the unrecognized keyword argument of <code>kwargs</code>.</li></ul><p><strong>Examples</strong></p><p>The following creates a variable <code>x</code> of name <code>x</code> with lower_bound 0 as with the first example above but does it without using the <code>@variable</code> macro</p><pre><code class="language-julia">info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
+JuMP.add_variable(model, JuMP.build_variable(error, info), "x")</code></pre><p>The following creates a <code>DenseAxisArray</code> of index set <code>[:a, :b]</code> and with respective upper bounds 2 and 3 and names <code>x[a]</code> and <code>x[b]</code> as with the second example above but does it without using the <code>@variable</code> macro</p><pre><code class="language-julia"># Without the `@variable` macro
+data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
+x = JuMP.Containers.DenseAxisArray(data, keys(ub))
+for i in keys(ub)
+    info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
+    x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[$i]")
+end</code></pre><p>The following are equivalent ways of creating a <code>Matrix</code> of size <code>N x N</code> with variables custom variables created with a JuMP extension using the <code>Poly(X)</code> positional argument to specify its variables:</p><pre><code class="language-julia"># Using the `@variable` macro
+@variable(model, x[1:N,1:N], Symmetric, Poly(X))
+# Without the `@variable` macro
+x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
+info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
+for i in 1:N, j in i:N
+    x[i,j] = x[j,i] = JuMP.add_variable(model, build_variable(error, info, Poly(X)), "x[$i,$j]")
+end</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.owner_model" id="JuMP.owner_model"><code>JuMP.owner_model</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">owner_model(s::AbstractJuMPScalar)</code></pre><p>Return the model owning the scalar <code>s</code>.</p></div></div></section><footer><hr/><a class="previous" href="../concepts/"><span class="direction">Previous</span><span class="title">Concepts</span></a><a class="next" href="../expressions/"><span class="direction">Next</span><span class="title">Expressions</span></a></footer></article></body></HTML>

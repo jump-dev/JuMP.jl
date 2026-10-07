@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Benders Decomposition (Lazy Constraints) · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Mixed-integer linear programs/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/diet/">The diet problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/finance/">Finance</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/network_flows/">Network Flows</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../Mixed-integer linear programs/urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox" checked/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../benders_decomposition/">Benders Decomposition</a></li><li class="is-active"><a class="tocitem" href>Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Optimization concepts</a></li><li class="is-active"><a href>Benders Decomposition (Lazy Constraints)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Benders Decomposition (Lazy Constraints)</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_lazy_constraints.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="benders_decomposition_lazy"><a class="docs-heading-anchor" href="#benders_decomposition_lazy">Benders Decomposition (Lazy Constraints)</a><a id="benders_decomposition_lazy-1"></a><a class="docs-heading-anchor-permalink" href="#benders_decomposition_lazy" title="Permalink"></a></h1><p><strong>Originally Contributed by</strong>: Mathieu Besançon</p><p>This notebook describes how to implement the Benders decomposition in JuMP using lazy constraints. We keep the same notation and problem form as the first notebook <em>Benders decomposition</em>.</p><p class="math-container">\[\begin{aligned}
+&amp; \text{maximize} \quad &amp;&amp;c_1^T x+c_2^T v \\
+&amp; \text{subject to} \quad &amp;&amp;A_1 x+ A_2 v \preceq b \\
+&amp; &amp;&amp;x \succeq 0, x \in \mathbb{Z}^n \\
+&amp; &amp;&amp;v \succeq 0, v \in \mathbb{R}^p \\
+\end{aligned}\]</p><p>where <span>$b \in \mathbb{R}^m$</span>, <span>$A_1 \in \mathbb{R}^{m \times n}$</span>, <span>$A_2 \in \mathbb{R}^{m \times p}$</span> and <span>$\mathbb{Z}$</span> is the set of integers.</p><p>Here the symbol <span>$\succeq$</span> (<span>$\preceq$</span>) stands for element-wise greater (less) than or equal to. Any mixed integer programming problem can be written in the form above.</p><p>For a detailed explanation on the Benders decomposition algorithm, see the introduction notebook.</p><h3 id="Lazy-constraints"><a class="docs-heading-anchor" href="#Lazy-constraints">Lazy constraints</a><a id="Lazy-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Lazy-constraints" title="Permalink"></a></h3><p>Some optimization solvers allow users to interact with them during the solution process by providing user-defined functions which are triggered under certain conditions.</p><p>The generic term for these functions is <strong>callback</strong>.</p><p>In integer optimization, the main callback types are lazy constraints, user-cuts and heuristic solutions. See the <a href="../../../manual/callbacks/#callbacks_manual">Callbacks</a> section for an introduction on how to use them.</p><p>Some callbacks define a new constraint which is only activated when necessary, i.e., when a current solution does not respect them. It can avoid building an optimization model with too many constraints up-front.</p><p>This is the case for Benders decomposition, since the sub-problem defines an exponential number of primal vertices and therefore dual cuts.</p><p>A detailed explanation on the distinction between user-cuts and lazy constraints is also available on <a href="https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html">Paul Rubin&#39;s blog</a>. He also <a href="https://orinanobworld.blogspot.ca/2011/10/benders-decomposition-then-and-now.html">describes this approach to Benders Decomposition</a>.</p><p>We use the data from the original notebook and change the solution algorithm to leverage lazy constraints:</p><ul><li>Step 1 (Initialization)</li><li>Step 2 (defining the subproblem model)</li><li>Step 3 (registering the lazy constraint of the subproblem)</li></ul><h3 id="Data-for-the-problem"><a class="docs-heading-anchor" href="#Data-for-the-problem">Data for the problem</a><a id="Data-for-the-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Data-for-the-problem" title="Permalink"></a></h3><p>The input data is from page 139, Integer programming by Garfinkel and Nemhauser<a href="#c1">[1]</a>.</p><pre><code class="language-julia hljs">c1 = [-1; -4]
+c2 = [-2; -3]
+
+dim_x = length(c1)
+dim_u = length(c2)
+
+b = [-2; -3]
+
+A1 = [1 -3;
+     -1 -3]
+A2 = [1 -2;
+     -1 -1]
+
+M = 1000;</code></pre><h3 id="Loading-the-necessary-packages"><a class="docs-heading-anchor" href="#Loading-the-necessary-packages">Loading the necessary packages</a><a id="Loading-the-necessary-packages-1"></a><a class="docs-heading-anchor-permalink" href="#Loading-the-necessary-packages" title="Permalink"></a></h3><pre><code class="language-julia hljs">using JuMP
+import GLPK
+import Test</code></pre><p>Subproblem creation</p><pre><code class="language-julia hljs">function build_subproblem()
+    sub_problem_model = Model(GLPK.Optimizer)
+    @variable(sub_problem_model, u[1:dim_u] &gt;= 0)
+    @constraint(
+        sub_problem_model,
+        constr_ref_subproblem[j = 1:size(A2, 2)],
+        A2[:, j]&#39; * u &gt;= c2[j],
+    )
+    return (sub_problem_model, u)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">build_subproblem (generic function with 1 method)</code></pre><h3 id="Master-Problem-Description"><a class="docs-heading-anchor" href="#Master-Problem-Description">Master Problem Description</a><a id="Master-Problem-Description-1"></a><a class="docs-heading-anchor-permalink" href="#Master-Problem-Description" title="Permalink"></a></h3><pre><code class="language-julia hljs">master_problem_model = Model(GLPK.Optimizer);
+
+(sub_problem_model, u) = build_subproblem();</code></pre><p>Variable Definition</p><pre><code class="language-julia hljs">@variable(master_problem_model, 0 &lt;= x[1:dim_x] &lt;= 1e6, Int)
+@variable(master_problem_model, t &lt;= 1e6)</code></pre><p class="math-container">\[ t \]</p><p>Objective Setting</p><pre><code class="language-julia hljs">@objective(master_problem_model, Max, t)
+
+print(master_problem_model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Max t
+Subject to
+ x[1] ≥ 0.0
+ x[2] ≥ 0.0
+ x[1] ≤ 1.0e6
+ x[2] ≤ 1.0e6
+ t ≤ 1.0e6
+ x[1] integer
+ x[2] integer</code></pre><p>Track the calls to the callback</p><pre><code class="language-julia hljs">iter_num = 0</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0</code></pre><p>Define lazy constraints</p><pre><code class="language-julia hljs">function benders_lazy_constraint_callback(cb_data)
+    global iter_num
+    iter_num += 1
+    println(&quot;Iteration number = &quot;, iter_num)
+
+    x_current = callback_value.(Ref(cb_data), x)
+    fm_current = callback_value(cb_data, t)
+
+    c_sub = b - A1 * x_current
+    @objective(sub_problem_model, Min, c1&#39; * x_current + c_sub&#39; * u)
+    optimize!(sub_problem_model)
+
+    print(&quot;\nThe current subproblem model is \n&quot;)
+    print(sub_problem_model)
+
+    t_status_sub = termination_status(sub_problem_model)
+    p_status_sub = primal_status(sub_problem_model)
+
+    fs_x_current = objective_value(sub_problem_model)
+
+    u_current = value.(u)
+
+    γ = b&#39; * u_current
+
+    if p_status_sub == MOI.FEASIBLE_POINT &amp;&amp; fs_x_current  ≈  fm_current # we are done
+        @info(&quot;No additional constraint from the subproblem&quot;)
+    end
+
+    if p_status_sub == MOI.FEASIBLE_POINT &amp;&amp; fs_x_current &lt; fm_current
+        println(&quot;\nThere is a suboptimal vertex, add the corresponding constraint&quot;)
+        cv = A1&#39; * u_current - c1
+        new_optimality_cons = @build_constraint(t + cv&#39; * x &lt;= γ)
+        MOI.submit(
+            master_problem_model,
+            MOI.LazyConstraint(cb_data),
+            new_optimality_cons,
+        )
+    end
+
+    if t_status_sub == MOI.INFEASIBLE_OR_UNBOUNDED
+        println(&quot;\nThere is an  extreme ray, adding the corresponding constraint&quot;)
+        ce = A1&#39; * u_current
+        new_feasibility_cons = @build_constraint(dot(ce, x) &lt;= γ)
+        MOI.submit(
+            master_problem_model,
+            MOI.LazyConstraint(cb_data),
+            new_feasibility_cons,
+        )
+    end
+end
+
+MOI.set(
+    master_problem_model,
+    MOI.LazyConstraintCallback(),
+    benders_lazy_constraint_callback,
+)
+
+optimize!(master_problem_model)
+
+t_status = termination_status(master_problem_model)
+p_status = primal_status(master_problem_model)
+
+if p_status == MOI.INFEASIBLE_POINT
+    println(&quot;The problem is infeasible :-(&quot;)
+end
+
+if t_status == MOI.INFEASIBLE_OR_UNBOUNDED
+    fm_current = M
+    x_current = M * ones(dim_x)
+end
+
+if p_status == MOI.FEASIBLE_POINT
+    fm_current = value(t)
+    x_current = value.(x)
+end
+
+
+println(&quot;Status of the master problem is &quot;, t_status,
+        &quot;\nwith fm_current = &quot;, fm_current,
+        &quot;\nx_current = &quot;, x_current)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iteration number = 1
+
+The current subproblem model is
+Min -2 u[1] - 3 u[2]
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+
+There is a suboptimal vertex, add the corresponding constraint
+Iteration number = 2
+
+The current subproblem model is
+Min 750003.75 u[1] + 750002.75 u[2] - 1.0000076666666666e6
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+
+There is a suboptimal vertex, add the corresponding constraint
+Iteration number = 3
+
+The current subproblem model is
+Min 0.875 u[1] - 0.125 u[2] - 3.8333333333333335
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+
+There is a suboptimal vertex, add the corresponding constraint
+Iteration number = 4
+
+The current subproblem model is
+Min -3.8333333333333335
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+[ Info: No additional constraint from the subproblem
+Iteration number = 5
+
+The current subproblem model is
+Min -0.875 u[1] + 0.125 u[2] - 3.8333333333333335
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+
+There is a suboptimal vertex, add the corresponding constraint
+Iteration number = 6
+
+The current subproblem model is
+Min u[2] - 5
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+[ Info: No additional constraint from the subproblem
+Iteration number = 7
+
+The current subproblem model is
+Min u[1] - 4
+Subject to
+ constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
+ constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
+ u[1] ≥ 0.0
+ u[2] ≥ 0.0
+[ Info: No additional constraint from the subproblem
+Status of the master problem is OPTIMAL
+with fm_current = -4.0
+x_current = [0.0, 1.0]</code></pre><h3 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h3><a id='c1'></a><ol><li>Garfinkel, R. &amp; Nemhauser, G. L. Integer programming. (Wiley, 1972).</li></ol><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_lazy_constraints.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_decomposition/">« Benders Decomposition</a><a class="docs-footer-nextpage" href="../../../manual/models/">Models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.5 on <span class="colophon-date" title="Sunday 1 August 2021 01:56">Sunday 1 August 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

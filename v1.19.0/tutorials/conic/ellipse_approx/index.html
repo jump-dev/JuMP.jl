@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Ellipsoid approximation · JuMP</title><meta name="title" content="Ellipsoid approximation · JuMP"/><meta property="og:title" content="Ellipsoid approximation · JuMP"/><meta property="twitter:title" content="Ellipsoid approximation · JuMP"/><meta name="description" content="Documentation for JuMP."/><meta property="og:description" content="Documentation for JuMP."/><meta property="twitter:description" content="Documentation for JuMP."/><script async src="https://www.googletagmanager.com/gtag/js?id=G-0RZ8X3D3D0"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0RZ8X3D3D0', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/><link href="../../../assets/citations.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should you use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../getting_started/debugging/">Debugging</a></li><li><a class="tocitem" href="../../getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li><li><a class="tocitem" href="../../getting_started/performance_tips/">Performance tips</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../linear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../linear/knapsack/">The knapsack problem example</a></li><li><a class="tocitem" href="../../linear/diet/">The diet problem</a></li><li><a class="tocitem" href="../../linear/cannery/">The cannery problem</a></li><li><a class="tocitem" href="../../linear/factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../../linear/multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/multi_commodity_network/">The network multi-commodity flow problem</a></li><li><a class="tocitem" href="../../linear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../linear/piecewise_linear/">Approximating nonlinear functions</a></li><li><a class="tocitem" href="../../linear/facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../../linear/finance/">Financial modeling problems</a></li><li><a class="tocitem" href="../../linear/geographic_clustering/">Geographical clustering</a></li><li><a class="tocitem" href="../../linear/network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../../linear/transp/">The transportation problem</a></li><li><a class="tocitem" href="../../linear/multi_objective_knapsack/">Multi-objective knapsack</a></li><li><a class="tocitem" href="../../linear/multi_objective_examples/">Simple multi-objective examples</a></li><li><a class="tocitem" href="../../linear/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../../linear/n-queens/">N-Queens</a></li><li><a class="tocitem" href="../../linear/constraint_programming/">Constraint programming</a></li><li><a class="tocitem" href="../../linear/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../linear/lp_sensitivity/">Sensitivity analysis of a linear program</a></li><li><a class="tocitem" href="../../linear/mip_duality/">Computing the duals of a mixed-integer program</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../nonlinear/simple_examples/">Simple examples</a></li><li><a class="tocitem" href="../../nonlinear/portfolio/">Portfolio optimization</a></li><li><a class="tocitem" href="../../nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../nonlinear/user_defined_hessians/">User-defined Hessians</a></li><li><a class="tocitem" href="../../nonlinear/nested_problems/">Nested optimization problems</a></li><li><a class="tocitem" href="../../nonlinear/querying_hessians/">Computing Hessians</a></li><li><a class="tocitem" href="../../nonlinear/complementarity/">Mixed complementarity problems</a></li><li><a class="tocitem" href="../../nonlinear/classifiers/">Classifiers</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox" checked/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><a class="tocitem" href="../start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../simple_examples/">Simple semidefinite programming examples</a></li><li><a class="tocitem" href="../dualization/">Dualization</a></li><li><a class="tocitem" href="../arbitrary_precision/">Arbitrary precision arithmetic</a></li><li><a class="tocitem" href="../logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../min_ellipse/">Minimal ellipses</a></li><li class="is-active"><a class="tocitem" href>Ellipsoid approximation</a><ul class="internal"><li><a class="tocitem" href="#Problem-formulation"><span>Problem formulation</span></a></li><li><a class="tocitem" href="#Required-packages"><span>Required packages</span></a></li><li><a class="tocitem" href="#Data"><span>Data</span></a></li><li><a class="tocitem" href="#JuMP-formulation"><span>JuMP formulation</span></a></li><li><a class="tocitem" href="#Results"><span>Results</span></a></li><li><a class="tocitem" href="#Alternative-formulations"><span>Alternative formulations</span></a></li></ul></li><li><a class="tocitem" href="../quantum_discrimination/">Quantum state discrimination</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li><li><a class="tocitem" href="../../algorithms/parallelism/">Parallelism</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../applications/power_systems/">Power Systems</a></li><li><a class="tocitem" href="../../applications/optimal_power_flow/">Optimal power flow</a></li><li><a class="tocitem" href="../../applications/web_app/">Serving web apps</a></li><li><a class="tocitem" href="../../applications/two_stage_stochastic/">Two-stage stochastic programs</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li><li><a class="tocitem" href="../../../manual/complex/">Complex number support</a></li><li><a class="tocitem" href="../../../manual/nonlinear/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling (Legacy)</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../api/JuMP/">JuMP</a></li><li><a class="tocitem" href="../../../api/JuMP.Containers/">JuMP.Containers</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li><li><a class="tocitem" href="../../../background/bibliography/">Bibliography</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li><li><a class="tocitem" href="../../../developers/checklists/">Checklists</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Solvers</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../packages/solvers/">Introduction</a></li><li><a class="tocitem" href="../../../packages/AmplNLWriter/">jump-dev/AmplNLWriter.jl</a></li><li><a class="tocitem" href="../../../packages/BARON/">jump-dev/BARON.jl</a></li><li><a class="tocitem" href="../../../packages/CPLEX/">jump-dev/CPLEX.jl</a></li><li><a class="tocitem" href="../../../packages/CSDP/">jump-dev/CSDP.jl</a></li><li><a class="tocitem" href="../../../packages/Cbc/">jump-dev/Cbc.jl</a></li><li><a class="tocitem" href="../../../packages/Clp/">jump-dev/Clp.jl</a></li><li><a class="tocitem" href="../../../packages/Dualization/">jump-dev/Dualization.jl</a></li><li><a class="tocitem" href="../../../packages/ECOS/">jump-dev/ECOS.jl</a></li><li><a class="tocitem" href="../../../packages/GLPK/">jump-dev/GLPK.jl</a></li><li><a class="tocitem" href="../../../packages/Gurobi/">jump-dev/Gurobi.jl</a></li><li><a class="tocitem" href="../../../packages/HiGHS/">jump-dev/HiGHS.jl</a></li><li><a class="tocitem" href="../../../packages/Hypatia/">jump-dev/Hypatia.jl</a></li><li><a class="tocitem" href="../../../packages/Ipopt/">jump-dev/Ipopt.jl</a></li><li><a class="tocitem" href="../../../packages/KNITRO/">jump-dev/KNITRO.jl</a></li><li><a class="tocitem" href="../../../packages/MiniZinc/">jump-dev/MiniZinc.jl</a></li><li><a class="tocitem" href="../../../packages/MosekTools/">jump-dev/MosekTools.jl</a></li><li><a class="tocitem" href="../../../packages/MultiObjectiveAlgorithms/">jump-dev/MultiObjectiveAlgorithms.jl</a></li><li><a class="tocitem" href="../../../packages/Pajarito/">jump-dev/Pajarito.jl</a></li><li><a class="tocitem" href="../../../packages/Pavito/">jump-dev/Pavito.jl</a></li><li><a class="tocitem" href="../../../packages/SCS/">jump-dev/SCS.jl</a></li><li><a class="tocitem" href="../../../packages/SDPA/">jump-dev/SDPA.jl</a></li><li><a class="tocitem" href="../../../packages/SDPLR/">jump-dev/SDPLR.jl</a></li><li><a class="tocitem" href="../../../packages/SDPNAL/">jump-dev/SDPNAL.jl</a></li><li><a class="tocitem" href="../../../packages/SDPT3/">jump-dev/SDPT3.jl</a></li><li><a class="tocitem" href="../../../packages/SeDuMi/">jump-dev/SeDuMi.jl</a></li><li><a class="tocitem" href="../../../packages/Xpress/">jump-dev/Xpress.jl</a></li><li><a class="tocitem" href="../../../packages/COPT/">COPT-Public/COPT.jl</a></li><li><a class="tocitem" href="../../../packages/GAMS/">GAMS-dev/GAMS.jl</a></li><li><a class="tocitem" href="../../../packages/Manopt/">JuliaManifolds/Manopt.jl</a></li><li><a class="tocitem" href="../../../packages/NLopt/">JuliaOpt/NLopt.jl</a></li><li><a class="tocitem" href="../../../packages/CDDLib/">JuliaPolyhedra/CDDLib.jl</a></li><li><a class="tocitem" href="../../../packages/Percival/">JuliaSmoothOptimizers/Percival.jl</a></li><li><a class="tocitem" href="../../../packages/MadNLP/">MadNLP/MadNLP.jl</a></li><li><a class="tocitem" href="../../../packages/EAGO/">PSORLab/EAGO.jl</a></li><li><a class="tocitem" href="../../../packages/PATHSolver/">chkwon/PATHSolver.jl</a></li><li><a class="tocitem" href="../../../packages/DAQP/">darnstrom/DAQP.jl</a></li><li><a class="tocitem" href="../../../packages/Tulip/">ds4dm/Tulip.jl</a></li><li><a class="tocitem" href="../../../packages/Loraine/">kocvara/Loraine.jl</a></li><li><a class="tocitem" href="../../../packages/Alpine/">lanl-ansi/Alpine.jl</a></li><li><a class="tocitem" href="../../../packages/Juniper/">lanl-ansi/Juniper.jl</a></li><li><a class="tocitem" href="../../../packages/ProxSDP/">mariohsouto/ProxSDP.jl</a></li><li><a class="tocitem" href="../../../packages/NEOSServer/">odow/NEOSServer.jl</a></li><li><a class="tocitem" href="../../../packages/OSQP/">osqp/OSQP.jl</a></li><li><a class="tocitem" href="../../../packages/CDCS/">oxfordcontrol/CDCS.jl</a></li><li><a class="tocitem" href="../../../packages/COSMO/">oxfordcontrol/COSMO.jl</a></li><li><a class="tocitem" href="../../../packages/Clarabel/">oxfordcontrol/Clarabel.jl</a></li><li><a class="tocitem" href="../../../packages/SCIP/">scipopt/SCIP.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">Extensions</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../extensions/introduction/">Introduction</a></li><li><a class="tocitem" href="../../../packages/DiffOpt/">jump-dev/DiffOpt.jl</a></li><li><a class="tocitem" href="../../../packages/ParametricOptInterface/">jump-dev/ParametricOptInterface.jl</a></li><li><a class="tocitem" href="../../../packages/PolyJuMP/">jump-dev/PolyJuMP.jl</a></li><li><a class="tocitem" href="../../../packages/SumOfSquares/">jump-dev/SumOfSquares.jl</a></li><li><a class="tocitem" href="../../../packages/DisjunctiveProgramming/">hdavid16/DisjunctiveProgramming.jl</a></li><li><a class="tocitem" href="../../../packages/InfiniteOpt/">infiniteopt/InfiniteOpt.jl</a></li><li><a class="tocitem" href="../../../packages/BilevelJuMP/">joaquimg/BilevelJuMP.jl</a></li><li><a class="tocitem" href="../../../packages/SDDP/">odow/SDDP.jl</a></li><li><a class="tocitem" href="../../../packages/Plasmo/">plasmo-dev/Plasmo.jl</a></li><li><a class="tocitem" href="../../../extensions/DimensionalData/">rafaqz/DimensionalData.jl</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9" type="checkbox"/><label class="tocitem" for="menuitem-9"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-1" type="checkbox"/><label class="tocitem" for="menuitem-9-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/">Introduction</a></li><li><a class="tocitem" href="../../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-2" type="checkbox"/><label class="tocitem" for="menuitem-9-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-3" type="checkbox"/><label class="tocitem" for="menuitem-9-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-4" type="checkbox"/><label class="tocitem" for="menuitem-9-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-5" type="checkbox"/><label class="tocitem" for="menuitem-9-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-9-6-1" type="checkbox"/><label class="tocitem" for="menuitem-9-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-2" type="checkbox"/><label class="tocitem" for="menuitem-9-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/implementation/">Implementation</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/list_of_bridges/">List of bridges</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-3" type="checkbox"/><label class="tocitem" for="menuitem-9-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-4" type="checkbox"/><label class="tocitem" for="menuitem-9-6-4"><span class="docs-label">Nonlinear</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Nonlinear/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-5" type="checkbox"/><label class="tocitem" for="menuitem-9-6-5"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-6-6" type="checkbox"/><label class="tocitem" for="menuitem-9-6-6"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-7" type="checkbox"/><label class="tocitem" for="menuitem-9-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/developer/checklists/">Checklists</a></li></ul></li><li><a class="tocitem" href="../../../moi/release_notes/">Release notes</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Conic programs</a></li><li class="is-active"><a href>Ellipsoid approximation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Ellipsoid approximation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/conic/ellipse_approx.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Ellipsoid-approximation"><a class="docs-heading-anchor" href="#Ellipsoid-approximation">Ellipsoid approximation</a><a id="Ellipsoid-approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Ellipsoid-approximation" title="Permalink"></a></h1><p><em>This tutorial was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em> <a href="../ellipse_approx.jl"><em>Download the source as a <code>.jl</code> file</em></a>.</p><p>This tutorial considers the problem of computing <em>extremal ellipsoids</em>: finding ellipsoids that best approximate a given set. As an extension, we show how to use JuMP to inspect the bridges that were used, and how to explore alternative formulations.</p><p>The model comes from Section 4.9 of (<a href="../../../background/bibliography/#BenTal2001">Ben-Tal and Nemirovski, 2001</a>).</p><p>For a related example, see also the <a href="../min_ellipse/#Minimal-ellipses">Minimal ellipses</a> tutorial.</p><h2 id="Problem-formulation"><a class="docs-heading-anchor" href="#Problem-formulation">Problem formulation</a><a id="Problem-formulation-1"></a><a class="docs-heading-anchor-permalink" href="#Problem-formulation" title="Permalink"></a></h2><p>Suppose that we are given a set <span>$\mathcal{S}$</span> consisting of <span>$m$</span> points in <span>$n$</span>-dimensional space:</p><p class="math-container">\[\mathcal{S} = \{ x_1, \ldots, x_m \} \subset \mathbb{R}^n\]</p><p>Our goal is to determine an optimal vector <span>$c \in  \mathbb{R}^n$</span> and an optimal <span>$n \times n$</span> real symmetric matrix <span>$D$</span> such that the ellipse:</p><p class="math-container">\[E(D, c) = \{ x : (x - c)^\top D ( x - c) \leq 1 \},\]</p><p>contains <span>$\mathcal{S}$</span> and has the smallest possible volume.</p><p>The optimal <span>$D$</span> and <span>$c$</span> are given by the optimization problem:</p><p class="math-container">\[\begin{aligned}
+\max        \quad &amp; t                                                                    \\
+\text{s.t.} \quad &amp; Z \succeq 0 \\
+                  &amp; \begin{bmatrix} s &amp; z^\top \\ z &amp; Z \\ \end{bmatrix} \succeq 0 \\
+                  &amp; x_i^\top Z x_i - 2x_i^\top z + s \leq 1    &amp; \quad i=1, \ldots, m \\
+                  &amp; t \le \sqrt[n]{\det(Z)},
+\end{aligned}\]</p><p>where <span>$D = Z_*$</span> and <span>$c = Z_*^{-1} z_*$</span>.</p><h2 id="Required-packages"><a class="docs-heading-anchor" href="#Required-packages">Required packages</a><a id="Required-packages-1"></a><a class="docs-heading-anchor-permalink" href="#Required-packages" title="Permalink"></a></h2><p>This tutorial uses the following packages:</p><pre><code class="language-julia hljs">using JuMP
+import LinearAlgebra
+import Plots
+import Random
+import SCS</code></pre><h2 id="Data"><a class="docs-heading-anchor" href="#Data">Data</a><a id="Data-1"></a><a class="docs-heading-anchor-permalink" href="#Data" title="Permalink"></a></h2><p>We first need to generate some points to work with.</p><pre><code class="language-julia hljs">function generate_point_cloud(
+    m;            # number of 2-dimensional points
+    a = 10,       # scaling in x direction
+    b = 2,        # scaling in y direction
+    rho = π / 6,  # rotation of points around origin
+    random_seed = 1,
+)
+    rng = Random.MersenneTwister(random_seed)
+    P = randn(rng, Float64, m, 2)
+    Phi = [a*cos(rho) a*sin(rho); -b*sin(rho) b*cos(rho)]
+    S = P * Phi
+    return S
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">generate_point_cloud (generic function with 1 method)</code></pre><p>For the sake of this example, let&#39;s take <span>$m = 600$</span>:</p><pre><code class="language-julia hljs">S = generate_point_cloud(600);</code></pre><p>We will visualise the points (and ellipse) using the Plots package:</p><pre><code class="language-julia hljs">r = 1.1 * maximum(abs.(S))
+plot = Plots.scatter(
+    S[:, 1],
+    S[:, 2];
+    xlim = (-r, r),
+    ylim = (-r, r),
+    label = nothing,
+    c = :green,
+    shape = :x,
+    size = (600, 600),
+)</code></pre><img src="6cd79117.svg" alt="Example block output"/><h2 id="JuMP-formulation"><a class="docs-heading-anchor" href="#JuMP-formulation">JuMP formulation</a><a id="JuMP-formulation-1"></a><a class="docs-heading-anchor-permalink" href="#JuMP-formulation" title="Permalink"></a></h2><p>Now let&#39;s build and the JuMP model. We&#39;ll compute <span>$D$</span> and <span>$c$</span> after the solve.</p><pre><code class="language-julia hljs">model = Model(SCS.Optimizer)
+# We need to use a tighter tolerance for this example, otherwise the bounding
+# ellipse won&#39;t actually be bounding...
+set_attribute(model, &quot;eps_rel&quot;, 1e-6)
+set_silent(model)
+m, n = size(S)
+@variable(model, z[1:n])
+@variable(model, Z[1:n, 1:n], PSD)
+@variable(model, s)
+@variable(model, t)
+@constraint(model, [s z&#39;; z Z] &gt;= 0, PSDCone())
+@constraint(
+    model,
+    [i in 1:m],
+    S[i, :]&#39; * Z * S[i, :] - 2 * S[i, :]&#39; * z + s &lt;= 1,
+)
+@constraint(model, [t; vec(Z)] in MOI.RootDetConeSquare(n))
+@objective(model, Max, t)
+optimize!(model)
+solution_summary(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">* Solver : SCS
+
+* Status
+  Result count       : 1
+  Termination status : OPTIMAL
+  Message from the solver:
+  &quot;solved&quot;
+
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : 4.50777e-03
+  Dual objective value : 4.47966e-03
+
+* Work counters
+  Solve time (sec)   : 5.33646e-01
+</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>After solving the model to optimality we can recover the solution in terms of <span>$D$</span> and <span>$c$</span>:</p><pre><code class="language-julia hljs">D = value.(Z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Float64}:
+  0.00707822  -0.0102173
+ -0.0102173    0.0175624</code></pre><pre><code class="language-julia hljs">c = D \ value.(z)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
+ -3.248028774784083
+ -1.8428256866082124</code></pre><p>Finally, overlaying the solution in the plot we see the minimal volume approximating ellipsoid:</p><pre><code class="language-julia hljs">P = sqrt(D)
+q = -P * c
+data = [tuple(P \ [cos(θ) - q[1], sin(θ) - q[2]]...) for θ in 0:0.05:(2pi+0.05)]
+Plots.plot!(plot, data; c = :crimson, label = nothing)</code></pre><img src="81db3ab3.svg" alt="Example block output"/><h2 id="Alternative-formulations"><a class="docs-heading-anchor" href="#Alternative-formulations">Alternative formulations</a><a id="Alternative-formulations-1"></a><a class="docs-heading-anchor-permalink" href="#Alternative-formulations" title="Permalink"></a></h2><p>The formulation of <code>model</code> uses <a href="../../../moi/reference/standard_form/#MathOptInterface.RootDetConeSquare"><code>MOI.RootDetConeSquare</code></a>. However, because SCS does not natively support this cone, JuMP automatically reformulates the problem into an equivalent problem that SCS <em>does</em> support. You can see the reformulation that JuMP chose using <a href="../../../api/JuMP/#JuMP.print_active_bridges"><code>print_active_bridges</code></a>:</p><pre><code class="language-julia hljs">print_active_bridges(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> * <span class="sgr31">Unsupported objective: MOI.VariableIndex</span>
+ |  bridged by:
+ |   MOIB.Objective.FunctionConversionBridge{Float64, MOI.ScalarAffineFunction{Float64}, MOI.VariableIndex}
+ |  may introduce:
+ |   * <span class="sgr32">Supported objective: MOI.ScalarAffineFunction{Float64}</span>
+ * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.LessThan{Float64}</span>
+ |  bridged by:
+ |   MOIB.Constraint.LessToGreaterBridge{Float64, MOI.ScalarAffineFunction{Float64}, MOI.ScalarAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.GreaterThan{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Nonnegatives, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeSquare</span>
+ |  bridged by:
+ |   MOIB.Constraint.SquareBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.ScalarAffineFunction{Float64}, MOI.PositiveSemidefiniteConeTriangle, MOI.PositiveSemidefiniteConeSquare}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |  bridged by:
+ |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.EqualTo{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Zeros, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Zeros</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |  bridged by:
+ |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.RootDetConeSquare</span>
+ |  bridged by:
+ |   MOIB.Constraint.SquareBridge{Float64, MOI.VectorOfVariables, MOI.ScalarAffineFunction{Float64}, MOI.RootDetConeTriangle, MOI.RootDetConeSquare}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.RootDetConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.RootDetBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.VectorOfVariables}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.GeometricMeanCone</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.FunctionConversionBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.GeometricMeanCone}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.GeometricMeanCone</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   MOIB.Constraint.GeoMeanToPowerBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PowerCone{Float64}</span>
+ |   |   |   |   * <span class="sgr31">Unsupported variable: MOI.Nonnegatives</span>
+ |   |   |   |   |  adding as constraint:
+ |   |   |   |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   |   |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.Nonnegatives</span>
+ |   |   |   |   |   |  bridged by:
+ |   |   |   |   |   |   MOIB.Constraint.FunctionConversionBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.Nonnegatives}
+ |   |   |   |   |   |  may introduce:
+ |   |   |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.EqualTo{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Zeros, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Zeros</span></code></pre><p>There&#39;s a lot going on here, but the first bullet is:</p><pre><code class="language-raw hljs">* Unsupported objective: MOI.VariableIndex
+|  bridged by:
+|   MOIB.Objective.FunctionizeBridge{Float64}
+|  introduces:
+|   * Supported objective: MOI.ScalarAffineFunction{Float64}</code></pre><p>This says that SCS does not support a <code>MOI.VariableIndex</code> objective function, and that JuMP used a <a href="../../../moi/submodules/Bridges/list_of_bridges/#MathOptInterface.Bridges.Objective.FunctionizeBridge"><code>MOI.Bridges.Objective.FunctionizeBridge</code></a> to convert it into a <code>MOI.ScalarAffineFunction{Float64}</code> objective function.</p><p>We can leave JuMP to do the reformulation, or we can rewrite our model to have an objective function that SCS natively supports:</p><pre><code class="language-julia hljs">@objective(model, Max, 1.0 * t + 0.0);</code></pre><p>Re-printing the active bridges:</p><pre><code class="language-julia hljs">print_active_bridges(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> * <span class="sgr32">Supported objective: MOI.ScalarAffineFunction{Float64}</span>
+ * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.LessThan{Float64}</span>
+ |  bridged by:
+ |   MOIB.Constraint.LessToGreaterBridge{Float64, MOI.ScalarAffineFunction{Float64}, MOI.ScalarAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.GreaterThan{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Nonnegatives, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeSquare</span>
+ |  bridged by:
+ |   MOIB.Constraint.SquareBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.ScalarAffineFunction{Float64}, MOI.PositiveSemidefiniteConeTriangle, MOI.PositiveSemidefiniteConeSquare}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |  bridged by:
+ |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.EqualTo{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Zeros, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Zeros</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |  bridged by:
+ |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.RootDetConeSquare</span>
+ |  bridged by:
+ |   MOIB.Constraint.SquareBridge{Float64, MOI.VectorOfVariables, MOI.ScalarAffineFunction{Float64}, MOI.RootDetConeTriangle, MOI.RootDetConeSquare}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.RootDetConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.RootDetBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.VectorOfVariables}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.GeometricMeanCone</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.FunctionConversionBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.GeometricMeanCone}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.GeometricMeanCone</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   MOIB.Constraint.GeoMeanToPowerBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PowerCone{Float64}</span>
+ |   |   |   |   * <span class="sgr31">Unsupported variable: MOI.Nonnegatives</span>
+ |   |   |   |   |  adding as constraint:
+ |   |   |   |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   |   |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.Nonnegatives</span>
+ |   |   |   |   |   |  bridged by:
+ |   |   |   |   |   |   MOIB.Constraint.FunctionConversionBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.Nonnegatives}
+ |   |   |   |   |   |  may introduce:
+ |   |   |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.EqualTo{Float64}</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Zeros, MOI.ScalarAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Zeros</span></code></pre><p>we get <code>* Supported objective: MOI.ScalarAffineFunction{Float64}</code>.</p><p>We can manually implement some other reformulations to change our model to something that SCS more closely supports by:</p><ul><li><p>Replacing the <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorOfVariables"><code>MOI.VectorOfVariables</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MOI.PositiveSemidefiniteConeTriangle</code></a> constraint <code>@variable(model, Z[1:n, 1:n], PSD)</code> with the <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorAffineFunction"><code>MOI.VectorAffineFunction</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MOI.PositiveSemidefiniteConeTriangle</code></a> <code>@constraint(model, Z &gt;= 0, PSDCone())</code>.</p></li><li><p>Replacing the <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorOfVariables"><code>MOI.VectorOfVariables</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeSquare"><code>MOI.PositiveSemidefiniteConeSquare</code></a> constraint <code>[s z&#39;; z Z] &gt;= 0, PSDCone()</code> with the <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorAffineFunction"><code>MOI.VectorAffineFunction</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MOI.PositiveSemidefiniteConeTriangle</code></a> <code>@constraint(model, LinearAlgebra.Symmetric([s z&#39;; z Z]) &gt;= 0, PSDCone())</code>.</p></li><li><p>Replacing the <a href="../../../moi/reference/standard_form/#MathOptInterface.ScalarAffineFunction"><code>MOI.ScalarAffineFunction</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.GreaterThan"><code>MOI.GreaterThan</code></a> constraints with the vectorized equivalent of <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorAffineFunction"><code>MOI.VectorAffineFunction</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.Nonnegatives"><code>MOI.Nonnegatives</code></a></p></li><li><p>Replacing the <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorOfVariables"><code>MOI.VectorOfVariables</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.RootDetConeSquare"><code>MOI.RootDetConeSquare</code></a> constraint with <a href="../../../moi/reference/standard_form/#MathOptInterface.VectorAffineFunction"><code>MOI.VectorAffineFunction</code></a> in <a href="../../../moi/reference/standard_form/#MathOptInterface.RootDetConeTriangle"><code>MOI.RootDetConeTriangle</code></a>.</p></li></ul><p>Note that we still need to bridge <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MOI.PositiveSemidefiniteConeTriangle</code></a> constraints because SCS uses an internal <code>SCS.ScaledPSDCone</code> set instead.</p><pre><code class="language-julia hljs">model = Model(SCS.Optimizer)
+set_attribute(model, &quot;eps_rel&quot;, 1e-6)
+set_silent(model)
+@variable(model, z[1:n])
+@variable(model, s)
+@variable(model, t)
+# The former @variable(model, Z[1:n, 1:n], PSD)
+@variable(model, Z[1:n, 1:n], Symmetric)
+@constraint(model, Z &gt;= 0, PSDCone())
+# The former [s z&#39;; z Z] &gt;= 0, PSDCone()
+@constraint(model, LinearAlgebra.Symmetric([s z&#39;; z Z]) &gt;= 0, PSDCone())
+# The former constraint S[i, :]&#39; * Z * S[i, :] - 2 * S[i, :]&#39; * z + s &lt;= 1
+f = [1 - S[i, :]&#39; * Z * S[i, :] + 2 * S[i, :]&#39; * z - s for i in 1:m]
+@constraint(model, f in MOI.Nonnegatives(m))
+# The former constraint [t; vec(Z)] in MOI.RootDetConeSquare(n)
+@constraint(model, 1 * [t; triangle_vec(Z)] .+ 0 in MOI.RootDetConeTriangle(n))
+# The former @objective(model, Max, t)
+@objective(model, Max, 1 * t + 0)
+optimize!(model)
+solve_time_1 = solve_time(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.534381127</code></pre><p>This formulation gives the much smaller graph:</p><pre><code class="language-julia hljs">print_active_bridges(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> * <span class="sgr32">Supported objective: MOI.ScalarAffineFunction{Float64}</span>
+ * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |  bridged by:
+ |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.RootDetConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.RootDetBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |  bridged by:
+ |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.GeometricMeanCone</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.GeoMeanToPowerBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PowerCone{Float64}</span>
+ |   |   * <span class="sgr31">Unsupported variable: MOI.Nonnegatives</span>
+ |   |   |  adding as constraint:
+ |   |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorOfVariables-in-MOI.Nonnegatives</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   MOIB.Constraint.FunctionConversionBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorOfVariables, MOI.Nonnegatives}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ |   * <span class="sgr32">Supported variable: MOI.Reals</span></code></pre><p>The last bullet shows how JuMP reformulated the <a href="../../../moi/reference/standard_form/#MathOptInterface.RootDetConeTriangle"><code>MOI.RootDetConeTriangle</code></a> constraint by adding a mix of <a href="../../../moi/reference/standard_form/#MathOptInterface.PositiveSemidefiniteConeTriangle"><code>MOI.PositiveSemidefiniteConeTriangle</code></a> and <a href="../../../moi/reference/standard_form/#MathOptInterface.GeometricMeanCone"><code>MOI.GeometricMeanCone</code></a> constraints.</p><p>Because SCS doesn&#39;t natively support the <a href="../../../moi/reference/standard_form/#MathOptInterface.GeometricMeanCone"><code>MOI.GeometricMeanCone</code></a>, these constraints were further bridged using a <a href="../../../moi/submodules/Bridges/list_of_bridges/#MathOptInterface.Bridges.Constraint.GeoMeanToPowerBridge"><code>MOI.Bridges.Constraint.GeoMeanToPowerBridge</code></a> to a series of <a href="../../../moi/reference/standard_form/#MathOptInterface.PowerCone"><code>MOI.PowerCone</code></a> constraints.</p><p>However, there are many other ways that a <a href="../../../moi/reference/standard_form/#MathOptInterface.GeometricMeanCone"><code>MOI.GeometricMeanCone</code></a> can be reformulated into something that SCS supports. Let&#39;s see what happens if we use <a href="../../../api/JuMP/#JuMP.remove_bridge"><code>remove_bridge</code></a> to remove the <a href="../../../moi/submodules/Bridges/list_of_bridges/#MathOptInterface.Bridges.Constraint.GeoMeanToPowerBridge"><code>MOI.Bridges.Constraint.GeoMeanToPowerBridge</code></a>:</p><pre><code class="language-julia hljs">remove_bridge(model, MOI.Bridges.Constraint.GeoMeanToPowerBridge)
+optimize!(model)</code></pre><p>This time, the solve took:</p><pre><code class="language-julia hljs">solve_time_2 = solve_time(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.319890201</code></pre><p>where previously it took</p><pre><code class="language-julia hljs">solve_time_1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.534381127</code></pre><p>Why was the solve time different?</p><pre><code class="language-julia hljs">print_active_bridges(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> * <span class="sgr32">Supported objective: MOI.ScalarAffineFunction{Float64}</span>
+ * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |  bridged by:
+ |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.RootDetConeTriangle</span>
+ |  bridged by:
+ |   MOIB.Constraint.RootDetBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |  may introduce:
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.PositiveSemidefiniteConeTriangle</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.SetDotScalingBridge{Float64, MOI.PositiveSemidefiniteConeTriangle, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Scaled{MOI.PositiveSemidefiniteConeTriangle}</span>
+ |   |   |  bridged by:
+ |   |   |   SCS.ScaledPSDConeBridge{Float64, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-SCS.ScaledPSDCone</span>
+ |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.GeometricMeanCone</span>
+ |   |  bridged by:
+ |   |   MOIB.Constraint.GeoMeanBridge{Float64, MOI.ScalarAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |  may introduce:
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.LessThan{Float64}</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.LessToGreaterBridge{Float64, MOI.ScalarAffineFunction{Float64}, MOI.ScalarAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr31">Unsupported constraint: MOI.ScalarAffineFunction{Float64}-in-MOI.GreaterThan{Float64}</span>
+ |   |   |   |  bridged by:
+ |   |   |   |   MOIB.Constraint.VectorizeBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.Nonnegatives, MOI.ScalarAffineFunction{Float64}}
+ |   |   |   |  may introduce:
+ |   |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ |   |   * <span class="sgr31">Unsupported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.RotatedSecondOrderCone</span>
+ |   |   |  bridged by:
+ |   |   |   MOIB.Constraint.RSOCtoSOCBridge{Float64, MOI.VectorAffineFunction{Float64}, MOI.VectorAffineFunction{Float64}}
+ |   |   |  may introduce:
+ |   |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.SecondOrderCone</span>
+ |   |   * <span class="sgr32">Supported constraint: MOI.VectorAffineFunction{Float64}-in-MOI.Nonnegatives</span>
+ |   |   * <span class="sgr32">Supported variable: MOI.Reals</span>
+ |   * <span class="sgr32">Supported variable: MOI.Reals</span></code></pre><p>This time, JuMP used a <a href="../../../moi/submodules/Bridges/list_of_bridges/#MathOptInterface.Bridges.Constraint.GeoMeanBridge"><code>MOI.Bridges.Constraint.GeoMeanBridge</code></a> to reformulate the constraint into a set of <a href="../../../moi/reference/standard_form/#MathOptInterface.RotatedSecondOrderCone"><code>MOI.RotatedSecondOrderCone</code></a> constraints, which were further reformulated into a set of supported <a href="../../../moi/reference/standard_form/#MathOptInterface.SecondOrderCone"><code>MOI.SecondOrderCone</code></a> constraints.</p><p>Since the two models are equivalent, we can conclude that for this particular model, the <a href="../../../moi/reference/standard_form/#MathOptInterface.SecondOrderCone"><code>MOI.SecondOrderCone</code></a> formulation is more efficient.</p><p>In general though, the performance of a particular reformulation is problem- and solver-specific. Therefore, JuMP chooses to minimize the number of bridges in the default reformulation, leaving you to explore alternative formulations using the tools and techniques shown in this tutorial.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../min_ellipse/">« Minimal ellipses</a><a class="docs-footer-nextpage" href="../quantum_discrimination/">Quantum state discrimination »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Thursday 1 February 2024 23:48">Thursday 1 February 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
