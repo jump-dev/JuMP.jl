@@ -3,6 +3,20 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+# Recursion instead of a loop over `args` to avoid `args[i]` with a runtime `i`,
+# which allocates a copy of `args` if it is a heterogeneous tuple.
+_setindex_args!(::Vector{Any}, ::Int) = nothing
+
+function _setindex_args!(
+    ret::Vector{Any},
+    i::Int,
+    arg,
+    args::Vararg{Any,N},
+) where {N}
+    ret[i] = arg
+    return _setindex_args!(ret, i + 1, args...)
+end
+
 """
     GenericNonlinearExpr{V}(head::Symbol, args::Vector{Any})
     GenericNonlinearExpr{V}(head::Symbol, args::Any...)
@@ -86,11 +100,11 @@ mutable struct GenericNonlinearExpr{V<:AbstractVariableRef} <:
         head::Symbol,
         args::Vararg{Any,N},
     ) where {V<:AbstractVariableRef,N}
-        for arg in args
-            _throw_if_not_real(arg)
-            _throw_if_legacy_error(arg)
-        end
-        return new{V}(head, Any[a for a in args])
+        foreach(_throw_if_not_real, args)
+        foreach(_throw_if_legacy_error, args)
+        ret = Vector{Any}(undef, N)
+        _setindex_args!(ret, 1, args...)
+        return new{V}(head, ret)
     end
 
     function GenericNonlinearExpr{V}(
