@@ -358,7 +358,7 @@ function test_bridges_direct()
 end
 
 function test_model_type_aliases()
-    @test GenericModel <: JuMP.ModelImpl
+    @test GenericModel <: JuMP.ConcreteModel
     @test GenericVariableRef<:(JuMP.VariableRefImpl{T} where {T<:Real})
     @test Model === GenericModel{Float64}
     @test VariableRef === GenericVariableRef{Float64}

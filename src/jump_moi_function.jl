@@ -55,7 +55,7 @@ function moi_function end
 
 # Default fallback for backwards compatibility. The first argument `model` was
 # introduced in JuMP@1.31.0.
-function moi_function(model::ModelImpl, f)
+function moi_function(model::ConcreteModel, f)
     check_belongs_to_model(f, model)
     return moi_function(f)
 end
@@ -144,14 +144,14 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
 end
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.VariableIndex},
 ) where {T}
     return variable_ref_type(model)
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::MOI.VariableIndex,
 ) where {T}
     return variable_ref_type(model)(model, variable)
@@ -173,7 +173,7 @@ function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
 end
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.ScalarAffineFunction{C}},
 ) where {C,T}
     S = promote_type(C, T)
@@ -181,7 +181,7 @@ function jump_function_type(
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::MOI.ScalarAffineFunction{C},
 ) where {C,T}
     S = promote_type(C, T)
@@ -208,14 +208,14 @@ function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
 end
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.ScalarQuadraticFunction{C}},
 ) where {C,T}
     return GenericQuadExpr{promote_type(T, C),variable_ref_type(model)}
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::MOI.ScalarQuadraticFunction{C},
 ) where {C,T}
     S = promote_type(T, C)
@@ -226,7 +226,7 @@ end
 
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
-function moi_function(model::ModelImpl, f::GenericNonlinearExpr{V}) where {V}
+function moi_function(model::ConcreteModel, f::GenericNonlinearExpr{V}) where {V}
     if (cache = get(model.subexpressions, f, nothing)) !== nothing
         return cache
     end
@@ -264,7 +264,7 @@ end
 # example, this method was used by Plasmo.jl.
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     model = owner_model(f)
-    if model isa ModelImpl
+    if model isa ConcreteModel
         # If `f` has a `GenericModel` as its owner, redirect to the two-arg
         # vesion so that we can cache common subexpressions.
         return moi_function(model, f)
@@ -330,13 +330,13 @@ function check_belongs_to_model(
 end
 
 function jump_function_type(
-    model::ModelImpl,
+    model::ConcreteModel,
     ::Type{<:MOI.ScalarNonlinearFunction},
 )
     return GenericNonlinearExpr{variable_ref_type(typeof(model))}
 end
 
-function jump_function(model::ModelImpl, f::MOI.ScalarNonlinearFunction)
+function jump_function(model::ConcreteModel, f::MOI.ScalarNonlinearFunction)
     V = variable_ref_type(typeof(model))
     ret = GenericNonlinearExpr{V}(f.head, Any[])
     stack = Tuple{GenericNonlinearExpr,Any}[]
@@ -369,14 +369,14 @@ function moi_function(variables::Vector{<:AbstractVariableRef})
 end
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.VectorOfVariables},
 ) where {T}
     return Vector{variable_ref_type(model)}
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables::MOI.VectorOfVariables,
 ) where {T}
     return variable_ref_type(model)[
@@ -393,7 +393,7 @@ end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.VectorAffineFunction{C}},
 ) where {C,T}
     S = promote_type(C, T)
@@ -401,7 +401,7 @@ function jump_function_type(
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::MOI.VectorAffineFunction{C},
 ) where {T,C}
     S = promote_type(C, T)
@@ -429,7 +429,7 @@ end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.VectorQuadraticFunction{C}},
 ) where {C,T}
     S = promote_type(T, C)
@@ -437,7 +437,7 @@ function jump_function_type(
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::MOI.VectorQuadraticFunction{C},
 ) where {C,T}
     S = promote_type(T, C)
@@ -458,21 +458,21 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
 end
 
 function moi_function(
-    model::ModelImpl,
+    model::ConcreteModel,
     f::AbstractVector{<:GenericNonlinearExpr},
 )
     return MOI.VectorNonlinearFunction([moi_function(model, row) for row in f])
 end
 
 function jump_function_type(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{MOI.VectorNonlinearFunction},
 ) where {T}
     return Vector{GenericNonlinearExpr{variable_ref_type(model)}}
 end
 
 function jump_function(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::MOI.VectorNonlinearFunction,
 ) where {T}
     return GenericNonlinearExpr{variable_ref_type(model)}[
@@ -482,7 +482,7 @@ end
 
 # MOI.Nonlinear.Expression
 
-function jump_function(model::ModelImpl, expr::MOI.Nonlinear.Expression)
+function jump_function(model::ConcreteModel, expr::MOI.Nonlinear.Expression)
     V = variable_ref_type(typeof(model))
     nlp = nonlinear_model(model)::MOI.Nonlinear.Model
     parsed = Vector{Any}(undef, length(expr.nodes))
@@ -539,7 +539,7 @@ function moi_function(model, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
-function moi_function(model::ModelImpl, constraint::AbstractConstraint)
+function moi_function(model::ConcreteModel, constraint::AbstractConstraint)
     return moi_function(model, jump_function(constraint))
 end
 
@@ -562,7 +562,7 @@ moi_function(x::Number) = x
 
 check_belongs_to_model(::Number, ::AbstractModel) = nothing
 
-jump_function(::ModelImpl{T}, x::Number) where {T} = convert(T, x)
+jump_function(::ConcreteModel{T}, x::Number) where {T} = convert(T, x)
 
 # Base.AbstractArray
 

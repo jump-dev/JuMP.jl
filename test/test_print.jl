@@ -1192,7 +1192,7 @@ function test_show_public_model_type_aliases()
         )
         concrete = typeof(concrete_model)
         concrete_ref = variable_ref_type(concrete_model)
-        @test occursin("ModelImpl", show_type(concrete))
+        @test occursin("ConcreteModel", show_type(concrete))
         @test occursin("VariableRefImpl", show_type(concrete_ref))
         @test endswith(show_type(concrete), ", $(show_type(typeof(hook)))}")
     end

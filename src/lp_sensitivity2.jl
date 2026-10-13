@@ -77,7 +77,7 @@ The lower bound of `x` can decrease by -Inf or increase by 3.0.
 ```
 """
 function lp_sensitivity_report(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     atol::T = Base.rtoldefault(T),
 ) where {T}
     if !_is_lp(model)
@@ -333,7 +333,7 @@ end
 
 Return `true` if `model` is a linear program.
 """
-function _is_lp(model::ModelImpl)
+function _is_lp(model::ConcreteModel)
     AffType = Union{VariableRefImpl,GenericAffExpr}
     if !(objective_function_type(model) <: AffType)
         return false
@@ -354,7 +354,7 @@ end
 
 See [`lp_matrix_data`](@ref) instead.
 """
-function _standard_form_matrix(model::ModelImpl{T}) where {T}
+function _standard_form_matrix(model::ConcreteModel{T}) where {T}
     matrix = lp_matrix_data(model)
     I = SparseArrays.spdiagm(fill(-one(T), length(matrix.affine_constraints)))
     return (
@@ -371,7 +371,7 @@ _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _convert_nonbasic_status(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
 _convert_nonbasic_status(::Any) = MOI.NONBASIC
 
-function _try_get_constraint_basis_status(model::ModelImpl, constraint)
+function _try_get_constraint_basis_status(model::ConcreteModel, constraint)
     try
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
     catch
@@ -386,7 +386,7 @@ function _try_get_constraint_basis_status(model::ModelImpl, constraint)
     end
 end
 
-function _try_get_variable_basis_status(model::ModelImpl, variable)
+function _try_get_variable_basis_status(model::ConcreteModel, variable)
     try
         return MOI.get(model, MOI.VariableBasisStatus(), variable)
     catch
@@ -406,7 +406,7 @@ _nonbasic_at_lower(::Any) = MOI.BASIC
 _nonbasic_at_upper(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _nonbasic_at_upper(::Any) = MOI.BASIC
 
-function _standard_form_basis(model::ModelImpl, std_form)
+function _standard_form_basis(model::ConcreteModel, std_form)
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))

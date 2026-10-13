@@ -466,7 +466,7 @@ con : x² = 1
 """
 function constraint_by_name end
 
-function constraint_by_name(model::ModelImpl, name::String)
+function constraint_by_name(model::ConcreteModel, name::String)
     index = MOI.get(backend(model), MOI.ConstraintIndex, name)
     if index === nothing
         return nothing
@@ -475,7 +475,7 @@ function constraint_by_name(model::ModelImpl, name::String)
 end
 
 function constraint_by_name(
-    model::ModelImpl,
+    model::ConcreteModel,
     name::String,
     ::Type{F},
     ::Type{S},
@@ -488,7 +488,7 @@ function constraint_by_name(
 end
 
 function constraint_by_name(
-    model::ModelImpl,
+    model::ConcreteModel,
     name::String,
     ::Type{F},
     ::Type{S},
@@ -560,7 +560,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::ModelImpl, con_ref::ConstraintRef)
+function delete(model::ConcreteModel, con_ref::ConstraintRef)
     if model !== con_ref.model
         error(
             """
@@ -614,7 +614,7 @@ Stacktrace:
 ```
 """
 function delete(
-    model::ModelImpl,
+    model::ConcreteModel,
     con_refs::Vector{<:ConstraintRef{<:AbstractModel}},
 )
     if any(c -> model !== c.model, con_refs)
@@ -656,7 +656,7 @@ julia> is_valid(model_2, c)
 false
 ```
 """
-function is_valid(model::ModelImpl, con_ref::ConstraintRef{<:AbstractModel})
+function is_valid(model::ConcreteModel, con_ref::ConstraintRef{<:AbstractModel})
     return (
         model === con_ref.model && MOI.is_valid(backend(model), con_ref.index)
     )
@@ -744,7 +744,7 @@ struct BridgeableConstraint{C,B,T} <: AbstractConstraint
 end
 
 function add_constraint(
-    model::ModelImpl,
+    model::ConcreteModel,
     con::BridgeableConstraint,
     name::String = "",
 )
@@ -1018,7 +1018,7 @@ This method should only be implemented by developers creating JuMP extensions.
 It should never be called by users of JuMP.
 """
 function add_constraint(
-    model::ModelImpl,
+    model::ConcreteModel,
     con::AbstractConstraint,
     name::String = "",
 )
@@ -1352,7 +1352,7 @@ julia> has_duals(model)
 true
 ```
 """
-function has_duals(model::ModelImpl; result::Int = 1)
+function has_duals(model::ConcreteModel; result::Int = 1)
     return dual_status(model; result = result) != MOI.NO_SOLUTION
 end
 
@@ -1587,7 +1587,7 @@ julia> num_constraints(model, AffExpr, MOI.LessThan{Float64})
 ```
 """
 function num_constraints(
-    model::ModelImpl,
+    model::ConcreteModel,
     function_type::Type{
         <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
     },
@@ -1632,7 +1632,7 @@ julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
 ```
 """
 function all_constraints(
-    model::ModelImpl,
+    model::ConcreteModel,
     function_type::Type{
         <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
     },
@@ -1688,7 +1688,7 @@ Iterating over the list of function and set types is a type-unstable operation.
 Consider using a function barrier. See the [Performance tips for extensions](@ref)
 section of the documentation for more details.
 """
-function list_of_constraint_types(model::ModelImpl)::Vector{Tuple{Type,Type}}
+function list_of_constraint_types(model::ConcreteModel)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
     return Tuple{Type,Type}[
@@ -1724,7 +1724,7 @@ julia> num_constraints(model; count_variable_in_set_constraints = false)
 ```
 """
 function num_constraints(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     count_variable_in_set_constraints::Bool,
 ) where {T}
     ret = num_nonlinear_constraints(model)
@@ -1781,7 +1781,7 @@ and a function barrier. See the [Performance tips for extensions](@ref) section
 of the documentation for more details.
 """
 function all_constraints(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     include_variable_in_set_constraints::Bool,
 ) where {T}
     ret = ConstraintRef[]
@@ -1881,7 +1881,7 @@ Subject to
 ```
 """
 function relax_with_penalty!(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     penalties::Dict;
     default::Union{Nothing,Real} = nothing,
 ) where {T}
@@ -1903,7 +1903,7 @@ function relax_with_penalty!(
 end
 
 function relax_with_penalty!(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     default::Real = one(T),
 ) where {T}
     return relax_with_penalty!(model, Dict(); default)

@@ -761,7 +761,7 @@ function MOI.ScalarAffineFunction(
 end
 
 function GenericAffExpr{C,V}(
-    m::ModelImpl,
+    m::ConcreteModel,
     f::MOI.ScalarAffineFunction,
 ) where {C,V<:VariableRefImpl}
     aff = GenericAffExpr{C,V}(f.constant)

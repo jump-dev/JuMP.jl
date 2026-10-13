@@ -331,7 +331,7 @@ It should never be called by users of JuMP.
 """
 operator_warn(::AbstractModel) = nothing
 
-function operator_warn(model::ModelImpl)
+function operator_warn(model::ConcreteModel)
     model.operator_counter += 1
     return
 end

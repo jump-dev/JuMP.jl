@@ -119,7 +119,7 @@ julia> data.sense
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function lp_matrix_data(model::ModelImpl{T}) where {T}
+function lp_matrix_data(model::ConcreteModel{T}) where {T}
     variables = all_variables(model)
     columns = Dict(var => i for (i, var) in enumerate(variables))
     n = length(columns)
@@ -166,7 +166,7 @@ _bounds(s::MOI.EqualTo{T}) where {T} = (s.value, s.value)
 _bounds(s::MOI.Interval{T}) where {T} = (s.lower, s.upper)
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{V},
     ::Type{S},
     cache::Any,
@@ -187,7 +187,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{V},
     ::Type{MOI.Integer},
     cache::Any,
@@ -200,7 +200,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{V},
     ::Type{MOI.ZeroOne},
     cache::Any,
@@ -213,7 +213,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{F},
     ::Type{S},
     cache::Any,
@@ -241,7 +241,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    ::ModelImpl{T},
+    ::ConcreteModel{T},
     ::Type{F},
     ::Type{S},
     ::Any,
@@ -257,7 +257,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{<:VariableRefImpl{T}},
     cache::Any,
 ) where {T}
@@ -267,7 +267,7 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{<:GenericAffExpr{T,<:VariableRefImpl{T}}},
     cache::Any,
 ) where {T}
@@ -279,7 +279,7 @@ function _fill_standard_form(
     return
 end
 
-function _fill_standard_form(::ModelImpl{T}, ::Type{F}, ::Any) where {T,F}
+function _fill_standard_form(::ConcreteModel{T}, ::Type{F}, ::Any) where {T,F}
     return error(
         """
         Unsupported objective type in `lp_matrix_data`: $F.

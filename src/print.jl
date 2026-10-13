@@ -13,8 +13,8 @@ Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 # Julia has a bug: when a type has 2 alias, instead of just printing the most
 # specific one, it just print none of them, see
 # https://github.com/JuliaLang/julia/issues/41034
-# Both Model and GenericModel{Float64} alias ModelImpl, so Julia just print
-# ModelImpl. The same applies to VariableRef.
+# Both Model and GenericModel{Float64} alias ConcreteModel, so Julia just print
+# ConcreteModel. The same applies to VariableRef.
 # So we need this as a workaround.
 function _show_public_type_name(io::IO, name::Symbol)
     from = get(io, :module, Main)
@@ -285,7 +285,7 @@ julia> name(model)
 """
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
-function name(model::ModelImpl)
+function name(model::ConcreteModel)
     if MOI.supports(backend(model), MOI.Name())
         ret = MOI.get(model, MOI.Name())
         if !isempty(ret)
@@ -311,7 +311,7 @@ julia> name(model)
 "My Model"
 ```
 """
-function set_name(model::ModelImpl, name::AbstractString)
+function set_name(model::ConcreteModel, name::AbstractString)
     MOI.set(model, MOI.Name(), name)
     return
 end
@@ -351,7 +351,7 @@ function _print_summary(io::IO, model::AbstractModel)
     return
 end
 
-function _print_summary(io::IO, model::ModelImpl{T}) where {T}
+function _print_summary(io::IO, model::ConcreteModel{T}) where {T}
     println(io, name(model))
     if T != Float64
         println(io, "├ value_type: ", T)
@@ -425,7 +425,7 @@ julia> show_objective_function_summary(stdout, model)
 Objective function type: AffExpr
 ```
 """
-function show_objective_function_summary(io::IO, model::ModelImpl)
+function show_objective_function_summary(io::IO, model::ConcreteModel)
     nlobj = _nlp_objective_function(model)
     print(io, "Objective function type: ")
     if nlobj === nothing
@@ -456,7 +456,7 @@ julia> show_constraints_summary(stdout, model)
 `VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint
 ```
 """
-function show_constraints_summary(io::IO, model::ModelImpl)
+function show_constraints_summary(io::IO, model::ConcreteModel)
     for (F, S) in list_of_constraint_types(model)
         n = num_constraints(model, F, S)
         println(io, "`$F`-in-`$S`: $n constraint", _plural(n))
@@ -488,7 +488,7 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 """
-function show_backend_summary(io::IO, model::ModelImpl)
+function show_backend_summary(io::IO, model::ConcreteModel)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
     if model_mode == MANUAL || model_mode == AUTOMATIC
@@ -665,7 +665,7 @@ julia> objective_function_string(MIME("text/plain"), model)
 "2 x"
 ```
 """
-function objective_function_string(mode, model::ModelImpl)
+function objective_function_string(mode, model::ConcreteModel)
     nlobj = _nlp_objective_function(model)
     if nlobj === nothing
         return function_string(mode, objective_function(model))
@@ -695,7 +695,7 @@ Return a string representation of the nonlinear constraint `c` belonging to
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_constraint_string(
-    model::ModelImpl,
+    model::ConcreteModel,
     mode::MIME,
     c::MOI.Nonlinear.ConstraintIndex,
 )
@@ -731,7 +731,7 @@ julia> constraints_string(MIME("text/plain"), model)
  "x ≥ 0"
 ```
 """
-function constraints_string(mode, model::ModelImpl)
+function constraints_string(mode, model::ConcreteModel)
     strings = String[
         constraint_string(mode, cref; in_math_mode = true) for
         (F, S) in list_of_constraint_types(model) for
@@ -758,7 +758,7 @@ Return a string representation of the nonlinear expression `c` belonging to
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_expr_string(
-    model::ModelImpl,
+    model::ConcreteModel,
     mode::MIME,
     c::MOI.Nonlinear.Expression,
 )
@@ -790,7 +790,7 @@ end
 # print `subexpression[i]`. To create this behavior, we create a new object and
 # overload `Base.show`, and we replace any ExpressionIndex with this new type.
 struct _NonlinearExpressionIO
-    model::ModelImpl
+    model::ConcreteModel
     mode::MIME
     value::Int
 end
@@ -808,7 +808,7 @@ end
 
 # We do a similar thing for nonlinear parameters.
 struct _NonlinearParameterIO
-    model::ModelImpl
+    model::ConcreteModel
     mode::MIME
     value::Int
 end
@@ -846,7 +846,7 @@ end
 
 _nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
-function _nl_subexpression_string(mode::MIME, model::ModelImpl)
+function _nl_subexpression_string(mode::MIME, model::ConcreteModel)
     nlp_model = nonlinear_model(model)
     strings = String[]
     if nlp_model === nothing

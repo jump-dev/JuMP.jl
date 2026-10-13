@@ -731,7 +731,7 @@ function MOI.ScalarQuadraticFunction(
 end
 
 function GenericQuadExpr{C,V}(
-    m::ModelImpl,
+    m::ConcreteModel,
     f::MOI.ScalarQuadraticFunction,
 ) where {C,V<:VariableRefImpl}
     quad = GenericQuadExpr{C,V}(

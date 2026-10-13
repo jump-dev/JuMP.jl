@@ -21,14 +21,14 @@ exist for the model, create an empty one.
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
-function nonlinear_model(model::ModelImpl; force::Bool = false)
+function nonlinear_model(model::ConcreteModel; force::Bool = false)
     if force
         _init_NLP(model)
     end
     return model.nlp_model
 end
 
-function _init_NLP(model::ModelImpl{Float64})
+function _init_NLP(model::ConcreteModel{Float64})
     if model.nlp_model === nothing
         model.nlp_model = MOI.Nonlinear.Model()
     end
@@ -191,7 +191,7 @@ end
 Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
-function _nlp_objective_function(model::ModelImpl)
+function _nlp_objective_function(model::ConcreteModel)
     if model.nlp_model === nothing
         return nothing
     end
@@ -435,10 +435,10 @@ VARIABLE, as well as eagerly computing the `var_value` for every variable. We
 use a `cache` so we don't have to recompute variables we have already seen.
 """
 struct _VariableValueMap{F,T} <: AbstractDict{MOI.VariableIndex,T}
-    model::ModelImpl{T}
+    model::ConcreteModel{T}
     value::F
     cache::Dict{MOI.VariableIndex,T}
-    function _VariableValueMap(model::ModelImpl{T}, value::F) where {T,F}
+    function _VariableValueMap(model::ConcreteModel{T}, value::F) where {T,F}
         return new{F,T}(model, value, Dict{MOI.VariableIndex,T}())
     end
 end
@@ -587,7 +587,7 @@ This function counts only the constraints added with [`@NLconstraint`](@ref) and
 [`add_nonlinear_constraint`](@ref). It does not count [`GenericNonlinearExpr`](@ref)
 constraints.
 """
-function num_nonlinear_constraints(model::ModelImpl)
+function num_nonlinear_constraints(model::ConcreteModel)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return 0
@@ -609,7 +609,7 @@ This function returns only the constraints added with [`@NLconstraint`](@ref) an
 [`add_nonlinear_constraint`](@ref). It does not return [`GenericNonlinearExpr`](@ref)
 constraints.
 """
-function all_nonlinear_constraints(model::ModelImpl)
+function all_nonlinear_constraints(model::ConcreteModel)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return NonlinearConstraintRef[]

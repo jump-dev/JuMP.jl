@@ -37,7 +37,7 @@ julia> relative_gap(model)
 0.0
 ```
 """
-function relative_gap(model::ModelImpl{T})::T where {T}
+function relative_gap(model::ConcreteModel{T})::T where {T}
     return MOI.get(model, MOI.RelativeGap())
 end
 
@@ -74,7 +74,7 @@ julia> objective_bound(model)
 3.0
 ```
 """
-function objective_bound(model::ModelImpl{T})::Union{T,Vector{T}} where {T}
+function objective_bound(model::ConcreteModel{T})::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveBound())
 end
 
@@ -119,7 +119,7 @@ Stacktrace:
 ```
 """
 function objective_value(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     result::Int = 1,
 )::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveValue(result))
@@ -166,7 +166,7 @@ Stacktrace:
 [...]
 ```
 """
-function dual_objective_value(model::ModelImpl{T}; result::Int = 1)::T where {T}
+function dual_objective_value(model::ConcreteModel{T}; result::Int = 1)::T where {T}
     return MOI.get(model, MOI.DualObjectiveValue(result))
 end
 
@@ -194,7 +194,7 @@ julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function objective_sense(model::ModelImpl)
+function objective_sense(model::ConcreteModel)
     return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
 end
 
@@ -224,7 +224,7 @@ julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1
 ```
 """
-function set_objective_sense(model::ModelImpl, sense::MOI.OptimizationSense)
+function set_objective_sense(model::ConcreteModel, sense::MOI.OptimizationSense)
     MOI.set(model, MOI.ObjectiveSense(), sense)
     return
 end
@@ -259,7 +259,7 @@ julia> objective_function(model)
 """
 function set_objective_function end
 
-function set_objective_function(model::ModelImpl, func::MOI.AbstractFunction)
+function set_objective_function(model::ConcreteModel, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(
@@ -282,14 +282,14 @@ function set_objective_function(model::ModelImpl, func::MOI.AbstractFunction)
 end
 
 function set_objective_function(
-    model::ModelImpl,
+    model::ConcreteModel,
     func::Union{AbstractJuMPScalar,AbstractVector{<:AbstractJuMPScalar}},
 )
     set_objective_function(model, moi_function(model, func))
     return
 end
 
-function set_objective_function(model::ModelImpl{T}, func::Real) where {T}
+function set_objective_function(model::ConcreteModel{T}, func::Real) where {T}
     set_objective_function(
         model,
         MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], convert(T, func)),
@@ -371,7 +371,7 @@ julia> objective_function_type(model)
 AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
 ```
 """
-function objective_function_type(model::ModelImpl)
+function objective_function_type(model::ConcreteModel)
     return jump_function_type(
         model,
         MOI.get(backend(model), MOI.ObjectiveFunctionType()),
@@ -425,18 +425,18 @@ ERROR: InexactError: convert(MathOptInterface.VariableIndex, 1.0 + 2.0 MOI.Varia
 ```
 """
 function objective_function(
-    model::ModelImpl,
+    model::ConcreteModel,
     ::Type{F},
 ) where {F<:MOI.AbstractFunction}
     func = MOI.get(backend(model), MOI.ObjectiveFunction{F}())::F
     return jump_function(model, func)
 end
 
-function objective_function(model::ModelImpl, ::Type{T}) where {T}
+function objective_function(model::ConcreteModel, ::Type{T}) where {T}
     return objective_function(model, moi_function_type(T))
 end
 
-function objective_function(model::ModelImpl)
+function objective_function(model::ConcreteModel)
     F = MOI.get(backend(model), MOI.ObjectiveFunctionType())
     return objective_function(model, F)
 end
@@ -469,7 +469,7 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::VariableRefImpl{T},
     coeff::Real,
 ) where {T}
@@ -491,7 +491,7 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::VariableRefImpl{T},
     coeff::T,
     ::Type{<:VariableRefImpl{T}},
@@ -509,7 +509,7 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::VariableRefImpl{T},
     coeff::T,
     ::Type{F},
@@ -553,7 +553,7 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:Real},
 ) where {T}
@@ -579,7 +579,7 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},
     ::Type{<:VariableRefImpl{T}},
@@ -594,7 +594,7 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},
     ::Type{F},
@@ -639,7 +639,7 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable_1::VariableRefImpl{T},
     variable_2::VariableRefImpl{T},
     coeff::Real,
@@ -662,7 +662,7 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable_1::VariableRefImpl{T},
     variable_2::VariableRefImpl{T},
     coeff::T,
@@ -675,7 +675,7 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable_1::VariableRefImpl{T},
     variable_2::VariableRefImpl{T},
     coeff::T,
@@ -726,7 +726,7 @@ julia> objective_function(model)
 ```
 """
 function set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables_1::AbstractVector{<:VariableRefImpl{T}},
     variables_2::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:Real},
@@ -754,7 +754,7 @@ function set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables_1::AbstractVector{<:V},
     variables_2::AbstractVector{<:V},
     coeffs::AbstractVector{<:T},
@@ -770,7 +770,7 @@ function _set_objective_coefficient(
 end
 
 function _set_objective_coefficient(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variables_1::AbstractVector{<:VariableRefImpl{T}},
     variables_2::AbstractVector{<:VariableRefImpl{T}},
     coeffs::AbstractVector{<:T},

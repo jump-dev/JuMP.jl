@@ -42,7 +42,7 @@ reference of the copied model can be obtained by indexing the map with the
 reference of the corresponding reference of the original model.
 """
 struct GenericReferenceMap{T}
-    model::ModelImpl{T}
+    model::ConcreteModel{T}
     index_map::MOIU.IndexMap
 end
 
@@ -148,7 +148,7 @@ cref : x = 2
 ```
 """
 function copy_model(
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     filter_constraints::Union{Nothing,Function} = nothing,
 ) where {T}
     if mode(model) == DIRECT
@@ -328,7 +328,7 @@ Subject to
  c2 : x ≤ 1
 ```
 """
-function copy_conflict(model::ModelImpl)
+function copy_conflict(model::ConcreteModel)
     function filter_constraints(cref::ConstraintRef)
         status = MOI.get(model, MOI.ConstraintConflictStatus(), cref)
         return status != MOI.NOT_IN_CONFLICT
@@ -341,7 +341,7 @@ end
 # Calling `deepcopy` over a JuMP model is not supported, nor planned to be
 # supported, because it would involve making a deep copy of the underlying
 # solver (behind a C pointer).
-function Base.deepcopy(::ModelImpl)
+function Base.deepcopy(::ConcreteModel)
     return error(
         """
         `deepcopy` is not supported for `JuMP.GenericModel` because the underlying
@@ -352,7 +352,7 @@ function Base.deepcopy(::ModelImpl)
     )
 end
 
-function MOI.copy_to(dest::MOI.ModelLike, src::ModelImpl)
+function MOI.copy_to(dest::MOI.ModelLike, src::ConcreteModel)
     nlp = nonlinear_model(src)
     if nlp !== nothing
         # Re-set the NLP block in-case things have changed since last
@@ -368,7 +368,7 @@ function MOI.copy_to(dest::MOI.ModelLike, src::ModelImpl)
     return MOI.copy_to(dest, backend(src))
 end
 
-function MOI.copy_to(dest::ModelImpl, src::MOI.ModelLike)
+function MOI.copy_to(dest::ConcreteModel, src::MOI.ModelLike)
     index_map = MOI.copy_to(backend(dest), src)
     if MOI.NLPBlock() in MOI.get(src, MOI.ListOfModelAttributesSet())
         block = MOI.get(src, MOI.NLPBlock())

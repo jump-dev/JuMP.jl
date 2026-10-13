@@ -19,7 +19,7 @@ julia> num_variables(model)
 2
 ```
 """
-function num_variables(model::ModelImpl)::Int64
+function num_variables(model::ConcreteModel)::Int64
     return MOI.get(model, MOI.NumberOfVariables())
 end
 
@@ -277,7 +277,7 @@ Base.abs2(v::AbstractVariableRef) = v^2
 
 Base.isreal(::AbstractVariableRef) = true
 
-struct VariableRefImpl{T,M<:ModelImpl{T}} <: AbstractVariableRef
+struct VariableRefImpl{T,M<:ConcreteModel{T}} <: AbstractVariableRef
     model::M
     index::MOI.VariableIndex
 end
@@ -293,13 +293,13 @@ const VariableRef = GenericVariableRef{Float64}
 function VariableRefImpl{T}(
     model::M,
     index::MOI.VariableIndex,
-) where {T,M<:ModelImpl{T}}
+) where {T,M<:ConcreteModel{T}}
     return VariableRefImpl{T,M}(model, index)
 end
 
 value_type(::Type{<:VariableRefImpl{T}}) where {T} = T
 
-variable_ref_type(::Type{M}) where {T,M<:ModelImpl{T}} = VariableRefImpl{T,M}
+variable_ref_type(::Type{M}) where {T,M<:ConcreteModel{T}} = VariableRefImpl{T,M}
 
 # `AbstractVariableRef` types must override the default `owner_model` if the field
 #  name is not `model`.
@@ -468,7 +468,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::ModelImpl, variable_ref::VariableRefImpl)
+function delete(model::ConcreteModel, variable_ref::VariableRefImpl)
     if model !== owner_model(variable_ref)
         error(
             """
@@ -515,7 +515,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::ModelImpl, variable_refs::Vector{<:VariableRefImpl})
+function delete(model::ConcreteModel, variable_refs::Vector{<:VariableRefImpl})
     if any(model !== owner_model(v) for v in variable_refs)
         error(
             """
@@ -552,7 +552,7 @@ julia> is_valid(model_2, x)
 false
 ```
 """
-function is_valid(model::ModelImpl, variable_ref::VariableRefImpl)
+function is_valid(model::ConcreteModel, variable_ref::VariableRefImpl)
     return model === owner_model(variable_ref) &&
            MOI.is_valid(backend(model), variable_ref.index)
 end
@@ -586,12 +586,12 @@ MOI.VariableIndex(1)
 """
 index(v::VariableRefImpl) = v.index
 
-function VariableRefImpl{T}(model::ModelImpl{T}) where {T}
+function VariableRefImpl{T}(model::ConcreteModel{T}) where {T}
     index = MOI.add_variable(backend(model))
     return VariableRefImpl{T}(model, index)
 end
 
-function VariableRefImpl{T,M}(model::M) where {T,M<:ModelImpl{T}}
+function VariableRefImpl{T,M}(model::M) where {T,M<:ConcreteModel{T}}
     return VariableRefImpl{T}(model)
 end
 
@@ -617,7 +617,7 @@ true
 ```
 """
 function VariableRefImpl{T}(
-    c::ConstraintRef{<:ModelImpl{T},<:MOI.ConstraintIndex{MOI.VariableIndex}},
+    c::ConstraintRef{<:ConcreteModel{T},<:MOI.ConstraintIndex{MOI.VariableIndex}},
 ) where {T}
     vi = MOI.VariableIndex(index(c).value)
     return VariableRefImpl{T}(owner_model(c), vi)
@@ -625,7 +625,7 @@ end
 
 function VariableRefImpl{T,M}(
     c::ConstraintRef{M,<:MOI.ConstraintIndex{MOI.VariableIndex}},
-) where {T,M<:ModelImpl{T}}
+) where {T,M<:ConcreteModel{T}}
     return VariableRefImpl{T}(c)
 end
 
@@ -741,7 +741,7 @@ julia> variable_by_name(model, "u[2]")
 u[2]
 ```
 """
-function variable_by_name(model::ModelImpl, name::String)
+function variable_by_name(model::ConcreteModel, name::String)
     index = MOI.get(backend(model), MOI.VariableIndex, name)
     if index === nothing
         return nothing
@@ -2198,7 +2198,7 @@ julia> has_values(model)
 true
 ```
 """
-function has_values(model::ModelImpl; result::Int = 1)
+function has_values(model::ConcreteModel; result::Int = 1)
     return primal_status(model; result = result) != MOI.NO_SOLUTION
 end
 
@@ -2210,7 +2210,7 @@ It should never be called by users of JuMP.
 """
 function add_variable end
 
-function add_variable(model::ModelImpl, v::ScalarVariable, name::String = "")
+function add_variable(model::ConcreteModel, v::ScalarVariable, name::String = "")
     model.is_model_dirty = true
     return _moi_add_variable(backend(model), model, v, name)
 end
@@ -2242,7 +2242,7 @@ end
 
 function _moi_add_variable(
     moi_backend,
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     v::ScalarVariable,
     name::String,
 ) where {T}
@@ -2397,7 +2397,7 @@ struct VariableConstrainedOnCreation{
 end
 
 function add_variable(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::VariableConstrainedOnCreation,
     name::String,
 ) where {T}
@@ -2414,7 +2414,7 @@ function add_variable(
 end
 
 function add_variable(
-    model::ModelImpl,
+    model::ConcreteModel,
     variables::AbstractArray{<:VariableConstrainedOnCreation},
     names::AbstractArray{<:String},
 )
@@ -2486,7 +2486,7 @@ function VariablesConstrainedOnCreation(
 end
 
 function add_variable(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     variable::VariablesConstrainedOnCreation,
     names,
 ) where {T}
@@ -2646,7 +2646,7 @@ _is_binary(v::ScalarVariable) = v.info.binary
 _is_integer(v::ScalarVariable) = v.info.integer
 
 function add_variable(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     v::ComplexVariable,
     name::String = "",
 ) where {T}
@@ -2671,7 +2671,7 @@ function build_variable(
 end
 
 function add_variable(
-    model::ModelImpl,
+    model::ConcreteModel,
     variables::AbstractArray{<:ComplexVariable},
     name::Union{<:AbstractArray{String},String} = "",
 )
@@ -2762,7 +2762,7 @@ julia> all_variables(model)
  y
 ```
 """
-function all_variables(model::ModelImpl{T}) where {T}
+function all_variables(model::ConcreteModel{T}) where {T}
     all_indices =
         MOI.get(model, MOI.ListOfVariableIndices())::Vector{MOI.VariableIndex}
     V = variable_ref_type(model)
@@ -2880,7 +2880,7 @@ Subject to
  x binary
 ```
 """
-function relax_integrality(model::ModelImpl)
+function relax_integrality(model::ConcreteModel)
     return _relax_or_fix_integrality(nothing, model)
 end
 
@@ -2933,17 +2933,17 @@ Subject to
  x binary
 ```
 """
-function fix_discrete_variables(var_value::Function, model::ModelImpl)
+function fix_discrete_variables(var_value::Function, model::ConcreteModel)
     return _relax_or_fix_integrality(var_value, model)
 end
 
-function fix_discrete_variables(model::ModelImpl)
+function fix_discrete_variables(model::ConcreteModel)
     return fix_discrete_variables(value, model)
 end
 
 function _relax_or_fix_integrality(
     var_value::Union{Nothing,Function},
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
 ) where {T}
     V = variable_ref_type(model)
     if num_constraints(model, V, MOI.Semicontinuous{T}) > 0

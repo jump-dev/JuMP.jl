@@ -40,7 +40,7 @@ Dict{Any, Float64} with 1 entry:
 ```
 """
 function primal_feasibility_report(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     point::AbstractDict{<:VariableRefImpl{T},T};
     atol::T = zero(T),
     skip_missing::Bool = false,
@@ -65,7 +65,7 @@ function primal_feasibility_report(
     end
 end
 
-function primal_feasibility_report(model::ModelImpl{T}; kwargs...) where {T}
+function primal_feasibility_report(model::ConcreteModel{T}; kwargs...) where {T}
     if !has_values(model)
         error(
             """
@@ -108,7 +108,7 @@ Dict{Any, Float64} with 1 entry:
 """
 function primal_feasibility_report(
     point::Function,
-    model::ModelImpl{T};
+    model::ConcreteModel{T};
     atol::T = zero(T),
     skip_missing::Bool = false,
 ) where {T}
@@ -148,7 +148,7 @@ function primal_feasibility_report(
 end
 
 function _add_infeasible_constraints(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     ::Type{F},
     ::Type{S},
     violated_constraints::Dict{Any,T},
@@ -165,7 +165,7 @@ function _add_infeasible_constraints(
 end
 
 function _add_infeasible_nonlinear_constraints(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     violated_constraints::Dict{Any,T},
     point_f::Function,
     atol::T,

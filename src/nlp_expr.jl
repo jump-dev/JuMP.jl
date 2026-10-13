@@ -958,7 +958,7 @@ julia> op_f(2.0)
 ```
 """
 function add_nonlinear_operator(
-    model::ModelImpl,
+    model::ConcreteModel,
     dim::Int,
     f::Function,
     args::Vararg{Function,N};
@@ -1177,7 +1177,7 @@ julia> simplify(model, x / sin(x)^0)
 x
 ```
 """
-function simplify(model::ModelImpl, f::AbstractJuMPScalar)
+function simplify(model::ConcreteModel, f::AbstractJuMPScalar)
     g = MOI.Nonlinear.SymbolicAD.simplify(moi_function(model, f))
     return jump_function(model, g)
 end
@@ -1225,7 +1225,7 @@ julia> derivative(model, sin(x)^y, y)
 ```
 """
 function derivative(
-    model::ModelImpl{T},
+    model::ConcreteModel{T},
     f::AbstractJuMPScalar,
     x::VariableRefImpl{T},
 ) where {T}
@@ -1274,7 +1274,7 @@ julia> ∇f[y]
 (sin(x) ^ y) * log(sin(x))
 ```
 """
-function gradient(model::ModelImpl{T}, f::AbstractJuMPScalar) where {T}
+function gradient(model::ConcreteModel{T}, f::AbstractJuMPScalar) where {T}
     g = moi_function(model, f)
     ∇f = Dict{VariableRefImpl{T},Any}()
     for xi in MOI.Nonlinear.SymbolicAD.variables(g)
