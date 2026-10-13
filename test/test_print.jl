@@ -1144,16 +1144,23 @@ function test_show_public_model_type_aliases()
         )
     end
     plain = MIME("text/plain")
+    # These details are only implemented by the workaround in `src/print.jl`
+    workaround = VERSION < v"1.14.0-DEV.3424"
     for (type, name, generic) in (
         (Model, "Model", "GenericModel"),
         (VariableRef, "VariableRef", "GenericVariableRef"),
     )
         @test show_type(type) == name
         @test show_type(Vector{type}) == "Vector{$name}"
-        @test show_type(plain, type) == "$name (alias for $generic{Float64})"
+        if workaround
+            @test show_type(plain, type) ==
+                  "$name (alias for $generic{Float64})"
+            @test show_type(type; context = (:compact => false,)) ==
+                  "$generic{Float64}"
+        else
+            @test startswith(show_type(plain, type), "$name (alias for ")
+        end
         @test show_type(plain, type; context = (:compact => true,)) == name
-        @test show_type(type; context = (:compact => false,)) ==
-              "$generic{Float64}"
         @test show_type(type; context = (:module => nothing,)) == "JuMP.$name"
     end
     for (wrapper, name) in (
@@ -1161,22 +1168,28 @@ function test_show_public_model_type_aliases()
         (GenericVariableRef, "GenericVariableRef"),
     )
         @test show_type(wrapper) == name
-        @test show_type(plain, wrapper) == name
+        @test startswith(show_type(plain, wrapper), name)
+        @test (show_type(plain, wrapper) == name) == workaround
         for T in (Float32, BigFloat)
             @test show_type(wrapper{T}) == "$name{$T}"
-            @test show_type(plain, wrapper{T}) == "$name{$T}"
+            @test startswith(show_type(plain, wrapper{T}), "$name{$T}")
         end
     end
-    for (type, expanded) in (
-        (AffExpr, "GenericAffExpr{Float64, GenericVariableRef{Float64}}"),
-        (QuadExpr, "GenericQuadExpr{Float64, GenericVariableRef{Float64}}"),
-        (NonlinearExpr, "GenericNonlinearExpr{GenericVariableRef{Float64}}"),
-    )
-        @test show_type(plain, type) ==
-              "$(show_type(type)) (alias for $expanded)"
+    if workaround
+        for (type, expanded) in (
+            (AffExpr, "GenericAffExpr{Float64, GenericVariableRef{Float64}}"),
+            (QuadExpr, "GenericQuadExpr{Float64, GenericVariableRef{Float64}}"),
+            (
+                NonlinearExpr,
+                "GenericNonlinearExpr{GenericVariableRef{Float64}}",
+            ),
+        )
+            @test show_type(plain, type) ==
+                  "$(show_type(type)) (alias for $expanded)"
+        end
+        @test show_type(plain, NonlinearConstraintRef{ScalarShape}) ==
+              "NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{GenericModel{Float64}, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})"
     end
-    @test show_type(plain, NonlinearConstraintRef{ScalarShape}) ==
-          "NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{GenericModel{Float64}, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})"
     model = Model()
     @variable(model, x[1:2])
     @constraint(model, c, x .<= 1)
