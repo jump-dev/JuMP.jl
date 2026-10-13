@@ -166,7 +166,10 @@ Stacktrace:
 [...]
 ```
 """
-function dual_objective_value(model::ConcreteModel{T}; result::Int = 1)::T where {T}
+function dual_objective_value(
+    model::ConcreteModel{T};
+    result::Int = 1,
+)::T where {T}
     return MOI.get(model, MOI.DualObjectiveValue(result))
 end
 
@@ -259,7 +262,10 @@ julia> objective_function(model)
 """
 function set_objective_function end
 
-function set_objective_function(model::ConcreteModel, func::MOI.AbstractFunction)
+function set_objective_function(
+    model::ConcreteModel,
+    func::MOI.AbstractFunction,
+)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(

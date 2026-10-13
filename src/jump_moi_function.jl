@@ -226,7 +226,10 @@ end
 
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
-function moi_function(model::ConcreteModel, f::GenericNonlinearExpr{V}) where {V}
+function moi_function(
+    model::ConcreteModel,
+    f::GenericNonlinearExpr{V},
+) where {V}
     if (cache = get(model.subexpressions, f, nothing)) !== nothing
         return cache
     end

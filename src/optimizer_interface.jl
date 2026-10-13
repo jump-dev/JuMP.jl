@@ -845,7 +845,10 @@ function raw_status(model::ConcreteModel)
     return MOI.get(model, MOI.RawStatusString())
 end
 
-function MOI.get(model::ConcreteModel, attr::Union{MOI.PrimalStatus,MOI.DualStatus})
+function MOI.get(
+    model::ConcreteModel,
+    attr::Union{MOI.PrimalStatus,MOI.DualStatus},
+)
     if model.is_model_dirty && mode(model) != DIRECT
         return MOI.NO_SOLUTION
     end
@@ -1719,7 +1722,9 @@ julia> optimizer_index(x)
 MOI.VariableIndex(1)
 ```
 """
-function optimizer_index(x::Union{VariableRefImpl,ConstraintRef{<:ConcreteModel}})
+function optimizer_index(
+    x::Union{VariableRefImpl,ConstraintRef{<:ConcreteModel}},
+)
     return _moi_optimizer_index(backend(owner_model(x)), index(x))
 end
 

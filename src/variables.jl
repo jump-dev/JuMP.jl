@@ -299,7 +299,9 @@ end
 
 value_type(::Type{<:VariableRefImpl{T}}) where {T} = T
 
-variable_ref_type(::Type{M}) where {T,M<:ConcreteModel{T}} = VariableRefImpl{T,M}
+function variable_ref_type(::Type{M}) where {T,M<:ConcreteModel{T}}
+    return VariableRefImpl{T,M}
+end
 
 # `AbstractVariableRef` types must override the default `owner_model` if the field
 #  name is not `model`.
@@ -617,7 +619,10 @@ true
 ```
 """
 function VariableRefImpl{T}(
-    c::ConstraintRef{<:ConcreteModel{T},<:MOI.ConstraintIndex{MOI.VariableIndex}},
+    c::ConstraintRef{
+        <:ConcreteModel{T},
+        <:MOI.ConstraintIndex{MOI.VariableIndex},
+    },
 ) where {T}
     vi = MOI.VariableIndex(index(c).value)
     return VariableRefImpl{T}(owner_model(c), vi)
@@ -2210,7 +2215,11 @@ It should never be called by users of JuMP.
 """
 function add_variable end
 
-function add_variable(model::ConcreteModel, v::ScalarVariable, name::String = "")
+function add_variable(
+    model::ConcreteModel,
+    v::ScalarVariable,
+    name::String = "",
+)
     model.is_model_dirty = true
     return _moi_add_variable(backend(model), model, v, name)
 end

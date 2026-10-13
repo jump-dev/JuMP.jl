@@ -127,7 +127,11 @@ function MOI.submit(
     return MOI.submit(backend(model), cb, f, con.set)
 end
 
-function MOI.submit(model::ConcreteModel, cb::MOI.UserCut, con::ScalarConstraint)
+function MOI.submit(
+    model::ConcreteModel,
+    cb::MOI.UserCut,
+    con::ScalarConstraint,
+)
     f = moi_function(model, con.func)
     return MOI.submit(backend(model), cb, f, con.set)
 end

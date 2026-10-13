@@ -1688,7 +1688,9 @@ Iterating over the list of function and set types is a type-unstable operation.
 Consider using a function barrier. See the [Performance tips for extensions](@ref)
 section of the documentation for more details.
 """
-function list_of_constraint_types(model::ConcreteModel)::Vector{Tuple{Type,Type}}
+function list_of_constraint_types(
+    model::ConcreteModel,
+)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
     return Tuple{Type,Type}[

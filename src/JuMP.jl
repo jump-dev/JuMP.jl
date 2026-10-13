@@ -917,7 +917,9 @@ function print_bridge_graph(io::IO, model::ConcreteModel)
     end
 end
 
-print_bridge_graph(model::ConcreteModel) = print_bridge_graph(Base.stdout, model)
+function print_bridge_graph(model::ConcreteModel)
+    return print_bridge_graph(Base.stdout, model)
+end
 
 """
     print_active_bridges([io::IO = stdout,] model::GenericModel)
