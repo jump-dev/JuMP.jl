@@ -127,6 +127,26 @@ function value_type(::Type{T}) where {T}
     )
 end
 
+"""
+    ConcreteModel{T<:Real,B<:MOI.ModelLike,H} <: AbstractModel
+
+The concrete type of JuMP models, with value type `T`, backend type `B` and
+optimize-hook type `H`.
+
+[`GenericModel{T}`](@ref GenericModel) is an alias for
+`ConcreteModel{T,MOI.ModelLike,Any}`, in which the backend and the optimize hook
+can be changed after the model is created. Use [`concrete_direct_model`](@ref)
+to create a model whose backend and optimize-hook types are concrete.
+
+## Example
+
+```jldoctest
+julia> model = concrete_direct_model(MOI.Utilities.Model{Float64}());
+
+julia> model isa ConcreteModel{Float64,MOI.Utilities.Model{Float64},Nothing}
+true
+```
+"""
 mutable struct ConcreteModel{T<:Real,B<:MOI.ModelLike,H} <: AbstractModel
     # !!! note
     #     When adding new fields to this struct, you must also update
