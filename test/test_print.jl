@@ -960,12 +960,12 @@ end
 
 function test_string_round_latex()
     for (test, result) in Any[
-        1 => "1",
-        -1 => "-1",
-        1e-5 => "1.0 \\times 10^{-5}",
-        -1e-5 => "-1.0 \\times 10^{-5}",
-        1.234e19 => "1.234 \\times 10^{19}",
-        -1.234e19 => "-1.234 \\times 10^{19}",
+        1=>"1",
+        -1=>"-1",
+        1e-5=>"1.0 \\times 10^{-5}",
+        -1e-5=>"-1.0 \\times 10^{-5}",
+        1.234e19=>"1.234 \\times 10^{19}",
+        -1.234e19=>"-1.234 \\times 10^{19}",
     ]
         @test JuMP._string_round(MIME("text/latex"), test) == result
     end
