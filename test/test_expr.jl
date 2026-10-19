@@ -167,6 +167,46 @@ function test_add_to_expression_GenericAffExpr_C()
     return
 end
 
+function test_add_to_expression_GenericAffExpr_residue_tol()
+    aff = GenericAffExpr(1.0, :a => 0.1 + 0.2, :b => 1.0)
+    other = GenericAffExpr(2.0, :a => 0.3, :c => 1e-12)
+    @test isequal_canonical(
+        add_to_expression!(copy(aff), -1.0, other; residue_tol = 1e-9),
+        GenericAffExpr(-1.0, :b => 1.0, :c => -1e-12),
+    )
+    @test isequal_canonical(
+        add_to_expression!(copy(aff), other, -1.0; residue_tol = 1e-9),
+        GenericAffExpr(-1.0, :b => 1.0, :c => -1e-12),
+    )
+    @test isequal_canonical(
+        add_to_expression!(copy(aff), -other; residue_tol = 1e-9),
+        GenericAffExpr(-1.0, :b => 1.0, :c => -1e-12),
+    )
+    # A merge that does not cancel keeps the term.
+    @test isequal_canonical(
+        add_to_expression!(copy(aff), 1.0, other; residue_tol = 1e-9),
+        GenericAffExpr(3.0, :a => (0.1 + 0.2) + 0.3, :b => 1.0, :c => 1e-12),
+    )
+    # The default keeps the cancellation residue.
+    result = add_to_expression!(copy(aff), -1.0, other)
+    @test result.terms[:a] == (0.1 + 0.2) - 0.3
+    return
+end
+
+function test_add_to_expression_GenericAffExpr_residue_tol_partial_sum()
+    # The partial sum of `:a` passes near zero, then grows again.
+    aff = GenericAffExpr(0.0, :a => 1.0)
+    add_to_expression!(
+        aff,
+        GenericAffExpr(0.0, :a => -1.0 + 1e-12);
+        residue_tol = 1e-9,
+    )
+    @test !haskey(aff.terms, :a)
+    add_to_expression!(aff, GenericAffExpr(0.0, :a => 2.0); residue_tol = 1e-9)
+    @test aff.terms[:a] == 2.0
+    return
+end
+
 function test_extension_linear_terms_AffExpr(
     ModelType = Model,
     VariableRefType = VariableRef,
