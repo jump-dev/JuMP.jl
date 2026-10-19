@@ -71,7 +71,7 @@ end
 _escape_if_scientific(::MIME, x::String) = x
 
 function _escape_if_scientific(::MIME"text/latex", x::String)
-    m = match(r"([0-9]+.[0-9]+)e(-?[0-9]+)", x)
+    m = match(r"(-?[0-9]+\.[0-9]+)e(-?[0-9]+)", x)
     if m === nothing
         return x
     end
