@@ -1,0 +1,100 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Objective · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../index.html"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../concepts/">Concepts</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li><a class="toctext" href="../expressions/">Expressions</a></li><li class="current"><a class="toctext" href="">Objective</a><ul class="internal"></ul></li><li><a class="toctext" href="../constraints/">Constraints</a></li><li><a class="toctext" href="../containers/">Containers</a></li><li><a class="toctext" href="../names/">Names</a></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../nlp/">Nonlinear Modeling</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li><li><a class="toctext" href="../updating/">Updating Guide</a></li><li><a class="toctext" href="../howdoi/">How do I ...? (FAQ)</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Objective</a></li></ul><a class="edit-page" href="https://github.com/JuliaOpt/JuMP.jl/blob/master/docs/src/objective.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Objective</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Objective-1" id="Objective-1">Objective</a></h1><p>TODO: Describe how the objective is represented (link to MOI docs)</p><p>Setting the objective function and objective sense:</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@objective" id="JuMP.@objective"><code>JuMP.@objective</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-none">@objective(model::Model, sense, func)</code></pre><p>Set the objective sense to <code>sense</code> and objective function to <code>func</code>. The objective sense can be either <code>Min</code>, <code>Max</code>, <code>MathOptInterface.MIN_SENSE</code>, <code>MathOptInterface.MAX_SENSE</code> or <code>MathOptInterface.FEASIBILITY_SENSE</code>; see <a href="http://www.juliaopt.org/MathOptInterface.jl/v0.6/apireference.html#MathOptInterface.ObjectiveSense"><code>MathOptInterface.ObjectiveSense</code></a>. In order to set the sense programatically, i.e., when <code>sense</code> is a Julia variable whose value is the sense, one of the three <code>MathOptInterface.ObjectiveSense</code> should be used. Using the symbols <code>:Min</code> or <code>:Max</code> is not supported anymore (it was supported up to JuMP v0.18). The function can either be a single JuMP variable, an affine expression of JuMP variables or a quadratic expression of JuMP variables.</p><p><strong>Examples</strong></p><p>To minimize the value of the variable <code>x</code>, do as follows:</p><pre><code class="language-julia-repl">julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @objective(model, Min, x)
+x</code></pre><p>To maximize the value of the affine expression <code>2x - 1</code>, do as follows:</p><pre><code class="language-julia-repl">julia&gt; @objective(model, Max, 2x - 1)
+2 x - 1</code></pre><p>To set a quadratic objective and set the objective sense programatically, do as follows:</p><pre><code class="language-julia-repl">julia&gt; sense = JuMP.MOI.MIN_SENSE
+MIN_SENSE::OptimizationSense = 0
+
+julia&gt; @objective(model, sense, x^2 - 2x + 1)
+x² - 2 x + 1</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_objective_sense" id="JuMP.set_objective_sense"><code>JuMP.set_objective_sense</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)</code></pre><p>Sets the objective sense of the model to the given sense. See <a href="#JuMP.set_objective_function"><code>set_objective_function</code></a> to set the objective function. These are low-level functions; the recommended way to set the objective is with the <a href="#JuMP.@objective"><code>@objective</code></a> macro.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_objective_function" id="JuMP.set_objective_function"><code>JuMP.set_objective_function</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">set_objective_function(model::Model,
+                       func::Union{AbstractJuMPScalar,
+                                   MathOptInterface.AbstractScalarFunction})</code></pre><p>Sets the objective function of the model to the given function. See <a href="#JuMP.set_objective_sense"><code>set_objective_sense</code></a> to set the objective sense. These are low-level functions; the recommended way to set the objective is with the <a href="#JuMP.@objective"><code>@objective</code></a> macro.</p></div></div></section><p>Querying the objective function and objective sense:</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.objective_sense" id="JuMP.objective_sense"><code>JuMP.objective_sense</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">objective_sense(model::Model)::MathOptInterface.OptimizationSense</code></pre><p>Return the objective sense.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.objective_function" id="JuMP.objective_function"><code>JuMP.objective_function</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">objective_function(model::Model,
+               T::Type{&lt;:AbstractJuMPScalar}=objective_function_type(model))</code></pre><p>Return an object of type <code>T</code> representing the objective function. Error if the objective is not convertible to type <code>T</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @objective(model, Min, 2x + 1)
+2 x + 1
+
+julia&gt; JuMP.objective_function(model, JuMP.AffExpr)
+2 x + 1
+
+julia&gt; JuMP.objective_function(model, JuMP.QuadExpr)
+2 x + 1
+
+julia&gt; typeof(JuMP.objective_function(model, JuMP.QuadExpr))
+JuMP.GenericQuadExpr{Float64,VariableRef}</code></pre><p>We see with the last two commands that even if the objective function is affine, as it is convertible to a quadratic function, it can be queried as a quadratic function and the result is quadratic.</p><p>However, it is not convertible to a variable.</p><pre><code class="language-julia-repl">julia&gt; JuMP.objective_function(model, JuMP.VariableRef)
+ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
+Stacktrace:
+ [1] convert at /home/blegat/.julia/dev/MathOptInterface/src/functions.jl:398 [inlined]
+ [2] get(::JuMP.JuMPMOIModel{Float64}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:290
+ [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:114 [inlined]
+ [4] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:439 [inlined]
+ [5] get(::MathOptInterface.Bridges.LazyBridgeOptimizer{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}},MathOptInterface.Bridges.AllBridgedConstraints{Float64}}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Bridges/bridgeoptimizer.jl:172
+ [6] objective_function(::Model, ::Type{VariableRef}) at /home/blegat/.julia/dev/JuMP/src/objective.jl:129
+ [7] top-level scope at none:0</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.objective_function_type" id="JuMP.objective_function_type"><code>JuMP.objective_function_type</code></a> — <span class="docstring-category">Function</span>.</div><div><div><p>"     objective<em>function</em>type(model::Model)::AbstractJuMPScalar</p><p>Return the type of the objective function.</p></div></div></section><p>Querying the objective value and bound:</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.objective_bound" id="JuMP.objective_bound"><code>JuMP.objective_bound</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">objective_bound(model::Model)</code></pre><p>Return the best known bound on the optimal objective value after a call to <code>optimize!(model)</code>.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.objective_value" id="JuMP.objective_value"><code>JuMP.objective_value</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">objective_value(model::Model)</code></pre><p>Return the objective value after a call to <code>optimize!(model)</code>.</p></div></div></section><footer><hr/><a class="previous" href="../expressions/"><span class="direction">Previous</span><span class="title">Expressions</span></a><a class="next" href="../constraints/"><span class="direction">Next</span><span class="title">Constraints</span></a></footer></article></body></HTML>
