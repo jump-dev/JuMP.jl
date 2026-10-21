@@ -31,6 +31,33 @@ function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     return dict
 end
 
+# The check runs only when `v` merges into an existing term. A new term is
+# never dropped.
+function _add_or_set!(
+    dict::OrderedDict{K,V},
+    k::K,
+    v::V,
+    residue_tol,
+) where {K,V}
+    if iszero(v)
+        return dict
+    end
+    index = OrderedCollections.ht_keyindex2(dict, k)
+    if index <= 0
+        setindex!(dict, v, k)
+        return dict
+    end
+    old = dict.vals[index]
+    new = old + v
+    if abs(new) <= residue_tol * max(abs(old), abs(v))
+        delete!(dict, k)
+    else
+        dict.vals[index] = new
+        dict.keys[index] = k
+    end
+    return dict
+end
+
 function _new_ordered_dict(
     ::Type{K},
     ::Type{V},
@@ -547,6 +574,36 @@ julia> ex1
 julia> ex2
 2 x[1] + 2 x[2]
 ```
+
+## Cancellation residue
+
+When you add an affine expression to `expression`, use the `residue_tol`
+keyword to remove the residue that floating-point cancellation leaves.
+
+When a term with coefficient `v` merges into an existing term with coefficient
+`old`, the method removes the term if
+`abs(old + v) <= residue_tol * max(abs(old), abs(v))`. This is the same check
+as `isapprox(old, -v; rtol = residue_tol)`. The method does not check a new
+term. If a later call adds to a removed term, the term starts again without the
+removed residue. The default `residue_tol = 0` keeps the terms that sum to zero.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @expression(model, ex1, 0.1 * x[1] + 0.2 * x[1] + x[2])
+0.30000000000000004 x[1] + x[2]
+
+julia> @expression(model, ex2, 0.3 * x[1])
+0.3 x[1]
+
+julia> add_to_expression!(copy(ex1), -1.0, ex2)
+5.551115123125783e-17 x[1] + x[2]
+
+julia> add_to_expression!(copy(ex1), -1.0, ex2; residue_tol = 1e-9)
+x[2]
+```
 """
 function add_to_expression! end
 
@@ -564,8 +621,12 @@ end
 
 function add_to_expression!(
     aff::GenericAffExpr{S,V},
-    other::GenericAffExpr{T,V},
+    other::GenericAffExpr{T,V};
+    residue_tol::Real = 0,
 ) where {S,T,V}
+    if !iszero(residue_tol)
+        return add_to_expression!(aff, one(S), other; residue_tol)
+    end
     # Note: merge!() doesn't appear to call sizehint!(). Is this important?
     merge!(+, aff.terms, other.terms)
     aff.constant += other.constant
@@ -611,11 +672,23 @@ end
 function add_to_expression!(
     aff::GenericAffExpr{S,V},
     coef::_Constant,
-    other::GenericAffExpr{T,V},
+    other::GenericAffExpr{T,V};
+    residue_tol::Real = 0,
 ) where {S,T,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
-    for (term_coef, var) in linear_terms(other)
-        _add_or_set!(aff.terms, var, convert(S, coef * term_coef))
+    if iszero(residue_tol)
+        for (term_coef, var) in linear_terms(other)
+            _add_or_set!(aff.terms, var, convert(S, coef * term_coef))
+        end
+    else
+        for (term_coef, var) in linear_terms(other)
+            _add_or_set!(
+                aff.terms,
+                var,
+                convert(S, coef * term_coef),
+                residue_tol,
+            )
+        end
     end
     aff.constant += coef * other.constant
     return aff
@@ -624,9 +697,10 @@ end
 function add_to_expression!(
     aff::GenericAffExpr{S,V},
     other::GenericAffExpr{T,V},
-    coef::_Constant,
+    coef::_Constant;
+    residue_tol::Real = 0,
 ) where {S,T,V}
-    return add_to_expression!(aff, coef, other)
+    return add_to_expression!(aff, coef, other; residue_tol)
 end
 
 function Base.isequal(
