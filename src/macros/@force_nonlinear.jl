@@ -86,7 +86,7 @@ x * 2 * (1 + x) * x
 julia> @allocated @expression(model, x * 2.0 * (1 + x) * x)
 3072
 
-julia> b = @allocated @expression(model, @force_nonlinear(x * 2.0 * (1 + x) * x))
+julia> @allocated @expression(model, @force_nonlinear(x * 2.0 * (1 + x) * x))
 688
 ```
 """
