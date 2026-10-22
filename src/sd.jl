@@ -759,7 +759,7 @@ function build_constraint(
     set::Zeros,
 ) where {
     V<:Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },

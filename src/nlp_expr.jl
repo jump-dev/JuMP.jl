@@ -1241,14 +1241,14 @@ julia> derivative(model, sin(x)^y, y)
 function derivative(
     model::ConcreteModel{T},
     f::AbstractJuMPScalar,
-    x::VariableRefImpl{T},
+    x::ConcreteVariableRef{T},
 ) where {T}
     df_dx =
         MOI.Nonlinear.SymbolicAD.derivative(moi_function(model, f), index(x))
     return jump_function(model, MOI.Nonlinear.SymbolicAD.simplify!(df_dx))
 end
 
-function derivative(f::AbstractJuMPScalar, x::VariableRefImpl)
+function derivative(f::AbstractJuMPScalar, x::ConcreteVariableRef)
     return derivative(owner_model(x), f, x)
 end
 
@@ -1290,12 +1290,12 @@ julia> ∇f[y]
 """
 function gradient(model::ConcreteModel{T}, f::AbstractJuMPScalar) where {T}
     g = moi_function(model, f)
-    ∇f = Dict{VariableRefImpl{T},Any}()
+    ∇f = Dict{ConcreteVariableRef{T},Any}()
     for xi in MOI.Nonlinear.SymbolicAD.variables(g)
         df_dx = MOI.Nonlinear.SymbolicAD.simplify!(
             MOI.Nonlinear.SymbolicAD.derivative(g, xi),
         )
-        ∇f[VariableRefImpl{T}(model, xi)] = jump_function(model, df_dx)
+        ∇f[ConcreteVariableRef{T}(model, xi)] = jump_function(model, df_dx)
     end
     return ∇f
 end

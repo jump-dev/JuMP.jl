@@ -64,7 +64,7 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::VariableRefImpl{Float64},
+    x::ConcreteVariableRef{Float64},
     parent::Int,
 )
     MOI.Nonlinear.parse_expression(model, expr, index(x), parent)
@@ -445,7 +445,7 @@ end
 
 function Base.getindex(map::_VariableValueMap, index::MOI.VariableIndex)
     return get!(map.cache, index) do
-        return map.value(VariableRefImpl(map.model, index))
+        return map.value(ConcreteVariableRef(map.model, index))
     end
 end
 

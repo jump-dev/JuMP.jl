@@ -277,7 +277,7 @@ Base.abs2(v::AbstractVariableRef) = v^2
 
 Base.isreal(::AbstractVariableRef) = true
 
-struct VariableRefImpl{T,M<:ConcreteModel{T}} <: AbstractVariableRef
+struct ConcreteVariableRef{T,M<:ConcreteModel{T}} <: AbstractVariableRef
     model::M
     index::MOI.VariableIndex
 end
@@ -287,20 +287,20 @@ end
 
 Holds a reference to the model and the corresponding MOI.VariableIndex.
 """
-const GenericVariableRef{T<:Real} = VariableRefImpl{T,GenericModel{T}}
+const GenericVariableRef{T<:Real} = ConcreteVariableRef{T,GenericModel{T}}
 const VariableRef = GenericVariableRef{Float64}
 
-function VariableRefImpl{T}(
+function ConcreteVariableRef{T}(
     model::M,
     index::MOI.VariableIndex,
 ) where {T,M<:ConcreteModel{T}}
-    return VariableRefImpl{T,M}(model, index)
+    return ConcreteVariableRef{T,M}(model, index)
 end
 
-value_type(::Type{<:VariableRefImpl{T}}) where {T} = T
+value_type(::Type{<:ConcreteVariableRef{T}}) where {T} = T
 
 function variable_ref_type(::Type{M}) where {T,M<:ConcreteModel{T}}
-    return VariableRefImpl{T,M}
+    return ConcreteVariableRef{T,M}
 end
 
 # `AbstractVariableRef` types must override the default `owner_model` if the field
@@ -371,13 +371,13 @@ function Base.showerror(io::IO, err::VariableNotOwned)
     )
 end
 
-Base.iszero(::VariableRefImpl) = false
+Base.iszero(::ConcreteVariableRef) = false
 
-function Base.copy(v::VariableRefImpl{T}) where {T}
-    return VariableRefImpl{T}(v.model, v.index)
+function Base.copy(v::ConcreteVariableRef{T}) where {T}
+    return ConcreteVariableRef{T}(v.model, v.index)
 end
 
-Base.broadcastable(v::VariableRefImpl) = Ref(v)
+Base.broadcastable(v::ConcreteVariableRef) = Ref(v)
 
 Base.zero(v::AbstractVariableRef) = zero(typeof(v))
 
@@ -419,7 +419,7 @@ julia> coefficient(x[1], x[2])
 0.0
 ```
 """
-function coefficient(v1::VariableRefImpl{T}, v2::VariableRefImpl{T}) where {T}
+function coefficient(v1::ConcreteVariableRef{T}, v2::ConcreteVariableRef{T}) where {T}
     if v1 == v2
         return one(T)
     else
@@ -428,14 +428,14 @@ function coefficient(v1::VariableRefImpl{T}, v2::VariableRefImpl{T}) where {T}
 end
 
 function coefficient(
-    ::VariableRefImpl{T},
-    ::VariableRefImpl{T},
-    ::VariableRefImpl{T},
+    ::ConcreteVariableRef{T},
+    ::ConcreteVariableRef{T},
+    ::ConcreteVariableRef{T},
 ) where {T}
     return zero(T)
 end
 
-function isequal_canonical(v::VariableRefImpl, other::VariableRefImpl)
+function isequal_canonical(v::ConcreteVariableRef, other::ConcreteVariableRef)
     return isequal(v, other)
 end
 
@@ -470,7 +470,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::ConcreteModel, variable_ref::VariableRefImpl)
+function delete(model::ConcreteModel, variable_ref::ConcreteVariableRef)
     if model !== owner_model(variable_ref)
         error(
             """
@@ -517,7 +517,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::ConcreteModel, variable_refs::Vector{<:VariableRefImpl})
+function delete(model::ConcreteModel, variable_refs::Vector{<:ConcreteVariableRef})
     if any(model !== owner_model(v) for v in variable_refs)
         error(
             """
@@ -554,7 +554,7 @@ julia> is_valid(model_2, x)
 false
 ```
 """
-function is_valid(model::ConcreteModel, variable_ref::VariableRefImpl)
+function is_valid(model::ConcreteModel, variable_ref::ConcreteVariableRef)
     return model === owner_model(variable_ref) &&
            MOI.is_valid(backend(model), variable_ref.index)
 end
@@ -562,11 +562,11 @@ end
 # The default hash is slow. It's important for the performance of AffExpr to
 # define our own.
 # https://github.com/jump-dev/MathOptInterface.jl/issues/234#issuecomment-366868878
-function Base.hash(v::VariableRefImpl, h::UInt)
+function Base.hash(v::ConcreteVariableRef, h::UInt)
     return hash(objectid(owner_model(v)), hash(v.index.value, h))
 end
 
-function Base.isequal(v1::VariableRefImpl, v2::VariableRefImpl)
+function Base.isequal(v1::ConcreteVariableRef, v2::ConcreteVariableRef)
     return owner_model(v1) === owner_model(v2) && v1.index == v2.index
 end
 
@@ -586,15 +586,15 @@ julia> index(x)
 MOI.VariableIndex(1)
 ```
 """
-index(v::VariableRefImpl) = v.index
+index(v::ConcreteVariableRef) = v.index
 
-function VariableRefImpl{T}(model::ConcreteModel{T}) where {T}
+function ConcreteVariableRef{T}(model::ConcreteModel{T}) where {T}
     index = MOI.add_variable(backend(model))
-    return VariableRefImpl{T}(model, index)
+    return ConcreteVariableRef{T}(model, index)
 end
 
-function VariableRefImpl{T,M}(model::M) where {T,M<:ConcreteModel{T}}
-    return VariableRefImpl{T}(model)
+function ConcreteVariableRef{T,M}(model::M) where {T,M<:ConcreteModel{T}}
+    return ConcreteVariableRef{T}(model)
 end
 
 """
@@ -618,20 +618,20 @@ julia> VariableRef(c) == x
 true
 ```
 """
-function VariableRefImpl{T}(
+function ConcreteVariableRef{T}(
     c::ConstraintRef{
         <:ConcreteModel{T},
         <:MOI.ConstraintIndex{MOI.VariableIndex},
     },
 ) where {T}
     vi = MOI.VariableIndex(index(c).value)
-    return VariableRefImpl{T}(owner_model(c), vi)
+    return ConcreteVariableRef{T}(owner_model(c), vi)
 end
 
-function VariableRefImpl{T,M}(
+function ConcreteVariableRef{T,M}(
     c::ConstraintRef{M,<:MOI.ConstraintIndex{MOI.VariableIndex}},
 ) where {T,M<:ConcreteModel{T}}
-    return VariableRefImpl{T}(c)
+    return ConcreteVariableRef{T}(c)
 end
 
 # Name setter/getters
@@ -655,7 +655,7 @@ julia> name(x[1])
 "x[1]"
 ```
 """
-function name(v::VariableRefImpl)
+function name(v::ConcreteVariableRef)
     model = owner_model(v)
     if !MOI.supports(backend(model), MOI.VariableName(), MOI.VariableIndex)
         return ""
@@ -685,7 +685,7 @@ julia> name(x)
 "x_foo"
 ```
 """
-function set_name(v::VariableRefImpl, s::String)
+function set_name(v::ConcreteVariableRef, s::String)
     MOI.set(owner_model(v), MOI.VariableName(), v, s)
     return
 end
@@ -751,13 +751,13 @@ function variable_by_name(model::ConcreteModel, name::String)
     if index === nothing
         return nothing
     end
-    return VariableRefImpl(model, index)
+    return ConcreteVariableRef(model, index)
 end
 
-MOI.VariableIndex(v::VariableRefImpl) = index(v)
+MOI.VariableIndex(v::ConcreteVariableRef) = index(v)
 
 # Note: No validation is performed that the variables belong to the same model.
-function MOI.VectorOfVariables(vars::Vector{<:VariableRefImpl})
+function MOI.VectorOfVariables(vars::Vector{<:ConcreteVariableRef})
     return MOI.VectorOfVariables(index.(vars))
 end
 
@@ -785,17 +785,17 @@ julia> has_lower_bound(x)
 true
 ```
 """
-function has_lower_bound(v::VariableRefImpl)
+function has_lower_bound(v::ConcreteVariableRef)
     return _moi_has_lower_bound(backend(owner_model(v)), v)
 end
 
 # _moi_* methods allow us to work around the type instability of the backend of
 # a model.
-function _moi_has_lower_bound(moi_backend, v::VariableRefImpl)
+function _moi_has_lower_bound(moi_backend, v::ConcreteVariableRef)
     return MOI.is_valid(moi_backend, _lower_bound_index(v))
 end
 
-function _lower_bound_index(v::VariableRefImpl{T}) where {T}
+function _lower_bound_index(v::ConcreteVariableRef{T}) where {T}
     return MOI.ConstraintIndex{MOI.VariableIndex,MOI.GreaterThan{T}}(
         index(v).value,
     )
@@ -826,7 +826,7 @@ julia> lower_bound(x)
 2.0
 ```
 """
-function set_lower_bound(v::VariableRefImpl, lower::Number)
+function set_lower_bound(v::ConcreteVariableRef, lower::Number)
     if !isfinite(lower)
         error(
             """
@@ -844,7 +844,7 @@ end
 
 function _moi_set_lower_bound(
     moi_backend,
-    v::VariableRefImpl{T},
+    v::ConcreteVariableRef{T},
     lower::Number,
 ) where {T}
     new_set = MOI.GreaterThan(convert(T, lower))
@@ -879,7 +879,7 @@ julia> LowerBoundRef(x)
 x ≥ 1
 ```
 """
-function LowerBoundRef(v::VariableRefImpl)
+function LowerBoundRef(v::ConcreteVariableRef)
     if !has_lower_bound(v)
         error(
             """
@@ -917,7 +917,7 @@ julia> has_lower_bound(x)
 false
 ```
 """
-function delete_lower_bound(variable_ref::VariableRefImpl)
+function delete_lower_bound(variable_ref::ConcreteVariableRef)
     delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
     return
 end
@@ -941,7 +941,7 @@ julia> lower_bound(x)
 1.0
 ```
 """
-function lower_bound(v::VariableRefImpl{T}) where {T}
+function lower_bound(v::ConcreteVariableRef{T}) where {T}
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), LowerBoundRef(v))
     return set.lower::T
 end
@@ -968,15 +968,15 @@ julia> has_upper_bound(x)
 true
 ```
 """
-function has_upper_bound(v::VariableRefImpl)
+function has_upper_bound(v::ConcreteVariableRef)
     return _moi_has_upper_bound(backend(owner_model(v)), v)
 end
 
-function _moi_has_upper_bound(moi_backend, v::VariableRefImpl)
+function _moi_has_upper_bound(moi_backend, v::ConcreteVariableRef)
     return MOI.is_valid(moi_backend, _upper_bound_index(v))
 end
 
-function _upper_bound_index(v::VariableRefImpl{T}) where {T}
+function _upper_bound_index(v::ConcreteVariableRef{T}) where {T}
     return MOI.ConstraintIndex{MOI.VariableIndex,MOI.LessThan{T}}(
         index(v).value,
     )
@@ -1007,7 +1007,7 @@ julia> upper_bound(x)
 2.0
 ```
 """
-function set_upper_bound(v::VariableRefImpl, upper::Number)
+function set_upper_bound(v::ConcreteVariableRef, upper::Number)
     if !isfinite(upper)
         error(
             """
@@ -1025,7 +1025,7 @@ end
 
 function _moi_set_upper_bound(
     moi_backend,
-    v::VariableRefImpl{T},
+    v::ConcreteVariableRef{T},
     upper::Number,
 ) where {T}
     new_set = MOI.LessThan(convert(T, upper))
@@ -1060,7 +1060,7 @@ julia> UpperBoundRef(x)
 x ≤ 1
 ```
 """
-function UpperBoundRef(v::VariableRefImpl)
+function UpperBoundRef(v::ConcreteVariableRef)
     if !has_upper_bound(v)
         error(
             """
@@ -1100,7 +1100,7 @@ julia> has_upper_bound(x)
 false
 ```
 """
-function delete_upper_bound(variable_ref::VariableRefImpl)
+function delete_upper_bound(variable_ref::ConcreteVariableRef)
     delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
     return
 end
@@ -1126,7 +1126,7 @@ julia> upper_bound(x)
 1.0
 ```
 """
-function upper_bound(v::VariableRefImpl{T}) where {T}
+function upper_bound(v::ConcreteVariableRef{T}) where {T}
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), UpperBoundRef(v))
     return set.upper::T
 end
@@ -1157,15 +1157,15 @@ julia> is_fixed(x)
 true
 ```
 """
-function is_fixed(v::VariableRefImpl)
+function is_fixed(v::ConcreteVariableRef)
     return _moi_is_fixed(backend(owner_model(v)), v)
 end
 
-function _moi_is_fixed(moi_backend, v::VariableRefImpl)
+function _moi_is_fixed(moi_backend, v::ConcreteVariableRef)
     return MOI.is_valid(moi_backend, _fix_index(v))
 end
 
-function _fix_index(v::VariableRefImpl{T}) where {T}
+function _fix_index(v::ConcreteVariableRef{T}) where {T}
     return MOI.ConstraintIndex{MOI.VariableIndex,MOI.EqualTo{T}}(index(v).value)
 end
 
@@ -1213,7 +1213,7 @@ julia> is_fixed(x)
 true
 ```
 """
-function fix(variable::VariableRefImpl, value::Number; force::Bool = false)
+function fix(variable::ConcreteVariableRef, value::Number; force::Bool = false)
     if !isfinite(value)
         error(
             """
@@ -1231,7 +1231,7 @@ end
 
 function _moi_fix(
     moi_backend,
-    variable::VariableRefImpl{T},
+    variable::ConcreteVariableRef{T},
     value::Number,
     force::Bool,
 ) where {T}
@@ -1291,7 +1291,7 @@ julia> is_fixed(x)
 false
 ```
 """
-function unfix(variable_ref::VariableRefImpl)
+function unfix(variable_ref::ConcreteVariableRef)
     delete(owner_model(variable_ref), FixRef(variable_ref))
     return
 end
@@ -1316,7 +1316,7 @@ julia> fix_value(x)
 1.0
 ```
 """
-function fix_value(v::VariableRefImpl{T}) where {T}
+function fix_value(v::ConcreteVariableRef{T}) where {T}
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), FixRef(v))
     return set.value::T
 end
@@ -1342,7 +1342,7 @@ julia> FixRef(x)
 x = 1
 ```
 """
-function FixRef(v::VariableRefImpl)
+function FixRef(v::ConcreteVariableRef)
     if !is_fixed(v)
         error("""
               Variable $v does not have fixed bounds.
@@ -1378,15 +1378,15 @@ julia> is_integer(x)
 true
 ```
 """
-function is_integer(v::VariableRefImpl)
+function is_integer(v::ConcreteVariableRef)
     return _moi_is_integer(backend(owner_model(v)), v)
 end
 
-function _moi_is_integer(moi_backend, v::VariableRefImpl)
+function _moi_is_integer(moi_backend, v::ConcreteVariableRef)
     return MOI.is_valid(moi_backend, _integer_index(v))
 end
 
-function _integer_index(v::VariableRefImpl)
+function _integer_index(v::ConcreteVariableRef)
     return MOI.ConstraintIndex{MOI.VariableIndex,MOI.Integer}(index(v).value)
 end
 
@@ -1413,14 +1413,14 @@ julia> is_integer(x)
 true
 ```
 """
-function set_integer(v::VariableRefImpl)
+function set_integer(v::ConcreteVariableRef)
     model = owner_model(v)
     model.is_model_dirty = true
     _moi_set_integer(backend(model), v)
     return
 end
 
-function _moi_set_integer(moi_backend, variable_ref::VariableRefImpl)
+function _moi_set_integer(moi_backend, variable_ref::ConcreteVariableRef)
     if _moi_is_integer(moi_backend, variable_ref)
         return
     elseif _moi_is_binary(moi_backend, variable_ref)
@@ -1461,7 +1461,7 @@ julia> is_integer(x)
 false
 ```
 """
-function unset_integer(variable_ref::VariableRefImpl)
+function unset_integer(variable_ref::ConcreteVariableRef)
     delete(owner_model(variable_ref), IntegerRef(variable_ref))
     return
 end
@@ -1486,7 +1486,7 @@ julia> IntegerRef(x)
 x integer
 ```
 """
-function IntegerRef(v::VariableRefImpl)
+function IntegerRef(v::ConcreteVariableRef)
     if !is_integer(v)
         error(
             """
@@ -1520,15 +1520,15 @@ julia> is_binary(x)
 true
 ```
 """
-function is_binary(v::VariableRefImpl)
+function is_binary(v::ConcreteVariableRef)
     return _moi_is_binary(backend(owner_model(v)), v)
 end
 
-function _moi_is_binary(moi_backend, v::VariableRefImpl)
+function _moi_is_binary(moi_backend, v::ConcreteVariableRef)
     return MOI.is_valid(moi_backend, _binary_index(v))
 end
 
-function _binary_index(v::VariableRefImpl)
+function _binary_index(v::ConcreteVariableRef)
     return MOI.ConstraintIndex{MOI.VariableIndex,MOI.ZeroOne}(index(v).value)
 end
 
@@ -1556,7 +1556,7 @@ julia> is_binary(x)
 true
 ```
 """
-function set_binary(v::VariableRefImpl)
+function set_binary(v::ConcreteVariableRef)
     model = owner_model(v)
     model.is_model_dirty = true
     _moi_set_binary(backend(model), v)
@@ -1603,7 +1603,7 @@ julia> is_binary(x)
 false
 ```
 """
-function unset_binary(variable_ref::VariableRefImpl)
+function unset_binary(variable_ref::ConcreteVariableRef)
     delete(owner_model(variable_ref), BinaryRef(variable_ref))
     return
 end
@@ -1627,7 +1627,7 @@ julia> BinaryRef(x)
 x binary
 ```
 """
-function BinaryRef(v::VariableRefImpl)
+function BinaryRef(v::ConcreteVariableRef)
     if !is_binary(v)
         error(
             """
@@ -1676,7 +1676,7 @@ Stacktrace:
 [...]
 ```
 """
-function ParameterRef(x::VariableRefImpl)
+function ParameterRef(x::ConcreteVariableRef)
     if !is_parameter(x)
         error(
             """
@@ -1689,7 +1689,7 @@ function ParameterRef(x::VariableRefImpl)
     return ConstraintRef(owner_model(x), _parameter_index(x), ScalarShape())
 end
 
-function _parameter_index(x::VariableRefImpl)
+function _parameter_index(x::ConcreteVariableRef)
     F, S = MOI.VariableIndex, MOI.Parameter{value_type(typeof(x))}
     return MOI.ConstraintIndex{F,S}(index(x).value)
 end
@@ -1720,7 +1720,7 @@ julia> is_parameter(x)
 false
 ```
 """
-function is_parameter(x::VariableRefImpl)
+function is_parameter(x::ConcreteVariableRef)
     return MOI.is_valid(backend(owner_model(x)), _parameter_index(x))::Bool
 end
 
@@ -1751,7 +1751,7 @@ julia> parameter_value(p)
 2.5
 ```
 """
-function set_parameter_value(x::VariableRefImpl, value)
+function set_parameter_value(x::ConcreteVariableRef, value)
     model = owner_model(x)
     T = value_type(typeof(x))
     model.is_model_dirty = true
@@ -1787,7 +1787,7 @@ julia> parameter_value(p)
 2.5
 ```
 """
-function parameter_value(x::VariableRefImpl)
+function parameter_value(x::ConcreteVariableRef)
     set = MOI.get(
         owner_model(x),
         MOI.ConstraintSet(),
@@ -2046,7 +2046,7 @@ julia> start_value(y)
 2.0
 ```
 """
-function start_value(v::VariableRefImpl{T})::Union{Nothing,T} where {T}
+function start_value(v::ConcreteVariableRef{T})::Union{Nothing,T} where {T}
     return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
 end
 
@@ -2135,7 +2135,7 @@ julia> start_value(y)
 ```
 """
 function set_start_value(
-    variable::VariableRefImpl{T},
+    variable::ConcreteVariableRef{T},
     value::Union{Nothing,Real},
 ) where {T}
     MOI.set(
@@ -2157,7 +2157,7 @@ Use [`primal_status`](@ref) to check if a result exists before asking for values
 
 See also: [`result_count`](@ref).
 """
-function value(v::VariableRefImpl{T}; result::Int = 1)::T where {T}
+function value(v::ConcreteVariableRef{T}; result::Int = 1)::T where {T}
     return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
 end
 
@@ -2166,7 +2166,7 @@ end
 
 Evaluate the value of the variable `v` as `var_value(v)`.
 """
-function value(var_value::Function, v::VariableRefImpl)
+function value(var_value::Function, v::ConcreteVariableRef)
     return var_value(v)
 end
 
@@ -2289,7 +2289,7 @@ function _moi_add_variable(
     if index === nothing
         index = MOI.add_variable(moi_backend)
     end
-    x = VariableRefImpl(model, index::MOI.VariableIndex)
+    x = ConcreteVariableRef(model, index::MOI.VariableIndex)
     if info.has_start && info.start !== nothing
         start = _to_value(T, info.start, "start value")
         MOI.set(moi_backend, MOI.VariablePrimalStart(), index, start)
@@ -2417,7 +2417,7 @@ function add_variable(
         name,
         T,
     )
-    ret = VariableRefImpl(model, x)
+    ret = ConcreteVariableRef(model, x)
     model.variable_in_set_ref[ret] = ci
     return ret
 end
@@ -2506,7 +2506,7 @@ function add_variable(
         vectorize(names, variable.shape),
         T,
     )
-    ret = reshape_vector(VariableRefImpl{T}.(model, x), variable.shape)
+    ret = reshape_vector(ConcreteVariableRef{T}.(model, x), variable.shape)
     if ci !== nothing  # ci === nothing if variable.set isa MOI.Reals
         model.variable_in_set_ref[ret] = ci
         if variable.shape != ScalarShape() && variable.shape != VectorShape()
@@ -2722,7 +2722,7 @@ julia> reduced_cost(x)
 2.0
 ```
 """
-function reduced_cost(x::VariableRefImpl{T})::T where {T}
+function reduced_cost(x::ConcreteVariableRef{T})::T where {T}
     model = owner_model(x)
     if !has_duals(model)
         error(
@@ -2778,7 +2778,7 @@ function all_variables(model::ConcreteModel{T}) where {T}
     return V[V(model, idx) for idx in all_indices]
 end
 
-function dual(::VariableRefImpl)
+function dual(::ConcreteVariableRef)
     return error(
         """
         Calling `dual` directly on a variable is not supported.
@@ -2807,7 +2807,7 @@ value(x::Number; result::Int = 1) = x
 
 value(::Function, x::Number) = x
 
-function _info_from_variable(v::VariableRefImpl)
+function _info_from_variable(v::ConcreteVariableRef)
     has_lb = has_lower_bound(v)
     lb = has_lb ? lower_bound(v) : -Inf
     has_ub = has_upper_bound(v)
@@ -2979,7 +2979,7 @@ function _relax_or_fix_integrality(
     )
     # We gather the info first because we cannot modify-then-query.
     info_pre_relaxation = map(discrete_variable_constraints) do c
-        v = VariableRefImpl{T}(c)
+        v = ConcreteVariableRef{T}(c)
         solution = var_value === nothing ? nothing : var_value(v)
         return (v, solution, _info_from_variable(v))
     end
@@ -3521,7 +3521,7 @@ end
 for sym in (:(<=), :(<))
     err = _logic_error_exception(sym)
     @eval begin
-        Base.$(sym)(::VariableRefImpl, ::Number) = throw($err)
-        Base.$(sym)(::Number, ::VariableRefImpl) = throw($err)
+        Base.$(sym)(::ConcreteVariableRef, ::Number) = throw($err)
+        Base.$(sym)(::Number, ::ConcreteVariableRef) = throw($err)
     end
 end

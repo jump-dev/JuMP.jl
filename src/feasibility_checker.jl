@@ -41,7 +41,7 @@ Dict{Any, Float64} with 1 entry:
 """
 function primal_feasibility_report(
     model::ConcreteModel{T},
-    point::AbstractDict{<:VariableRefImpl{T},T};
+    point::AbstractDict{<:ConcreteVariableRef{T},T};
     atol::T = zero(T),
     skip_missing::Bool = false,
 ) where {T}

@@ -415,7 +415,7 @@ function jump_function(
             add_to_expression!(
                 g,
                 t.coefficient,
-                VariableRefImpl(model, t.variable),
+                ConcreteVariableRef(model, t.variable),
             )
         end
         push!(ret, g)

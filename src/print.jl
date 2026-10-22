@@ -789,7 +789,7 @@ end
 _replace_expr_terms(::Any, ::Any, expr::Any) = expr
 
 function _replace_expr_terms(model, ::Any, x::MOI.VariableIndex)
-    return VariableRefImpl(model, x)
+    return ConcreteVariableRef(model, x)
 end
 
 # By default, JuMP will print NonlinearExpression objects with some preamble and
@@ -888,11 +888,11 @@ julia> anonymous_name(MIME("text/plain"), x)
 """
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
-function anonymous_name(::MIME"text/plain", x::VariableRefImpl)
+function anonymous_name(::MIME"text/plain", x::ConcreteVariableRef)
     return "_[$(index(x).value)]"
 end
 
-function anonymous_name(::MIME"text/latex", x::VariableRefImpl)
+function anonymous_name(::MIME"text/latex", x::ConcreteVariableRef)
     return "{\\_}_{$(index(x).value)}"
 end
 

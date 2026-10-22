@@ -359,7 +359,7 @@ end
 
 function test_model_type_aliases()
     @test GenericModel <: JuMP.ConcreteModel
-    @test GenericVariableRef<:(JuMP.VariableRefImpl{T} where {T<:Real})
+    @test GenericVariableRef<:(JuMP.ConcreteVariableRef{T} where {T<:Real})
     @test Model === GenericModel{Float64}
     @test VariableRef === GenericVariableRef{Float64}
     return

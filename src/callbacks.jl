@@ -95,7 +95,7 @@ julia> optimize!(model)
 Solution is: 10.0
 ```
 """
-function callback_value(cb_data, x::VariableRefImpl)
+function callback_value(cb_data, x::ConcreteVariableRef)
     # TODO(odow):
     # MOI defines `is_set_by_optimize(::CallbackVariablePrimal) = true`.
     # This causes problems for JuMP because it checks the termination_status to
@@ -139,7 +139,7 @@ end
 function MOI.submit(
     model::ConcreteModel{T},
     cb::MOI.HeuristicSolution,
-    variables::Vector{<:VariableRefImpl{T}},
+    variables::Vector{<:ConcreteVariableRef{T}},
     values::Vector{<:Real},
 ) where {T}
     return MOI.submit(

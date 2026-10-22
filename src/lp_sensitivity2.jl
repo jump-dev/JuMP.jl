@@ -10,11 +10,11 @@ See [`lp_sensitivity_report`](@ref).
 """
 struct SensitivityReport{T}
     rhs::Dict{ConstraintRef,Tuple{T,T}}
-    objective::Dict{VariableRefImpl{T},Tuple{T,T}}
+    objective::Dict{ConcreteVariableRef{T},Tuple{T,T}}
 end
 
 Base.getindex(s::SensitivityReport, c::ConstraintRef) = s.rhs[c]
-Base.getindex(s::SensitivityReport, x::VariableRefImpl) = s.objective[x]
+Base.getindex(s::SensitivityReport, x::ConcreteVariableRef) = s.objective[x]
 
 """
     lp_sensitivity_report(model::GenericModel{T}; atol::T = Base.rtoldefault(T))::SensitivityReport{T} where {T}
@@ -146,7 +146,7 @@ function lp_sensitivity_report(
 
     report = SensitivityReport(
         Dict{ConstraintRef,Tuple{T,T}}(),
-        Dict{VariableRefImpl{T},Tuple{T,T}}(),
+        Dict{ConcreteVariableRef{T},Tuple{T,T}}(),
     )
 
     ###
@@ -334,7 +334,7 @@ end
 Return `true` if `model` is a linear program.
 """
 function _is_lp(model::ConcreteModel)
-    AffType = Union{VariableRefImpl,GenericAffExpr}
+    AffType = Union{ConcreteVariableRef,GenericAffExpr}
     if !(objective_function_type(model) <: AffType)
         return false
     end

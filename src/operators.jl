@@ -519,7 +519,7 @@ end
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
-Base.conj(x::VariableRefImpl) = x
+Base.conj(x::ConcreteVariableRef) = x
 
 # Can remove the following code once == overloading is removed
 function LinearAlgebra.issymmetric(x::Matrix{<:_JuMPTypes})
@@ -611,7 +611,7 @@ _mult_lower(α, A) = parent(α * LinearAlgebra.LowerTriangular(parent(A)))
 
 function Base.:*(
     x::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -627,7 +627,7 @@ end
 function Base.:*(
     A::LinearAlgebra.Hermitian,
     x::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -637,7 +637,7 @@ end
 
 function Base.complex(
     r::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -649,7 +649,7 @@ end
 function Base.complex(
     r::Real,
     i::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -659,12 +659,12 @@ end
 
 function Base.complex(
     r::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
     i::Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -679,7 +679,7 @@ function Base.:+(
     B::LinearAlgebra.Hermitian,
 ) where {
     V<:Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -692,7 +692,7 @@ function Base.:+(
     B::LinearAlgebra.Symmetric{V,Matrix{V}},
 ) where {
     V<:Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -705,7 +705,7 @@ function Base.:-(
     B::LinearAlgebra.Hermitian,
 ) where {
     V<:Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },
@@ -718,7 +718,7 @@ function Base.:-(
     B::LinearAlgebra.Symmetric{V,Matrix{V}},
 ) where {
     V<:Union{
-        VariableRefImpl{<:Real},
+        ConcreteVariableRef{<:Real},
         GenericAffExpr{<:Real},
         GenericQuadExpr{<:Real},
     },

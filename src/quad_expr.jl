@@ -720,7 +720,7 @@ function _moi_quadratic_term(t::Tuple)
 end
 
 function MOI.ScalarQuadraticFunction(
-    q::GenericQuadExpr{C,<:VariableRefImpl},
+    q::GenericQuadExpr{C,<:ConcreteVariableRef},
 ) where {C}
     _assert_isfinite(q)
     qterms = MOI.ScalarQuadraticTerm{C}[
@@ -733,7 +733,7 @@ end
 function GenericQuadExpr{C,V}(
     m::ConcreteModel,
     f::MOI.ScalarQuadraticFunction,
-) where {C,V<:VariableRefImpl}
+) where {C,V<:ConcreteVariableRef}
     quad = GenericQuadExpr{C,V}(
         GenericAffExpr{C,V}(
             m,
@@ -776,7 +776,7 @@ function _fill_vqf!(
 end
 
 function MOI.VectorQuadraticFunction(
-    quads::Vector{<:GenericQuadExpr{C,<:VariableRefImpl}},
+    quads::Vector{<:GenericQuadExpr{C,<:ConcreteVariableRef}},
 ) where {C}
     num_quadratic_terms = sum(quad -> length(quad_terms(quad)), quads)
     quadratic_terms =

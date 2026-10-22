@@ -20,7 +20,7 @@ struct LPMatrixData{T}
     sense::MOI.OptimizationSense
     integers::Vector{Int}
     binaries::Vector{Int}
-    variables::Vector{<:VariableRefImpl{T}}
+    variables::Vector{<:ConcreteVariableRef{T}}
     affine_constraints::Vector{ConstraintRef}
     variable_constraints::Vector{ConstraintRef}
 end
@@ -172,7 +172,7 @@ function _fill_standard_form(
     cache::Any,
 ) where {
     T,
-    V<:VariableRefImpl{T},
+    V<:ConcreteVariableRef{T},
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T},MOI.Interval{T}},
 }
     for c in all_constraints(model, V, S)
@@ -191,7 +191,7 @@ function _fill_standard_form(
     ::Type{V},
     ::Type{MOI.Integer},
     cache::Any,
-) where {T,V<:VariableRefImpl{T}}
+) where {T,V<:ConcreteVariableRef{T}}
     for c in all_constraints(model, V, MOI.Integer)
         c_obj = constraint_object(c)
         push!(cache.integers, cache.variable_to_column[c_obj.func])
@@ -204,7 +204,7 @@ function _fill_standard_form(
     ::Type{V},
     ::Type{MOI.ZeroOne},
     cache::Any,
-) where {T,V<:VariableRefImpl{T}}
+) where {T,V<:ConcreteVariableRef{T}}
     for c in all_constraints(model, V, MOI.ZeroOne)
         c_obj = constraint_object(c)
         push!(cache.binaries, cache.variable_to_column[c_obj.func])
@@ -219,7 +219,7 @@ function _fill_standard_form(
     cache::Any,
 ) where {
     T,
-    F<:GenericAffExpr{T,<:VariableRefImpl{T}},
+    F<:GenericAffExpr{T,<:ConcreteVariableRef{T}},
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T},MOI.Interval{T}},
 }
     for c in all_constraints(model, F, S)
@@ -258,7 +258,7 @@ end
 
 function _fill_standard_form(
     model::ConcreteModel{T},
-    ::Type{<:VariableRefImpl{T}},
+    ::Type{<:ConcreteVariableRef{T}},
     cache::Any,
 ) where {T}
     cache.c[cache.variable_to_column[objective_function(model)]] = one(T)
@@ -268,7 +268,7 @@ end
 
 function _fill_standard_form(
     model::ConcreteModel{T},
-    ::Type{<:GenericAffExpr{T,<:VariableRefImpl{T}}},
+    ::Type{<:GenericAffExpr{T,<:ConcreteVariableRef{T}}},
     cache::Any,
 ) where {T}
     f = objective_function(model)

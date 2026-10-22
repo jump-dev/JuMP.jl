@@ -751,7 +751,7 @@ end
 # the same model. The verification is done in `check_belongs_to_model` which
 # should be called before calling `MOI.ScalarAffineFunction`.
 function MOI.ScalarAffineFunction(
-    a::GenericAffExpr{C,<:VariableRefImpl},
+    a::GenericAffExpr{C,<:ConcreteVariableRef},
 ) where {C}
     _assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{C}[
@@ -763,7 +763,7 @@ end
 function GenericAffExpr{C,V}(
     m::ConcreteModel,
     f::MOI.ScalarAffineFunction,
-) where {C,V<:VariableRefImpl}
+) where {C,V<:ConcreteVariableRef}
     aff = GenericAffExpr{C,V}(f.constant)
     for t in f.terms
         add_to_expression!(aff, t.coefficient, V(m, t.variable))
@@ -801,7 +801,7 @@ function _fill_vaf!(
 end
 
 function MOI.VectorAffineFunction(
-    affs::Vector{<:GenericAffExpr{C,<:VariableRefImpl}},
+    affs::Vector{<:GenericAffExpr{C,<:ConcreteVariableRef}},
 ) where {C}
     len = 0
     for aff in affs

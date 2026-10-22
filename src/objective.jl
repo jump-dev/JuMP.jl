@@ -476,7 +476,7 @@ julia> objective_function(model)
 """
 function set_objective_coefficient(
     model::ConcreteModel{T},
-    variable::VariableRefImpl{T},
+    variable::ConcreteVariableRef{T},
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -498,9 +498,9 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variable::VariableRefImpl{T},
+    variable::ConcreteVariableRef{T},
     coeff::T,
-    ::Type{<:VariableRefImpl{T}},
+    ::Type{<:ConcreteVariableRef{T}},
 ) where {T}
     current_obj = objective_function(model)
     if index(current_obj) == index(variable)
@@ -516,7 +516,7 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variable::VariableRefImpl{T},
+    variable::ConcreteVariableRef{T},
     coeff::T,
     ::Type{F},
 ) where {T,F}
@@ -560,7 +560,7 @@ julia> objective_function(model)
 """
 function set_objective_coefficient(
     model::ConcreteModel{T},
-    variables::AbstractVector{<:VariableRefImpl{T}},
+    variables::AbstractVector{<:ConcreteVariableRef{T}},
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -586,12 +586,12 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variables::AbstractVector{<:VariableRefImpl{T}},
+    variables::AbstractVector{<:ConcreteVariableRef{T}},
     coeffs::AbstractVector{<:T},
-    ::Type{<:VariableRefImpl{T}},
+    ::Type{<:ConcreteVariableRef{T}},
 ) where {T}
     new_objective = LinearAlgebra.dot(coeffs, variables)
-    current_obj = objective_function(model)::VariableRefImpl{T}
+    current_obj = objective_function(model)::ConcreteVariableRef{T}
     if !(current_obj in variables)
         add_to_expression!(new_objective, current_obj)
     end
@@ -601,7 +601,7 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variables::AbstractVector{<:VariableRefImpl{T}},
+    variables::AbstractVector{<:ConcreteVariableRef{T}},
     coeffs::AbstractVector{<:T},
     ::Type{F},
 ) where {T,F}
@@ -646,8 +646,8 @@ julia> objective_function(model)
 """
 function set_objective_coefficient(
     model::ConcreteModel{T},
-    variable_1::VariableRefImpl{T},
-    variable_2::VariableRefImpl{T},
+    variable_1::ConcreteVariableRef{T},
+    variable_2::ConcreteVariableRef{T},
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -669,8 +669,8 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variable_1::VariableRefImpl{T},
-    variable_2::VariableRefImpl{T},
+    variable_1::ConcreteVariableRef{T},
+    variable_2::ConcreteVariableRef{T},
     coeff::T,
     ::Type{F},
 ) where {T,F}
@@ -682,8 +682,8 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variable_1::VariableRefImpl{T},
-    variable_2::VariableRefImpl{T},
+    variable_1::ConcreteVariableRef{T},
+    variable_2::ConcreteVariableRef{T},
     coeff::T,
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}
@@ -733,8 +733,8 @@ julia> objective_function(model)
 """
 function set_objective_coefficient(
     model::ConcreteModel{T},
-    variables_1::AbstractVector{<:VariableRefImpl{T}},
-    variables_2::AbstractVector{<:VariableRefImpl{T}},
+    variables_1::AbstractVector{<:ConcreteVariableRef{T}},
+    variables_2::AbstractVector{<:ConcreteVariableRef{T}},
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
@@ -765,7 +765,7 @@ function _set_objective_coefficient(
     variables_2::AbstractVector{<:V},
     coeffs::AbstractVector{<:T},
     ::Type{F},
-) where {T,F,V<:VariableRefImpl{T}}
+) where {T,F,V<:ConcreteVariableRef{T}}
     new_obj = GenericQuadExpr{T,V}()
     add_to_expression!(new_obj, objective_function(model))
     for (c, x, y) in zip(coeffs, variables_1, variables_2)
@@ -777,8 +777,8 @@ end
 
 function _set_objective_coefficient(
     model::ConcreteModel{T},
-    variables_1::AbstractVector{<:VariableRefImpl{T}},
-    variables_2::AbstractVector{<:VariableRefImpl{T}},
+    variables_1::AbstractVector{<:ConcreteVariableRef{T}},
+    variables_2::AbstractVector{<:ConcreteVariableRef{T}},
     coeffs::AbstractVector{<:T},
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}

@@ -53,8 +53,8 @@ Base.getindex(::GenericReferenceMap, x::Number) = x
 Base.getindex(::GenericReferenceMap, x::AbstractString) = x
 Base.getindex(::GenericReferenceMap, x::Symbol) = x
 
-function Base.getindex(map::GenericReferenceMap, vref::VariableRefImpl)
-    return VariableRefImpl(map.model, map.index_map[index(vref)])
+function Base.getindex(map::GenericReferenceMap, vref::ConcreteVariableRef)
+    return ConcreteVariableRef(map.model, map.index_map[index(vref)])
 end
 
 function Base.getindex(map::GenericReferenceMap, cref::ConstraintRef)

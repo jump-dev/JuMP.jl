@@ -1280,7 +1280,7 @@ end
 function MOI.get(
     model::ConcreteModel,
     attr::MOI.AbstractVariableAttribute,
-    v::VariableRefImpl,
+    v::ConcreteVariableRef,
 )
     check_belongs_to_model(v, model)
     if !MOI.is_set_by_optimize(attr)
@@ -1332,7 +1332,7 @@ end
 function MOI.set(
     model::ConcreteModel,
     attr::MOI.AbstractVariableAttribute,
-    v::VariableRefImpl,
+    v::ConcreteVariableRef,
     value,
 )
     check_belongs_to_model(v, model)
@@ -1389,7 +1389,7 @@ function get_attribute(model::ConcreteModel, attr::MOI.AbstractModelAttribute)
     return MOI.get(model, attr)
 end
 
-function get_attribute(x::VariableRefImpl, attr::MOI.AbstractVariableAttribute)
+function get_attribute(x::ConcreteVariableRef, attr::MOI.AbstractVariableAttribute)
     return MOI.get(owner_model(x), attr, x)
 end
 
@@ -1513,7 +1513,7 @@ function set_attribute(
 end
 
 function set_attribute(
-    x::VariableRefImpl,
+    x::ConcreteVariableRef,
     attr::MOI.AbstractVariableAttribute,
     value,
 )
@@ -1632,7 +1632,7 @@ function set_attributes(
     destination::Union{
         ConcreteModel,
         MOI.OptimizerWithAttributes,
-        VariableRefImpl,
+        ConcreteVariableRef,
         ConstraintRef,
     },
     pairs::Pair...,
@@ -1723,7 +1723,7 @@ MOI.VariableIndex(1)
 ```
 """
 function optimizer_index(
-    x::Union{VariableRefImpl,ConstraintRef{<:ConcreteModel}},
+    x::Union{ConcreteVariableRef,ConstraintRef{<:ConcreteModel}},
 )
     return _moi_optimizer_index(backend(owner_model(x)), index(x))
 end
@@ -1794,7 +1794,7 @@ function set_start_values(
     constraint_dual_start::Union{Nothing,Function} = dual,
     nonlinear_dual_start::Union{Nothing,Function} = nonlinear_dual_start_value,
 ) where {T}
-    variable_primal = Dict{VariableRefImpl{T},T}()
+    variable_primal = Dict{ConcreteVariableRef{T},T}()
     support_variable_primal = MOI.supports(
         backend(model),
         MOI.VariablePrimalStart(),
