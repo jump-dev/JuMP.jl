@@ -287,4 +287,28 @@ function test_skip_missing_in_vector()
     return
 end
 
+function test_complex_primal_feasibility_report_scalar()
+    model = Model()
+    @variable(model, x in ComplexPlane(), start = 1 + 2im)
+    @constraint(model, c, x == 1 + 2im)
+    @test isempty(primal_feasibility_report(start_value, model))
+    set_start_value(real(x), 2)
+    set_start_value(imag(x), 3)
+    ret = primal_feasibility_report(start_value, model)
+    @test isapprox(ret[c], sqrt(2))
+    return
+end
+
+function test_complex_primal_feasibility_report_vector()
+    model = Model()
+    @variable(model, x in ComplexPlane(), start = 1 + 2im)
+    @constraint(model, c, [x - (1 + 2im)] in Zeros())
+    @test isempty(primal_feasibility_report(start_value, model))
+    set_start_value(real(x), 2)
+    set_start_value(imag(x), 3)
+    ret = primal_feasibility_report(start_value, model)
+    @test isapprox(ret[c], sqrt(2))
+    return
+end
+
 end  # module
