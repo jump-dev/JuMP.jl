@@ -183,6 +183,9 @@ function _add_infeasible_nonlinear_constraints(
     return
 end
 
+_eltype(::Real, ::Type{T}) where {T} = T
+_eltype(::Complex, ::Type{T}) where {T} = Complex{T}
+
 function _distance_to_set(
     point_f::F,
     func,
@@ -193,8 +196,11 @@ function _distance_to_set(
     if ismissing(ret)
         return zero(T)
     end
-    return MOI.Utilities.distance_to_set(convert(T, ret), set)
+    return MOI.Utilities.distance_to_set(convert(_eltype(ret, T), ret), set)
 end
+
+_eltype(::AbstractVector{<:Real}, ::Type{T}) where {T} = T
+_eltype(::AbstractVector{<:Complex}, ::Type{T}) where {T} = Complex{T}
 
 function _distance_to_set(
     point_f::F,
@@ -206,5 +212,6 @@ function _distance_to_set(
     if any(ismissing, ret)
         return zero(T)
     end
-    return MOI.Utilities.distance_to_set(convert(Vector{T}, ret), set)
+    point = convert(Vector{_eltype(ret, T)}, ret)
+    return MOI.Utilities.distance_to_set(point, set)
 end
