@@ -718,4 +718,34 @@ function test_issue_4049()
     return
 end
 
+function test_convert_aff_expr_to_variable()
+    model = Model()
+    @variable(model, x)
+    @test convert(VariableRef, 1.0 * x) === x
+    @test_throws InexactError convert(VariableRef, 1.0 * x + 1.0)
+    @test_throws InexactError convert(VariableRef, zero(AffExpr))
+    @test_throws InexactError convert(VariableRef, 1.2 * x)
+    return
+end
+
+function test_convert_aff_expr_to_variable()
+    model = GenericModel{Rational{Int}}()
+    @variable(model, x)
+    @variable(model, y)
+    @test convert(GenericVariableRef{Rational{Int}}, 1 // 1 * x) === x
+    @test_throws(
+        InexactError,
+        convert(GenericVariableRef{Rational{Int}}, 1 // 1 * x + 1 // 1),
+    )
+    @test_throws(
+        InexactError,
+        convert(GenericVariableRef{Rational{Int}}, 1 // 2 * x + 1 // 2 * y),
+    )
+    @test_throws(
+        InexactError,
+        convert(GenericVariableRef{Rational{Int}}, 5 // 4 * x),
+    )
+    return
+end
+
 end  # TestExpr

@@ -58,8 +58,17 @@ julia> typeof(imag(x))
 AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
 ```
 
-To create an anonymous variable, use the `set` keyword argument:
+By default, `real` and `imag` return affine expressions. If needed, `convert`
+these to variables:
+```jldoctest complex_variables
+julia> convert(VariableRef, real(x))
+real(x)
 
+julia> convert(VariableRef, imag(x))
+imag(x)
+```
+
+To create an anonymous variable, use the `set` keyword argument:
 ```jldoctest
 julia> model = Model();
 
