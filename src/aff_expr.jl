@@ -698,7 +698,10 @@ function Base.convert(
     )
 end
 
-function Base.convert(::Type{V}, expr::GenericAffExpr{T,V}) where {T,V}
+function Base.convert(
+    ::Type{V},
+    expr::GenericAffExpr{<:Number,V},
+) where {V<:GenericVariableRef}
     if !iszero(expr.constant)
         throw(InexactError(:convert, V, expr))
     elseif length(expr.terms) != 1
