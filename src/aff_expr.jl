@@ -698,6 +698,22 @@ function Base.convert(
     )
 end
 
+function Base.convert(
+    ::Type{V},
+    expr::GenericAffExpr{<:Number,V},
+) where {V<:GenericVariableRef}
+    if !iszero(expr.constant)
+        throw(InexactError(:convert, V, expr))
+    elseif length(expr.terms) != 1
+        throw(InexactError(:convert, V, expr))
+    end
+    x, c = only(expr.terms)
+    if !isone(c)
+        throw(InexactError(:convert, V, expr))
+    end
+    return x
+end
+
 """
     AffExpr
 
