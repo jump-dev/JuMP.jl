@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:cc="http://creativecommons.org/ns#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="150pt" height="150pt" viewBox="0 0 150 150" version="1.1">
+<g id="surface196">
+<path style="fill:none;stroke-width:8;stroke-linecap:round;stroke-linejoin:miter;stroke:rgb(100%,100%,93.333333%);stroke-opacity:1;stroke-miterlimit:10;" d="M 30 78 L 130 38 "/>
+<path style="fill:none;stroke-width:8;stroke-linecap:round;stroke-linejoin:miter;stroke:rgb(100%,100%,93.333333%);stroke-opacity:1;stroke-miterlimit:10;" d="M 14 130 L 130 14 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(79.6%,23.5%,20%);fill-opacity:1;" d="M 93 114 C 93 123.390625 85.390625 131 76 131 C 66.609375 131 59 123.390625 59 114 C 59 104.609375 66.609375 97 76 97 C 85.390625 97 93 104.609375 93 114 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(22%,59.6%,14.9%);fill-opacity:1;" d="M 133 74 C 133 83.390625 125.390625 91 116 91 C 106.609375 91 99 83.390625 99 74 C 99 64.609375 106.609375 57 116 57 C 125.390625 57 133 64.609375 133 74 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(58.4%,34.5%,69.8%);fill-opacity:1;" d="M 133 114 C 133 123.390625 125.390625 131 116 131 C 106.609375 131 99 123.390625 99 114 C 99 104.609375 106.609375 97 116 97 C 125.390625 97 133 104.609375 133 114 "/>
+</g>
+<metadata
+    id="metadata21">
+    <rdf:RDF>
+        <cc:Work
+            rdf:about="">
+        <dc:creator>
+            <cc:Agent>
+            <dc:title>JuMP project</dc:title>
+            </cc:Agent>
+        </dc:creator>
+        <dc:title>Logo for JuMP</dc:title>
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
+        <dc:description>Logo for JuMP, an algebraic modeling language and a collection of supporting packages for mathematical optimization embedded in the Julia programming language</dc:description>
+        <dc:date>August 2018</dc:date>
+        </cc:Work>
+        <cc:License
+            rdf:about="http://creativecommons.org/licenses/by/4.0/">
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+            rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+            rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        </cc:License>
+    </rdf:RDF>
+</metadata>
+</svg>
+

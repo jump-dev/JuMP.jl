@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Geographical clustering · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><script src="../../../../copy.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><input class="collapse-toggle" id="menuitem-1" type="checkbox"/><label class="tocitem" for="menuitem-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox"/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../getting_started/introduction/">Introduction</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_sets_and_indexing/">Getting started with sets and indexing</a></li><li><a class="tocitem" href="../../getting_started/getting_started_with_data_and_plotting/">Getting started with data and plotting</a></li><li><a class="tocitem" href="../../getting_started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../getting_started/design_patterns_for_larger_models/">Design patterns for larger models</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../diet/">The diet problem</a></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li><a class="tocitem" href="../facility_location/">The facility location problem</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../finance/">Financial modeling problems</a></li><li class="is-active"><a class="tocitem" href>Geographical clustering</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../n-queens/">N-Queens</a></li><li><a class="tocitem" href="../network_flows/">Network flow problems</a></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Sudoku</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li><li><a class="tocitem" href="../callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../nonlinear/introduction/">Introduction</a></li><li><a class="tocitem" href="../../nonlinear/tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../../nonlinear/portfolio/">Quadratic portfolio optimization</a></li><li><a class="tocitem" href="../../nonlinear/qcp/">Quadratically constrained programs</a></li><li><a class="tocitem" href="../../nonlinear/space_shuttle_reentry_trajectory/">Optimal control for a Space Shuttle reentry trajectory</a></li><li><a class="tocitem" href="../../nonlinear/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../nonlinear/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../nonlinear/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../nonlinear/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../nonlinear/querying_hessians/">Computing Hessians</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../conic/introduction/">Introduction</a></li><li><a class="tocitem" href="../../conic/start_values/">Primal and dual warm-starts</a></li><li><a class="tocitem" href="../../conic/tips_and_tricks/">Tips and Tricks</a></li><li><a class="tocitem" href="../../conic/logistic_regression/">Logistic regression</a></li><li><a class="tocitem" href="../../conic/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../conic/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../conic/experiment_design/">Experiment design</a></li><li><a class="tocitem" href="../../conic/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../conic/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../conic/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../conic/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../algorithms/benders_decomposition/">Benders decomposition</a></li><li><a class="tocitem" href="../../algorithms/cutting_stock_column_generation/">Column generation</a></li><li><a class="tocitem" href="../../algorithms/tsp_lazy_constraints/">Traveling Salesperson Problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Applications</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../applications/power_systems/">Power Systems</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Background Information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/contributing/">Contributing</a></li><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/custom_solver_binaries/">Custom binaries</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li><li><a class="tocitem" href="../../../release_notes/">Release notes</a></li><li><input class="collapse-toggle" id="menuitem-8" type="checkbox"/><label class="tocitem" for="menuitem-8"><span class="docs-label">MathOptInterface</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-1" type="checkbox"/><label class="tocitem" for="menuitem-8-1"><span class="docs-label">Introduction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/">Introduction</a></li><li><a class="tocitem" href="../../../moi/background/motivation/">Motivation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/tutorials/example/">Solving a problem using MathOptInterface</a></li><li><a class="tocitem" href="../../../moi/tutorials/implementing/">Implementing a solver interface</a></li><li><a class="tocitem" href="../../../moi/tutorials/mathprogbase/">Transitioning from MathProgBase</a></li><li><a class="tocitem" href="../../../moi/tutorials/bridging_constraint/">Implementing a constraint bridge</a></li><li><a class="tocitem" href="../../../moi/tutorials/manipulating_expressions/">Manipulating expressions</a></li><li><a class="tocitem" href="../../../moi/tutorials/latency/">Latency</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/manual/standard_form/">Standard form problem</a></li><li><a class="tocitem" href="../../../moi/manual/models/">Models</a></li><li><a class="tocitem" href="../../../moi/manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../moi/manual/modification/">Problem modification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-4" type="checkbox"/><label class="tocitem" for="menuitem-8-4"><span class="docs-label">Background</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/background/duality/">Duality</a></li><li><a class="tocitem" href="../../../moi/background/infeasibility_certificates/">Infeasibility certificates</a></li><li><a class="tocitem" href="../../../moi/background/naming_conventions/">Naming conventions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-5" type="checkbox"/><label class="tocitem" for="menuitem-8-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/reference/standard_form/">Standard form</a></li><li><a class="tocitem" href="../../../moi/reference/models/">Models</a></li><li><a class="tocitem" href="../../../moi/reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../moi/reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../moi/reference/modification/">Modifications</a></li><li><a class="tocitem" href="../../../moi/reference/nonlinear/">Nonlinear programming</a></li><li><a class="tocitem" href="../../../moi/reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../moi/reference/errors/">Errors</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6" type="checkbox"/><label class="tocitem" for="menuitem-8-6"><span class="docs-label">Submodules</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-8-6-1" type="checkbox"/><label class="tocitem" for="menuitem-8-6-1"><span class="docs-label">Benchmarks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Benchmarks/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-2" type="checkbox"/><label class="tocitem" for="menuitem-8-6-2"><span class="docs-label">Bridges</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Bridges/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/implementation/">Implementation</a></li><li><a class="tocitem" href="../../../moi/submodules/Bridges/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-3" type="checkbox"/><label class="tocitem" for="menuitem-8-6-3"><span class="docs-label">FileFormats</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/FileFormats/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/FileFormats/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-4" type="checkbox"/><label class="tocitem" for="menuitem-8-6-4"><span class="docs-label">Utilities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Utilities/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Utilities/reference/">API Reference</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-6-5" type="checkbox"/><label class="tocitem" for="menuitem-8-6-5"><span class="docs-label">Test</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../moi/submodules/Test/overview/">Overview</a></li><li><a class="tocitem" href="../../../moi/submodules/Test/reference/">API Reference</a></li></ul></li></ul></li><li><a class="tocitem" href="../../../moi/release_notes/">Release notes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Linear programs</a></li><li class="is-active"><a href>Geographical clustering</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Geographical clustering</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/linear/geographic_clustering.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Geographical-clustering"><a class="docs-heading-anchor" href="#Geographical-clustering">Geographical clustering</a><a id="Geographical-clustering-1"></a><a class="docs-heading-anchor-permalink" href="#Geographical-clustering" title="Permalink"></a></h1><p><strong>Originally Contributed by</strong>: Matthew Helm (<a href="https://discourse.julialang.org/t/which-jump-jl-solver-for-this-problem/43350/17?u=mthelm85">with help from Mathieu Tanneau on Julia Discourse</a>)</p><p>The goal of this exercise is to cluster <span>$n$</span> cities into <span>$k$</span> groups, minimizing the total pairwise distance between cities <em>and</em> ensuring that the variance in the total populations of each group is relatively small.</p><p>This tutorial uses the following packages:</p><pre><code class="language-julia hljs">using JuMP
+import DataFrames
+import HiGHS
+import LinearAlgebra</code></pre><p>For this example, we&#39;ll use the 20 most populous cities in the United States.</p><pre><code class="language-julia hljs">cities = DataFrames.DataFrame(
+    city = [
+        &quot;New York, NY&quot;,
+        &quot;Los Angeles, CA&quot;,
+        &quot;Chicago, IL&quot;,
+        &quot;Houston, TX&quot;,
+        &quot;Philadelphia, PA&quot;,
+        &quot;Phoenix, AZ&quot;,
+        &quot;San Antonio, TX&quot;,
+        &quot;San Diego, CA&quot;,
+        &quot;Dallas, TX&quot;,
+        &quot;San Jose, CA&quot;,
+        &quot;Austin, TX&quot;,
+        &quot;Indianapolis, IN&quot;,
+        &quot;Jacksonville, FL&quot;,
+        &quot;San Francisco, CA&quot;,
+        &quot;Columbus, OH&quot;,
+        &quot;Charlotte, NC&quot;,
+        &quot;Fort Worth, TX&quot;,
+        &quot;Detroit, MI&quot;,
+        &quot;El Paso, TX&quot;,
+        &quot;Memphis, TN&quot;,
+    ],
+    population = [
+        8.405,
+        3.884,
+        2.718,
+        2.195,
+        1.553,
+        1.513,
+        1.409,
+        1.355,
+        1.257,
+        0.998,
+        0.885,
+        0.843,
+        0.842,
+        0.837,
+        0.822,
+        0.792,
+        0.792,
+        0.688,
+        0.674,
+        0.653,
+    ],
+    lat = [
+        40.7127,
+        34.0522,
+        41.8781,
+        29.7604,
+        39.9525,
+        33.4483,
+        29.4241,
+        32.7157,
+        32.7766,
+        37.3382,
+        30.2671,
+        39.7684,
+        30.3321,
+        37.7749,
+        39.9611,
+        35.2270,
+        32.7554,
+        42.3314,
+        31.7775,
+        35.1495,
+    ],
+    lon = [
+        -74.0059,
+        -118.2436,
+        -87.6297,
+        -95.3698,
+        -75.1652,
+        -112.0740,
+        -98.4936,
+        -117.1610,
+        -96.7969,
+        -121.8863,
+        -97.7430,
+        -86.1580,
+        -81.6556,
+        -122.4194,
+        -82.9987,
+        -80.8431,
+        -97.3307,
+        -83.0457,
+        -106.4424,
+        -90.0489,
+    ],
+)</code></pre><div class="data-frame"><p>20 rows × 4 columns</p><table class="data-frame"><thead><tr><th></th><th>city</th><th>population</th><th>lat</th><th>lon</th></tr><tr><th></th><th title="String">String</th><th title="Float64">Float64</th><th title="Float64">Float64</th><th title="Float64">Float64</th></tr></thead><tbody><tr><th>1</th><td>New York, NY</td><td>8.405</td><td>40.7127</td><td>-74.0059</td></tr><tr><th>2</th><td>Los Angeles, CA</td><td>3.884</td><td>34.0522</td><td>-118.244</td></tr><tr><th>3</th><td>Chicago, IL</td><td>2.718</td><td>41.8781</td><td>-87.6297</td></tr><tr><th>4</th><td>Houston, TX</td><td>2.195</td><td>29.7604</td><td>-95.3698</td></tr><tr><th>5</th><td>Philadelphia, PA</td><td>1.553</td><td>39.9525</td><td>-75.1652</td></tr><tr><th>6</th><td>Phoenix, AZ</td><td>1.513</td><td>33.4483</td><td>-112.074</td></tr><tr><th>7</th><td>San Antonio, TX</td><td>1.409</td><td>29.4241</td><td>-98.4936</td></tr><tr><th>8</th><td>San Diego, CA</td><td>1.355</td><td>32.7157</td><td>-117.161</td></tr><tr><th>9</th><td>Dallas, TX</td><td>1.257</td><td>32.7766</td><td>-96.7969</td></tr><tr><th>10</th><td>San Jose, CA</td><td>0.998</td><td>37.3382</td><td>-121.886</td></tr><tr><th>11</th><td>Austin, TX</td><td>0.885</td><td>30.2671</td><td>-97.743</td></tr><tr><th>12</th><td>Indianapolis, IN</td><td>0.843</td><td>39.7684</td><td>-86.158</td></tr><tr><th>13</th><td>Jacksonville, FL</td><td>0.842</td><td>30.3321</td><td>-81.6556</td></tr><tr><th>14</th><td>San Francisco, CA</td><td>0.837</td><td>37.7749</td><td>-122.419</td></tr><tr><th>15</th><td>Columbus, OH</td><td>0.822</td><td>39.9611</td><td>-82.9987</td></tr><tr><th>16</th><td>Charlotte, NC</td><td>0.792</td><td>35.227</td><td>-80.8431</td></tr><tr><th>17</th><td>Fort Worth, TX</td><td>0.792</td><td>32.7554</td><td>-97.3307</td></tr><tr><th>18</th><td>Detroit, MI</td><td>0.688</td><td>42.3314</td><td>-83.0457</td></tr><tr><th>19</th><td>El Paso, TX</td><td>0.674</td><td>31.7775</td><td>-106.442</td></tr><tr><th>20</th><td>Memphis, TN</td><td>0.653</td><td>35.1495</td><td>-90.0489</td></tr></tbody></table></div><h3 id="Model-Specifics"><a class="docs-heading-anchor" href="#Model-Specifics">Model Specifics</a><a id="Model-Specifics-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Specifics" title="Permalink"></a></h3><p>We will cluster these 20 cities into 3 different groups and we will assume that the ideal or target population <span>$P$</span> for a group is simply the total population of the 20 cities divided by 3:</p><pre><code class="language-julia hljs">n = size(cities, 1)
+k = 3
+P = sum(cities.population) / k</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">11.038333333333334</code></pre><h3 id="Obtaining-the-distances-between-each-city"><a class="docs-heading-anchor" href="#Obtaining-the-distances-between-each-city">Obtaining the distances between each city</a><a id="Obtaining-the-distances-between-each-city-1"></a><a class="docs-heading-anchor-permalink" href="#Obtaining-the-distances-between-each-city" title="Permalink"></a></h3><p>Let&#39;s compute the pairwise Haversine distance between each of the cities in our data set and store the result in a variable we&#39;ll call <code>dm</code>:</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+    haversine(lat1, long1, lat2, long2, r = 6372.8)
+
+Compute the haversine distance between two points on a sphere of radius `r`,
+where the points are given by the latitude/longitude pairs `lat1/long1` and
+`lat2/long2` (in degrees).
+&quot;&quot;&quot;
+function haversine(lat1, long1, lat2, long2, r = 6372.8)
+    lat1, long1 = deg2rad(lat1), deg2rad(long1)
+    lat2, long2 = deg2rad(lat2), deg2rad(long2)
+    hav(a, b) = sin((b - a) / 2)^2
+    inner_term = hav(lat1, lat2) + cos(lat1) * cos(lat2) * hav(long1, long2)
+    d = 2 * r * asin(sqrt(inner_term))
+    # Round distance to nearest kilometer.
+    return round(Int, d)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Main.haversine</code></pre><p>Our distance matrix is symmetric so we&#39;ll convert it to a <code>LowerTriangular</code> matrix so that we can better interpret the objective value of our model:</p><pre><code class="language-julia hljs">dm = LinearAlgebra.LowerTriangular([
+    haversine(cities.lat[i], cities.lon[i], cities.lat[j], cities.lon[j])
+    for i in 1:n, j in 1:n
+])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20×20 LinearAlgebra.LowerTriangular{Int64, Matrix{Int64}}:
+    0     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅  …     ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 3937     0     ⋅     ⋅     ⋅     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 1145  2805     0     ⋅     ⋅     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 2282  2207  1516     0     ⋅     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+  130  3845  1068  2157     0     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 3445   574  2337  1633  3345     0     ⋅  …     ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 2546  1934  1695   304  2423  1363     0        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 3908   179  2787  2094  3812   481  1813        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 2206  1993  1295   362  2089  1424   406        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 4103   492  2958  2588  4023   989  2336        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 2432  1972  1577   235  2310  1398   118  …     ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 1036  2907   265  1394   938  2409  1609        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 1345  3450  1391  1321  1221  2883  1626        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+ 4130   559  2986  2644  4052  1051  2394        ⋅     ⋅     ⋅     ⋅     ⋅  ⋅
+  767  3177   444  1598   668  2679  1834        0     ⋅     ⋅     ⋅     ⋅  ⋅
+  855  3405   946  1490   725  2863  1777  …   560     0     ⋅     ⋅     ⋅  ⋅
+ 2251  1944  1327   382  2134  1375   387     1511  1543     0     ⋅     ⋅  ⋅
+  774  3186   382  1780   711  2716  1994      264   813  1646     0     ⋅  ⋅
+ 3054  1130  2010  1081  2945   559   804     2292  2398   864  2374     0  ⋅
+ 1534  2576   777   780  1415  2028  1017      820   837   722  1003  1565  0</code></pre><h3 id="Build-the-model"><a class="docs-heading-anchor" href="#Build-the-model">Build the model</a><a id="Build-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Build-the-model" title="Permalink"></a></h3><p>Now that we have the basics taken  care of, we can set up our model, create decision variables, add constraints, and then solve.</p><p>First, we&#39;ll set up a model that leverages the Cbc solver. Next, we&#39;ll set up a binary variable <span>$x_{i,k}$</span> that takes the value <span>$1$</span> if city <span>$i$</span> is in group <span>$k$</span> and <span>$0$</span> otherwise. Each city must be in a group, so we&#39;ll add the constraint <span>$\sum_kx_{i,k} = 1$</span> for every <span>$i$</span>.</p><pre><code class="language-julia hljs">model = Model(HiGHS.Optimizer)
+set_silent(model)</code></pre><pre><code class="language-julia hljs">@variable(model, x[1:n, 1:k], Bin)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20×3 Matrix{VariableRef}:
+ x[1,1]   x[1,2]   x[1,3]
+ x[2,1]   x[2,2]   x[2,3]
+ x[3,1]   x[3,2]   x[3,3]
+ x[4,1]   x[4,2]   x[4,3]
+ x[5,1]   x[5,2]   x[5,3]
+ x[6,1]   x[6,2]   x[6,3]
+ x[7,1]   x[7,2]   x[7,3]
+ x[8,1]   x[8,2]   x[8,3]
+ x[9,1]   x[9,2]   x[9,3]
+ x[10,1]  x[10,2]  x[10,3]
+ x[11,1]  x[11,2]  x[11,3]
+ x[12,1]  x[12,2]  x[12,3]
+ x[13,1]  x[13,2]  x[13,3]
+ x[14,1]  x[14,2]  x[14,3]
+ x[15,1]  x[15,2]  x[15,3]
+ x[16,1]  x[16,2]  x[16,3]
+ x[17,1]  x[17,2]  x[17,3]
+ x[18,1]  x[18,2]  x[18,3]
+ x[19,1]  x[19,2]  x[19,3]
+ x[20,1]  x[20,2]  x[20,3]</code></pre><pre><code class="language-julia hljs">@constraint(model, [i = 1:n], sum(x[i, :]) == 1)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ x[1,1] + x[1,2] + x[1,3] = 1.0
+ x[2,1] + x[2,2] + x[2,3] = 1.0
+ x[3,1] + x[3,2] + x[3,3] = 1.0
+ x[4,1] + x[4,2] + x[4,3] = 1.0
+ x[5,1] + x[5,2] + x[5,3] = 1.0
+ x[6,1] + x[6,2] + x[6,3] = 1.0
+ x[7,1] + x[7,2] + x[7,3] = 1.0
+ x[8,1] + x[8,2] + x[8,3] = 1.0
+ x[9,1] + x[9,2] + x[9,3] = 1.0
+ x[10,1] + x[10,2] + x[10,3] = 1.0
+ x[11,1] + x[11,2] + x[11,3] = 1.0
+ x[12,1] + x[12,2] + x[12,3] = 1.0
+ x[13,1] + x[13,2] + x[13,3] = 1.0
+ x[14,1] + x[14,2] + x[14,3] = 1.0
+ x[15,1] + x[15,2] + x[15,3] = 1.0
+ x[16,1] + x[16,2] + x[16,3] = 1.0
+ x[17,1] + x[17,2] + x[17,3] = 1.0
+ x[18,1] + x[18,2] + x[18,3] = 1.0
+ x[19,1] + x[19,2] + x[19,3] = 1.0
+ x[20,1] + x[20,2] + x[20,3] = 1.0</code></pre><p>To reduce symmetry, we fix the first city to belong to the first group.</p><pre><code class="language-julia hljs">fix(x[1, 1], 1; force = true)</code></pre><p>The total population of a group <span>$k$</span> is <span>$Q_k = \sum_ix_{i,k}q_i$</span> where <span>$q_i$</span> is simply the <span>$i$</span>th value from the <code>population</code> column in our <code>cities</code> DataFrame. Let&#39;s add constraints so that <span>$\alpha \leq (Q_k - P) \leq \beta$</span>. We&#39;ll set <span>$\alpha$</span> equal to <span>$-3$</span> million and <span>$\beta$</span> equal to <span>$3$</span>. By adjusting these thresholds you&#39;ll find that there is a tradeoff between having relatively even populations between groups and having geographically close cities within each group. In other words, the larger the absolute values of <span>$\alpha$</span> and <span>$\beta$</span>, the closer together the cities in a group will be but the variance between the group populations will be higher.</p><pre><code class="language-julia hljs">@variable(model, -3 &lt;= population_diff[1:k] &lt;= 3)
+@constraint(model, population_diff .== x&#39; * cities.population .- P)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ -8.405 x[1,1] - 3.884 x[2,1] - 2.718 x[3,1] - 2.195 x[4,1] - 1.553 x[5,1] - 1.513 x[6,1] - 1.409 x[7,1] - 1.355 x[8,1] - 1.257 x[9,1] - 0.998 x[10,1] - 0.885 x[11,1] - 0.843 x[12,1] - 0.842 x[13,1] - 0.837 x[14,1] - 0.822 x[15,1] - 0.792 x[16,1] - 0.792 x[17,1] - 0.688 x[18,1] - 0.674 x[19,1] - 0.653 x[20,1] + population_diff[1] = -11.038333333333334
+ -8.405 x[1,2] - 3.884 x[2,2] - 2.718 x[3,2] - 2.195 x[4,2] - 1.553 x[5,2] - 1.513 x[6,2] - 1.409 x[7,2] - 1.355 x[8,2] - 1.257 x[9,2] - 0.998 x[10,2] - 0.885 x[11,2] - 0.843 x[12,2] - 0.842 x[13,2] - 0.837 x[14,2] - 0.822 x[15,2] - 0.792 x[16,2] - 0.792 x[17,2] - 0.688 x[18,2] - 0.674 x[19,2] - 0.653 x[20,2] + population_diff[2] = -11.038333333333334
+ -8.405 x[1,3] - 3.884 x[2,3] - 2.718 x[3,3] - 2.195 x[4,3] - 1.553 x[5,3] - 1.513 x[6,3] - 1.409 x[7,3] - 1.355 x[8,3] - 1.257 x[9,3] - 0.998 x[10,3] - 0.885 x[11,3] - 0.843 x[12,3] - 0.842 x[13,3] - 0.837 x[14,3] - 0.822 x[15,3] - 0.792 x[16,3] - 0.792 x[17,3] - 0.688 x[18,3] - 0.674 x[19,3] - 0.653 x[20,3] + population_diff[3] = -11.038333333333334</code></pre><p>Now we need to add one last binary variable <span>$z_{i,j}$</span> to our model that we&#39;ll use to compute the total distance between the cities in our groups, defined as <span>$\sum_{i,j}d_{i,j}z_{i,j}$</span>. Variable <span>$z_{i,j}$</span> will equal <span>$1$</span> if cities <span>$i$</span> and <span>$j$</span> are in the same group, and <span>$0$</span> if they are not in the same group.</p><p>To ensure that <span>$z_{i,j} = 1$</span> if and only if cities <span>$i$</span> and <span>$j$</span> are in the same group, we add the constraints <span>$z_{i,j} \geq x_{i,k} + x_{j,k} - 1$</span> for every pair <span>$i,j$</span> and every <span>$k$</span>:</p><pre><code class="language-julia hljs">@variable(model, z[i = 1:n, j = 1:i], Bin)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 210 entries:
+  [12, 10]  =  z[12,10]
+  [12, 2 ]  =  z[12,2]
+  [12, 3 ]  =  z[12,3]
+  [16, 12]  =  z[16,12]
+  [16, 14]  =  z[16,14]
+  [16, 16]  =  z[16,16]
+  [17, 12]  =  z[17,12]
+  [18, 14]  =  z[18,14]
+            ⋮
+  [18, 16]  =  z[18,16]
+  [18, 18]  =  z[18,18]
+  [19, 12]  =  z[19,12]
+  [19, 14]  =  z[19,14]
+  [19, 16]  =  z[19,16]
+  [19, 19]  =  z[19,19]
+  [20, 15]  =  z[20,15]</code></pre><pre><code class="language-julia hljs">for k in 1:k, i in 1:n, j in 1:i
+    @constraint(model, z[i, j] &gt;= x[i, k] + x[j, k] - 1)
+end</code></pre><p>We can now add an objective to our model which will simply be to minimize the dot product of <span>$z$</span> and our distance matrix, <code>dm</code>.</p><pre><code class="language-julia hljs">@objective(model, Min, sum(dm[i, j] * z[i, j] for i in 1:n, j in 1:i))</code></pre><p class="math-container">\[ 3937 z_{2,1} + 1145 z_{3,1} + 2805 z_{3,2} + 2282 z_{4,1} + 2207 z_{4,2} + 1516 z_{4,3} + 130 z_{5,1} + 3845 z_{5,2} + 1068 z_{5,3} + 2157 z_{5,4} + 3445 z_{6,1} + 574 z_{6,2} + 2337 z_{6,3} + 1633 z_{6,4} + 3345 z_{6,5} + 2546 z_{7,1} + 1934 z_{7,2} + 1695 z_{7,3} + 304 z_{7,4} + 2423 z_{7,5} + 1363 z_{7,6} + 3908 z_{8,1} + 179 z_{8,2} + 2787 z_{8,3} + 2094 z_{8,4} + 3812 z_{8,5} + 481 z_{8,6} + 1813 z_{8,7} + 2206 z_{9,1} + 1993 z_{9,2} + 1295 z_{9,3} + 362 z_{9,4} + 2089 z_{9,5} + 1424 z_{9,6} + 406 z_{9,7} + 1902 z_{9,8} + 4103 z_{10,1} + 492 z_{10,2} + 2958 z_{10,3} + 2588 z_{10,4} + 4023 z_{10,5} + 989 z_{10,6} + 2336 z_{10,7} + 670 z_{10,8} + 2333 z_{10,9} + 2432 z_{11,1} + 1972 z_{11,2} + 1577 z_{11,3} + 235 z_{11,4} + 2310 z_{11,5} + 1398 z_{11,6} + 118 z_{11,7} + 1859 z_{11,8} + 293 z_{11,9} + 2358 z_{11,10} + 1036 z_{12,1} + 2907 z_{12,2} + 265 z_{12,3} + 1394 z_{12,4} + 938 z_{12,5} + 2409 z_{12,6} + 1609 z_{12,7} + 2874 z_{12,8} + 1229 z_{12,9} + 3099 z_{12,10} + 1491 z_{12,11} + 1345 z_{13,1} + 3450 z_{13,2} + 1391 z_{13,3} + 1321 z_{13,4} + 1221 z_{13,5} + 2883 z_{13,6} + 1626 z_{13,7} + 3361 z_{13,8} + 1459 z_{13,9} + 3768 z_{13,10} + 1544 z_{13,11} + 1126 z_{13,12} + 4130 z_{14,1} + 559 z_{14,2} + 2986 z_{14,3} + 2644 z_{14,4} + 4052 z_{14,5} + 1051 z_{14,6} + 2394 z_{14,7} + 738 z_{14,8} + 2384 z_{14,9} + 68 z_{14,10} + 2414 z_{14,11} + 3131 z_{14,12} + 3815 z_{14,13} + 767 z_{15,1} + 3177 z_{15,2} + 444 z_{15,3} + 1598 z_{15,4} + 668 z_{15,5} + 2679 z_{15,6} + 1834 z_{15,7} + 3144 z_{15,8} + 1469 z_{15,9} + 3364 z_{15,10} + 1717 z_{15,11} + 271 z_{15,12} + 1078 z_{15,13} + 3395 z_{15,14} + 855 z_{16,1} + 3405 z_{16,2} + 946 z_{16,3} + 1490 z_{16,4} + 725 z_{16,5} + 2863 z_{16,6} + 1777 z_{16,7} + 3343 z_{16,8} + 1494 z_{16,9} + 3659 z_{16,10} + 1672 z_{16,11} + 689 z_{16,12} + 550 z_{16,13} + 3698 z_{16,14} + 560 z_{16,15} + 2251 z_{17,1} + 1944 z_{17,2} + 1327 z_{17,3} + 382 z_{17,4} + 2134 z_{17,5} + 1375 z_{17,6} + 387 z_{17,7} + 1853 z_{17,8} + 50 z_{17,9} + 2286 z_{17,10} + 280 z_{17,11} + 1268 z_{17,12} + 1509 z_{17,13} + 2338 z_{17,14} + 1511 z_{17,15} + 1543 z_{17,16} + 774 z_{18,1} + 3186 z_{18,2} + 382 z_{18,3} + 1780 z_{18,4} + 711 z_{18,5} + 2716 z_{18,6} + 1994 z_{18,7} + 3169 z_{18,8} + 1609 z_{18,9} + 3334 z_{18,10} + 1875 z_{18,11} + 386 z_{18,12} + 1340 z_{18,13} + 3360 z_{18,14} + 264 z_{18,15} + 813 z_{18,16} + 1646 z_{18,17} + 3054 z_{19,1} + 1130 z_{19,2} + 2010 z_{19,3} + 1081 z_{19,4} + 2945 z_{19,5} + 559 z_{19,6} + 804 z_{19,7} + 1013 z_{19,8} + 914 z_{19,9} + 1541 z_{19,10} + 846 z_{19,11} + 2028 z_{19,12} + 2362 z_{19,13} + 1602 z_{19,14} + 2292 z_{19,15} + 2398 z_{19,16} + 864 z_{19,17} + 2374 z_{19,18} + 1534 z_{20,1} + 2576 z_{20,2} + 777 z_{20,3} + 780 z_{20,4} + 1415 z_{20,5} + 2028 z_{20,6} + 1017 z_{20,7} + 2509 z_{20,8} + 676 z_{20,9} + 2853 z_{20,10} + 901 z_{20,11} + 618 z_{20,12} + 950 z_{20,13} + 2896 z_{20,14} + 820 z_{20,15} + 837 z_{20,16} + 722 z_{20,17} + 1003 z_{20,18} + 1565 z_{20,19} \]</p><p>We can then call <code>optimize!</code> and review the results.</p><pre><code class="language-julia hljs">optimize!(model)</code></pre><h3 id="Reviewing-the-Results"><a class="docs-heading-anchor" href="#Reviewing-the-Results">Reviewing the Results</a><a id="Reviewing-the-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Reviewing-the-Results" title="Permalink"></a></h3><p>Now that we have results, we can add a column to our <code>cities</code> DataFrame for the group and then loop through our <span>$x$</span> variable to assign each city to its group. Once we have that, we can look at the total population for each group and also look at the cities in each group to verify that they are grouped by geographic proximity.</p><pre><code class="language-julia hljs">cities.group = zeros(n)
+
+for i in 1:n, j in 1:k
+    if round(Int, value(x[i, j])) == 1
+        cities.group[i] = j
+    end
+end
+
+for group in DataFrames.groupby(cities, :group)
+    @show group
+    println(&quot;&quot;)
+    @show sum(group.population)
+    println(&quot;&quot;)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">group = 7×5 SubDataFrame
+ Row │ city              population  lat      lon       group
+     │ String            Float64     Float64  Float64   Float64
+─────┼──────────────────────────────────────────────────────────
+   1 │ New York, NY           8.405  40.7127  -74.0059      1.0
+   2 │ Philadelphia, PA       1.553  39.9525  -75.1652      1.0
+   3 │ Indianapolis, IN       0.843  39.7684  -86.158       1.0
+   4 │ Jacksonville, FL       0.842  30.3321  -81.6556      1.0
+   5 │ Columbus, OH           0.822  39.9611  -82.9987      1.0
+   6 │ Charlotte, NC          0.792  35.227   -80.8431      1.0
+   7 │ Detroit, MI            0.688  42.3314  -83.0457      1.0
+
+sum(group.population) = 13.944999999999999
+
+group = 6×5 SubDataFrame
+ Row │ city               population  lat      lon       group
+     │ String             Float64     Float64  Float64   Float64
+─────┼───────────────────────────────────────────────────────────
+   1 │ Los Angeles, CA         3.884  34.0522  -118.244      2.0
+   2 │ Phoenix, AZ             1.513  33.4483  -112.074      2.0
+   3 │ San Diego, CA           1.355  32.7157  -117.161      2.0
+   4 │ San Jose, CA            0.998  37.3382  -121.886      2.0
+   5 │ San Francisco, CA       0.837  37.7749  -122.419      2.0
+   6 │ El Paso, TX             0.674  31.7775  -106.442      2.0
+
+sum(group.population) = 9.261000000000001
+
+group = 7×5 SubDataFrame
+ Row │ city             population  lat      lon       group
+     │ String           Float64     Float64  Float64   Float64
+─────┼─────────────────────────────────────────────────────────
+   1 │ Chicago, IL           2.718  41.8781  -87.6297      3.0
+   2 │ Houston, TX           2.195  29.7604  -95.3698      3.0
+   3 │ San Antonio, TX       1.409  29.4241  -98.4936      3.0
+   4 │ Dallas, TX            1.257  32.7766  -96.7969      3.0
+   5 │ Austin, TX            0.885  30.2671  -97.743       3.0
+   6 │ Fort Worth, TX        0.792  32.7554  -97.3307      3.0
+   7 │ Memphis, TN           0.653  35.1495  -90.0489      3.0
+
+sum(group.population) = 9.909</code></pre><hr/><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>This tutorial was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>. <a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/linear/geographic_clustering.jl">View the source <code>.jl</code> file on GitHub</a>.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../finance/">« Financial modeling problems</a><a class="docs-footer-nextpage" href="../knapsack/">The knapsack problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Friday 25 February 2022 01:45">Friday 25 February 2022</span>. Using Julia version 1.6.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

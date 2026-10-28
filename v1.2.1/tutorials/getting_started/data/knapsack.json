@@ -1,0 +1,10 @@
+{
+    "objects": {
+        "apple": {"profit": 5.0, "weight": 2.0},
+        "banana": {"profit": 3.0, "weight": 8.0},
+        "cherry": {"profit": 2.0, "weight": 4.0},
+        "date": {"profit": 7.0, "weight": 2.0},
+        "eggplant": {"profit": 4.0, "weight": 5.0}
+    },
+    "capacity": 10.0
+}
