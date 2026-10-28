@@ -1688,10 +1688,14 @@ function test_empty_subexpressions()
     model = Model()
     @variable(model, x)
     y = sin(x)
-    moi_y = moi_function(model, y)
-    @test !isempty(model.subexpressions)
-    empty!(model)
-    @test isempty(model.subexpressions)
+    # Keep the weak cache's key alive so only empty! can remove its entry.
+    GC.@preserve y begin
+        moi_function(model, y)
+        GC.gc()
+        @test !isempty(model.subexpressions)
+        empty!(model)
+        @test isempty(model.subexpressions)
+    end
     return
 end
 
