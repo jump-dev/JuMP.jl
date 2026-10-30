@@ -1,0 +1,42 @@
+name: JuliaC
+on:
+  push:
+    branches:
+      - master
+      - release-*
+  pull_request:
+    types: [opened, synchronize, reopened]
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      JULIA_CPU_TARGET: generic
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.13.0'
+      - uses: julia-actions/cache@v3
+      - name: Instantiate the LP environment
+        shell: julia --color=yes --project=test/JuliaC {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - name: Install JuliaC
+        run: julia --project=@juliac -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaC", version="0.3.10"))'
+      - name: Compile the LP
+        # Unsafe trimming matches the tested JuMPy backend profile. The next
+        # step executes the binary; this is not a safe-trimming guarantee.
+        run: >
+          julia --project=@juliac -m JuliaC
+          --output-exe jump_lp --project test/JuliaC
+          --trim=unsafe-warn --bundle test/JuliaC/build
+          test/JuliaC/lp.jl
+      - name: Run the compiled LP
+        run: test/JuliaC/build/bin/jump_lp

@@ -8,6 +8,15 @@ module TestFeasibilityChecker
 using JuMP
 using Test
 
+function test_concrete_model_point_dictionary()
+    model = JuMP.concrete_direct_model(MOI.Utilities.Model{Float64}())
+    @variable(model, x >= 1)
+    @test isempty(primal_feasibility_report(model, Dict(x => 1.0)))
+    @test primal_feasibility_report(model, Dict(x => 0.0)) ==
+          Dict(LowerBoundRef(x) => 1.0)
+    return
+end
+
 function test_no_solution()
     model = Model()
     @variable(model, x, Bin)

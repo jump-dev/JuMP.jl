@@ -2078,4 +2078,19 @@ function test_model_convert_sos2()
     return
 end
 
+function test_non_finite_bound_abstract_coefficient_type()
+    model = GenericModel{Real}()
+    @test_throws(
+        ErrorException(
+            """
+            Unable to use `Inf::Float64` as the lower bound of a variable because it is not finite.
+
+            Ensure that the lower bound is a finite value.
+            """,
+        ),
+        @variable(model, x >= Inf),
+    )
+    return
+end
+
 end  # module TestVariable
