@@ -21,7 +21,7 @@ function test_Array()
     # alternative syntax
     Containers.@container(x[i in 1:3], i^2)
     @test x isa Vector{Int}
-    Containers.@container(x[i ∈ 1:3], i^2)
+    Containers.@container(x[i∈1:3], i^2)
     @test x isa Vector{Int}
     return
 end
