@@ -32,7 +32,7 @@ julia> using JuMP, Unitful
 julia> import HiGHS
 ```
 
-### Variables
+### Variables with units
 
 Create a variable with units by passing the unit as a positional argument to
 [`@variable`](@ref):
@@ -70,7 +70,7 @@ julia> all_variables(model)
  y
 ```
 
-### Constraints
+### Constraints with units
 
 When adding a constraint, the units are converted to the unit of the
 expression, and then removed:
@@ -104,7 +104,7 @@ ERROR: DimensionError: 0.0 m s^-1 and 0 m are not dimensionally compatible.
 [...]
 ```
 
-### Objective
+### Objective with units
 
 When setting the objective, the units are converted to the unit of the
 expression and then removed:
@@ -117,7 +117,7 @@ julia> objective_function(model)
 2 x + 0.3048 y
 ```
 
-### Solutions
+### Solutions with units
 
 Querying the value of an expression with units returns a value with units:
 
