@@ -15,9 +15,11 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [weakdeps]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
 JuMPDimensionalDataExt = "DimensionalData"
+JuMPUnitfulExt = "Unitful"
 
 [compat]
 DimensionalData = "0.29.18, 0.30"
@@ -31,12 +33,14 @@ PrecompileTools = "1"
 Printf = "1"
 SparseArrays = "1"
 Test = "1"
+Unitful = "1"
 julia = "1.10"
 
 [extras]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 ParallelTestRunner = "d3525ed8-44d0-4b2c-a655-542cee43accc"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["DimensionalData", "ParallelTestRunner", "Test"]
+test = ["DimensionalData", "ParallelTestRunner", "Test", "Unitful"]

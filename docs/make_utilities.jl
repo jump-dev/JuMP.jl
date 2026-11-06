@@ -431,8 +431,10 @@ end
 
 function list_of_solvers_and_extensions()
     _LIST_OF_SOLVERS = Pair{String,String}[]
-    _LIST_OF_EXTENSIONS =
-        Pair{String,String}["DimensionalData.jl"=>"extensions/DimensionalData.md",]
+    _LIST_OF_EXTENSIONS = Pair{String,String}[
+        "DimensionalData.jl"=>"extensions/DimensionalData.md",
+        "Unitful.jl"=>"extensions/Unitful.md",
+    ]
     for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         repo = string(solver, get(data, "ext", ".jl"))
         if get(data, "extension", false)
