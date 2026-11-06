@@ -97,6 +97,40 @@ function JuMP.add_variable(
     return (one(T) * v.scale) * x
 end
 
+# The units are stripped from the constraint before it is passed to MOI. The
+# unit is stored in the shape of the constraint so that `value` and `dual` can
+# add the units back.
+struct _UnitfulShape{U<:Unitful.Units} <: JuMP.AbstractShape
+    unit::U
+end
+
+function JuMP.reshape_vector(
+    x::Union{Number,JuMP.AbstractJuMPScalar},
+    shape::_UnitfulShape,
+)
+    return x * (1 * shape.unit)
+end
+
+JuMP.vectorize(x, shape::_UnitfulShape) = Unitful.ustrip(shape.unit, x)
+
+JuMP.vectorize(::Nothing, ::_UnitfulShape) = nothing
+
+# The objective has no units so the dual has the inverse unit of the
+# constraint.
+JuMP.dual_shape(shape::_UnitfulShape) = _UnitfulShape(inv(shape.unit))
+
+function JuMP.in_set_string(
+    mode,
+    con::JuMP.ScalarConstraint{<:Any,<:Any,<:_UnitfulShape},
+)
+    set_str = JuMP.in_set_string(mode, JuMP.moi_set(con))
+    return string(set_str, " ", con.shape.unit)
+end
+
+function _with_unit(con::JuMP.ScalarConstraint, unit::Unitful.Units)
+    return JuMP.ScalarConstraint(con.func, con.set, _UnitfulShape(unit))
+end
+
 function JuMP.build_constraint(
     error_fn::Function,
     f::_UnitfulExpr,
@@ -111,7 +145,8 @@ function JuMP.build_constraint(
     set::MOI.AbstractScalarSet,
     unit::Unitful.Units,
 )
-    return JuMP.build_constraint(error_fn, _ustrip(unit, f), set)
+    con = JuMP.build_constraint(error_fn, _ustrip(unit, f), set)
+    return _with_unit(con, unit)
 end
 
 function JuMP.build_constraint(
@@ -130,12 +165,13 @@ function JuMP.build_constraint(
     ub::Unitful.Quantity,
     unit::Unitful.Units,
 )
-    return JuMP.build_constraint(
+    con = JuMP.build_constraint(
         error_fn,
         _ustrip(unit, f),
         Unitful.ustrip(unit, lb),
         Unitful.ustrip(unit, ub),
     )
+    return _with_unit(con, unit)
 end
 
 function JuMP.set_objective_function(model::JuMP.GenericModel, f::_UnitfulExpr)

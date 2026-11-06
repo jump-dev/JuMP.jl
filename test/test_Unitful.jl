@@ -142,6 +142,91 @@ function test_unitful_interval()
     return
 end
 
+function test_unitful_constraint_string()
+    model = Model()
+    @variable(model, x, u"m/s")
+    @variable(model, y, u"ft/s")
+    @constraint(model, c1, x + y <= 36u"km/hr")
+    @test sprint(show, c1) == "c1 : (x + 0.3048 y) m s^-1 ≤ 10 m s^-1"
+    @constraint(model, c2, x <= 36u"km/hr", u"km/hr")
+    @test sprint(show, c2) == "c2 : (3.6 x) km hr^-1 ≤ 36 km hr^-1"
+    @constraint(model, c3, 1u"cm/s" <= x <= 2u"m/s")
+    @test sprint(show, c3) == "c3 : (x) m s^-1 ∈ [0.01, 2] m s^-1"
+    return
+end
+
+function test_unitful_constraint_value_and_dual()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x, u"m/s")
+    @constraint(model, c1, x <= 36u"km/hr")
+    @constraint(model, c2, x <= 36u"km/hr", u"km/hr")
+    @constraint(model, c3, 0u"m/s" <= x <= 36u"km/hr", u"km/hr")
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    v = optimizer_index(only(all_variables(model)))
+    MOI.set(mock, MOI.VariablePrimal(), v, 10.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c1), -2.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c2), -2.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c3), -2.0)
+    optimize!(model)
+    @test value(c1) ≈ 10u"m/s"
+    @test value(c1) isa typeof(1.0u"m/s")
+    @test value(c2) ≈ 36u"km/hr"
+    @test value(c2) isa typeof(1.0u"km/hr")
+    @test value(c3) ≈ 36u"km/hr"
+    @test value(_ -> 1.0, c1) ≈ 1u"m/s"
+    @test dual(c1) ≈ -2u"s/m"
+    @test dual(c1) isa typeof(1.0u"s/m")
+    @test dual(c2) ≈ -2u"hr/km"
+    @test dual(c2) isa typeof(1.0u"hr/km")
+    @test dual(c3) ≈ -2u"hr/km"
+    return
+end
+
+function test_unitful_constraint_start_value()
+    model = Model()
+    @variable(model, x, u"m/s")
+    @constraint(model, c, x <= 36u"km/hr")
+    @test start_value(c) === nothing
+    @test dual_start_value(c) === nothing
+    set_start_value(c, 18u"km/hr")
+    @test start_value(c) ≈ 5u"m/s"
+    @test MOI.get(model, MOI.ConstraintPrimalStart(), c) ≈ 5
+    set_dual_start_value(c, -2u"s/m")
+    @test dual_start_value(c) ≈ -2u"s/m"
+    @test MOI.get(model, MOI.ConstraintDualStart(), c) ≈ -2
+    set_start_value(c, nothing)
+    @test start_value(c) === nothing
+    set_dual_start_value(c, nothing)
+    @test dual_start_value(c) === nothing
+    @test_throws Unitful.DimensionError set_start_value(c, 1u"m")
+    return
+end
+
+function test_unitful_constraint_ref()
+    model = Model()
+    @variable(model, x, u"m")
+    @variable(model, y)
+    @constraint(model, c1, x <= 1u"m")
+    @constraint(model, c2, 2y <= 1)
+    @test shape(constraint_object(c1)) == c1.shape
+    @test c2.shape == ScalarShape()
+    @test constraint_by_name(model, "c1") == c1
+    @test typeof(constraint_by_name(model, "c1")) == typeof(c1)
+    @test typeof(constraint_by_name(model, "c2")) == typeof(c2)
+    @test all_constraints(model, AffExpr, MOI.LessThan{Float64}) == [c1, c2]
+    new_model, ref_map = copy_model(model)
+    new_c1 = constraint_by_name(new_model, "c1")
+    @test new_c1.shape == c1.shape
+    @test ref_map[c1] == new_c1
+    return
+end
+
 function test_unitful_objective()
     model = Model()
     @variable(model, x, u"m")
