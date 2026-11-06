@@ -878,8 +878,15 @@ function test_all_constraints_scalar()
         VariableRef,
         MOI.GreaterThan{Float64},
     )
-    ref =
-        @inferred all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+    CI = MOI.ConstraintIndex{MOI.VariableIndex,MOI.GreaterThan{Float64}}
+    # The return type is a small `Union` because a scalar constraint may have
+    # a shape that is not `ScalarShape`.
+    ref = @inferred Vector{<:ConstraintRef{Model,CI}} all_constraints(
+        model,
+        VariableRef,
+        MOI.GreaterThan{Float64},
+    )
+    @test ref isa Vector{ConstraintRef{Model,CI,ScalarShape}}
     @test ref == [LowerBoundRef(x)]
     @test 0 ==
           @inferred num_constraints(model, AffExpr, MOI.GreaterThan{Float64})
@@ -2378,6 +2385,65 @@ function test_shadow_price_errors()
         ),
         shadow_price(c4),
     )
+    return
+end
+
+struct _ScaleShape <: AbstractShape
+    scale::Float64
+end
+
+JuMP.reshape_vector(x::Number, s::_ScaleShape) = x * s.scale
+
+JuMP.vectorize(x::Number, s::_ScaleShape) = x / s.scale
+
+JuMP.dual_shape(s::_ScaleShape) = _ScaleShape(1 / s.scale)
+
+function test_scalar_constraint_shape()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x)
+    con = ScalarConstraint(1.0 * x, MOI.LessThan(1.0), _ScaleShape(2.0))
+    @test shape(con) == _ScaleShape(2.0)
+    c = add_constraint(model, con, "c")
+    @constraint(model, d, 2x <= 1)
+    @test c.shape == _ScaleShape(2.0)
+    @test d.shape == ScalarShape()
+    @test constraint_object(c).shape == _ScaleShape(2.0)
+    @test constraint_by_name(model, "c") == c
+    @test typeof(constraint_by_name(model, "c")) == typeof(c)
+    @test typeof(constraint_by_name(model, "d")) == typeof(d)
+    @test all_constraints(model, AffExpr, MOI.LessThan{Float64}) == [c, d]
+    @test value(_ -> 3.0, c) == 6.0
+    set_start_value(c, 4.0)
+    @test MOI.get(model, MOI.ConstraintPrimalStart(), c) == 2.0
+    @test start_value(c) == 4.0
+    set_dual_start_value(c, 4.0)
+    @test MOI.get(model, MOI.ConstraintDualStart(), c) == 8.0
+    @test dual_start_value(c) == 4.0
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 3.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c), -1.0)
+    optimize!(model)
+    @test value(c) == 6.0
+    @test dual(c) == -0.5
+    return
+end
+
+function test_scalar_constraint_parametric_constructor()
+    model = Model()
+    @variable(model, x)
+    con = ScalarConstraint{VariableRef,MOI.LessThan{Float64}}(
+        x,
+        MOI.LessThan(1.0),
+    )
+    @test con isa
+          ScalarConstraint{VariableRef,MOI.LessThan{Float64},ScalarShape}
+    @test shape(con) == ScalarShape()
     return
 end
 

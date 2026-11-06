@@ -232,7 +232,8 @@ function set_dual_start_value(
     },
     value,
 )
-    v = _convert_if_something(_value_type(con_ref), value)
+    v = vectorize(value, dual_shape(con_ref.shape))
+    v = _convert_if_something(_value_type(con_ref), v)
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, v)
     return
 end
@@ -312,7 +313,8 @@ function set_start_value(
     },
     value,
 )
-    v = _convert_if_something(_value_type(con_ref), value)
+    v = vectorize(value, con_ref.shape)
+    v = _convert_if_something(_value_type(con_ref), v)
     MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, v)
     return
 end
@@ -514,7 +516,7 @@ function constraint_ref_with_index(
         <:MOI.AbstractScalarSet,
     },
 )
-    return ConstraintRef(model, index, ScalarShape())
+    return ConstraintRef(model, index, get(model.shapes, index, ScalarShape()))
 end
 
 function constraint_ref_with_index(
@@ -791,10 +793,10 @@ julia> @constraint(model, c, 2x <= 1)
 c : 2 x ≤ 1
 
 julia> object = constraint_object(c)
-ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}, ScalarShape}(2 x, MathOptInterface.LessThan{Float64}(1.0), ScalarShape())
 
 julia> typeof(object)
-ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}, ScalarShape}
 
 julia> object.func
 2 x
@@ -842,6 +844,8 @@ constraints for more background.
 
  * `.func`: field contains a JuMP object representing the function
  * `.set`: field contains the MOI set
+ * `.shape`: field contains an [`AbstractShape`](@ref) used to convert the
+   values of the constraint, for example, to add units
 
 ## Example
 
@@ -855,29 +859,45 @@ julia> @constraint(model, c, 2x <= 1)
 c : 2 x ≤ 1
 
 julia> object = constraint_object(c)
-ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(2 x, MathOptInterface.LessThan{Float64}(1.0))
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}, ScalarShape}(2 x, MathOptInterface.LessThan{Float64}(1.0), ScalarShape())
 
 julia> typeof(object)
-ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}, ScalarShape}
 
 julia> object.func
 2 x
 
 julia> object.set
 MathOptInterface.LessThan{Float64}(1.0)
+
+julia> object.shape
+ScalarShape()
 ```
 """
 struct ScalarConstraint{
     F<:Union{Number,AbstractJuMPScalar},
     S<:MOI.AbstractScalarSet,
+    Shape<:AbstractShape,
 } <: AbstractConstraint
     func::F
     set::S
+    shape::Shape
+end
+
+function ScalarConstraint(
+    func::Union{Number,AbstractJuMPScalar},
+    set::MOI.AbstractScalarSet,
+)
+    return ScalarConstraint(func, set, ScalarShape())
+end
+
+function ScalarConstraint{F,S}(func, set) where {F,S}
+    return ScalarConstraint{F,S,ScalarShape}(func, set, ScalarShape())
 end
 
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 
-shape(::ScalarConstraint) = ScalarShape()
+shape(con::ScalarConstraint) = con.shape
 
 function constraint_object(
     con_ref::ConstraintRef{
@@ -888,7 +908,7 @@ function constraint_object(
     model = con_ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), con_ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
-    return ScalarConstraint(jump_function(model, f), s)
+    return ScalarConstraint(jump_function(model, f), s, con_ref.shape)
 end
 
 """
@@ -1642,7 +1662,11 @@ function all_constraints(
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
-    if set_type <: MOI.AbstractScalarSet
+    indices = MOI.get(model, MOI.ListOfConstraintIndices{f_type,set_type}())
+    # Scalar constraints have a `ScalarShape` unless an extension gave them
+    # another shape.
+    if set_type <: MOI.AbstractScalarSet &&
+       !any(Base.Fix1(haskey, model.shapes), indices)
         constraint_ref_type = ConstraintRef{
             typeof(model),
             MOI.ConstraintIndex{f_type,set_type},
@@ -1653,7 +1677,7 @@ function all_constraints(
             ConstraintRef{typeof(model),MOI.ConstraintIndex{f_type,set_type}}
     end
     result = constraint_ref_type[]
-    for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type,set_type}())
+    for idx in indices
         push!(result, constraint_ref_with_index(model, idx))
     end
     return result

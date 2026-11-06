@@ -148,6 +148,8 @@ reshape_vector(α, ::ScalarShape) = α
 
 reshape_vector(::Nothing, ::ScalarShape) = nothing
 
+vectorize(x, ::ScalarShape) = x
+
 """
     VectorShape()
 
