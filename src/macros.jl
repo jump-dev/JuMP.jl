@@ -340,6 +340,7 @@ function model_convert(model::AbstractModel, con::ScalarConstraint)
     return ScalarConstraint(
         model_convert(model, con.func),
         model_convert(model, con.set),
+        con.shape,
     )
 end
 
