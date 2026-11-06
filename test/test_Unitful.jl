@@ -10,6 +10,8 @@ using Test
 using JuMP
 using Unitful
 
+include(joinpath(@__DIR__, "utilities.jl"))
+
 function test_unitful_variable()
     model = Model()
     @variable(model, x, u"m/s")
@@ -22,18 +24,55 @@ end
 
 function test_unitful_variable_bounds()
     model = Model()
-    @variable(model, 0 <= x <= 36u"km/hr", u"m/s", start = 18u"km/hr")
+    @variable(model, 0u"m/s" <= x <= 36u"km/hr", u"m/s", start = 18u"km/hr")
     v = only(all_variables(model))
     @test lower_bound(v) == 0
     @test upper_bound(v) ≈ 10
     @test start_value(v) ≈ 5
-    @test_throws Unitful.DimensionError @variable(model, y >= 1u"s", u"m")
+    @variable(model, y == 2u"km", u"m")
+    @test fix_value(all_variables(model)[2]) ≈ 2000
+    @test_throws Unitful.DimensionError @variable(model, z >= 1u"s", u"m")
+    return
+end
+
+function test_unitful_variable_bounds_without_units()
+    model = Model()
+    @test_throws_runtime(
+        ErrorException(
+            """
+            In `@variable(model, x >= 0, u"m")`:
+
+            Unable to use `0` as a bound or start value because it has no units.
+
+            Use a quantity with the same dimension as `m`.
+            """,
+        ),
+        @variable(model, x >= 0, u"m"),
+    )
+    @test_throws ErrorException @variable(model, x <= 1, u"m")
+    @test_throws ErrorException @variable(model, x == 1, u"m")
+    @test_throws ErrorException @variable(model, x, u"m", start = 1)
+    @test_throws ErrorException @variable(model, x >= 1, 10u"m")
+    @test num_variables(model) == 0
+    return
+end
+
+function test_unitful_variable_scale()
+    model = Model()
+    @variable(model, 0u"m/s" <= x <= 36u"km/hr", 10u"m/s")
+    v = only(all_variables(model))
+    @test x isa GenericAffExpr{typeof(1.0u"m/s"),VariableRef}
+    @test x == 10.0u"m/s" * v
+    @test sprint(show, x) == "(10 x) m s^-1"
+    @test lower_bound(v) == 0
+    @test upper_bound(v) ≈ 1
+    @test value(_ -> 0.5, x) ≈ 5u"m/s"
     return
 end
 
 function test_unitful_variable_container()
     model = Model()
-    @variable(model, x[1:2] >= 0, u"m")
+    @variable(model, x[1:2] >= 0u"m", u"m")
     @test x isa Vector{GenericAffExpr{typeof(1.0u"m"),VariableRef}}
     @test name.(all_variables(model)) == ["x[1]", "x[2]"]
     return

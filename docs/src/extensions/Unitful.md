@@ -42,15 +42,26 @@ julia> model = Model(HiGHS.Optimizer);
 
 julia> set_silent(model)
 
-julia> @variable(model, x >= 0, u"m/s")
+julia> @variable(model, x >= 0u"m/s", u"m/s")
 (x) m s^-1
 
-julia> @variable(model, y >= 0, u"ft/s")
+julia> @variable(model, y >= 0u"m/s", u"ft/s")
 (y) ft s^-1
 ```
 
-Bounds without units, such as `0` above, are interpreted in the unit of the
-variable.
+The bounds and start values must have units, even if they are zero:
+
+```jldoctest ext_unitful
+julia> @variable(model, z >= 0, u"m/s")
+ERROR: At none:1: `@variable(model, z >= 0, u"m/s")`:
+
+Unable to use `0` as a bound or start value because it has no units.
+
+Use a quantity with the same dimension as `m s^-1`.
+
+Stacktrace:
+[...]
+```
 
 Similarly to [Complex number support](@ref), `x` is not a [`VariableRef`](@ref);
 instead, it is an affine expression with `Unitful.Quantity`-valued
@@ -69,6 +80,23 @@ julia> all_variables(model)
  x
  y
 ```
+
+To improve the scaling of the problem, pass a quantity instead of a unit:
+
+```jldoctest ext_unitful_scale
+julia> using JuMP, Unitful
+
+julia> model = Model();
+
+julia> @variable(model, 0u"m/s" <= w <= 100u"m/s", 10u"m/s")
+(10 w) m s^-1
+
+julia> upper_bound(only(all_variables(model)))
+10.0
+```
+
+Here, `w` is the expression `10.0u"m/s" * w`, where the variable `w` without
+units is between `0` and `10`.
 
 ### Expressions with units
 
