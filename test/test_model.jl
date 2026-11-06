@@ -860,6 +860,20 @@ function test_copy_refmap_expr()
     end
 end
 
+function test_copy_shapes()
+    model = Model()
+    @variable(model, x[1:2, 1:2], PSD)
+    @constraint(model, c, x in PSDCone())
+    @constraint(model, d, x in PSDCone())
+    new_model, ref_map = copy_model(model)
+    @test constraint_by_name(new_model, "c").shape == c.shape
+    @test ref_map[c].shape == c.shape
+    new_model, ref_map = copy_model(model; filter_constraints = !=(c))
+    @test constraint_by_name(new_model, "c") === nothing
+    @test constraint_by_name(new_model, "d").shape == d.shape
+    return
+end
+
 function test_copy_dict_expr()
     model = Model()
     @variable(model, x)
