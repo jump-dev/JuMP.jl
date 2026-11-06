@@ -125,11 +125,12 @@ m s^-1
 
 When adding a constraint, the units are converted to the unit of the
 expression `lhs - rhs`, as defined in [Expressions with units](@ref), and then
-removed:
+removed before the constraint is passed to the solver. The unit is stored in
+the [`AbstractShape`](@ref) of the constraint:
 
 ```jldoctest ext_unitful
 julia> @constraint(model, c1, x + y <= 72u"km/hr")
-c1 : x + 0.3048 y ≤ 20
+c1 : (x + 0.3048 y) m s^-1 ≤ 20 m s^-1
 ```
 
 Pass a unit as a positional argument to [`@constraint`](@ref) to choose the unit
@@ -137,7 +138,7 @@ of the constraint, for example, for better scaling:
 
 ```jldoctest ext_unitful
 julia> @constraint(model, c2, x + y <= 72u"km/hr", u"km/hr")
-c2 : 3.6 x + 1.09728 y ≤ 72
+c2 : (3.6 x + 1.09728 y) km hr^-1 ≤ 72 km hr^-1
 ```
 
 Note that a number like `0.5` has no unit, so the units of both sides of the following
@@ -145,7 +146,7 @@ constraint are compatible:
 
 ```jldoctest ext_unitful
 julia> @constraint(model, c3, x <= 0.5 * y)
-c3 : x - 0.1524 y ≤ 0
+c3 : (x - 0.1524 y) m s^-1 ≤ 0 m s^-1
 ```
 
 Constraints with incompatible units throw an error:
@@ -171,7 +172,8 @@ julia> objective_function(model)
 
 ### Solutions with units
 
-Querying the value of an expression with units returns a value with units:
+Querying the value of an expression or a constraint with units returns a value
+with units:
 
 ```jldoctest ext_unitful
 julia> optimize!(model)
@@ -184,13 +186,26 @@ julia> value(y)
 
 julia> value(x + y)
 20.0 m s^-1
+
+julia> value(c2)
+72.0 km hr^-1
 ```
 
-However, because the constraints and objective are passed to the solver
-without units, solution values such as [`objective_value`](@ref) and
-[`dual`](@ref) do not have units:
+The objective is passed to the solver without units, so the
+[`objective_value`](@ref) does not have units:
 
 ```jldoctest ext_unitful
 julia> objective_value(model)
 26.666666666666664
+```
+
+Because the objective has no units, the [`dual`](@ref) of a constraint has the
+inverse unit of the constraint:
+
+```jldoctest ext_unitful
+julia> dual(c1)
+-1.3333333333333333 s m^-1
+
+julia> dual(c3)
+-0.6666666666666666 s m^-1
 ```
