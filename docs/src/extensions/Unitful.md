@@ -70,10 +70,34 @@ julia> all_variables(model)
  y
 ```
 
+### Expressions with units
+
+The unit of an expression is the unit of its coefficient type. If all its terms
+have the same unit, the expression keeps this unit:
+
+```jldoctest ext_unitful
+julia> y + 1u"ft/s"
+(y + 1) ft s^-1
+```
+
+If the terms have different units of the same dimension, Unitful converts them
+to the preferred unit of this dimension, regardless of the order of the terms.
+See `Unitful.upreferred` and `Unitful.preferunits` for details. By default, the
+preferred units are the SI units:
+
+```jldoctest ext_unitful
+julia> y + x
+(0.3048 y + x) m s^-1
+
+julia> Unitful.upreferred(u"ft/s")
+m s^-1
+```
+
 ### Constraints with units
 
 When adding a constraint, the units are converted to the unit of the
-expression, and then removed:
+expression `lhs - rhs`, as defined in [Expressions with units](@ref), and then
+removed:
 
 ```jldoctest ext_unitful
 julia> @constraint(model, c1, x + y <= 72u"km/hr")
