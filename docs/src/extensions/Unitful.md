@@ -88,7 +88,7 @@ julia> @constraint(model, c2, x + y <= 72u"km/hr", u"km/hr")
 c2 : 3.6 x + 1.09728 y ≤ 72
 ```
 
-Note that `0.5` has no unit, so the units of both sides of the following
+Note that a number like `0.5` has no unit, so the units of both sides of the following
 constraint are compatible:
 
 ```jldoctest ext_unitful
