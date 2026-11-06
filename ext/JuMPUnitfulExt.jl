@@ -11,8 +11,9 @@ import Unitful
 
 # Similarly to complex numbers, the units are stored in the coefficient type of
 # the expressions. A variable with units is therefore represented by a
-# `GenericAffExpr` with a single term whose coefficient is `1` in the unit of the
-# variable.
+# `GenericAffExpr` with a single term whose coefficient is the scale of the
+# variable, for example, `1 m/s` for `u"m/s"` or `10 m/s` for `10u"m/s"`. The
+# scale can be used to improve the scaling of the problem.
 
 function JuMP._complex_convert_type(
     ::Type{T},
@@ -40,29 +41,51 @@ end
 
 _ustrip(f::_UnitfulExpr) = _ustrip(_unit(f), f)
 
-# Bounds without units are interpreted in the unit of the variable so that,
-# for example, `@variable(model, x >= 0, u"m")` is supported.
-function _ustrip_bound(unit::Unitful.Units, x::Unitful.Quantity)
-    return Unitful.ustrip(unit, x)
+struct _UnitfulVariable{S<:Union{Unitful.Units,Unitful.Quantity}} <:
+       JuMP.AbstractVariable
+    variable::JuMP.ScalarVariable
+    scale::S
 end
 
-_ustrip_bound(::Unitful.Units, x) = x
+function _strip_bound(::Function, scale, x::Unitful.Quantity)
+    return Unitful.uconvert(Unitful.NoUnits, x / scale)
+end
 
-struct _UnitfulVariable{U<:Unitful.Units} <: JuMP.AbstractVariable
-    variable::JuMP.ScalarVariable
-    unit::U
+function _strip_bound(error_fn::Function, scale, x)
+    return error_fn(
+        """
+        Unable to use `$x` as a bound or start value because it has no units.
+
+        Use a quantity with the same dimension as `$scale`.
+        """,
+    )
+end
+
+function _strip_bound(error_fn::Function, scale, has_value::Bool, x)
+    if has_value
+        return _strip_bound(error_fn, scale, x)
+    end
+    return x
 end
 
 function JuMP.build_variable(
-    ::Function,
+    error_fn::Function,
     info::JuMP.VariableInfo,
-    unit::Unitful.Units,
+    scale::Union{Unitful.Units,Unitful.Quantity},
 )
-    variable = JuMP.ScalarVariable(info)
-    return _UnitfulVariable(
-        JuMP._mapinfo(Base.Fix1(_ustrip_bound, unit), variable),
-        unit,
+    new_info = JuMP.VariableInfo(
+        info.has_lb,
+        _strip_bound(error_fn, scale, info.has_lb, info.lower_bound),
+        info.has_ub,
+        _strip_bound(error_fn, scale, info.has_ub, info.upper_bound),
+        info.has_fix,
+        _strip_bound(error_fn, scale, info.has_fix, info.fixed_value),
+        info.has_start,
+        _strip_bound(error_fn, scale, info.has_start, info.start),
+        info.binary,
+        info.integer,
     )
+    return _UnitfulVariable(JuMP.ScalarVariable(new_info), scale)
 end
 
 function JuMP.add_variable(
@@ -71,7 +94,7 @@ function JuMP.add_variable(
     name::String = "",
 ) where {T}
     x = JuMP.add_variable(model, v.variable, name)
-    return (one(T) * v.unit) * x
+    return (one(T) * v.scale) * x
 end
 
 function JuMP.build_constraint(
