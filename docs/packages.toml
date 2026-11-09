@@ -210,9 +210,9 @@
     user = "samuelsonric"
     rev = "v0.2.0"
 [MFAOA]
-      user = "Quicopt"
-      rev = "v0.1.1"
-      has_html = true
+    user = "Quicopt"
+    rev = "v0.1.1"
+    has_html = true
 [NLPModelsAlgencan]
     user = "pjssilva"
     rev = "v0.10.3"
