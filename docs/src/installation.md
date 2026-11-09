@@ -144,6 +144,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Loraine.jl](https://github.com/kocvara/Loraine.jl)                            |                                                                                  |        | MIT      | LP, SDP                   |
 | [MadNLP.jl](https://github.com/madsuite-org/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
 | [MAiNGO](https://git.rwth-aachen.de/avt-svt/public/maingo)                     | [MAiNGO.jl](https://github.com/MAiNGO-github/MAiNGO.jl)                          |        | EPL 2.0  |(MI)NLP                    |
+| [MFAOA](https://github.com/Quicopt/MFAOA.jl)                                   |                                                                                  |        | Apache   | BQP, QUBO                  |
 | [MiniZinc](https://www.minizinc.org/)                                          | [MiniZinc.jl](https://github.com/jump-dev/MiniZinc.jl)                           | Manual | MPL-2    | CP-SAT                    |
 | [Minotaur](https://github.com/coin-or/minotaur)                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   | Manual | BSD-like | (MI)NLP                   |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
