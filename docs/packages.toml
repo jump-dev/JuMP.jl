@@ -211,7 +211,7 @@
     rev = "v0.2.0"
 [MFAOA]
     user = "Quicopt"
-    rev = "v0.1.1"
+    rev = "88c1173a9fd2e91aa6f60031e1f2262f473adcec"
     has_html = true
 [NLPModelsAlgencan]
     user = "pjssilva"
