@@ -49,11 +49,11 @@ function test_UserCut()
     return
 end
 
-function test_HeuristicSolution()
+function test_HeuristicSolution(model_factory = direct_model)
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
-    model = direct_model(mock)
+    model = model_factory(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
     MOI.submit(model, MOI.HeuristicSolution(DummyCallbackData()), [x], [0.0])
@@ -69,6 +69,11 @@ function test_HeuristicSolution()
     @test length(c) == 2
     @test c[2][1] == [index(x)]
     @test c[2][2] == [1.0]
+    return
+end
+
+function test_HeuristicSolution_concrete_model()
+    test_HeuristicSolution(JuMP.concrete_direct_model)
     return
 end
 
