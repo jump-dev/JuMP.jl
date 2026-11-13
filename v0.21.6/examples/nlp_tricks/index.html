@@ -1,0 +1,114 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Nonlinear tips and tricks · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview', {'page': location.pathname + location.search + location.hash});
+</script><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script data-main="../../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" data-theme-name="documenter-dark" href="../../assets/themes/documenter-dark.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-light" data-theme-primary="" href="../../assets/themes/documenter-light.css" rel="stylesheet" type="text/css"/><script src="../../assets/themeswap.js"></script><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img alt="JuMP logo" src="../../assets/logo.png"/></a><div class="docs-package-name"><span class="docs-autofit">JuMP</span></div><form action="../../search/" class="docs-search"><input class="docs-search-query" id="documenter-search-query" name="q" placeholder="Search docs" type="text"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../installation/">Installation Guide</a></li><li><a class="tocitem" href="../../quickstart/">Quick Start Guide</a></li><li><a class="tocitem" href="../../variables/">Variables</a></li><li><a class="tocitem" href="../../expressions/">Expressions</a></li><li><a class="tocitem" href="../../objective/">Objectives</a></li><li><a class="tocitem" href="../../constraints/">Constraints</a></li><li><a class="tocitem" href="../../containers/">Containers</a></li><li><a class="tocitem" href="../../solvers/">Interacting with solvers</a></li><li><a class="tocitem" href="../../solutions/">Querying Solutions</a></li><li><a class="tocitem" href="../../nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../reference/callbacks/">Callback API</a></li><li><a class="tocitem" href="../../reference/constraints/">Constraint API</a></li><li><a class="tocitem" href="../../reference/containers/">Containers API</a></li><li><a class="tocitem" href="../../reference/expressions/">Expression API</a></li><li><a class="tocitem" href="../../reference/models/">Model API</a></li><li><a class="tocitem" href="../../reference/moi/">MathOptInterface API</a></li><li><a class="tocitem" href="../../reference/nonlinear/">Nonlinear API</a></li><li><a class="tocitem" href="../../reference/objectives/">Objective API</a></li><li><a class="tocitem" href="../../reference/solutions/">Solution API</a></li><li><a class="tocitem" href="../../reference/variables/">Variable API</a></li></ul></li><li><input checked="" class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../basic/">A basic example</a></li><li><a class="tocitem" href="../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li><a class="tocitem" href="../clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../diet/">The diet problem</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../multi/">The multi-commodity flow problem</a></li><li class="is-active"><a class="tocitem" href="">Nonlinear tips and tricks</a><ul class="internal"><li><a class="tocitem" href="#User-defined-functions-with-vector-outputs"><span>User-defined functions with vector outputs</span></a></li></ul></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../qcp/">Quadratically constrained programs</a></li><li><a class="tocitem" href="../robust_uncertainty/">Robust uncertainty sets</a></li><li><a class="tocitem" href="../rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Solving Sudokus with MIP</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li></ul></li><li><a class="tocitem" href="../../style/">Style Guide</a></li><li><a class="tocitem" href="../../roadmap/">Development Roadmap</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href="">Nonlinear tips and tricks</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="">Nonlinear tips and tricks</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/examples/nlp_tricks.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" href="#" id="documenter-settings-button" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" href="#" id="documenter-sidebar-button"></a></div></header><article class="content" id="documenter-page"><h1 id="Nonlinear-tips-and-tricks"><a class="docs-heading-anchor" href="#Nonlinear-tips-and-tricks">Nonlinear tips and tricks</a><a id="Nonlinear-tips-and-tricks-1"></a><a class="docs-heading-anchor-permalink" href="#Nonlinear-tips-and-tricks" title="Permalink"></a></h1><p>This example collates some tips and tricks you can use when formulating nonlinear programs. It uses the following packages:</p><pre><code class="language-julia">using JuMP
+import Ipopt
+import Test</code></pre><h2 id="User-defined-functions-with-vector-outputs"><a class="docs-heading-anchor" href="#User-defined-functions-with-vector-outputs">User-defined functions with vector outputs</a><a id="User-defined-functions-with-vector-outputs-1"></a><a class="docs-heading-anchor-permalink" href="#User-defined-functions-with-vector-outputs" title="Permalink"></a></h2><p>A common situation is to have a user-defined function like the following that returns multiple outputs (we define <code>function_calls</code> to keep track of how many times we call this method):</p><pre><code class="language-julia">function_calls = 0
+function foo(x, y)
+    global function_calls += 1
+    common_term = x^2 + y^2
+    term_1 = sqrt(1 + common_term)
+    term_2 = common_term
+    return term_1, term_2
+end</code></pre><pre class="documenter-example-output">foo (generic function with 1 method)</pre><p>For example, the first term might be used in the objective, and the second term might be used in a constraint, and often they share share work that is expensive to evaluate.</p><p>This is a problem for JuMP, because it requires user-defined functions to return a single number. One option is to define two separate functions, the first returning the first argument, and the second returning the second argument.</p><pre><code class="language-julia">foo_1(x, y) = foo(x, y)[1]
+foo_2(x, y) = foo(x, y)[2]</code></pre><pre class="documenter-example-output">foo_2 (generic function with 1 method)</pre><p>However, if the common term is expensive to compute, this approach is wasteful because it will evaluate the expensive term twice. Let's have a look at how many times we evalute <code>x^2 + y^2</code> during a solve:</p><pre><code class="language-julia">model = Model(Ipopt.Optimizer)
+set_silent(model)
+@variable(model, x[1:2] &gt;= 0, start = 0.1)
+register(model, :foo_1, 2, foo_1; autodiff = true)
+register(model, :foo_2, 2, foo_2; autodiff = true)
+@NLobjective(model, Max, foo_1(x[1], x[2]))
+@NLconstraint(model, foo_2(x[1], x[2]) &lt;= 2)
+function_calls = 0
+optimize!(model)
+Test.@test objective_value(model) ≈ √3 atol=1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+println("Naive approach: function calls = $(function_calls)")</code></pre><pre class="documenter-example-output">Naive approach: function calls = 40</pre><p>An alternative approach is to use <em>memoization</em>, which uses a cache to store the result of function evaluations. We can write a memoization function as follows:</p><pre><code class="language-julia">"""
+    memoize(foo::Function, n_outputs::Int)
+
+Take a function `foo` and return a vector of length `n_outputs`, where each
+element is a function that returns the `i`'th output of `foo`.
+
+To avoid duplication of work, cache the most-recent evaluations of `foo`.
+Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to
+work when `x` is a `Float64` and a `ForwardDiff.Dual`.
+"""
+function memoize(foo::Function, n_outputs::Int)
+    last_x, last_f = nothing, nothing
+    last_dx, last_dfdx = nothing, nothing
+    function foo_i(i, x::T...) where {T &lt;: Real}
+        if T == Float64
+            if x != last_x
+                last_x, last_f = x, foo(x...)
+            end
+            return last_f[i]::T
+        else
+            if x != last_dx
+                last_dx, last_dfdx = x, foo(x...)
+            end
+            return last_dfdx[i]::T
+        end
+    end
+    return [(x...) -&gt; foo_i(i, x...) for i = 1:n_outputs]
+end</code></pre><pre class="documenter-example-output">Main.ex-nlp_tricks.memoize</pre><p>Let's see how it works. First, construct the memoized versions of <code>foo</code>:</p><pre><code class="language-julia">memoized_foo = memoize(foo, 2)</code></pre><pre class="documenter-example-output">2-element Array{getfield(Main.ex-nlp_tricks, Symbol("##4#7")){Int64,getfield(Main.ex-nlp_tricks, Symbol("#foo_i#5")){typeof(Main.ex-nlp_tricks.foo)}},1}:
+ getfield(Main.ex-nlp_tricks, Symbol("##4#7")){Int64,getfield(Main.ex-nlp_tricks, Symbol("#foo_i#5")){typeof(Main.ex-nlp_tricks.foo)}}(1, getfield(Main.ex-nlp_tricks, Symbol("#foo_i#5")){typeof(Main.ex-nlp_tricks.foo)}(Main.ex-nlp_tricks.foo, Core.Box(nothing), Core.Box(nothing), Core.Box(nothing), Core.Box(nothing)))
+ getfield(Main.ex-nlp_tricks, Symbol("##4#7")){Int64,getfield(Main.ex-nlp_tricks, Symbol("#foo_i#5")){typeof(Main.ex-nlp_tricks.foo)}}(2, getfield(Main.ex-nlp_tricks, Symbol("#foo_i#5")){typeof(Main.ex-nlp_tricks.foo)}(Main.ex-nlp_tricks.foo, Core.Box(nothing), Core.Box(nothing), Core.Box(nothing), Core.Box(nothing)))</pre><p>Now try evaluating the first element of <code>memoized_foo</code>.</p><pre><code class="language-julia">function_calls = 0
+memoized_foo[1](1.0, 1.0)
+println("function_calls = ", function_calls)</code></pre><pre class="documenter-example-output">function_calls = 1</pre><p>As expected, this evaluated the function once. However, if we call the function again, we hit the cache instead of needing to re-compute <code>foo</code> and <code>function_calls</code> is still <code>1</code>!</p><pre><code class="language-julia">memoized_foo[1](1.0, 1.0)
+println("function_calls = ", function_calls)</code></pre><pre class="documenter-example-output">function_calls = 1</pre><p>Now let's see how this works during a real solve:</p><pre><code class="language-julia">model = Model(Ipopt.Optimizer)
+set_silent(model)
+@variable(model, x[1:2] &gt;= 0, start = 0.1)
+register(model, :foo_1, 2, memoized_foo[1]; autodiff = true)
+register(model, :foo_2, 2, memoized_foo[2]; autodiff = true)
+@NLobjective(model, Max, foo_1(x[1], x[2]))
+@NLconstraint(model, foo_2(x[1], x[2]) &lt;= 2)
+function_calls = 0
+optimize!(model)
+Test.@test objective_value(model) ≈ √3 atol=1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+println("Memoized approach: function_calls = $(function_calls)")</code></pre><pre class="documenter-example-output">Memoized approach: function_calls = 20</pre><p>Compared to the naive approach, the memoized approach requires half as many function evaluations!</p><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/examples/nlp_tricks.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multi/">« The multi-commodity flow problem</a><a class="docs-footer-nextpage" href="../prod/">The workforce scheduling problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label></p><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div><p></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 28 January 2021 23:52">Thursday 28 January 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></HTML>

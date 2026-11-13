@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Callbacks · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview', {'page': location.pathname + location.search + location.hash});
+</script><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="JuMP logo"/></a><div class="docs-package-name"><span class="docs-autofit">JuMP</span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox" checked/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>Callbacks</a><ul class="internal"><li><a class="tocitem" href="#Lazy-constraints"><span>Lazy constraints</span></a></li><li><a class="tocitem" href="#User-cut"><span>User-cut</span></a></li><li><a class="tocitem" href="#HeuristicCallback"><span>HeuristicCallback</span></a></li><li><a class="tocitem" href="#GLPK-solver-dependent-callback"><span>GLPK solver-dependent callback</span></a></li></ul></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li><a class="tocitem" href="../cutting_stock_column_generation/">Cutting stock</a></li><li><a class="tocitem" href="../diet/">The diet problem</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../finance/">Finance</a></li><li><a class="tocitem" href="../geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../n-queens/">N-Queens</a></li><li><a class="tocitem" href="../network_flows/">Network Flows</a></li><li><a class="tocitem" href="../power_systems/">Power Systems</a></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Sudoku</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Mixed-integer linear programs</a></li><li class="is-active"><a href>Callbacks</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Callbacks</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/callbacks.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Callbacks"><a class="docs-heading-anchor" href="#Callbacks">Callbacks</a><a id="Callbacks-1"></a><a class="docs-heading-anchor-permalink" href="#Callbacks" title="Permalink"></a></h1><p>This example uses the following packages:</p><pre><code class="language-julia">using JuMP
+import GLPK
+import Random</code></pre><h2 id="Lazy-constraints"><a class="docs-heading-anchor" href="#Lazy-constraints">Lazy constraints</a><a id="Lazy-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Lazy-constraints" title="Permalink"></a></h2><p>An example using a lazy constraint callback.</p><pre><code class="language-julia">function example_lazy_constraint()
+    model = Model(GLPK.Optimizer)
+    @variable(model, 0 &lt;= x &lt;= 2.5, Int)
+    @variable(model, 0 &lt;= y &lt;= 2.5, Int)
+    @objective(model, Max, y)
+    lazy_called = false
+    function my_callback_function(cb_data)
+        lazy_called = true
+        x_val = callback_value(cb_data, x)
+        y_val = callback_value(cb_data, y)
+        println(&quot;Called from (x, y) = ($x_val, $y_val)&quot;)
+        status = callback_node_status(cb_data, model)
+        if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+            println(&quot; - Solution is integer infeasible!&quot;)
+        elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
+            println(&quot; - Solution is integer feasible!&quot;)
+        else
+            @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+            println(&quot; - I don&#39;t know if the solution is integer feasible :(&quot;)
+        end
+        if y_val - x_val &gt; 1 + 1e-6
+            con = @build_constraint(y - x &lt;= 1)
+            println(&quot;Adding $(con)&quot;)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        elseif y_val + x_val &gt; 3 + 1e-6
+            con = @build_constraint(y - x &lt;= 1)
+            println(&quot;Adding $(con)&quot;)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
+    optimize!(model)
+    println(&quot;Optimal solution (x, y) = ($(value(x)), $(value(y)))&quot;)
+    return
+end
+
+example_lazy_constraint()</code></pre><pre class="documenter-example-output">Called from (x, y) = (0.0, 2.0)
+ - Solution is integer feasible!
+Adding ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(y - x, MathOptInterface.LessThan{Float64}(1.0))
+Called from (x, y) = (1.0, 2.0)
+ - Solution is integer feasible!
+Optimal solution (x, y) = (1.0, 2.0)</pre><h2 id="User-cut"><a class="docs-heading-anchor" href="#User-cut">User-cut</a><a id="User-cut-1"></a><a class="docs-heading-anchor-permalink" href="#User-cut" title="Permalink"></a></h2><p>An example using a user-cut callback.</p><pre><code class="language-julia">function example_user_cut_constraint()
+    Random.seed!(1)
+    N = 30
+    item_weights, item_values = rand(N), rand(N)
+    model = Model(GLPK.Optimizer)
+    @variable(model, x[1:N], Bin)
+    @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) &lt;= 10)
+    @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
+    callback_called = false
+    function my_callback_function(cb_data)
+        callback_called = true
+        x_vals = callback_value.(Ref(cb_data), x)
+        accumulated = sum(item_weights[i] for i = 1:N if x_vals[i] &gt; 1e-4)
+        println(&quot;Called with accumulated = $(accumulated)&quot;)
+        n_terms = sum(1 for i = 1:N if x_vals[i] &gt; 1e-4)
+        if accumulated &gt; 10
+            con = @build_constraint(
+                sum(x[i] for i = 1:N if x_vals[i] &gt; 0.5) &lt;= n_terms - 1
+            )
+            println(&quot;Adding $(con)&quot;)
+            MOI.submit(model, MOI.UserCut(cb_data), con)
+        end
+    end
+    MOI.set(model, MOI.UserCutCallback(), my_callback_function)
+    optimize!(model)
+    @show callback_called
+    return
+end
+
+example_user_cut_constraint()</code></pre><pre class="documenter-example-output">Called with accumulated = 10.245300779183612
+Adding ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2] + x[4] + x[6] + x[7] + x[9] + x[10] + x[11] + x[12] + x[13] + x[14] + x[15] + x[16] + x[17] + x[18] + x[19] + x[20] + x[21] + x[22] + x[23] + x[24] + x[26] + x[29] + x[30], MathOptInterface.LessThan{Float64}(23.0))
+Called with accumulated = 10.276817515233951
+Adding ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2] + x[4] + x[6] + x[7] + x[9] + x[10] + x[11] + x[12] + x[13] + x[14] + x[16] + x[17] + x[18] + x[19] + x[20] + x[21] + x[22] + x[23] + x[24] + x[26] + x[29] + x[30], MathOptInterface.LessThan{Float64}(23.0))
+Called with accumulated = 10.812296027897915
+Adding ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2] + x[4] + x[6] + x[7] + x[9] + x[10] + x[11] + x[12] + x[13] + x[14] + x[16] + x[17] + x[18] + x[19] + x[20] + x[21] + x[22] + x[23] + x[24] + x[26] + x[29] + x[30], MathOptInterface.LessThan{Float64}(23.0))
+callback_called = true</pre><h2 id="HeuristicCallback"><a class="docs-heading-anchor" href="#HeuristicCallback">HeuristicCallback</a><a id="HeuristicCallback-1"></a><a class="docs-heading-anchor-permalink" href="#HeuristicCallback" title="Permalink"></a></h2><p>An example using a heuristic solution callback.</p><pre><code class="language-julia">function example_heuristic_solution()
+    Random.seed!(1)
+    N = 30
+    item_weights, item_values = rand(N), rand(N)
+    model = Model(GLPK.Optimizer)
+    @variable(model, x[1:N], Bin)
+    @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) &lt;= 10)
+    @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
+    callback_called = false
+    function my_callback_function(cb_data)
+        callback_called = true
+        x_vals = callback_value.(Ref(cb_data), x)
+        ret = MOI.submit(
+            model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
+        )
+        println(&quot;Heuristic solution status = $(ret)&quot;)
+    end
+    MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
+    optimize!(model)
+    return
+end
+
+example_heuristic_solution()</code></pre><pre class="documenter-example-output">Heuristic solution status = HEURISTIC_SOLUTION_ACCEPTED
+Heuristic solution status = HEURISTIC_SOLUTION_ACCEPTED
+Heuristic solution status = HEURISTIC_SOLUTION_REJECTED
+Heuristic solution status = HEURISTIC_SOLUTION_REJECTED</pre><h2 id="GLPK-solver-dependent-callback"><a class="docs-heading-anchor" href="#GLPK-solver-dependent-callback">GLPK solver-dependent callback</a><a id="GLPK-solver-dependent-callback-1"></a><a class="docs-heading-anchor-permalink" href="#GLPK-solver-dependent-callback" title="Permalink"></a></h2><p>An example using GLPK&#39;s solver-dependent callback.</p><pre><code class="language-julia">function example_solver_dependent_callback()
+    model = Model(GLPK.Optimizer)
+    @variable(model, 0 &lt;= x &lt;= 2.5, Int)
+    @variable(model, 0 &lt;= y &lt;= 2.5, Int)
+    @objective(model, Max, y)
+    lazy_called = false
+    function my_callback_function(cb_data)
+        lazy_called = true
+        reason = GLPK.glp_ios_reason(cb_data.tree)
+        println(&quot;Called from reason = $(reason)&quot;)
+        if reason != GLPK.GLP_IROWGEN
+            return
+        end
+        x_val = callback_value(cb_data, x)
+        y_val = callback_value(cb_data, y)
+        if y_val - x_val &gt; 1 + 1e-6
+            con = @build_constraint(y - x &lt;= 1)
+            println(&quot;Adding $(con)&quot;)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        elseif y_val + x_val &gt; 3 + 1e-6
+            con = @build_constraint(y - x &lt;= 1)
+            println(&quot;Adding $(con)&quot;)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, GLPK.CallbackFunction(), my_callback_function)
+    optimize!(model)
+    return
+end
+
+example_solver_dependent_callback()</code></pre><pre class="documenter-example-output">Called from reason = 6
+Called from reason = 7
+Called from reason = 1
+Adding ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(y - x, MathOptInterface.LessThan{Float64}(1.0))
+Called from reason = 7
+Called from reason = 1
+Called from reason = 2</pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/callbacks.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Getting started/working_with_data_files/">« Working with Data Files</a><a class="docs-footer-nextpage" href="../cannery/">The cannery problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 8 May 2021 23:27">Saturday 8 May 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

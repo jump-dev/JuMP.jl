@@ -1,0 +1,110 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Containers · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../index.html"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li><a class="toctext" href="../expressions/">Expressions</a></li><li><a class="toctext" href="../objective/">Objective</a></li><li><a class="toctext" href="../constraints/">Constraints</a></li><li class="current"><a class="toctext" href="">Containers</a><ul class="internal"><li><a class="toctext" href="#Containers-in-macros-1">Containers in macros</a></li></ul></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../solutions/">Query Solutions</a></li><li><a class="toctext" href="../nlp/">Nonlinear Modeling</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Containers</a></li></ul><a class="edit-page" href="https://github.com/JuliaOpt/JuMP.jl/blob/master/docs/src/containers.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Containers</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Containers-1" id="Containers-1">Containers</a></h1><p>JuMP provides a specialized container similar to <a href="https://github.com/JuliaArrays/AxisArrays.jl"><code>AxisArrays</code></a> that enables indexing with non-integer indices. Normally these are created automatically by JuMP's macros. The following constructors can be used to create them manually.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.Containers.DenseAxisArray" id="JuMP.Containers.DenseAxisArray"><code>JuMP.Containers.DenseAxisArray</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">DenseAxisArray(data::Array{T, N}, axes...) where {T, N}</code></pre><p>Construct a JuMP array with the underlying data specified by the <code>data</code> array and the given axes. Exactly <code>N</code> axes must be provided, and their lengths must match <code>size(data)</code> in the corresponding dimensions.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; array = JuMP.Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 2:3
+And data, a 2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia&gt; array[:b, 3]
+4</code></pre></div></div><div><div><pre><code class="language-none">DenseAxisArray{T}(undef, axes...) where T</code></pre><p>Construct an uninitialized DenseAxisArray with element-type <code>T</code> indexed over the given axes.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; array = JuMP.Containers.DenseAxisArray{Float64}(undef, [:a, :b], 1:2);
+
+julia&gt; fill!(array, 1.0)
+2-dimensional DenseAxisArray{Float64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 1:2
+And data, a 2×2 Array{Float64,2}:
+ 1.0  1.0
+ 1.0  1.0
+
+julia&gt; array[:a, 2] = 5.0
+5.0
+
+julia&gt; array[:a, 2]
+5.0
+
+julia&gt; array
+2-dimensional DenseAxisArray{Float64,2,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+    Dimension 2, 1:2
+And data, a 2×2 Array{Float64,2}:
+ 1.0  5.0
+ 1.0  1.0</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.Containers.SparseAxisArray" id="JuMP.Containers.SparseAxisArray"><code>JuMP.Containers.SparseAxisArray</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">struct SparseAxisArray{T,N,K&lt;:NTuple{N, Any}} &lt;: AbstractArray{T,N}
+    data::Dict{K,T}
+end</code></pre><p><code>N</code>-dimensional array with elements of type <code>T</code> where only a subset of the entries are defined. The entries with indices <code>idx = (i1, i2, ..., iN)</code> in <code>keys(data)</code> has value <code>data[idx]</code>. Note that as opposed to <code>SparseArrays.AbstractSparseArray</code>, the missing entries are not assumed to be <code>zero(T)</code>, they are simply not part of the array. This means that the result of <code>map(f, sa::SparseAxisArray)</code> or <code>f.(sa::SparseAxisArray)</code> has the same sparsity structure than <code>sa</code> even if <code>f(zero(T))</code> is not zero.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; dict = Dict((:a, 2) =&gt; 1.0, (:a, 3) =&gt; 2.0, (:b, 3) =&gt; 3.0)
+Dict{Tuple{Symbol,Int64},Float64} with 3 entries:
+  (:b, 3) =&gt; 3.0
+  (:a, 2) =&gt; 1.0
+  (:a, 3) =&gt; 2.0
+
+julia&gt; array = JuMP.Containers.SparseAxisArray(dict)
+JuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Int64}} with 3 entries:
+  [b, 3]  =  3.0
+  [a, 2]  =  1.0
+  [a, 3]  =  2.0
+
+julia&gt; array[:b, 3]
+3.0</code></pre></div></div></section><h2><a class="nav-anchor" href="#Containers-in-macros-1" id="Containers-in-macros-1">Containers in macros</a></h2><p>The <code>generate_container</code> function encodes the logic for how containers are constructed in JuMP's macros.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.Containers.generate_container" id="JuMP.Containers.generate_container"><code>JuMP.Containers.generate_container</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">generate_container(T, indexvars, indexsets, requestedtype)</code></pre><p>Return a tuple, the first element of which is <em>code</em> that generates a container for objects of type <code>T</code> given the index variables, index sets, and <code>requestedtype</code>. <code>requestedtype</code> may be one of <code>:Array</code>, <code>:DenseAxisArray</code>, <code>:SparseAxisArray</code>, or <code>:Auto</code>. Return error-producing code if requested type is incompatible. For the case of <code>:Auto</code>, the following rules are used to determine the appropriate container:</p><ol><li><p>If all index sets are either explicit <code>1:B</code> objects for any <code>B</code> or symbols which refer to objects of type <code>Base.OneTo</code>, then an <code>Array</code> is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the <code>Base.OneTo</code> condition.</p></li><li><p>If condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an <code>DenseAxisArray</code> is generated of the appropriate size.</p></li><li><p>Otherwise, generate an empty <code>SparseAxisArray{T,N,NTuple{N,Any}}</code>.</p></li></ol><p>The second element of the return tuple is a <code>Bool</code>, <code>true</code> if the container type automatically checks for duplicate terms in the index sets and <code>false</code> otherwise.</p><p><strong>Examples</strong></p><pre><code class="language-none">generate_container(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
+# Returns code equivalent to:
+# :(Array{VariableRef}(length(1:N), length(1:T))
+
+generate_container(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
+# Returns code equivalent to:
+# :(JuMP.Containers.DenseAxisArray(undef, 1:N, 2:T))
+
+generate_container(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
+# Returns code that generates an Array if S is of type Base.OneTo,
+# otherwise an DenseAxisArray.
+
+generate_container(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
+# Returns code equivalent to:
+# :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))</code></pre></div></div></section><p>In the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> (resp. <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a>) macro, containers of variables (resp. constraints) can be created with the following syntax:</p><ul><li><code>name[index_set_1, index_set_2, ..., index_set_n]</code> creating an <code>n</code>-dimensional container of name <code>name</code>; or</li><li><code>[index_set_1, index_set_2, ..., index_set_n]</code> creating an <em>anonymous</em><code>n</code>-dimensional container.</li></ul><p>Each expression <code>index_set_i</code> can either be</p><ul><li>of the form <code>index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code>; or</li><li>of the form <code>index_name=index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code> and allowing values used in the macro expression and keyword arguments to be expressions depending on the <code>index_name</code>.</li></ul><p>The macro then creates the container using the <a href="#JuMP.Containers.generate_container"><code>JuMP.Containers.generate_container</code></a> function with the following arguments:</p><ol><li><code>VariableRef</code> for the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> macro and <code>ConstraintRef</code> for the <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a> macro.</li><li>The index variables and arbitrary symbols for dimensions for which no variable index is specified.</li><li>The index sets specified.</li><li>The value of the <code>keyword</code> argument if given or <code>:Auto</code>.</li></ol><footer><hr/><a class="previous" href="../constraints/"><span class="direction">Previous</span><span class="title">Constraints</span></a><a class="next" href="../solvers/"><span class="direction">Next</span><span class="title">Solvers</span></a></footer></article></body></HTML>

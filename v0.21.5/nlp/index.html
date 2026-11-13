@@ -1,0 +1,200 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Nonlinear Modeling · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li><a class="toctext" href="../expressions/">Expressions</a></li><li><a class="toctext" href="../objective/">Objective</a></li><li><a class="toctext" href="../constraints/">Constraints</a></li><li><a class="toctext" href="../containers/">Containers</a></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../solutions/">Query Solutions</a></li><li class="current"><a class="toctext" href="">Nonlinear Modeling</a><ul class="internal"><li><a class="toctext" href="#Syntax-notes-1">Syntax notes</a></li><li><a class="toctext" href="#Nonlinear-Parameters-1">Nonlinear Parameters</a></li><li><a class="toctext" href="#User-defined-Functions-1">User-defined Functions</a></li><li><a class="toctext" href="#Factors-affecting-solution-time-1">Factors affecting solution time</a></li><li><a class="toctext" href="#Querying-derivatives-from-a-JuMP-model-1">Querying derivatives from a JuMP model</a></li><li><a class="toctext" href="#Raw-expression-input-1">Raw expression input</a></li><li><a class="toctext" href="#Reference-1">Reference</a></li></ul></li><li><a class="toctext" href="../callbacks/">Callbacks</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li><li><a class="toctext" href="../roadmap/">Development Roadmap</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Nonlinear Modeling</a></li></ul><a class="edit-page" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/nlp.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Nonlinear Modeling</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Nonlinear-Modeling-1" id="Nonlinear-Modeling-1">Nonlinear Modeling</a></h1><p>JuMP has support for general smooth nonlinear (convex and nonconvex) optimization problems. JuMP is able to provide exact, sparse second-order derivatives to solvers. This information can improve solver accuracy and performance.</p><p>Nonlinear objectives and constraints are specified by using the <code>@NLobjective</code> and <code>@NLconstraint</code> macros. The familiar <code>sum()</code> syntax is supported within these macros, as well as <code>prod()</code> which analogously represents the product of the terms within. Note that the <code>@objective</code> and <code>@constraint</code> macros (and corresponding functions) do <em>not</em> currently support nonlinear expressions. However, a model can contain a mix of linear, quadratic, and nonlinear contraints or objective functions. Starting points may be provided by using the <code>start</code> keyword argument to <code>@variable</code>.</p><p>For example, we can solve the classical Rosenbrock problem (with a twist) as follows:</p><pre><code class="language-julia">using Ipopt
+model = Model(Ipopt.Optimizer)
+@variable(model, x, start = 0.0)
+@variable(model, y, start = 0.0)
+
+@NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+
+optimize!(model)
+println("x = ", value(x), " y = ", value(y))
+
+# adding a (linear) constraint
+@constraint(model, x + y == 10)
+optimize!(model)
+println("x = ", value(x), " y = ", value(y))</code></pre><p>See the JuMP <a href="https://github.com/jump-dev/JuMP.jl/tree/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/examples">examples directory</a> for more examples (which include <code>mle.jl</code>, <code>rosenbrock.jl</code>, and <code>clnlbeam.jl</code>).</p><p>The <a href="https://github.com/jump-dev/JuMP.jl/blob/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/test/nlp_solver.jl">NLP solver tests</a> contain additional examples.</p><h2><a class="nav-anchor" href="#Syntax-notes-1" id="Syntax-notes-1">Syntax notes</a></h2><p>The syntax accepted in nonlinear expressions is more restricted than the syntax for linear and quadratic expressions. We note some important points below.</p><ul><li>With the exception of the splatting syntax discussed below, all expressions must be simple scalar operations. You cannot use <code>dot</code>, matrix-vector products, vector slices, etc. Translate vector operations into explicit <code>sum()</code> operations or use the <code>AffExpr</code> plus auxiliary variable trick described below.</li><li>There is no operator overloading provided to build up nonlinear expressions. For example, if <code>x</code> is a JuMP variable, the code <code>3x</code> will return an <code>AffExpr</code> object that can be used inside of future expressions and linear constraints. However, the code <code>sin(x)</code> is an error. All nonlinear expressions must be inside of macros.</li><li><a href="#User-defined-Functions-1">User-defined Functions</a> may be used within nonlinear expressions only after they are registered. For example, the follow code results in an error because <code>register()</code> must be called first to register <code>my_function</code>.</li></ul><pre><code class="language-julia">model = Model()
+my_function(a, b) = exp(a) * b
+@variable(model, x)
+@variable(model, y)
+@NLobjective(model, Min, my_function(x, y))
+
+# output
+
+ERROR: Unrecognized function "my_function" used in nonlinear expression.</code></pre><ul><li><code>AffExpr</code> and <code>QuadExpr</code> objects cannot currently be used inside nonlinear expressions. Instead, introduce auxiliary variables, e.g.:</li></ul><pre><code class="language-julia">    my_expr = dot(c, x) + 3y # where x and y are variables
+    @variable(model, aux)
+    @constraint(model, aux == my_expr)
+    @NLobjective(model, Min, sin(aux))</code></pre><ul><li>You can declare embeddable nonlinear expressions with <code>@NLexpression</code>. For example:</li></ul><pre><code class="language-julia">    @NLexpression(model, my_expr[i = 1:n], sin(x[i]))
+    @NLconstraint(model, my_constr[i = 1:n], my_expr[i] &lt;= 0.5)</code></pre><ul><li>Anonymous syntax is supported in <code>@NLexpression</code> and <code>@NLconstraint</code>:</li></ul><pre><code class="language-julia">    my_expr = @NLexpression(model, [i = 1:n], sin(x[i]))
+    my_constr = @NLconstraint(model, [i = 1:n], my_expr[i] &lt;= 0.5)</code></pre><ul><li>The <a href="https://docs.julialang.org/en/v1/manual/faq/#...-splits-one-argument-into-many-different-arguments-in-function-calls-1">splatting operator</a><code>...</code> is recognized in a very restricted setting for expanding function arguments. The expression splatted can be <em>only</em> a symbol. More complex expressions are not recognized.</li></ul><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x[1:3]);
+
+julia&gt; @NLconstraint(model, *(x...) &lt;= 1.0)
+x[1] * x[2] * x[3] - 1.0 ≤ 0
+
+julia&gt; @NLconstraint(model, *((x / 2)...) &lt;= 0.0)
+ERROR: LoadError: Unexpected expression in (*)(x / 2...). JuMP supports splatting only symbols. For example, x... is ok, but (x + 1)..., [x; y]... and g(f(y)...) are not.</code></pre><h2><a class="nav-anchor" href="#Nonlinear-Parameters-1" id="Nonlinear-Parameters-1">Nonlinear Parameters</a></h2><p>For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects which can be used to modify a model in-place just by updating the value of the parameter. Nonlinear parameters are declared by using the <code>@NLparameter</code> macro and may be indexed by arbitrary sets analogously to JuMP variables and expressions. The initial value of the parameter must be provided on the right-hand side of the <code>==</code> sign. There is no anonymous syntax for creating parameters.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@NLparameter" id="JuMP.@NLparameter"><code>JuMP.@NLparameter</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@NLparameter(model, param == value)</code></pre><p>Create and return a nonlinear parameter <code>param</code> attached to the model <code>model</code> with initial value set to <code>value</code>. Nonlinear parameters may be used only in nonlinear expressions.</p><p><strong>Example</strong></p><pre><code class="language-julia">model = Model()
+@NLparameter(model, x == 10)
+value(x)
+
+# output
+10.0</code></pre><pre><code class="language-none">@NLparameter(model, param_collection[...] == value_expr)</code></pre><p>Create and return a collection of nonlinear parameters <code>param_collection</code> attached to the model <code>model</code> with initial value set to <code>value_expr</code> (may depend on index sets). Uses the same syntax for specifying index sets as <a href="../variables/#JuMP.@variable"><code>@variable</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia">model = Model()
+@NLparameter(model, y[i = 1:10] == 2 * i)
+value(y[9])
+
+# output
+18.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/macros.jl#L1512-L1545" target="_blank">source</a></section><p>You may use <code>value</code> and <code>set_value</code> to query or update the value of a parameter.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.value-Tuple{NonlinearParameter}" id="JuMP.value-Tuple{NonlinearParameter}"><code>JuMP.value</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">value(p::NonlinearParameter)</code></pre><p>Return the current value stored in the nonlinear parameter <code>p</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia">model = Model()
+@NLparameter(model, p == 10)
+value(p)
+
+# output
+10.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/nlp.jl#L109-L123" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_value-Tuple{NonlinearParameter,Number}" id="JuMP.set_value-Tuple{NonlinearParameter,Number}"><code>JuMP.set_value</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">set_value(p::NonlinearParameter, v::Number)</code></pre><p>Store the value <code>v</code> in the nonlinear parameter <code>p</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia">model = Model()
+@NLparameter(model, p == 0)
+set_value(p, 5)
+value(p)
+
+# output
+5.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/nlp.jl#L126-L141" target="_blank">source</a></section><p>Nonlinear parameters can be used <em>within nonlinear expressions</em> only:</p><pre><code class="language-julia">@NLparameter(model, x == 10)
+@variable(model, z)
+@objective(model, Max, x * z)             # Error: x is a nonlinear parameter.
+@NLobjective(model, Max, x * z)           # Ok.
+@expression(model, my_expr, x * z^2)      # Error: x is a nonlinear parameter.
+@NLexpression(model, my_nl_expr, x * z^2) # Ok.</code></pre><p>Nonlinear parameters are useful when solving nonlinear models in a sequence:</p><pre><code class="language-julia">using Ipopt
+model = Model(Ipopt.Optimizer)
+@variable(model, z)
+@NLparameter(model, x == 1.0)
+@NLobjective(model, Min, (z - x)^2)
+optimize!(model)
+value(z) # Equals 1.0.
+
+# Now, update the value of x to solve a different problem.
+set_value(x, 5.0)
+optimize!(model)
+value(z) # Equals 5.0</code></pre><p>Using nonlinear parameters can be faster than creating a new model from scratch with updated data because JuMP is able to avoid repeating a number of steps in processing the model before handing it off to the solver.</p><h2><a class="nav-anchor" href="#User-defined-Functions-1" id="User-defined-Functions-1">User-defined Functions</a></h2><p>JuMP's library of recognized univariate functions is derived from the <a href="https://github.com/johnmyleswhite/Calculus.jl">Calculus.jl</a> package. If you encounter a standard special function not currently supported by JuMP, consider contributing to the <a href="https://github.com/johnmyleswhite/Calculus.jl/blob/cb42f3699177449a42bdc3461c8aea8777aa8c39/src/differentiate.jl#L115">list of derivative rules</a> there. In addition to this built-in list of functions, it is possible to register custom (<em>user-defined</em>) nonlinear functions to use within nonlinear expressions. JuMP does not support black-box optimization, so all user-defined functions must provide derivatives in some form. Fortunately, JuMP supports <strong>automatic differentiation of user-defined functions</strong>, a feature to our knowledge not available in any comparable modeling systems.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>Automatic differentiation is <em>not</em> finite differencing. JuMP's automatically computed derivatives are not subject to approximation error.</p></div></div><p>JuMP uses <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff.jl</a> to perform automatic differentiation; see the ForwardDiff.jl <a href="http://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html">documentation</a> for a description of how to write a function suitable for automatic differentiation.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>If you see method errors with <code>ForwardDiff.Duals</code>, see the guidelines at <a href="http://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html">ForwardDiff.jl</a>. The most common error is that your user-defined function is not generic with respect to the number type, i.e., don't assume that the input to the function is <code>Float64</code>.</p><pre><code class="language-julia">f(x::Float64) = 2 * x  # This will not work.
+f(x::Real)    = 2 * x  # This is good.
+f(x)          = 2 * x  # This is also good.</code></pre></div></div><p>To register a user-defined function with derivatives computed by automatic differentiation, use the <code>register</code> method as in the following example:</p><pre><code class="language-julia">my_square(x) = x^2
+my_f(x,y) = (x - 1)^2 + (y - 2)^2
+
+model = Model()
+
+register(model, :my_f, 2, my_f, autodiff=true)
+register(model, :my_square, 1, my_square, autodiff=true)
+
+@variable(model, x[1:2] &gt;= 0.5)
+@NLobjective(model, Min, my_f(x[1], my_square(x[2])))</code></pre><p>The above code creates a JuMP model with the objective function <code>(x[1] - 1)^2 + (x[2]^2 - 2)^2</code>. The first argument to <code>register</code> is the model for which the functions are registered. The second argument is a Julia symbol object which serves as the name of the user-defined function in JuMP expressions; the JuMP name need not be the same as the name of the corresponding Julia method. The third argument specifies how many arguments the function takes. The fourth argument is the name of the Julia method which computes the function, and <code>autodiff=true</code> instructs JuMP to compute exact gradients automatically.</p><p>Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients. The more general syntax for <code>register</code> which accepts user-provided derivative evaluation routines is:</p><pre><code class="language-julia">JuMP.register(model::Model, s::Symbol, dimension::Integer, f::Function,
+              ∇f::Function, ∇²f::Function)</code></pre><p>The input differs between functions which take a single input argument and functions which take more than one. For univariate functions, the derivative evaluation routines should return a number which represents the first and second-order derivatives respectively. For multivariate functions, the derivative evaluation routines will be passed a gradient vector which they must explicitly fill. Second-order derivatives of multivariate functions are not currently supported; this argument should be omitted. The following example sets up the same optimization problem as before, but now we explicitly provide evaluation routines for the user-defined functions:</p><pre><code class="language-julia">my_square(x) = x^2
+my_square_prime(x) = 2x
+my_square_prime_prime(x) = 2
+
+my_f(x, y) = (x - 1)^2 + (y - 2)^2
+function ∇f(g, x, y)
+    g[1] = 2 * (x - 1)
+    g[2] = 2 * (y - 2)
+end
+
+model = Model()
+
+register(model, :my_f, 2, my_f, ∇f)
+register(model, :my_square, 1, my_square, my_square_prime,
+         my_square_prime_prime)
+
+@variable(model, x[1:2] &gt;= 0.5)
+@NLobjective(model, Min, my_f(x[1], my_square(x[2])))</code></pre><p>Once registered, user-defined functions can also be used in constraints. For example:</p><pre><code class="language-julia">@NLconstraint(model, my_square(x[1]) &lt;= 2.0)</code></pre><h3><a class="nav-anchor" href="#User-defined-functions-with-vector-inputs-1" id="User-defined-functions-with-vector-inputs-1">User-defined functions with vector inputs</a></h3><p>User-defined functions which take vectors as input arguments (e.g. <code>f(x::Vector)</code>) are <em>not</em> supported. Instead, use Julia's splatting syntax to create a function with scalar arguments. For example, instead of</p><pre><code class="language-julia">f(x::Vector) = sum(x[i]^i for i in 1:length(x))</code></pre><p>define:</p><pre><code class="language-julia">f(x...) = sum(x[i]^i for i in 1:length(x))</code></pre><p>This function <code>f</code> can be used in a JuMP model as follows:</p><pre><code class="language-julia">model = Model()
+@variable(model, x[1:5] &gt;= 0)
+f(x...) = sum(x[i]^i for i in 1:length(x))
+register(model, :f, 5, f; autodiff = true)
+@NLobjective(model, Min, f(x...))</code></pre><h2><a class="nav-anchor" href="#Factors-affecting-solution-time-1" id="Factors-affecting-solution-time-1">Factors affecting solution time</a></h2><p>The execution time when solving a nonlinear programming problem can be divided into two parts, the time spent in the optimization algorithm (the solver) and the time spent evaluating the nonlinear functions and corresponding derivatives. Ipopt explicitly displays these two timings in its output, for example:</p><pre><code class="language-sourceCode">Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
+Total CPU secs in NLP function evaluations           =      2.083</code></pre><p>For Ipopt in particular, one can improve the performance by installing advanced sparse linear algebra packages, see <a href="../installation/#Installation-Guide-1">Installation Guide</a>. For other solvers, see their respective documentation for performance tips.</p><p>The function evaluation time, on the other hand, is the responsibility of the modeling language. JuMP computes derivatives by using reverse-mode automatic differentiation with graph coloring methods for exploiting sparsity of the Hessian matrix <a href="#footnote-1">[1]</a>. As a conservative bound, JuMP's performance here currently may be expected to be within a factor of 5 of AMPL's.</p><h2><a class="nav-anchor" href="#Querying-derivatives-from-a-JuMP-model-1" id="Querying-derivatives-from-a-JuMP-model-1">Querying derivatives from a JuMP model</a></h2><p>For some advanced use cases, one may want to directly query the derivatives of a JuMP model instead of handing the problem off to a solver. Internally, JuMP implements the <code>AbstractNLPEvaluator</code> interface from <a href="http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1">MathOptInterface</a>. To obtain an NLP evaluator object from a JuMP model, use <code>JuMP.NLPEvaluator</code>. <code>JuMP.index</code> returns the <code>MOI.VariableIndex</code> corresponding to a JuMP variable. <code>MOI.VariableIndex</code> itself is a type-safe wrapper for <code>Int64</code> (stored in the <code>value</code> field.)</p><p>For example:</p><pre><code class="language-julia">raw_index(v::MOI.VariableIndex) = v.value
+model = Model()
+@variable(model, x)
+@variable(model, y)
+@NLobjective(model, Min, sin(x) + sin(y))
+values = zeros(2)
+x_index = raw_index(JuMP.index(x))
+y_index = raw_index(JuMP.index(y))
+values[x_index] = 2.0
+values[y_index] = 3.0
+d = NLPEvaluator(model)
+MOI.initialize(d, [:Grad])
+MOI.eval_objective(d, values) # == sin(2.0) + sin(3.0)
+
+# output
+1.0504174348855488</code></pre><pre><code class="language-julia">∇f = zeros(2)
+MOI.eval_objective_gradient(d, ∇f, values)
+(∇f[x_index], ∇f[y_index]) # == (cos(2.0), cos(3.0))
+
+# output
+(-0.4161468365471424, -0.9899924966004454)</code></pre><p>Only nonlinear constraints (those added with <code>@NLconstraint</code>), and nonlinear objectives (added with <code>@NLobjective</code>) exist in the scope of the <code>NLPEvaluator</code>. The <code>NLPEvaluator</code><em>does not evaluate derivatives of linear or quadratic constraints or objectives</em>. The <code>index</code> method applied to a nonlinear constraint reference object returns its index as a <code>NonlinearConstraintIndex</code>. The <code>value</code> field of <code>NonlinearConstraintIndex</code> stores the raw integer index. For example:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x);
+
+julia&gt; @NLconstraint(model, cons1, sin(x) &lt;= 1);
+
+julia&gt; @NLconstraint(model, cons2, x + 5 == 10);
+
+julia&gt; typeof(cons1)
+ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape}
+
+julia&gt; index(cons1)
+NonlinearConstraintIndex(1)
+
+julia&gt; index(cons2)
+NonlinearConstraintIndex(2)</code></pre><p>Note that for one-sided nonlinear constraints, JuMP subtracts any values on the right-hand side when computing expressions. In other words, one-sided nonlinear constraints are always transformed to have a right-hand side of zero.</p><p>This method of querying derivatives directly from a JuMP model is convenient for interacting with the model in a structured way, e.g., for accessing derivatives of specific variables. For example, in statistical maximum likelihood estimation problems, one is often interested in the Hessian matrix at the optimal solution, which can be queried using the <code>NLPEvaluator</code>.</p><h2><a class="nav-anchor" href="#Raw-expression-input-1" id="Raw-expression-input-1">Raw expression input</a></h2><p>In addition to the <code>@NLobjective</code> and <code>@NLconstraint</code> macros, it is also possible to provide Julia <code>Expr</code> objects directly by using <code>set_NL_objective</code> and <code>add_NL_constraint</code>. This input form may be useful if the expressions are generated programmatically. JuMP variables should be spliced into the expression object. For example:</p><pre><code class="language-julia">@variable(model, 1 &lt;= x[i = 1:4] &lt;= 5)
+set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
+add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) &gt;= 25))
+
+# Equivalent form using traditional JuMP macros:
+@NLobjective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+@NLconstraint(model, x[1] * x[2] * x[3] * x[4] &gt;= 25)</code></pre><p>See the Julia documentation for more examples and description of Julia expressions.</p><h2><a class="nav-anchor" href="#Reference-1" id="Reference-1">Reference</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@NLconstraint" id="JuMP.@NLconstraint"><code>JuMP.@NLconstraint</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@NLconstraint(m::Model, expr)</code></pre><p>Add a constraint described by the nonlinear expression <code>expr</code>. See also <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a>. For example:</p><pre><code class="language-julia">@NLconstraint(model, sin(x) &lt;= 1)
+@NLconstraint(model, [i = 1:3], sin(i * x) &lt;= 1 / i)</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/macros.jl#L1374-L1384" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@NLexpression" id="JuMP.@NLexpression"><code>JuMP.@NLexpression</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@NLexpression(args...)</code></pre><p>Efficiently build a nonlinear expression which can then be inserted in other nonlinear constraints and the objective. See also [<code>@expression</code>]. For example:</p><pre><code class="language-julia">@NLexpression(model, my_expr, sin(x)^2 + cos(x^2))
+@NLconstraint(model, my_expr + y &gt;= 5)
+@NLobjective(model, Min, my_expr)</code></pre><p>Indexing over sets and anonymous expressions are also supported:</p><pre><code class="language-julia">@NLexpression(m, my_expr_1[i=1:3], sin(i * x))
+my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/macros.jl#L1463-L1480" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@NLobjective" id="JuMP.@NLobjective"><code>JuMP.@NLobjective</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@NLobjective(model, sense, expression)</code></pre><p>Add a nonlinear objective to <code>model</code> with optimization sense <code>sense</code>. <code>sense</code> must be <code>Max</code> or <code>Min</code>.</p><p><strong>Example</strong></p><pre><code class="language-none">@NLobjective(model, Max, 2x + 1 + sin(x))</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/a4dd2fbaee785a369cd873acdbcaaf7c4547525f/src/macros.jl#L1353-L1362" target="_blank">source</a></section><div class="footnote" id="footnote-1"><a href="#footnote-1"><strong>[1]</strong></a><p>Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</p></div><footer><hr/><a class="previous" href="../solutions/"><span class="direction">Previous</span><span class="title">Query Solutions</span></a><a class="next" href="../callbacks/"><span class="direction">Next</span><span class="title">Callbacks</span></a></footer></article></body></HTML>

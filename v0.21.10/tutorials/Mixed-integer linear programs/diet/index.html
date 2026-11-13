@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>The diet problem · JuMP</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-44252521-1"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-44252521-1', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/extra_styles.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img class="docs-light-only" src="../../../assets/logo.svg" alt="JuMP logo"/><img class="docs-dark-only" src="../../../assets/logo-dark.svg" alt="JuMP logo"/></a><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Introduction</a></li><li><a class="tocitem" href="../../../installation/">Installation Guide</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Getting started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Getting started/an_introduction_to_julia/">Getting started with Julia</a></li><li><a class="tocitem" href="../../Getting started/getting_started_with_JuMP/">Getting started with JuMP</a></li><li><a class="tocitem" href="../../Getting started/performance_tips/">Performance tips</a></li><li><a class="tocitem" href="../../Getting started/solvers_and_solutions/">Solvers and Solutions</a></li><li><a class="tocitem" href="../../Getting started/variables_constraints_objective/">Variables, constraints, and objective functions</a></li><li><a class="tocitem" href="../../Getting started/working_with_data_files/">Working with Data Files</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox" checked/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Mixed-integer linear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../callbacks/">Callbacks</a></li><li><a class="tocitem" href="../cannery/">The cannery problem</a></li><li><a class="tocitem" href="../cutting_stock_column_generation/">Cutting stock</a></li><li class="is-active"><a class="tocitem" href>The diet problem</a></li><li><a class="tocitem" href="../facility_location/">Facility Location</a></li><li><a class="tocitem" href="../factory_schedule/">The factory schedule example</a></li><li><a class="tocitem" href="../finance/">Finance</a></li><li><a class="tocitem" href="../geographic_clustering/">Geographical Clustering</a></li><li><a class="tocitem" href="../knapsack/">The knapsack problem</a></li><li><a class="tocitem" href="../multi/">The multi-commodity flow problem</a></li><li><a class="tocitem" href="../n-queens/">N-Queens</a></li><li><a class="tocitem" href="../network_flows/">Network Flows</a></li><li><a class="tocitem" href="../power_systems/">Power Systems</a></li><li><a class="tocitem" href="../prod/">The workforce scheduling problem</a></li><li><a class="tocitem" href="../steelT3/">The SteelT3 problem</a></li><li><a class="tocitem" href="../sudoku/">Sudoku</a></li><li><a class="tocitem" href="../tips_and_tricks/">Tips and tricks</a></li><li><a class="tocitem" href="../transp/">The transportation problem</a></li><li><a class="tocitem" href="../urban_plan/">The urban planning problem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Nonlinear programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Nonlinear programs/clnlbeam/">The clnlbeam problem</a></li><li><a class="tocitem" href="../../Nonlinear programs/mle/">Maximum likelihood estimation</a></li><li><a class="tocitem" href="../../Nonlinear programs/nlp_tricks/">Nonlinear tips and tricks</a></li><li><a class="tocitem" href="../../Nonlinear programs/rocket_control/">Rocket Control</a></li><li><a class="tocitem" href="../../Nonlinear programs/rosenbrock/">The Rosenbrock function</a></li><li><a class="tocitem" href="../../Nonlinear programs/space_shuttle_reentry_trajectory/">Space Shuttle Reentry Trajectory</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Quadratic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Quadratic programs/portfolio/">Portfolio Optimization</a></li><li><a class="tocitem" href="../../Quadratic programs/qcp/">Quadratically constrained programs</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-5" type="checkbox"/><label class="tocitem" for="menuitem-3-5"><span class="docs-label">Conic programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Conic programs/logistic_regression/">Logistic Regression</a></li><li><a class="tocitem" href="../../Conic programs/tips_and_tricks/">Tips and Tricks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-6" type="checkbox"/><label class="tocitem" for="menuitem-3-6"><span class="docs-label">Semidefinite programs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Semidefinite programs/cluster/">K-means clustering via SDP</a></li><li><a class="tocitem" href="../../Semidefinite programs/corr_sdp/">The correlation problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/experiment_design/">Experiment Design</a></li><li><a class="tocitem" href="../../Semidefinite programs/max_cut_sdp/">SDP relaxations: max-cut</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_distortion/">The minimum distortion problem</a></li><li><a class="tocitem" href="../../Semidefinite programs/min_ellipse/">Minimum ellipses</a></li><li><a class="tocitem" href="../../Semidefinite programs/robust_uncertainty/">Robust uncertainty sets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-7" type="checkbox"/><label class="tocitem" for="menuitem-3-7"><span class="docs-label">Optimization concepts</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../Optimization concepts/benders_decomposition/">Benders Decomposition</a></li><li><a class="tocitem" href="../../Optimization concepts/benders_lazy_constraints/">Benders Decomposition (Lazy Constraints)</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Manual</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../manual/models/">Models</a></li><li><a class="tocitem" href="../../../manual/variables/">Variables</a></li><li><a class="tocitem" href="../../../manual/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../manual/objective/">Objectives</a></li><li><a class="tocitem" href="../../../manual/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../manual/containers/">Containers</a></li><li><a class="tocitem" href="../../../manual/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../manual/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../manual/callbacks/">Solver-independent Callbacks</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../reference/models/">Models</a></li><li><a class="tocitem" href="../../../reference/variables/">Variables</a></li><li><a class="tocitem" href="../../../reference/expressions/">Expressions</a></li><li><a class="tocitem" href="../../../reference/objectives/">Objectives</a></li><li><a class="tocitem" href="../../../reference/constraints/">Constraints</a></li><li><a class="tocitem" href="../../../reference/containers/">Containers</a></li><li><a class="tocitem" href="../../../reference/solutions/">Solutions</a></li><li><a class="tocitem" href="../../../reference/nlp/">Nonlinear Modeling</a></li><li><a class="tocitem" href="../../../reference/callbacks/">Callbacks</a></li><li><a class="tocitem" href="../../../reference/moi/">MathOptInterface</a></li><li><a class="tocitem" href="../../../reference/extensions/">Extensions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Background information</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../background/should_i_use/">Should I use JuMP?</a></li><li><a class="tocitem" href="../../../background/algebraic_modeling_languages/">Algebraic modeling languages</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Developer Docs</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developers/extensions/">Extensions</a></li><li><a class="tocitem" href="../../../developers/style/">Style Guide</a></li><li><a class="tocitem" href="../../../developers/roadmap/">Roadmap</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Mixed-integer linear programs</a></li><li class="is-active"><a href>The diet problem</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>The diet problem</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/diet.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="The-diet-problem"><a class="docs-heading-anchor" href="#The-diet-problem">The diet problem</a><a id="The-diet-problem-1"></a><a class="docs-heading-anchor-permalink" href="#The-diet-problem" title="Permalink"></a></h1><p>Solve the classic &quot;diet problem&quot;, also known as the <a href="https://en.wikipedia.org/wiki/Stigler_diet">Stigler diet</a>. The code is based on <a href="https://www.gurobi.com/documentation/9.0/examples/diet_cpp_cpp.html">an example from Gurobi</a>.</p><pre><code class="language-julia hljs">using JuMP
+import GLPK
+import Test
+
+function print_solution(is_optimal, foods, buy)
+    println(&quot;RESULTS:&quot;)
+    if is_optimal
+        for food in foods
+            println(&quot;  $(food) = $(value(buy[food]))&quot;)
+        end
+    else
+        println(&quot;The solver did not find an optimal solution.&quot;)
+    end
+end
+
+function example_diet(; verbose = true)
+    # Nutrition guidelines
+    categories = [&quot;calories&quot;, &quot;protein&quot;, &quot;fat&quot;, &quot;sodium&quot;]
+    category_data = Containers.DenseAxisArray(
+        [
+            1800 2200
+            91 Inf
+            0 65
+            0 1779
+        ],
+        categories,
+        [&quot;min&quot;, &quot;max&quot;],
+    )
+    Test.@test category_data[&quot;protein&quot;, &quot;min&quot;] == 91.0
+    Test.@test category_data[&quot;sodium&quot;, &quot;max&quot;] == 1779.0
+    # Foods
+    foods = [
+        &quot;hamburger&quot;,
+        &quot;chicken&quot;,
+        &quot;hot dog&quot;,
+        &quot;fries&quot;,
+        &quot;macaroni&quot;,
+        &quot;pizza&quot;,
+        &quot;salad&quot;,
+        &quot;milk&quot;,
+        &quot;ice cream&quot;,
+    ]
+    cost = Containers.DenseAxisArray(
+        [2.49, 2.89, 1.50, 1.89, 2.09, 1.99, 2.49, 0.89, 1.59],
+        foods,
+    )
+    food_data = Containers.DenseAxisArray(
+        [
+            410 24 26 730
+            420 32 10 1190
+            560 20 32 1800
+            380 4 19 270
+            320 12 10 930
+            320 15 12 820
+            320 31 12 1230
+            100 8 2.5 125
+            330 8 10 180
+        ],
+        foods,
+        categories,
+    )
+    Test.@test food_data[&quot;hamburger&quot;, &quot;calories&quot;] == 410.0
+    Test.@test food_data[&quot;milk&quot;, &quot;fat&quot;] == 2.5
+    # Build model
+    model = Model(GLPK.Optimizer)
+    @variables(
+        model,
+        begin
+            # Variables for nutrition info
+            category_data[c, &quot;min&quot;] &lt;=
+            nutrition[c = categories] &lt;=
+            category_data[c, &quot;max&quot;]
+            # Variables for which foods to buy
+            buy[foods] &gt;= 0
+        end
+    )
+    # Objective - minimize cost
+    @objective(model, Min, sum(cost[f] * buy[f] for f in foods))
+    # Nutrition constraints
+    @constraint(
+        model,
+        [c in categories],
+        sum(food_data[f, c] * buy[f] for f in foods) == nutrition[c]
+    )
+    # Solve
+    if verbose
+        println(&quot;Solving original problem...&quot;)
+    end
+    optimize!(model)
+    term_status = termination_status(model)
+    is_optimal = term_status == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4
+    if verbose
+        print_solution(is_optimal, foods, buy)
+    end
+    # Limit dairy (note that the problem will become infeasible).
+    @constraint(model, buy[&quot;milk&quot;] + buy[&quot;ice cream&quot;] &lt;= 6)
+    if verbose
+        println(&quot;Solving dairy-limited problem...&quot;)
+    end
+    optimize!(model)
+    Test.@test termination_status(model) == MOI.INFEASIBLE
+    Test.@test primal_status(model) == MOI.NO_SOLUTION
+    if verbose
+        print_solution(false, foods, buy)
+    end
+    return
+end
+
+example_diet()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Solving original problem...
+RESULTS:
+  hamburger = 0.6045138888888888
+  chicken = 0.0
+  hot dog = 0.0
+  fries = 0.0
+  macaroni = 0.0
+  pizza = 0.0
+  salad = 0.0
+  milk = 6.9701388888888935
+  ice cream = 2.591319444444441
+Solving dairy-limited problem...
+RESULTS:
+The solver did not find an optimal solution.</code></pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Mixed-integer linear programs/diet.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../cutting_stock_column_generation/">« Cutting stock</a><a class="docs-footer-nextpage" href="../facility_location/">Facility Location »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.5 on <span class="colophon-date" title="Sunday 5 September 2021 03:39">Sunday 5 September 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html><HTML lang="en"><head><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Constraints · JuMP</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-44252521-1', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script data-main="../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><script data-outdated-warner="">function maybeAddWarning () {
+    const head = document.getElementsByTagName('head')[0];
+
+    // Add a noindex meta tag (unless one exists) so that search engines don't index this version of the docs.
+    if (document.body.querySelector('meta[name="robots"]') === null) {
+        const meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex';
+
+        head.appendChild(meta);
+    };
+
+    // Add a stylesheet to avoid inline styling
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode('.outdated-warning-overlay {  position: fixed;  top: 0;  left: 0;  right: 0;  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);  z-index: 999;  background-color: #ffaba7;  color: rgba(0, 0, 0, 0.7);  border-bottom: 3px solid #da0b00;  padding: 10px 35px;  text-align: center;  font-size: 15px; }  .outdated-warning-overlay .outdated-warning-closer {    position: absolute;    top: calc(50% - 10px);    right: 18px;    cursor: pointer;    width: 12px; }  .outdated-warning-overlay a {    color: #2e63b8; }    .outdated-warning-overlay a:hover {      color: #363636; }'));
+    head.appendChild(style);
+
+    const div = document.createElement('div');
+    div.classList.add('outdated-warning-overlay');
+    const closer = document.createElement('div');
+    closer.classList.add('outdated-warning-closer');
+
+    // Icon by font-awesome (license: https://fontawesome.com/license, link: https://fontawesome.com/icons/times?style=solid)
+    closer.innerHTML = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path></svg>';
+    closer.addEventListener('click', function () {
+        document.body.removeChild(div);
+    });
+    let href = '/stable';
+    if (window.documenterBaseURL) {
+        href = window.documenterBaseURL + '/../stable';
+    }
+    div.innerHTML = 'This documentation is not for the latest version. <br> <a href="' + href + '">Go to the latest documentation</a>.';
+    div.appendChild(closer);
+    document.body.appendChild(div);
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeAddWarning);
+} else {
+    maybeAddWarning();
+};
+</script></head><body><nav class="toc"><a href="../"><img alt="JuMP logo" class="logo" src="../assets/logo.png"/></a><h1>JuMP</h1><select id="version-selector" onchange="window.location.href=this.value" style="visibility: hidden"></select><form action="../search/" class="search" id="search-form"><input id="search-query" name="q" placeholder="Search docs" type="text"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../installation/">Installation Guide</a></li><li><a class="toctext" href="../quickstart/">Quick Start Guide</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li><a class="toctext" href="../expressions/">Expressions</a></li><li><a class="toctext" href="../objective/">Objective</a></li><li class="current"><a class="toctext" href="">Constraints</a><ul class="internal"><li><a class="toctext" href="#The-@constraint-macro-1">The <code>@constraint</code> macro</a></li><li><a class="toctext" href="#The-@constraints-macro-1">The <code>@constraints</code> macro</a></li><li><a class="toctext" href="#constraint_duality-1">Duality</a></li><li><a class="toctext" href="#Constraint-names-1">Constraint names</a></li><li><a class="toctext" href="#Constraint-containers-1">Constraint containers</a></li><li><a class="toctext" href="#Vectorized-constraints-1">Vectorized constraints</a></li><li><a class="toctext" href="#Constraints-on-a-single-variable-1">Constraints on a single variable</a></li><li><a class="toctext" href="#Quadratic-constraints-1">Quadratic constraints</a></li><li><a class="toctext" href="#Constraints-on-a-collection-of-variables-1">Constraints on a collection of variables</a></li><li><a class="toctext" href="#Indicator-constraints-1">Indicator constraints</a></li><li><a class="toctext" href="#Semidefinite-constraints-1">Semidefinite constraints</a></li><li><a class="toctext" href="#Constraint-modifications-1">Constraint modifications</a></li><li><a class="toctext" href="#Constraint-deletion-1">Constraint deletion</a></li><li><a class="toctext" href="#Accessing-constraints-from-a-model-1">Accessing constraints from a model</a></li><li><a class="toctext" href="#Complementarity-constraints-1">Complementarity constraints</a></li><li><a class="toctext" href="#Special-Ordered-Sets-(SOS1-and-SOS2)-1">Special Ordered Sets (SOS1 and SOS2)</a></li><li><a class="toctext" href="#Reference-1">Reference</a></li><li><a class="toctext" href="#Constructing-constraints-without-adding-them-to-the-model-1">Constructing constraints without adding them to the model</a></li></ul></li><li><a class="toctext" href="../containers/">Containers</a></li><li><a class="toctext" href="../solvers/">Solvers</a></li><li><a class="toctext" href="../solutions/">Query Solutions</a></li><li><a class="toctext" href="../nlp/">Nonlinear Modeling</a></li><li><a class="toctext" href="../callbacks/">Callbacks</a></li><li><a class="toctext" href="../style/">Style Guide</a></li><li><a class="toctext" href="../extensions/">Extensions</a></li><li><a class="toctext" href="../roadmap/">Development Roadmap</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="">Constraints</a></li></ul><a class="edit-page" href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/constraints.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Constraints</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" href="#Constraints-1" id="Constraints-1">Constraints</a></h1><p>This page explains how to write various types of constraints in JuMP. Before reading further, please make sure you are familiar with JuMP models, and JuMP <a href="../variables/#Variables-1">Variables</a>. For nonlinear constraints, see <a href="../nlp/#Nonlinear-Modeling-1">Nonlinear Modeling</a> instead.</p><p>JuMP is based on the MathOptInterface (MOI) API. Because of this, JuMP thinks of a constraint as the restriction that the output of a <em>function</em> belongs to a <em>set</em>. For example, instead of representing a constraint <span>$a^\top x \le b$</span> as a <em>less-than-or-equal-to</em> constraint, JuMP models this as the <em>scalar affine</em> function <span>$a^\top x$</span> belonging to the <em>less-than</em> set <span>$(-\infty, b]$</span>. Thus, instead of a <em>less-than-or-equal-to</em> constraint, we consider this constraint to be a <em>scalar affine -in- less than</em> constraint. More generally, we use the shorthand <em>function-in-set</em> to refer to constraints composed of different types of functions and sets. In the rest of this page, we will introduce the different types of functions and sets that JuMP knows about as needed. You can read more details about this <em>function-in-set</em> concept in the MOI documentation.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>The examples use <code>MOI</code> as an alias for the <code>MathOptInterface</code> module. This alias is defined by <code>using JuMP</code>. You may also define it in your code by</p><pre><code class="language-julia">import MathOptInterface
+const MOI = MathOptInterface</code></pre></div></div><h2><a class="nav-anchor" href="#The-@constraint-macro-1" id="The-@constraint-macro-1">The <code>@constraint</code> macro</a></h2><p>Constraints are added to a JuMP model using the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro. Here is an example of how to add the constraint <span>$2x \le 1$</span> to a JuMP model:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0</code></pre><p>Wasn't that easy! Let's unpack what happened, because just like <a href="../variables/#JuMP.@variable"><code>@variable</code></a> there are a few subtle things going on.</p><ol><li>The mathematical constraint <span>$2x \le 1$</span> was added to the model.</li><li>A Julia variable called <code>con</code> was created that is a reference to the constraint.</li><li>This Julia variable was stored in <code>model</code> and can be accessed by <code>model[:con]</code>.</li><li>JuMP set the name attribute (the one that is shown when printing) of the constraint to <code>"con"</code>.</li></ol><p>Just like the Julia variables created in <a href="../variables/#JuMP.@variable"><code>@variable</code></a>, <code>con</code> can be bound to a different value. For example:</p><pre><code class="language-julia-repl">julia&gt; con
+con : 2 x &lt;= 1.0
+
+julia&gt; con = 1
+1
+
+julia&gt; con
+1</code></pre><p>However, the reference can be retrieved by querying the model using the symbolic name:</p><pre><code class="language-julia-repl">julia&gt; con = model[:con]
+con : 2 x &lt;= 1.0
+
+julia&gt; con
+con : 2 x &lt;= 1.0</code></pre><p>Because the named variables and constraints are stored in the same namespace, creating a constraint with the same name as a variable or an existing constraint will result in an error. To overcome this limitation, it is possible to create anonymous constraints, just like it is possible to create <a href="../variables/#Anonymous-JuMP-variables-1">Anonymous JuMP variables</a>. This is done by dropping the second argument to <a href="#JuMP.@constraint"><code>@constraint</code></a>:</p><pre><code class="language-julia-repl">julia&gt; con = @constraint(model, 2x &lt;= 1)
+2 x &lt;= 1.0</code></pre><p>It is also possible use different comparison operators (e.g., <code>&gt;=</code> and <code>==</code>) to create the following types of constraints:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, 2x &gt;= 1)
+2 x &gt;= 1.0
+
+julia&gt; @constraint(model, 2x == 1)
+2 x = 1.0
+
+julia&gt; @constraint(model, 1 &lt;= 2x &lt;= 3)
+2 x ∈ [1.0, 3.0]</code></pre><p>Note that JuMP normalizes the constraints by moving all of the terms containing variables to the left-hand side, and all of the constant terms to the right-hand side. Thus, we get:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, 2x + 1 &lt;= 4x + 4)
+-2 x &lt;= 3.0</code></pre><h2><a class="nav-anchor" href="#The-@constraints-macro-1" id="The-@constraints-macro-1">The <code>@constraints</code> macro</a></h2><p>Like <a href="../variables/#variables-1"><code>@variables</code></a>, there is a "plural" version of the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro:</p><pre><code class="language-julia-repl">julia&gt; @constraints(model, begin
+           2x &lt;=  1
+            x &gt;= -1
+       end)
+
+julia&gt; print(model)
+Feasibility
+Subject to
+ x ≥ -1.0
+ 2 x ≤ 1.0</code></pre><h2><a class="nav-anchor" href="#constraint_duality-1" id="constraint_duality-1">Duality</a></h2><p>JuMP adopts the notion of <a href="http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1">conic duality from MOI</a>. For linear programs, a feasible dual on a <code>&gt;=</code> constraint is nonnegative and a feasible dual on a <code>&lt;=</code> constraint is nonpositive. If the constraint is an equality constraint, it depends on which direction is binding.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>JuMP's definition of duality is independent of the objective sense. That is, the sign of feasible duals associated with a constraint depends on the direction of the constraint and not whether the problem is maximization or minimization. <strong>This is a different convention from linear programming duality in some common textbooks.</strong></p></div></div><p>The dual value associated with a constraint in the most recent solution can be accessed using the <a href="../solutions/#JuMP.dual"><code>dual</code></a> function. You can use the <a href="../solutions/#JuMP.has_duals"><code>has_duals</code></a> function to check whether the model has a dual solution available to query. For example:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, con, x &lt;= 1)
+con : x &lt;= 1.0
+
+julia&gt; has_duals(model)
+false</code></pre><pre><code class="language-julia-repl">julia&gt; @objective(model, Min, -2x)
+-2 x
+
+julia&gt; optimize!(model)
+
+julia&gt; has_duals(model)
+true
+
+julia&gt; dual(con)
+-2.0
+
+julia&gt; @objective(model, Max, 2x)
+2 x
+
+julia&gt; optimize!(model)
+
+julia&gt; dual(con)
+-2.0</code></pre><p>To help users who may be less familiar with conic duality, JuMP provides the <a href="#JuMP.shadow_price"><code>shadow_price</code></a> function which returns a value that can be interpreted as the improvement in the objective in response to an infinitesimal relaxation (on the scale of one unit) in the right-hand side of the constraint. <a href="#JuMP.shadow_price"><code>shadow_price</code></a> can be used only on linear constraints with a <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code> comparison operator.</p><p>In the example above, <code>dual(con)</code> returned <code>-2.0</code> regardless of the optimization sense. However, in the second case when the optimization sense is <code>Max</code>, <a href="#JuMP.shadow_price"><code>shadow_price</code></a> returns:</p><pre><code class="language-julia-repl">julia&gt; shadow_price(con)
+2.0</code></pre><p>To query the dual variables associated with a variable bound, first obtain a constraint reference using one of <a href="#JuMP.UpperBoundRef"><code>UpperBoundRef</code></a>, <a href="#JuMP.LowerBoundRef"><code>LowerBoundRef</code></a>, or <a href="#JuMP.FixRef"><code>FixRef</code></a>, and then call <a href="../solutions/#JuMP.dual"><code>dual</code></a> on the returned constraint reference. The <a href="../variables/#JuMP.reduced_cost"><code>reduced_cost</code></a> function may simplify this process as it returns the shadow price of an active bound of a variable (or zero, if no active bound exists).</p><h2><a class="nav-anchor" href="#Constraint-names-1" id="Constraint-names-1">Constraint names</a></h2><p>The name, i.e. the value of the <code>MOI.ConstraintName</code> attribute, of a constraint can be obtained by <a href="#JuMP.name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex}"><code>name(::JuMP.ConstraintRef)</code></a> and set by <a href="#JuMP.set_name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex,String}"><code>set_name(::JuMP.ConstraintRef, ::String)</code></a>.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex}" id="JuMP.name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex}"><code>JuMP.name</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">name(con_ref::ConstraintRef)</code></pre><p>Get a constraint's name attribute.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L54-L58" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex,String}" id="JuMP.set_name-Tuple{ConstraintRef{Model,#s313,Shape} where Shape&lt;:AbstractShape where #s313&lt;:MathOptInterface.ConstraintIndex,String}"><code>JuMP.set_name</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">set_name(con_ref::ConstraintRef, s::AbstractString)</code></pre><p>Set a constraint's name attribute.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L63-L67" target="_blank">source</a></section><p>The constraint can also be retrieved from its name using <a href="#JuMP.constraint_by_name"><code>constraint_by_name</code></a>.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.constraint_by_name" id="JuMP.constraint_by_name"><code>JuMP.constraint_by_name</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">constraint_by_name(model::AbstractModel,
+                   name::String)::Union{ConstraintRef, Nothing}</code></pre><p>Returns the reference of the constraint with name attribute <code>name</code> or <code>Nothing</code> if no constraint has this name attribute. Throws an error if several constraints have <code>name</code> as their name attribute.</p><pre><code class="language-none">constraint_by_name(model::AbstractModel,
+                   name::String,
+                   F::Type{&lt;:Union{AbstractJuMPScalar,
+                                   Vector{&lt;:AbstractJuMPScalar},
+                                   MOI.AbstactFunction}},
+                   S::Type{&lt;:MOI.AbstractSet})::Union{ConstraintRef, Nothing}</code></pre><p>Similar to the method above, except that it throws an error if the constraint is not an <code>F</code>-in-<code>S</code> contraint where <code>F</code> is either the JuMP or MOI type of the function, and <code>S</code> is the MOI type of the set. This method is recommended if you know the type of the function and set since its returned type can be inferred while for the method above (i.e. without <code>F</code> and <code>S</code>), the exact return type of the constraint index cannot be inferred.</p><pre><code class="language-julia-repl">julia&gt; using JuMP
+
+julia&gt; model = Model()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @constraint(model, con, x^2 == 1)
+con : x² = 1.0
+
+julia&gt; constraint_by_name(model, "kon")
+
+julia&gt; constraint_by_name(model, "con")
+con : x² = 1.0
+
+julia&gt; constraint_by_name(model, "con", AffExpr, MOI.EqualTo{Float64})
+
+julia&gt; constraint_by_name(model, "con", QuadExpr, MOI.EqualTo{Float64})
+con : x² = 1.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L70-L119" target="_blank">source</a></section><h2><a class="nav-anchor" href="#Constraint-containers-1" id="Constraint-containers-1">Constraint containers</a></h2><p>So far, we've added constraints one-by-one. However, just like <a href="../variables/#Variable-containers-1">Variable containers</a>, JuMP provides a mechanism for building groups of constraints compactly. References to these groups of constraints are returned in <em>containers</em>. Three types of constraint containers are supported: <code>Array</code>s, <code>DenseAxisArray</code>s, and <code>SparseAxisArray</code>s. We explain each of these in the following.</p><h3><a class="nav-anchor" href="#constraint_arrays-1" id="constraint_arrays-1">Arrays</a></h3><p>One way of adding a group of constraints compactly is the following:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con[i = 1:3], i * x &lt;= i + 1)
+3-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ con[1] : x &lt;= 2.0
+ con[2] : 2 x &lt;= 3.0
+ con[3] : 3 x &lt;= 4.0</code></pre><p>JuMP returns references to the three constraints in an <code>Array</code> that is bound to the Julia variable <code>con</code>. This array can be accessed and sliced as you would with any Julia array:</p><pre><code class="language-julia-repl">julia&gt; con[1]
+con[1] : x &lt;= 2.0
+
+julia&gt; con[2:3]
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ con[2] : 2 x &lt;= 3.0
+ con[3] : 3 x &lt;= 4.0</code></pre><p>Anonymous containers can also be constructed by dropping the name (e.g. <code>con</code>) before the square brackets:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, [i = 1:2], i * x &lt;= i + 1)
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ x &lt;= 2.0
+ 2 x &lt;= 3.0</code></pre><p>Just like <a href="../variables/#JuMP.@variable"><code>@variable</code></a>, JuMP will form an <code>Array</code> of constraints when it can determine at parse time that the indices are one-based integer ranges. Therefore <code>con[1:b]</code> will create an <code>Array</code>, but <code>con[a:b]</code> will not. A special case is <code>con[Base.OneTo(n)]</code> which will produce an <code>Array</code>. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of <code>con[a:b]</code>), JuMP will create a <code>DenseAxisArray</code> instead.</p><h3><a class="nav-anchor" href="#DenseAxisArrays-1" id="DenseAxisArrays-1">DenseAxisArrays</a></h3><p>The syntax for constructing a <a href="../containers/#JuMP.Containers.DenseAxisArray"><code>DenseAxisArray</code></a> of constraints is very similar to the <a href="../variables/#variable_jump_arrays-1">syntax for constructing</a> a <code>DenseAxisArray</code> of variables.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con[i = 1:2, j = 2:3], i * x &lt;= j + 1)
+2-dimensional DenseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, 2:3
+And data, a 2×2 Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2}:
+ con[1,2] : x &lt;= 3.0    con[1,3] : x &lt;= 4.0
+ con[2,2] : 2 x &lt;= 3.0  con[2,3] : 2 x &lt;= 4.0</code></pre><h3><a class="nav-anchor" href="#SparseAxisArrays-1" id="SparseAxisArrays-1">SparseAxisArrays</a></h3><p>The syntax for constructing a <a href="../containers/#JuMP.Containers.SparseAxisArray"><code>SparseAxisArray</code></a> of constraints is very similar to the <a href="../variables/#variable_sparseaxisarrays-1">syntax for constructing</a> a <code>SparseAxisArray</code> of variables.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x &lt;= j + 1)
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,Tuple{Int64,Int64}} with 2 entries:
+  [1, 2]  =  con[1,2] : x &lt;= 3.0
+  [2, 1]  =  con[2,1] : 2 x &lt;= 2.0</code></pre><h3><a class="nav-anchor" href="#Forcing-the-container-type-1" id="Forcing-the-container-type-1">Forcing the container type</a></h3><p>When creating a container of constraints, JuMP will attempt to choose the tightest container type that can store the constraints. However, because this happens at parse time, it does not always make the best choice. Just like in <a href="../variables/#JuMP.@variable"><code>@variable</code></a>, we can force the type of container using the <code>container</code> keyword. For syntax and the reason behind this, take a look at the <a href="../variables/#variable_forcing-1">variable docs</a>.</p><h2><a class="nav-anchor" href="#Vectorized-constraints-1" id="Vectorized-constraints-1">Vectorized constraints</a></h2><p>We can also add constraints to JuMP using vectorized linear algebra. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+
+julia&gt; A = [1 2; 3 4]
+2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia&gt; b = [5, 6]
+2-element Array{Int64,1}:
+ 5
+ 6
+
+julia&gt; @constraint(model, con, A * x .== b)
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},ScalarShape},1}:
+ x[1] + 2 x[2] == 5.0
+ 3 x[1] + 4 x[2] == 6.0</code></pre><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>Make sure to use <a href="https://docs.julialang.org/en/v1/manual/functions/index.html#man-vectorized-1">Julia's dot syntax</a> in front of the comparison operators (e.g. <code>.==</code>, <code>.&gt;=</code>, and <code>.&lt;=</code>). If you use a comparison without the dot, an error will be thrown.</p></div></div><p>Instead of adding an array of <code>ScalarAffineFunction-in-EqualTo</code> constraints, we can instead construct a <code>VectorAffineFunction-in-Nonnegatives</code> constraint as follows:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, A * x - b in MOI.Nonnegatives(2))
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] in MathOptInterface.Nonnegatives(2)</code></pre><p>In addition to the <code>Nonnegatives</code> set, MOI defines a number of other vector-valued sets such as <code>Nonpositives</code>. See the <a href="http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1">MOI documentation</a> for more information.</p><p>Note also that for the first time we have used an explicit <em>function-in-set</em> description of the constraint. Read more about this representation for constraints in the <a href="http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Constraints-by-function-set-pairs-1">MOI documentation</a>.</p><h2><a class="nav-anchor" href="#Constraints-on-a-single-variable-1" id="Constraints-on-a-single-variable-1">Constraints on a single variable</a></h2><p>In <a href="../variables/#Variables-1">Variables</a>, we saw how to modify the variable bounds, as well as add binary and integer restrictions to the domain of each variable. This can also be achieved using the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro. For example, <code>MOI.ZeroOne()</code> restricts the domain to <span>$\{0, 1\}$</span>:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, x in MOI.ZeroOne())
+x binary</code></pre><p>and <code>MOI.Integer()</code> restricts to the domain to the integers <span>$\mathbb{Z}$</span>:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, x in MOI.Integer())
+x integer</code></pre><p>JuMP also supports modeling semi-continuous variables, whose domain is <span>$\{0\} ∪ [l, u]$</span>, using the <code>MOI.Semicontinuous</code> set:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
+x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)</code></pre><p>as well as semi-integer variables, whose domain is <span>$\{0\} ∪ \{l, l+1, \dots, u\}$</span>, using the <code>MOI.Semiinteger</code> set:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
+x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)</code></pre><h2><a class="nav-anchor" href="#Quadratic-constraints-1" id="Quadratic-constraints-1">Quadratic constraints</a></h2><p>In addition to affine functions, JuMP also supports constraints with quadratic terms. (For more general nonlinear functions, see <a href="../nlp/#Nonlinear-Modeling-1">Nonlinear Modeling</a>.) For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+
+julia&gt; @variable(model, t &gt;= 0)
+t
+
+julia&gt; @constraint(model, x[1]^2 + x[2]^2 &lt;= t^2)
+x[1]² + x[2]² - t² &lt;= 0.0</code></pre><p>Note that this quadratic constraint (including the lower bound on <code>t</code>) is equivalent to a second order cone constraint where <code>||x[1]^2 + x[2]^2||\_2 ≤ t</code> and <code>t ≥ 0</code>. Instead of writing out the quadratic expansion, we can pass JuMP the constraint in <em>function</em>-in-<em>set</em> form. To do so, we need to define the function and the set.</p><p>The function is a vector of variables:</p><pre><code class="language-julia-repl">julia&gt; [t, x[1], x[2]]
+3-element Array{VariableRef,1}:
+ t
+ x[1]
+ x[2]</code></pre><p>Note that the variable <code>t</code> comes first, followed by the <code>x</code> arguments. The set is an instance of <a href="#JuMP.SecondOrderCone"><code>SecondOrderCone</code></a>: <code>SecondOrderCone()</code>. Thus, we can add the second order cone constraint as follows:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, [t, x[1], x[2]] in SecondOrderCone())
+[t, x[1], x[2]] in MathOptInterface.SecondOrderCone(3)</code></pre><p>JuMP also supports the <a href="#JuMP.RotatedSecondOrderCone"><code>RotatedSecondOrderCone</code></a> which requires the addition of a perspective variable <code>u</code>. The rotated second order cone constraints the variables <code>t</code>, <code>u</code>, and <code>x</code> such that: <code>||x[1]^2 + x[2]^2||\_2 ≤ t × u</code> and <code>t, u ≥ 0</code>. It can be added as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, u)
+u
+
+julia&gt; @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
+[t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)</code></pre><p>In addition to the second order cone and rotated second order cone, MOI defines a number of other conic sets such as the exponential and power cones. See the <a href="http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1">MathOptInterface documentation</a> for more information.</p><h2><a class="nav-anchor" href="#Constraints-on-a-collection-of-variables-1" id="Constraints-on-a-collection-of-variables-1">Constraints on a collection of variables</a></h2><p>In addition to constraining the domain of a single variable, JuMP supports placing constraints of a subset of the variables. We already saw an example of this in the <a href="#Quadratic-constraints-1">Quadratic constraints</a> section when we constrained a vector of variables to belong to the second order cone.</p><p>In a special ordered set of type I (often denoted SOS-I), at most one variable can take a non-zero value. We can construct SOS-I constraints using the <code>MOI.SOS1</code> set:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])</code></pre><p>Note that we have to pass <code>MOI.SOS1</code> a <em>weight</em> vector. This vector implies an ordering on the variables. If the decision variables are related and have a physical ordering (e.g., they correspond to the size of a factory to be built, and the SOS-I constraint enforces that only one factory can be built), then the weight vector, although not used directly in the constraint, can help the solver make a better decision in the solution process.</p><p>This ordering is more important in a special ordered set of type II (SOS-II), in which at most two values can be non-zero, and if there are two non-zeros, they must be consecutive according to the ordering. For example, in the following constraint, the possible non-zero pairs are (<code>x[1]</code> and <code>x[3]</code>) and (<code>x[2]</code> and <code>x[3]</code>):</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])</code></pre><h2><a class="nav-anchor" href="#Indicator-constraints-1" id="Indicator-constraints-1">Indicator constraints</a></h2><p>JuMP provides a special syntax for creating indicator constraints, that is, enforce a constraint to hold depending on the value of a binary variable. In order to constrain the constraint <code>x + y &lt;= 1</code> to hold when a binary variable <code>a</code> is one, use the following syntax:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, y)
+y
+
+julia&gt; @variable(model, a, Bin)
+a
+
+julia&gt; @constraint(model, a =&gt; {x + y &lt;= 1})
+a =&gt; {x + y ≤ 1.0}</code></pre><p>If instead the constraint should hold when <code>a</code> is zero, simply add a <code>!</code> or <code>¬</code> before the binary variable.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, !a =&gt; {x + y &lt;= 1})
+!a =&gt; {x + y ≤ 1.0}</code></pre><h2><a class="nav-anchor" href="#Semidefinite-constraints-1" id="Semidefinite-constraints-1">Semidefinite constraints</a></h2><p>JuMP provides a special syntax for constraining a matrix to be symmetric positive semidefinite (PSD) with the <a href="#JuMP.@SDconstraint"><code>@SDconstraint</code></a> macro. In the context of this macro, the inequality <code>A &gt;= B</code> between two square matrices <code>A</code> and <code>B</code> is understood as constraining <code>A - B</code> to be symmetric positive semidefinite.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x)
+x
+
+julia&gt; @SDconstraint(model, [x 2x; 3x 4x] &gt;= ones(2, 2))
+[x - 1    2 x - 1;
+ 3 x - 1  4 x - 1] ∈ PSDCone()</code></pre><p>Solvers supporting such constraints usually expect to be given a matrix that is <em>symbolically</em> symmetric, that is, for which the expression in corresponding off-diagonal entries are the same. In our example, the expressions of entries <code>(1, 2)</code> and <code>(2, 1)</code> are respectively <code>2x - 1</code> and <code>3x - 1</code> which are different. To bridge the gap between the constraint modeled and what the solver expects, JuMP creates an equality constraint <code>3x - 1 == 2x - 1</code> and constrains the symmetric matrix <code>[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]</code> to be positive semidefinite.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>If the matrix provided is already symbolically symmetric, the equality constrains are equivalent to <code>0 = 0</code> and are not added. In practice, if all coefficients are smaller than <code>1e-10</code>, the constraint is ignored, if all coefficients are smaller than <code>1e-8</code> but some are larger than <code>1e-10</code>, it is ignored but a warning is displayed, otherwise if at least one coefficient is larger than <code>1e-8</code>, the constraint is added.</p></div></div><p>If the matrix is known to be symmetric, the PSD constraint can be added as follows:</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra
+
+julia&gt; @constraint(model, Symmetric([x 2x; 2x 4x] - ones(2, 2)) in PSDCone())
+[x - 1    2 x - 1;
+ 2 x - 1  4 x - 1] ∈ PSDCone()</code></pre><p>Note that the lower triangular entries are silently ignored even if they are different so use it with caution:</p><pre><code class="language-julia-repl">julia&gt; cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
+[x    2 x;
+ 2 x  4 x] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x
+ 2 x
+ 4 x
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><p>Note that as <code>@SDconstraint(model, A &gt;= B)</code> constrains <code>A - B</code> to be symmetric positive semidefinite, even if <code>A</code> is a matrix of variables and <code>B</code> is a matrix of zeros, <code>A - B</code> will be a matrix of affine expressions. For instance, in the example below, the function is <code>VectorAffineFunction</code> instead of <code>VectorOfVariables</code>.</p><pre><code class="language-julia-repl">julia&gt; typeof(@SDconstraint(model, [x x; x x] &gt;= zeros(2, 2)))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}</code></pre><p>Moreover, the <code>Symmetric</code> structure can be lost in the operation <code>A - B</code>. For instance, in the example below, the set is <code>PositiveSemidefiniteConeSquare</code> instead of <code>PositiveSemidefiniteConeTriangle</code>.</p><pre><code class="language-julia-repl">julia&gt; typeof(@SDconstraint(model, Symmetric([x x; x x]) &gt;= zeros(2, 2)))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}</code></pre><p>To create a constraint on the vector of variables with the <a href="#JuMP.@SDconstraint"><code>@SDconstraint</code></a> macro, use the <code>0</code> symbol. The following three syntax are equivalent:</p><ul><li><code>@SDconstraint(model, A &gt;= 0)</code>,</li><li><code>@SDconstraint(model, 0 &lt;= A)</code> and</li><li><code>@constraint(model, A in PSDCone())</code>.</li></ul><pre><code class="language-julia-repl">julia&gt; typeof(@SDconstraint(model, [x x; x x] &gt;= 0))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+
+julia&gt; typeof(@SDconstraint(model, 0 &lt;= Symmetric([x x; x x])))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeTriangle},SymmetricMatrixShape}</code></pre><p>As the syntax is recognized at parse time, using a variable with value zero does not work:</p><pre><code class="language-julia-repl">julia&gt; a = 0
+0
+
+julia&gt; @SDconstraint(model, [x x; x x] &gt;= a)
+ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+[...]</code></pre><h2><a class="nav-anchor" href="#Constraint-modifications-1" id="Constraint-modifications-1">Constraint modifications</a></h2><p>A common paradigm, especially in linear programming, is to repeatedly solve a model with different coefficients.</p><h3><a class="nav-anchor" href="#Modifying-a-constant-term-1" id="Modifying-a-constant-term-1">Modifying a constant term</a></h3><p>Use <a href="#JuMP.set_normalized_rhs"><code>set_normalized_rhs</code></a> to modify the right-hand side (constant) term of a constraint. Use <a href="#JuMP.normalized_rhs"><code>normalized_rhs</code></a> to query the right-hand side term.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; set_normalized_rhs(con, 3)
+
+julia&gt; con
+con : 2 x &lt;= 3.0
+
+julia&gt; normalized_rhs(con)
+3.0</code></pre><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>JuMP normalizes constraints into a standard form by moving all constant terms onto the right-hand side of the constraint.</p><pre><code class="language-julia">@constraint(model, 2x - 1 &lt;= 2)</code></pre><p>will be normalized to</p><pre><code class="language-julia">@constraint(model, 2x &lt;= 3)</code></pre><p><a href="#JuMP.set_normalized_rhs"><code>set_normalized_rhs</code></a> sets the right-hand side term of the normalized constraint.</p></div></div><p>If constraints are complicated, e.g., they are composed of a number of components, each of which has a constant term, then it may be difficult to calculate what the right-hand side term should be in the standard form.</p><p>For this situation, JuMP includes the ability to <em>fix</em> variables to a value using the <a href="../variables/#JuMP.fix"><code>fix</code></a> function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, const_term)
+const_term
+
+julia&gt; @constraint(model, con, 2x &lt;= const_term + 1)
+con : 2 x - const_term &lt;= 1.0
+
+julia&gt; fix(const_term, 1.0)</code></pre><p>The constraint <code>con</code> is now equivalent to <code>2x &lt;= 2</code>.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>Even though <code>const_term</code> is fixed, it is still a decision variable. Thus, <code>const_term * x</code> is bilinear. Fixed variables are not replaced with constants when communicating the problem to a solver.</p></div></div><p>Another option is to use <a href="#JuMP.add_to_function_constant"><code>add_to_function_constant</code></a>. The constant given is added to the function of a <code>func</code>-in-<code>set</code> constraint. In the following example, adding <code>2</code> to the function has the effect of removing <code>2</code> to the right-hand side:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; add_to_function_constant(con, 2)
+
+julia&gt; con
+con : 2 x &lt;= -1.0
+
+julia&gt; normalized_rhs(con)
+-1.0</code></pre><p>In the case of interval constraints, the constant is removed in each bounds.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 0 &lt;= 2x + 1 &lt;= 2)
+con : 2 x ∈ [-1.0, 1.0]
+
+julia&gt; add_to_function_constant(con, 3)
+
+julia&gt; con
+con : 2 x ∈ [-4.0, -2.0]</code></pre><h3><a class="nav-anchor" href="#Modifying-a-variable-coefficient-1" id="Modifying-a-variable-coefficient-1">Modifying a variable coefficient</a></h3><p>To modify the coefficients for a linear term in a constraint (but notably not yet the coefficients on a quadratic term), use <a href="#JuMP.set_normalized_coefficient"><code>set_normalized_coefficient</code></a>. To query the current coefficient, use <a href="#JuMP.normalized_coefficient"><code>normalized_coefficient</code></a>.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x[1] + x[2] &lt;= 1)
+con : 2 x[1] + x[2] ≤ 1.0
+
+julia&gt; set_normalized_coefficient(con, x[2], 0)
+
+julia&gt; con
+con : 2 x[1] ≤ 1.0
+
+julia&gt; normalized_coefficient(con, x[2])
+0.0</code></pre><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>JuMP normalizes constraints into a standard form by moving all terms involving variables onto the left-hand side of the constraint.</p><pre><code class="language-julia">@constraint(model, 2x &lt;= 1 - x)</code></pre><p>will be normalized to</p><pre><code class="language-julia">@constraint(model, 3x &lt;= 1)</code></pre><p><a href="#JuMP.set_normalized_coefficient"><code>set_normalized_coefficient</code></a> sets the coefficient of the normalized constraint.</p></div></div><h2><a class="nav-anchor" href="#Constraint-deletion-1" id="Constraint-deletion-1">Constraint deletion</a></h2><p>Constraints can be deleted from a model using <a href="#JuMP.delete"><code>delete</code></a>. Just like variable references, it is possible to check if a constraint reference is valid using <a href="#JuMP.is_valid"><code>is_valid</code></a>. Here is an example of deleting a constraint:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x &lt;= 1)
+con : 2 x &lt;= 1.0
+
+julia&gt; is_valid(model, con)
+true
+
+julia&gt; delete(model, con)
+
+julia&gt; is_valid(model, con)
+false</code></pre><h2><a class="nav-anchor" href="#Accessing-constraints-from-a-model-1" id="Accessing-constraints-from-a-model-1">Accessing constraints from a model</a></h2><p>You can query the types of constraints currently present in the model by calling <a href="#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a>. Then, given a function and set type, use <a href="#JuMP.num_constraints"><code>num_constraints</code></a> to access the number of constraints of this type and <a href="#JuMP.all_constraints"><code>all_constraints</code></a> to access a list of their references. Then use <a href="#JuMP.constraint_object"><code>constraint_object</code></a> to get an instance of an <a href="#JuMP.AbstractConstraint"><code>AbstractConstraint</code></a> object, either <a href="#JuMP.ScalarConstraint"><code>ScalarConstraint</code></a> or <a href="#JuMP.VectorConstraint"><code>VectorConstraint</code></a>, that stores the constraint data.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x[i=1:2] &gt;= i, Int);
+
+julia&gt; @constraint(model, x[1] + x[2] &lt;= 1);
+
+julia&gt; list_of_constraint_types(model)
+3-element Array{Tuple{DataType,DataType},1}:
+ (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.Integer)
+
+julia&gt; num_constraints(model, VariableRef, MOI.Integer)
+2
+
+julia&gt; all_constraints(model, VariableRef, MOI.Integer)
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:
+ x[1] integer
+ x[2] integer
+
+julia&gt; num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2
+
+julia&gt; all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+ x[1] ≥ 1.0
+ x[2] ≥ 2.0
+
+julia&gt; num_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
+1
+
+julia&gt; less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ x[1] + x[2] ≤ 1.0
+
+julia&gt; con = constraint_object(less_than_constraints[1])
+ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
+
+julia&gt; con.func
+x[1] + x[2]
+
+julia&gt; con.set
+MathOptInterface.LessThan{Float64}(1.0)</code></pre><h2><a class="nav-anchor" href="#Complementarity-constraints-1" id="Complementarity-constraints-1">Complementarity constraints</a></h2><p>A mixed complementarity constraint <code>F(x) ⟂ x</code> consists of finding <code>x</code> in the interval <code>[lb, ub]</code>, such that the following holds:</p><ul><li><code>F(x) == 0</code> if <code>lb &lt; x &lt; ub</code></li><li><code>F(x) &gt;= 0</code> if <code>lb == x</code></li><li><code>F(x) &lt;= 0</code> if <code>x == ub</code></li></ul><p>For more information, see the <a href="https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements"><code>MOI.Complements</code> documentation</a>.</p><p>JuMP supports mixed complementarity constraints via <code>complements(F(x), x)</code> or <code>F(x) ⟂ x</code> in the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro. The interval set <code>[lb, ub]</code> is obtained from the variable bounds on <code>x</code>.</p><p>For example, to define the problem <code>2x - 1 ⟂ x</code> with <code>x ∈ [0, ∞)</code>, do:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x &gt;= 0)
+x
+
+julia&gt; @constraint(model, 2x - 1 ⟂ x)
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)</code></pre><p>This problem has a unique solution at <code>x = 0.5</code>.</p><p>The perp operator <code>⟂</code> can be entered in most editors (and the Julia REPL) by typing <code>\perp&lt;tab&gt;</code>.</p><p>An alternative approach that does not require the <code>⟂</code> symbol uses the <code>complements</code> function as follows:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, complements(2x - 1, x))
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)</code></pre><p>In both cases, the mapping <code>F(x)</code> is supplied as the first argument, and the matching variable <code>x</code> is supplied as the second.</p><p>Vector-valued complementarity constraints are also supported:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, -2 &lt;= y[1:2] &lt;= 2)
+2-element Array{VariableRef,1}:
+ y[1]
+ y[2]
+
+julia&gt; M = [1 2; 3 4]
+2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia&gt; q = [5, 6]
+2-element Array{Int64,1}:
+ 5
+ 6
+
+julia&gt; @constraint(model, M * y + q ⟂ y)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)</code></pre><h2><a class="nav-anchor" href="#Special-Ordered-Sets-(SOS1-and-SOS2)-1" id="Special-Ordered-Sets-(SOS1-and-SOS2)-1">Special Ordered Sets (SOS1 and SOS2)</a></h2><p>A Special Ordered Set (SOS) is an ordered set of variables with the following characteristics.</p><p>If a vector of variables <code>x</code> is in a Special Ordered Set of Type I (SOS1), then at most one element of <code>x</code> can take a non-zero value, and all other elements must be zero.</p><p>Although not required for feasibility, solvers can benefit from an ordering of the variables (e.g., the variables represent different factories to build, at most one factory can be built, and the factories can be ordered according to cost). To induce an ordering, <code>weights</code> can be provided; as such, they should be unique values. The <code>k</code>th element in the ordered set corresponds to  the <code>k</code>th weight in <code>weights</code> when the weights are sorted.</p><p>A SOS1 constraint is equivalent to:</p><ul><li><code>x[i] &gt;= 0</code> for some <code>i</code></li><li><code>x[j] == 0</code> for all <code>j != i</code></li></ul><p>If a vector of variables <code>x</code> is in a Special Ordered Set of Type II (SOS2), then at most two  elements can be non-zero, and if two elements are non-zero, they must be adjacent.</p><p>Because of the adjacency requirement, you should supply a weight vector (with unique elements) to induce an ordering of the variables. The <code>k</code>th element in the ordered set corresponds to the <code>k</code>th weight in <code>weights</code> when the weights are sorted.</p><p>A SOS2 constraint is equivalent to:</p><ul><li><code>x[i] &gt;= 0</code>, <code>x[i+1] &gt;= 0</code>  for some <code>i</code></li><li><code>x[j] == 0</code> for all <code>j != i</code>, <code>j != i+1</code></li></ul><p>Create an SOS constraint as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, x in SOS2([3,5,2]))
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])</code></pre><p>In the case above, <code>x[3]</code> is the first variable and <code>x[2]</code> the last variable under the induced ordering. When no ordering vector is provided, JuMP induces an ordering from <code>1:length(x)</code>.</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia&gt; @constraint(model, x in SOS2())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])</code></pre><h2><a class="nav-anchor" href="#Reference-1" id="Reference-1">Reference</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@constraint" id="JuMP.@constraint"><code>JuMP.@constraint</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@constraint(m::Model, expr)</code></pre><p>Add a constraint described by the expression <code>expr</code>.</p><pre><code class="language-none">@constraint(m::Model, ref[i=..., j=..., ...], expr)</code></pre><p>Add a group of constraints described by the expression <code>expr</code> parametrized by <code>i</code>, <code>j</code>, ...</p><p>The expression <code>expr</code> can either be</p><ul><li>of the form <code>func in set</code> constraining the function <code>func</code> to belong to the set <code>set</code> which is either a <a href="http://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1"><code>MathOptInterface.AbstractSet</code></a> or one of the JuMP shortcuts <a href="#JuMP.SecondOrderCone"><code>SecondOrderCone</code></a>, <a href="#JuMP.RotatedSecondOrderCone"><code>RotatedSecondOrderCone</code></a> and <a href="#JuMP.PSDCone"><code>PSDCone</code></a>, e.g. <code>@constraint(model, [1, x-1, y-2] in SecondOrderCone())</code> constrains the norm of <code>[x-1, y-2]</code> be less than 1;</li><li>of the form <code>a sign b</code>, where <code>sign</code> is one of <code>==</code>, <code>≥</code>, <code>&gt;=</code>, <code>≤</code> and <code>&lt;=</code> building the single constraint enforcing the comparison to hold for the expression <code>a</code> and <code>b</code>, e.g. <code>@constraint(m, x^2 + y^2 == 1)</code> constrains <code>x</code> and <code>y</code> to lie on the unit circle;</li><li>of the form <code>a ≤ b ≤ c</code> or <code>a ≥ b ≥ c</code> (where <code>≤</code> and <code>&lt;=</code> (resp. <code>≥</code> and <code>&gt;=</code>) can be used interchangeably) constraining the paired the expression <code>b</code> to lie between <code>a</code> and <code>c</code>;</li><li>of the forms <code>@constraint(m, a .sign b)</code> or <code>@constraint(m, a .sign b .sign c)</code> which broadcast the constraint creation to each element of the vectors.</li></ul><p><strong>Note for extending the constraint macro</strong></p><p>Each constraint will be created using <code>add_constraint(m, build_constraint(_error, func, set))</code> where</p><ul><li><code>_error</code> is an error function showing the constraint call in addition to the error message given as argument,</li><li><code>func</code> is the expression that is constrained</li><li>and <code>set</code> is the set in which it is constrained to belong.</li></ul><p>For <code>expr</code> of the first type (i.e. <code>@constraint(m, func in set)</code>), <code>func</code> and <code>set</code> are passed unchanged to <code>build_constraint</code> but for the other types, they are determined from the expressions and signs. For instance, <code>@constraint(m, x^2 + y^2 == 1)</code> is transformed into <code>add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))</code>.</p><p>To extend JuMP to accept new constraints of this form, it is necessary to add the corresponding methods to <code>build_constraint</code>. Note that this will likely mean that either <code>func</code> or <code>set</code> will be some custom type, rather than e.g. a <code>Symbol</code>, since we will likely want to dispatch on the type of the function or set appearing in the constraint.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/macros.jl#L439-L488" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@SDconstraint" id="JuMP.@SDconstraint"><code>JuMP.@SDconstraint</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@SDconstraint(model::Model, expr)</code></pre><p>Add a semidefinite constraint described by the expression <code>expr</code>.</p><pre><code class="language-none">@SDconstraint(model::Model, ref[i=..., j=..., ...], expr)</code></pre><p>Add a group of semidefinite constraints described by the expression <code>expr</code> parametrized by <code>i</code>, <code>j</code>, ...</p><p>The expression <code>expr</code> needs to be of the form <code>a sign b</code> where <code>sign</code> is <code>⪰</code>, <code>≥</code>, <code>&gt;=</code>, <code>⪯</code>, <code>≤</code> or <code>&lt;=</code> and <code>a</code> and <code>b</code> are <code>square</code> matrices. It constrains the square matrix <code>x</code> (or <code>-x</code> if the sign is <code>⪯</code>, <code>≤</code> or <code>&lt;=</code>) to be symmetric and positive semidefinite where</p><ul><li><code>x = a</code>, if <code>b</code> is the symbol <code>0</code>,</li><li><code>x = -b</code>, if <code>a</code> is the symbol <code>0</code>,</li><li>otherwise, <code>x = a - b</code>.</li></ul><p>By default, we check numerical symmetry of the matrix <code>x</code>, and if symmetry is violated by some arbitrary amount, we add explicit equality constraints. You can use <code>Symmetric(x) in PSDCone()</code> with the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro to skip these checks if you know the matrix must be symmetric; see <a href="#JuMP.PSDCone"><code>PSDCone</code></a> for more information.</p><p><strong>Examples</strong></p><p>The following constrains the matrix <code>[x-1 2x-2; -3 x-4]</code> to be symmetric and positive semidefinite, that is, it constrains <code>2x-2</code> to be equal to <code>-3</code> and constrains all eigenvalues of the matrix to be nonnegative.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; a = [x 2x
+            0  x];
+
+julia&gt; b = [1 2
+            3 4];
+
+julia&gt; cref = @SDconstraint(model, a ⪰ b)
+[x - 1  2 x - 2;
+ -3     x - 4  ] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ -3
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>In the set <code>PositiveSemidefiniteConeSquare(2)</code> in the last output, <code>Square</code> means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set <code>PositiveSemidefiniteConeTriangle</code> exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see <a href="#JuMP.PSDCone"><code>PSDCone</code></a> to see how to use it.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/macros.jl#L526-L588" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.SecondOrderCone" id="JuMP.SecondOrderCone"><code>JuMP.SecondOrderCone</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">SecondOrderCone</code></pre><p>Second order cone object that can be used to constrain the euclidean norm of a vector <code>x</code> to be less than or equal to a nonnegative scalar <code>t</code>. This is a shortcut for the <code>MathOptInterface.SecondOrderCone</code>.</p><p><strong>Examples</strong></p><p>The following constrains <span>$\|(x-1, x-2)\|_2 \le t$</span> and <span>$t \ge 0$</span>:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, t)
+t
+
+julia&gt; @constraint(model, [t, x-1, x-2] in SecondOrderCone())
+[t, x - 1, x - 2] ∈ MathOptInterface.SecondOrderCone(3)</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/sets.jl#L15-L37" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.RotatedSecondOrderCone" id="JuMP.RotatedSecondOrderCone"><code>JuMP.RotatedSecondOrderCone</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">RotatedSecondOrderCone</code></pre><p>Rotated second order cone object that can be used to constrain the square of the euclidean norm of a vector <code>x</code> to be less than or equal to <span>$2tu$</span> where <code>t</code> and <code>u</code> are nonnegative scalars. This is a shortcut for the <code>MathOptInterface.RotatedSecondOrderCone</code>.</p><p><strong>Examples</strong></p><p>The following constrains <span>$\|(x-1, x-2)\|_2 \le 2tx$</span> and <span>$t, x \ge 0$</span>:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, t)
+t
+
+julia&gt; @constraint(model, [t, x, x-1, x-2] in RotatedSecondOrderCone())
+[t, x, x - 1, x - 2] ∈ MathOptInterface.RotatedSecondOrderCone(4)</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/sets.jl#L41-L64" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.PSDCone" id="JuMP.PSDCone"><code>JuMP.PSDCone</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">PSDCone</code></pre><p>Positive semidefinite cone object that can be used to constrain a square matrix to be positive semidefinite in the <a href="#JuMP.@constraint"><code>@constraint</code></a> macro. If the matrix has type <code>Symmetric</code> then the columns vectorization (the vector obtained by concatenating the columns) of its upper triangular part is constrained to belong to the <code>MOI.PositiveSemidefiniteConeTriangle</code> set, otherwise its column vectorization is constrained to belong to the <code>MOI.PositiveSemidefiniteConeSquare</code> set.</p><p><strong>Examples</strong></p><p>Consider the following example:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; a = [ x 2x
+            2x  x];
+
+julia&gt; b = [1 2
+            2 4];
+
+julia&gt; cref = @SDconstraint(model, a ⪰ b)
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>We see in the output of the last command that the matrix the vectorization of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra # For Symmetric
+
+julia&gt; cref = @constraint(model, Symmetric(a - b) in PSDCone())
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><p>As we see in the output of the last command, the vectorization of only the upper triangular part of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/sd.jl#L3-L65" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.shadow_price" id="JuMP.shadow_price"><code>JuMP.shadow_price</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">shadow_price(con_ref::ConstraintRef)</code></pre><p>Return the change in the objective from an infinitesimal relaxation of the constraint.</p><p>This value is computed from <a href="../solutions/#JuMP.dual"><code>dual</code></a> and can be queried only when <code>has_duals</code> is <code>true</code> and the objective sense is <code>MIN_SENSE</code> or <code>MAX_SENSE</code> (not <code>FEASIBILITY_SENSE</code>). For linear constraints, the shadow prices differ at most in sign from the <code>dual</code> value depending on the objective sense.</p><p>See also <a href="../variables/#JuMP.reduced_cost"><code>reduced_cost</code></a>.</p><p><strong>Notes</strong></p><ul><li>The function simply translates signs from <code>dual</code> and does not validate the conditions needed to guarantee the sensitivity interpretation of the shadow price. The caller is responsible, e.g., for checking whether the solver converged to an optimal primal-dual pair or a proof of infeasibility.</li><li>The computation is based on the current objective sense of the model. If this has changed since the last solve, the results will be incorrect.</li><li>Relaxation of equality constraints (and hence the shadow price) is defined based on which sense of the equality constraint is active.</li></ul></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L657-L680" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.normalized_coefficient" id="JuMP.normalized_coefficient"><code>JuMP.normalized_coefficient</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef)</code></pre><p>Return the coefficient associated with <code>variable</code> in <code>constraint</code> after JuMP has normalized the constraint into its standard form. See also <a href="#JuMP.set_normalized_coefficient"><code>set_normalized_coefficient</code></a>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L444-L450" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_normalized_coefficient" id="JuMP.set_normalized_coefficient"><code>JuMP.set_normalized_coefficient</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">set_normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef, value)</code></pre><p>Set the coefficient of <code>variable</code> in the constraint <code>constraint</code> to <code>value</code>.</p><p>Note that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint <code>2x + 3x &lt;= 2</code>, <code>set_normalized_coefficient(con, x, 4)</code> will create the constraint <code>4x &lt;= 2</code>.</p><pre><code class="language-julia">model = Model()
+@variable(model, x)
+@constraint(model, con, 2x + 3x &lt;= 2)
+set_normalized_coefficient(con, x, 4)
+con
+
+# output
+
+con : 4 x &lt;= 2.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L414-L434" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.normalized_rhs" id="JuMP.normalized_rhs"><code>JuMP.normalized_rhs</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">normalized_rhs(con_ref::ConstraintRef)</code></pre><p>Return the right-hand side term of <code>con_ref</code> after JuMP has converted the constraint into its normalized form. See also <a href="#JuMP.set_normalized_rhs"><code>set_normalized_rhs</code></a>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L488-L493" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.set_normalized_rhs" id="JuMP.set_normalized_rhs"><code>JuMP.set_normalized_rhs</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">set_normalized_rhs(con_ref::ConstraintRef, value)</code></pre><p>Set the right-hand side term of <code>constraint</code> to <code>value</code>.</p><p>Note that prior to this step, JuMP will aggregate all constant terms onto the right-hand side of the constraint. For example, given a constraint <code>2x + 1 &lt;= 2</code>, <code>set_normalized_rhs(con, 4)</code> will create the constraint <code>2x &lt;= 4</code>, not <code>2x + 1 &lt;= 4</code>.</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 2x + 1 &lt;= 2)
+con : 2 x &lt;= 1.0
+
+julia&gt; set_normalized_rhs(con, 4)
+
+julia&gt; con
+con : 2 x &lt;= 4.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L458-L477" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.add_to_function_constant" id="JuMP.add_to_function_constant"><code>JuMP.add_to_function_constant</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">add_to_function_constant(constraint::ConstraintRef, value)</code></pre><p>Add <code>value</code> to the function constant term.</p><p>Note that for scalar constraints, JuMP will aggregate all constant terms onto the right-hand side of the constraint so instead of modifying the function, the set will be translated by <code>-value</code>. For example, given a constraint <code>2x &lt;= 3</code>, <code>add_to_function_constant(c, 4)</code> will modify it to <code>2x &lt;= -1</code>.</p><p><strong>Examples</strong></p><p>For scalar constraints, the set is translated by <code>-value</code>:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, 0 &lt;= 2x - 1 &lt;= 2)
+con : 2 x ∈ [1.0, 3.0]
+
+julia&gt; add_to_function_constant(con, 4)
+
+julia&gt; con
+con : 2 x ∈ [-3.0, -1.0]</code></pre><p>For vector constraints, the constant is added to the function:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, con, [x + y, x, y] in SecondOrderCone())
+con : [x + y, x, y] in MOI.SecondOrderCone(3)
+
+julia&gt; add_to_function_constant(con, [1, 2, 2])
+
+julia&gt; con
+con : [x + y + 1, x + 2, y + 2] in MOI.SecondOrderCone(3)</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L521-L555" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.is_valid" id="JuMP.is_valid"><code>JuMP.is_valid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">is_valid(model::Model, con_ref::ConstraintRef{Model})</code></pre><p>Return <code>true</code> if <code>constraint_ref</code> refers to a valid constraint in <code>model</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L193-L197" target="_blank">source</a><div><div><pre><code class="language-none">is_valid(model::Model, variable_ref::VariableRef)</code></pre><p>Return <code>true</code> if <code>variable</code> refers to a valid variable in <code>model</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L195-L199" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.delete" id="JuMP.delete"><code>JuMP.delete</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">delete(model::Model, con_ref::ConstraintRef)</code></pre><p>Delete the constraint associated with <code>constraint_ref</code> from the model <code>model</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L162-L166" target="_blank">source</a><div><div><pre><code class="language-none">delete(model::Model, con_refs::Vector{&lt;:ConstraintRef})</code></pre><p>Delete the constraints associated with <code>con_refs</code> from the model <code>model</code>. Solvers may implement specialized methods for deleting multiple constraints of the same concrete type, i.e., when <code>isconcretetype(eltype(con_refs))</code>. These may be more efficient than repeatedly calling the single constraint delete method.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L175-L183" target="_blank">source</a><div><div><pre><code class="language-none">delete(model::Model, variable_ref::VariableRef)</code></pre><p>Delete the variable associated with <code>variable_ref</code> from the model <code>model</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L166-L170" target="_blank">source</a><div><div><pre><code class="language-none">delete(model::Model, variable_refs::Vector{VariableRef})</code></pre><p>Delete the variables associated with <code>variable_refs</code> from the model <code>model</code>. Solvers may implement methods for deleting multiple variables that are more efficient than repeatedly calling the single variable delete method.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L179-L185" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.LowerBoundRef" id="JuMP.LowerBoundRef"><code>JuMP.LowerBoundRef</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">LowerBoundRef(v::VariableRef)</code></pre><p>Return a constraint reference to the lower bound constraint of <code>v</code>. Errors if one does not exist.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L391-L396" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.UpperBoundRef" id="JuMP.UpperBoundRef"><code>JuMP.UpperBoundRef</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">UpperBoundRef(v::VariableRef)</code></pre><p>Return a constraint reference to the upper bound constraint of <code>v</code>. Errors if one does not exist.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L471-L476" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.FixRef" id="JuMP.FixRef"><code>JuMP.FixRef</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">FixRef(v::VariableRef)</code></pre><p>Return a constraint reference to the constraint fixing the value of <code>v</code>. Errors if one does not exist.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/variables.jl#L593-L598" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.ConstraintRef" id="JuMP.ConstraintRef"><code>JuMP.ConstraintRef</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">ConstraintRef</code></pre><p>Holds a reference to the model and the corresponding MOI.ConstraintIndex.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L11-L15" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.list_of_constraint_types" id="JuMP.list_of_constraint_types"><code>JuMP.list_of_constraint_types</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">list_of_constraint_types(model::Model)</code></pre><p>Return a list of tuples of the form <code>(F, S)</code> where <code>F</code> is a JuMP function type and <code>S</code> is an MOI set type such that <code>all_constraints(model, F, S)</code> returns a nonempty list.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x &gt;= 0, Bin);
+
+julia&gt; @constraint(model, 2x &lt;= 1);
+
+julia&gt; list_of_constraint_types(model)
+3-element Array{Tuple{DataType,DataType},1}:
+ (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.ZeroOne)</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L872-L893" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.all_constraints" id="JuMP.all_constraints"><code>JuMP.all_constraints</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">all_constraints(model::Model, function_type, set_type)::Vector{&lt;:ConstraintRef}</code></pre><p>Return a list of all constraints currently in the model where the function has type <code>function_type</code> and the set has type <code>set_type</code>. The constraints are ordered by creation time.</p><p>See also <a href="#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a> and <a href="#JuMP.num_constraints"><code>num_constraints</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x &gt;= 0, Bin);
+
+julia&gt; @constraint(model, 2x &lt;= 1);
+
+julia&gt; all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+ x ≥ 0.0
+
+julia&gt; all_constraints(model, VariableRef, MOI.ZeroOne)
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:
+ x binary
+
+julia&gt; all_constraints(model, AffExpr, MOI.LessThan{Float64})
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+ 2 x ≤ 1.0</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L817-L846" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.num_constraints" id="JuMP.num_constraints"><code>JuMP.num_constraints</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">num_constraints(model::Model, function_type, set_type)::Int64</code></pre><p>Return the number of constraints currently in the model where the function has type <code>function_type</code> and the set has type <code>set_type</code>.</p><p>See also <a href="#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a> and <a href="#JuMP.all_constraints"><code>all_constraints</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x &gt;= 0, Bin);
+
+julia&gt; @variable(model, y);
+
+julia&gt; @constraint(model, y in MOI.GreaterThan(1.0));
+
+julia&gt; @constraint(model, y &lt;= 1.0);
+
+julia&gt; @constraint(model, 2x &lt;= 1);
+
+julia&gt; num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2
+
+julia&gt; num_constraints(model, VariableRef, MOI.ZeroOne)
+1
+
+julia&gt; num_constraints(model, AffExpr, MOI.LessThan{Float64})
+2</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L772-L803" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.constraint_object" id="JuMP.constraint_object"><code>JuMP.constraint_object</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">constraint_object(con_ref::ConstraintRef)</code></pre><p>Return the underlying constraint data for the constraint referenced by <code>ref</code>.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L302-L306" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.AbstractConstraint" id="JuMP.AbstractConstraint"><code>JuMP.AbstractConstraint</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">abstract type AbstractConstraint</code></pre><p>An abstract base type for all constraint types. <code>AbstractConstraint</code>s store the function and set directly, unlike <a href="#JuMP.ConstraintRef"><code>ConstraintRef</code></a>s that are merely references to constraints stored in a model. <code>AbstractConstraint</code>s do not need to be attached to a model.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L205-L212" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.ScalarConstraint" id="JuMP.ScalarConstraint"><code>JuMP.ScalarConstraint</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">struct ScalarConstraint</code></pre><p>The data for a scalar constraint. The <code>func</code> field containts a JuMP object representing the function and the <code>set</code> field contains the MOI set. See also the <a href="#Constraints-1">documentation</a> on JuMP's representation of constraints for more background.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L309-L316" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.VectorConstraint" id="JuMP.VectorConstraint"><code>JuMP.VectorConstraint</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">struct VectorConstraint</code></pre><p>The data for a vector constraint. The <code>func</code> field containts a JuMP object representing the function and the <code>set</code> field contains the MOI set. The <code>shape</code> field contains an <a href="../extensions/#JuMP.AbstractShape"><code>AbstractShape</code></a> matching the form in which the constraint was constructed (e.g., by using matrices or flat vectors). See also the <a href="#Constraints-1">documentation</a> on JuMP's representation of constraints.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/constraints.jl#L339-L348" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.index-Tuple{ConstraintRef}" id="JuMP.index-Tuple{ConstraintRef}"><code>JuMP.index</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">index(cr::ConstraintRef)::MOI.ConstraintIndex</code></pre><p>Return the index of the constraint that corresponds to <code>cr</code> in the MOI backend.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/JuMP.jl#L811-L815" target="_blank">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.optimizer_index-Tuple{ConstraintRef{Model,C,Shape} where Shape&lt;:AbstractShape where C}" id="JuMP.optimizer_index-Tuple{ConstraintRef{Model,C,Shape} where Shape&lt;:AbstractShape where C}"><code>JuMP.optimizer_index</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">optimizer_index(cr::ConstraintRef{Model})::MOI.ConstraintIndex</code></pre><p>Return the index of the constraint that corresponds to <code>cr</code> in the optimizer model. It throws <a href="../solvers/#JuMP.NoOptimizer"><code>NoOptimizer</code></a> if no optimizer is set and throws an <code>ErrorException</code> if the optimizer is set but is not attached or if the constraint is bridged.</p></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/JuMP.jl#L795-L802" target="_blank">source</a></section><h2><a class="nav-anchor" href="#Constructing-constraints-without-adding-them-to-the-model-1" id="Constructing-constraints-without-adding-them-to-the-model-1">Constructing constraints without adding them to the model</a></h2><p>For advanced use cases.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" href="#JuMP.@build_constraint" id="JuMP.@build_constraint"><code>JuMP.@build_constraint</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-julia">@build_constraint(constraint_expr)</code></pre><p>Constructs a <code>ScalarConstraint</code> or <code>VectorConstraint</code> using the same machinery as <a href="#JuMP.@constraint"><code>@constraint</code></a> but without adding the constraint to a model.</p><p>Constraints using broadcast operators like <code>x .&lt;= 1</code> are also supported and will create arrays of <code>ScalarConstraint</code> or <code>VectorConstraint</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia">model = Model();
+@variable(model, x);
+@build_constraint(2x &gt;= 1)
+
+# output
+ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))</code></pre></div></div><a class="source-link" href="https://github.com/jump-dev/JuMP.jl/blob/e2fd3ebd9e3f5e6913ba461c0bc54e5cc92f061e/src/macros.jl#L593-L612" target="_blank">source</a></section><footer><hr/><a class="previous" href="../objective/"><span class="direction">Previous</span><span class="title">Objective</span></a><a class="next" href="../containers/"><span class="direction">Next</span><span class="title">Containers</span></a></footer></article></body></HTML>

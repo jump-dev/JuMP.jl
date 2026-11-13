@@ -1,0 +1,233 @@
+/* Prototype: line numbers + linkable lines for Documenter code blocks.
+ * Loaded after the theme CSS so equal-specificity rules win the cascade. */
+
+/* ---- theme tokens (light defaults; dark overrides scoped to theme class) ---- */
+:root {
+  --ln-digits: 2;                        /* per-block override set by JS for >99 lines */
+  --ln-bg: #f5f5f5;                      /* must be opaque, = pre background */
+  --ln-fg: #a5a5a5;
+  --ln-fg-hover: #2e63b8;                /* theme link color */
+  --ln-border: #dbdbdb;                  /* pre border color */
+  --ln-hl-bg: rgba(255, 208, 42, 0.18);  /* highlighted line background */
+  --ln-hl-gutter-bg: #ece2b8;            /* opaque blend of hl over --ln-bg */
+  --ln-hl-fg: #6a5c1e;
+  --ln-btn: #222;                    /* = copy-button rest color */
+  --ln-btn-hover: #2e63b8;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(34, 34, 34, 0.1);
+  --ln-copied: #259a12;                  /* = copy-button.success color */
+}
+html.theme--documenter-dark {
+  --ln-bg: #282f2f;
+  --ln-fg: #5e6d6f;
+  --ln-fg-hover: #6eb0e8;
+  --ln-border: #5e6d6f;
+  --ln-hl-bg: rgba(255, 208, 42, 0.10);
+  --ln-hl-gutter-bg: #46442e;
+  --ln-hl-fg: #d8c56a;
+  --ln-btn: #fff;                    /* = copy-button rest color */
+  --ln-btn-hover: #1abc9c;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(255, 255, 255, 0.1);
+  --ln-copied: #259a12;
+}
+/* Catppuccin themes: --ln-bg matches each theme's pre background (mantle),
+ * --ln-border its pre border (surface2), accents from the catppuccin palette. */
+html.theme--catppuccin-latte {
+  --ln-bg: #e6e9ef;
+  --ln-fg: #8c8fa1;
+  --ln-fg-hover: #1e66f5;
+  --ln-border: #acb0be;
+  --ln-hl-bg: rgba(223, 142, 29, 0.15);
+  --ln-hl-gutter-bg: #e5d8c9;
+  --ln-hl-fg: #7a5c0e;
+  --ln-btn: #4c4f69;                 /* = copy-button rest color */
+  --ln-btn-hover: #1e66f5;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(76, 79, 105, 0.1);
+  --ln-copied: #40a02b;
+}
+html.theme--catppuccin-frappe {
+  --ln-bg: #292c3c;
+  --ln-fg: #737994;
+  --ln-fg-hover: #8caaee;
+  --ln-border: #626880;
+  --ln-hl-bg: rgba(229, 200, 144, 0.10);
+  --ln-hl-gutter-bg: #454349;
+  --ln-hl-fg: #e5c890;
+  --ln-btn: #c6d0f5;                 /* = copy-button rest color */
+  --ln-btn-hover: #8caaee;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(198, 208, 245, 0.1);
+  --ln-copied: #a6d189;
+}
+html.theme--catppuccin-macchiato {
+  --ln-bg: #1e2030;
+  --ln-fg: #6e738d;
+  --ln-fg-hover: #8aadf4;
+  --ln-border: #5b6078;
+  --ln-hl-bg: rgba(238, 212, 159, 0.10);
+  --ln-hl-gutter-bg: #3d3b40;
+  --ln-hl-fg: #eed49f;
+  --ln-btn: #cad3f5;                 /* = copy-button rest color */
+  --ln-btn-hover: #8aadf4;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(202, 211, 245, 0.1);
+  --ln-copied: #a6da95;
+}
+html.theme--catppuccin-mocha {
+  --ln-bg: #181825;
+  --ln-fg: #6c7086;
+  --ln-fg-hover: #89b4fa;
+  --ln-border: #585b70;
+  --ln-hl-bg: rgba(249, 226, 175, 0.10);
+  --ln-hl-gutter-bg: #3a3639;
+  --ln-hl-fg: #f9e2af;
+  --ln-btn: #cdd6f4;                 /* = copy-button rest color */
+  --ln-btn-hover: #89b4fa;           /* = copy-button hover color */
+  --ln-btn-hover-bg: rgba(205, 214, 244, 0.1);
+  --ln-copied: #a6e3a1;
+}
+
+/* ---- structure ----
+ * The theme sets: pre { position:relative; overflow:hidden } and
+ * pre code { padding:0 .75rem !important; overflow:auto; display:block },
+ * i.e. <code> is the horizontal scroll container. The gutter replaces the
+ * code's left padding (restored as margin-right on the number box). */
+/* The tripled class bumps specificity to (0,3,2): the catppuccin themes
+ * scope their padding rule as `html.theme--X pre code.hljs` = (0,2,3), which
+ * would otherwise beat a plain `pre > code.line-numbers` despite our later
+ * cascade position (both are !important, so specificity decides). */
+pre > code.line-numbers.line-numbers.line-numbers {
+  padding-left: 0 !important;
+  counter-reset: line;
+}
+code.line-numbers > .code-lines {
+  display: block;
+  width: max-content;  /* widest line sets the width of every .line ... */
+  min-width: 100%;     /* ... and never narrower than the scrollport */
+}
+code.line-numbers .line {
+  display: block;      /* full-width highlight; one \n per line in innerText */
+  counter-increment: line;
+}
+
+/* ---- gutter numbers ----
+ * .line-num is a real (empty) span so it is a first-class hit-test target —
+ * clicks resolve via event.target, no geometry math, and position:sticky sits
+ * on a real element (engines disagree about sticky/getComputedStyle on
+ * pseudo-elements). The digit itself renders in its ::before, so it still
+ * never appears in innerText/copies or selections. */
+code.line-numbers .line-num {
+  position: sticky;    /* pinned to the code scrollport during h-scroll */
+  left: 0;
+  display: inline-block;
+  box-sizing: border-box;
+  /* 1ch per digit (monospace) + breathing room; digits default to 2 */
+  width: calc(var(--ln-digits) * 1ch + 1.5em);
+  padding-right: 0.75em;
+  margin-right: 0.75rem;  /* restores the removed code padding-left */
+  text-align: right;
+  color: var(--ln-fg);
+  background: var(--ln-bg);  /* hides code sliding underneath */
+  border-right: 1px solid var(--ln-border);
+  user-select: none;
+  cursor: pointer;
+}
+code.line-numbers .line-num::before {
+  content: counter(line);
+}
+/* Opaque mask over the gap between the gutter border and the code text
+ * (the margin-right above): it is part of the scrollable content, so without
+ * this, horizontally scrolled code shows in that "padding" strip. Anchored to
+ * the sticky cell, so it stays pinned along with the numbers. */
+code.line-numbers .line-num::after {
+  content: "";
+  position: absolute;
+  left: calc(100% + 1px); /* start after the 1px border-right */
+  top: 0;
+  bottom: 0;
+  width: 0.75rem;
+  background: var(--ln-bg);
+}
+code.line-numbers .line.hl .line-num::after {
+  /* translucent highlight layered over the opaque base = exactly the same
+   * color as the highlighted line itself (the darker opaque gutter tint here
+   * read as the number-column highlight leaking past the border) */
+  background: linear-gradient(var(--ln-hl-bg), var(--ln-hl-bg)), var(--ln-bg);
+}
+code.line-numbers .line-num:hover {
+  color: var(--ln-fg-hover);
+}
+
+/* ---- highlighted lines ---- */
+code.line-numbers .line.hl {
+  background: var(--ln-hl-bg);
+}
+code.line-numbers .line.hl .line-num {
+  background: var(--ln-hl-gutter-bg);
+  color: var(--ln-hl-fg);
+}
+
+/* Modern browsers (Chrome 131+, Firefox 138+, Safari 18.4+) wrap the
+ * contents of <details> (docstrings) in a ::details-content
+ * pseudo-element. The theme's box-sizing reset
+ * (`*, ::before, ::after { box-sizing: inherit }` from html's border-box)
+ * matches elements and the classic pseudos but not ::details-content, which
+ * stays at the UA default content-box — so every element inside a docstring
+ * inherits content-box instead. The 2.5em copy/permalink buttons then grow
+ * to 3.5em outer boxes and their icons drift apart (#23). Re-joining the
+ * pseudo to the inherit chain restores border-box for the whole subtree.
+ * Must be a standalone rule: engines without ::details-content drop the
+ * rule (and don't have the problem). */
+::details-content {
+  box-sizing: inherit;
+}
+
+/* ---- permalink button (sits left of the copy button): a real <a> that
+   copies the block/selection URL on click ----
+ * Colors mirror the theme's copy-button rules (rest = text color at 0.2
+ * opacity, hover/focus = accent + translucent background) via the --ln-btn
+ * tokens. The doubled class bumps specificity to (0,2,1)/(0,3,1): the dark
+ * themes scope their generic anchor colors as `html.theme--X a` = (0,1,2)
+ * and `html.theme--X a:hover` = (0,2,2), which would otherwise paint the
+ * permalink (a real <a>) in link colors while the copy <button> next to it
+ * uses the button colors. */
+pre .block-link.block-link {
+  opacity: 0.2;
+  transition: opacity 0.2s;
+  position: absolute;
+  right: 2.5em;
+  top: 0;
+  width: 2.5em;
+  height: 2.5em;
+  padding: 0.5em;
+  background: transparent;
+  border: none;
+  color: var(--ln-btn);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+pre:hover .block-link {
+  opacity: 1;
+}
+/* :focus styled like :hover, exactly as the theme does for the copy button */
+pre .block-link.block-link:focus,
+pre .block-link.block-link:hover {
+  opacity: 1;
+  color: var(--ln-btn-hover);
+  background: var(--ln-btn-hover-bg);
+}
+/* post-copy confirmation: checkmark icon, held visible even off-hover.
+ * Same (0,3,1) specificity as the hover rule; later in the cascade wins. */
+pre .block-link.block-link.copied,
+pre .block-link.block-link.copied:hover {
+  color: var(--ln-copied);
+  opacity: 1;
+}
+pre .block-link svg {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: middle;
+}
+
+/* ---- whole-block highlight (hash = #cbN) ---- */
+pre.hl-block {
+  border-color: var(--ln-fg-hover);
+}
