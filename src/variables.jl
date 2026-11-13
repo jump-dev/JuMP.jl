@@ -186,18 +186,10 @@ struct VariableInfo{S,T,U,V}
         binary::Bool,
         integer::Bool,
     ) where {S,T,U,V}
-        if has_lb && _is_typemin(lower_bound)
-            has_lb = false
-            lower_bound = NaN
-        end
-        if has_ub && _is_typemax(upper_bound)
-            has_ub = false
-            upper_bound = NaN
-        end
-        return new{typeof(lower_bound),typeof(upper_bound),U,V}(
-            has_lb,
+        return new{S,T,U,V}(
+            has_lb && !_is_typemin(lower_bound),
             lower_bound,
-            has_ub,
+            has_ub && !_is_typemax(upper_bound),
             upper_bound,
             has_fix,
             fixed_value,
