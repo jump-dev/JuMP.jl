@@ -180,6 +180,12 @@ function copy_model(
 
     new_model.optimize_hook = model.optimize_hook
 
+    for (ci, shape) in model.shapes
+        if haskey(index_map, ci)
+            new_model.shapes[index_map[ci]] = shape
+        end
+    end
+
     # TODO copy NLP data
     if nonlinear_model(model) !== nothing
         error(
