@@ -35,9 +35,7 @@ import Test
 # ## The battery problem
 
 # Our model is a deterministic simplification of the storage model in Section 3
-# of Chancelier, De Lara, Lindegaard, Pacaud, Pennanen, and Perkkiö (2026),
-# [*Optimal operation and valuation of electricity storage systems in intraday
-# markets*](https://doi.org/10.1007/s10287-026-00564-7).
+# of [Chancelier2026](@cite).
 # Their model includes uncertain prices, bid–ask spreads, and risk preferences.
 # Here, we assume known prices and maximize trading revenue over six one-hour
 # periods. The data are illustrative, rather than observations from a market.
@@ -170,10 +168,8 @@ objective_value(ipopt_model)
 # ## CCOpt: solve the complementarity problem directly
 
 # CCOpt handles mathematical programs with complementarity constraints using
-# specialized relaxation and penalty algorithms built on MadNLP. See Pozharskiy,
-# Pacaud, Diehl, and Nurkanović (2026), [*CCOpt: an Open-Source Solver for
-# Large-Scale Mathematical Programs with Complementarity
-# Constraints*](https://arxiv.org/abs/2604.18726).
+# specialized relaxation and penalty algorithms built on MadNLP. See
+# [Pozharskiy2026](@cite) for the algorithms and implementation.
 #
 # Its JuMP interface accepts our nonnegative complementarity pairs directly.
 # Do not wrap CCOpt in `MathOptComplements.Optimizer`: we want CCOpt to receive
@@ -240,7 +236,7 @@ results
 
 # ## When can we omit complementarity?
 
-# Proposition 2 of Chancelier et al. gives a sufficient condition for their
+# Proposition 2 of [Chancelier2026](@cite) gives a sufficient condition for their
 # convex relaxation to be exact: `s⁻ / c⁻ ≤ s⁺ / c⁺`, where `s⁻` and `s⁺` are
 # bid and ask prices, and `c⁻` and `c⁺` are discharge and charge coefficients.
 # In our model, these are `s⁻ = s⁺ = price`, `c⁺ = efficiency`, and
