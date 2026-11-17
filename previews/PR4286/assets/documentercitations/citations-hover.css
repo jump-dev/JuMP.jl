@@ -1,0 +1,72 @@
+/* Popups showing a bibliography entry when hovering over a citation link
+ * (see citations-hover.js). The look ties in with the footnote previews that
+ * Documenter shows when hovering over a footnote link.
+ *
+ * One palette block per theme; light is the `:root` default. */
+
+:root {
+  --citation-hover-bg: #ffffff;
+  --citation-hover-fg: #222222;
+  --citation-hover-border: #dbdbdb;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+html.theme--documenter-dark {
+  --citation-hover-bg: #1f2424;
+  --citation-hover-fg: #fff;
+  --citation-hover-border: #5e6d6f;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-latte {
+  --citation-hover-bg: #eff1f5;
+  --citation-hover-fg: #4c4f69;
+  --citation-hover-border: #acb0be;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+html.theme--catppuccin-frappe {
+  --citation-hover-bg: #303446;
+  --citation-hover-fg: #c6d0f5;
+  --citation-hover-border: #626880;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-macchiato {
+  --citation-hover-bg: #24273a;
+  --citation-hover-fg: #cad3f5;
+  --citation-hover-border: #5b6078;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-mocha {
+  --citation-hover-bg: #1e1e2e;
+  --citation-hover-fg: #cdd6f4;
+  --citation-hover-border: #585b70;
+  --citation-hover-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.citation-hover-popup {
+  display: none;
+  position: absolute;
+  z-index: 200; /* above content; Documenter modals use ~1000+ */
+  width: max-content;
+  max-width: min(40rem, calc(100vw - 2rem));
+  /* Long entries scroll inside the popup. This works because the popup stays
+   * open while the pointer is over it. */
+  max-height: min(18rem, 60vh);
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--citation-hover-bg);
+  color: var(--citation-hover-fg);
+  border: 1px solid var(--citation-hover-border);
+  border-radius: 5px;
+  box-shadow: var(--citation-hover-shadow);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+/* The entry is rendered as it appears in a bibliography block, but as a
+ * standalone paragraph rather than a list item. */
+.citation-hover-popup > *:first-child {
+  margin-top: 0;
+}
+.citation-hover-popup > *:last-child {
+  margin-bottom: 0;
+}

@@ -1,0 +1,118 @@
+/* Doxygen-style hover tooltips for reference links (see ref-popup.js). One
+ * palette block per theme; light is the :root default — same pattern as
+ * juliasyntax-tokens.css. */
+
+:root {
+  --refpop-bg: #ffffff;
+  --refpop-fg: #222222;
+  --refpop-border: #dbdbdb;
+  --refpop-accent: #2e63b8;
+  --refpop-hover-bg: #f5f5f5;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+html.theme--documenter-dark {
+  --refpop-bg: #1f2424;
+  --refpop-fg: #fff;
+  --refpop-border: #5e6d6f;
+  --refpop-accent: #4c9aff;
+  --refpop-hover-bg: #282f2f;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-latte {
+  --refpop-bg: #eff1f5;
+  --refpop-fg: #4c4f69;
+  --refpop-border: #acb0be;
+  --refpop-accent: #1e66f5;
+  --refpop-hover-bg: #e6e9ef;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+html.theme--catppuccin-frappe {
+  --refpop-bg: #303446;
+  --refpop-fg: #c6d0f5;
+  --refpop-border: #626880;
+  --refpop-accent: #8caaee;
+  --refpop-hover-bg: #292c3c;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-macchiato {
+  --refpop-bg: #24273a;
+  --refpop-fg: #cad3f5;
+  --refpop-border: #5b6078;
+  --refpop-accent: #8aadf4;
+  --refpop-hover-bg: #1e2030;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+html.theme--catppuccin-mocha {
+  --refpop-bg: #1e1e2e;
+  --refpop-fg: #cdd6f4;
+  --refpop-border: #585b70;
+  --refpop-accent: #89b4fa;
+  --refpop-hover-bg: #181825;
+  --refpop-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.ref-popup {
+  display: none;
+  position: absolute;
+  z-index: 200; /* above content; Documenter modals use ~1000+ */
+  /* Size to the signature: Julia headers get long, so prefer growing (up to a
+   * generous cap / the viewport) over an overflow scrollbar in every tooltip. */
+  width: max-content;
+  max-width: min(64rem, calc(100vw - 2rem));
+  background: var(--refpop-bg);
+  color: var(--refpop-fg);
+  border: 1px solid var(--refpop-border);
+  border-radius: 6px;
+  box-shadow: var(--refpop-shadow);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Disambiguation list (ambiguous links only). */
+.ref-popup .ref-popup-targets {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--refpop-border);
+  max-height: 14rem; /* very long candidate lists scroll */
+  overflow-y: auto;
+}
+.ref-popup .ref-popup-targets li {
+  margin: 0;
+  padding: 0;
+}
+.ref-popup .ref-popup-targets a {
+  display: block;
+  padding: 0.25rem 0.75rem;
+  color: var(--refpop-accent);
+  font-family: var(--documenter-font-family-monospace, monospace);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ref-popup .ref-popup-targets li.selected a,
+.ref-popup .ref-popup-targets a:hover {
+  background: var(--refpop-hover-bg);
+}
+
+/* Tooltip body: highlighted signature + one-line brief. The signature is a
+ * bare <code> (not <pre>, which Documenter decorates with a copy button), so
+ * undo the theme's inline-code chrome. */
+.ref-popup .ref-tip {
+  padding: 0.5rem 0.75rem;
+}
+.ref-popup .ref-tip-sig {
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: var(--documenter-font-family-monospace, monospace);
+  font-size: 0.875rem;
+  white-space: pre;
+  overflow-x: auto;
+}
+.ref-popup .ref-tip-brief {
+  margin: 0.375rem 0 0;
+  opacity: 0.9;
+}
