@@ -8,8 +8,8 @@ module TestLPMatrixData
 using JuMP
 using Test
 
-function test_standard_matrix_form()
-    model = Model()
+function test_standard_matrix_form(model_factory = Model)
+    model = model_factory()
     @variable(model, x >= 1, Bin)
     @variable(model, 2 <= y)
     @variable(model, 3 <= z <= 4, Int)
@@ -19,6 +19,8 @@ function test_standard_matrix_form()
     @constraint(model, -1 <= x + y <= 2)
     @objective(model, Max, 1 + 2x)
     a = lp_matrix_data(model)
+    @test a.variables isa Vector{JuMP.variable_ref_type(model)}
+    @test a.variables == [x, y, z]
     @test Matrix(a.A) == [1 0 0; 0 -4 -5; 2 3 0; 1 1 0]
     @test a.b_lower == [5, 7, -Inf, -1]
     @test a.b_upper == [5, Inf, 6, 2]
@@ -38,6 +40,13 @@ function test_standard_matrix_form()
     @test b.c_offset == 0
     @test b.integers == [1, 3]
     @test b.binaries == Int[]
+    return
+end
+
+function test_standard_matrix_form_concrete_model()
+    test_standard_matrix_form() do
+        return JuMP.concrete_direct_model(MOI.Utilities.Model{Float64}())
+    end
     return
 end
 
