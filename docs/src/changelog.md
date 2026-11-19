@@ -7,6 +7,27 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.33.0 (November 19, 2026)
+
+### Added
+
+ - Added support for complex constraints in primal_feasibility_report (#4274)
+ - Added support for converting an affine expression to a variable (#4276)
+
+### Fixed
+
+ - Fixed printing of negative scientific numbers in `MIME"text/latex"` (#4271)
+ - Fixed result type of broadcasting between sparse matrices (#4272)
+ - Fixed a type instability in `VariableInfo` (#4285)
+ - Fixed copying constraint shapes in `copy_model` (#4281)
+
+### Other
+
+ - Keep subexpression cache key alive in model emptying test (#4277)
+ - Fix formatting for latest JuliaFormatter (#4279)
+ - Added `MFAOA.jl` to the solver list (#4283)
+ - Set result counts when populating mock solutions in tests (#4284)
+
 ## Version v1.32.1 (October 7, 2026)
 
 ### Fixed
