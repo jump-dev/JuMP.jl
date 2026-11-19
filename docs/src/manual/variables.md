@@ -988,8 +988,8 @@ julia> for i in 1:N
 
 julia> x1
 Dict{Tuple{Int64, Int64, Int64}, VariableRef} with 2 entries:
-  (1, 1, 1)    => x1[1,1,1]
   (10, 10, 10) => x1[10,10,10]
+  (1, 1, 1)    => x1[1,1,1]
 ```
 If performance is a concern, explicitly construct the set of indices instead of
 using the filtering syntax.

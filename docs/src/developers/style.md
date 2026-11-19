@@ -262,7 +262,7 @@ end
 
 # output
 
-my_sum_defensive
+my_sum_defensive (generic function with 1 method)
 ```
 
 This function works on `Vector{Float64}`:
