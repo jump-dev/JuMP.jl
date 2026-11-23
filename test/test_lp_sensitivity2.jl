@@ -503,6 +503,53 @@ function test_Free_variable()
     return
 end
 
+function test_Coupled_free_nonbasic_variable()
+    for sense in (MIN_SENSE, MAX_SENSE), coefficient in (-2.0, 2.0)
+        mock = MOIU.MockOptimizer(
+            MOIU.Model{Float64}();
+            eval_variable_constraint_dual = false,
+        )
+        model = direct_model(mock)
+        @variable(model, x)
+        @variable(model, y)
+        @variable(model, w)
+        @variable(model, z >= 0)
+        @constraint(model, c, x + coefficient * y + z == 3)
+        @constraint(model, d, 1.0 * w == 2)
+        sign = sense == MIN_SENSE ? 1.0 : -1.0
+        @objective(model, sense, x + coefficient * y + w + (1 + sign) * z)
+        optimize!(model)
+        MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+        MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+        for (var, p, status) in (
+            (x, 3.0, MOI.BASIC),
+            (y, 0.0, MOI.SUPER_BASIC),
+            (w, 2.0, MOI.BASIC),
+            (z, 0.0, MOI.NONBASIC_AT_LOWER),
+        )
+            MOI.set(mock, MOI.VariablePrimal(), index(var), p)
+            MOI.set(mock, MOI.VariableBasisStatus(), index(var), status)
+        end
+        for (con, multiplier, status) in (
+            (c, sign, MOI.NONBASIC),
+            (d, sign, MOI.NONBASIC),
+            (LowerBoundRef(z), 1.0, MOI.NONBASIC_AT_LOWER),
+        )
+            MOI.set(mock, MOI.ConstraintDual(), index(con), multiplier)
+            MOI.set(mock, MOI.ConstraintBasisStatus(), index(con), status)
+        end
+        report = lp_sensitivity_report(model)
+        # For feasible points with z = 0 and w = 2, changing x's objective
+        # coefficient by δ gives objective 5 + 3δ - δ * coefficient * y.
+        @test report[x] == (0.0, 0.0)
+        @test report[y] == (0.0, 0.0)
+        @test report[w] == (-Inf, Inf)
+        @test report[z] == (sense == MIN_SENSE ? (-1.0, Inf) : (-Inf, 1.0))
+    end
+    return
+end
+
 function test_fixed_to_set_basic_equality()
     _test_sensitivity(
         """

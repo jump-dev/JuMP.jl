@@ -225,6 +225,12 @@ function lp_sensitivity_report(
                     continue  # Fixed variables can be ignored.
                 elseif abs(d[j][e_i]) <= atol
                     continue  # Direction is ≈0 so any value of δ is okay.
+                elseif j <= n &&
+                       std_form.lower[j] == -Inf &&
+                       std_form.upper[j] == Inf
+                    # A free nonbasic variable must have zero reduced cost.
+                    t_lo, t_hi = max(t_lo, zero(T)), min(t_hi, zero(T))
+                    continue
                 end
                 # There are three confusing sign switch opportunities. We
                 # usually want to be:
