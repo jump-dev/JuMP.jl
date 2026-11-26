@@ -30,8 +30,8 @@ import Test
 # A mixed complementarity problem has the form:
 # ```math
 # \begin{align}
-#     F_i(x) \perp x_i & i = 1 \ldots n \\
-#     l_i \le x_i \le u_i & i = 1 \ldots n.
+#     F_i(x) \perp x_i & \quad i = 1 \ldots n \\
+#     l_i \le x_i \le u_i & \quad i = 1 \ldots n.
 # \end{align}
 # ```
 # where the ``\perp`` constraint enforces the following relations:

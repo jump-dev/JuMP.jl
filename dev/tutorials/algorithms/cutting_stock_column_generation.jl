@@ -108,7 +108,7 @@ data = get_data()
 # ```math
 # \begin{align}
 #     \min & \sum\limits_{j=1}^J y_j \\
-#     \;\;\text{s.t.} & \sum\limits_{i=1}^I w_i x_{ij} \le W y_j & \forall j=1,\ldots,J \\
+#     \;\;\text{s.t.} \; & \sum\limits_{i=1}^I w_i x_{ij} \le W y_j & \forall j=1,\ldots,J \\
 #          & \sum\limits_{j=1}^J x_{ij} \ge d_i & \forall i=1,\ldots,I \\
 #          & x_{ij} \ge 0 & \forall i=1,\ldots,I, j=1,\ldots,J \\
 #          & x_{ij} \in \mathbb{Z} & \forall i=1,\ldots,I, j=1,\ldots,J \\
@@ -172,7 +172,7 @@ solution_summary(model)
 # ```math
 # \begin{align}
 #     \min & \sum\limits_{p=1}^P x_p \\
-#     \;\;\text{s.t.} & \sum\limits_{p=1}^P a_{ip} x_p \ge d_i & \forall i=1,\ldots,I \\
+#     \;\;\text{s.t.} \; & \sum\limits_{p=1}^P a_{ip} x_p \ge d_i & \forall i=1,\ldots,I \\
 #          & x_{p} \ge 0 & \forall p=1,\ldots,P \\
 #          & x_{p} \in \mathbb{Z} & \forall p=1,\ldots,P
 # \end{align}
@@ -280,7 +280,7 @@ assert_is_solved_and_feasible(model; dual = true)
 # ```math
 # \begin{align}
 #     \max & \sum\limits_{i=1}^I \pi_i y_i \\
-#     \;\;\text{s.t.} & \sum\limits_{i=1}^I w_i y_{i} \le W \\
+#     \;\;\text{s.t.} \; & \sum\limits_{i=1}^I w_i y_{i} \le W \\
 #          & y_{i} \ge 0 & \forall i=1,\ldots,I \\
 #          & y_{i} \in \mathbb{Z} & \forall i=1,\ldots,I \\
 # \end{align}

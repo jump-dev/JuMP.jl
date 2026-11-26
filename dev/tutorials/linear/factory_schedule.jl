@@ -52,7 +52,7 @@ import Test
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} \\
-# \text{s.t.} & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
+# \text{s.t.} \; & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
 #             & x_{m,f} \ge l_f z_{m,f} && \forall f \in F, m \in M \\
 #             & \sum\limits_{f\in F} x_{m,f} = d_m && \forall m \in M \\
 #             & z_{m,f} \in \{0, 1\} && \forall f \in F, m \in M.
@@ -77,7 +77,7 @@ import Test
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{f \in F, m \in M} a_f z_{m,f} + c_f x_{m,f} + \sum\limits_{m \in M}10000 \delta_m \\
-# \text{s.t.} & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
+# \text{s.t.} \; & x_{m,f} \le u_f z_{m,f} && \forall f \in F, m \in M \\
 #             & x_{m,f} \ge l_f z_{m,f} && \forall f \in F, m \in M \\
 #             & \sum\limits_{f\in F} x_{m,f} + \delta_m = d_m && \forall m \in M \\
 #             & z_{m,f} \in \{0, 1\} && \forall f \in F, m \in M \\
