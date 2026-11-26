@@ -63,7 +63,7 @@ Random.seed!(1234)
 # ```math
 # \begin{aligned}
 # \min\left(\mathrm{w.r.t.} \mathbf{S}_{+}^{n}\right) & E=\left(\sum_{j=1}^{p} m_{j} v_{j} v_{j}^{T}\right)^{-1} \\
-# \text{subject to} & m_{i} \geq 0 \\
+# \text{subject to} \; & m_{i} \geq 0 \\
 # & \sum\limits_{i=1}^p m_{i} = m \\
 # & m_{i} \in \mathbb{Z},\quad i=1,\ldots,p
 # \end{aligned}
@@ -125,7 +125,7 @@ eye = Matrix{Float64}(LinearAlgebra.I, q, q);
 # ```math
 # \begin{aligned}
 # \min & \mathbf{1}^{T} u \\
-# \text{subject to} & \left[\begin{aligned}{\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}} & {e_{k}} \\ {e_{k}^{T}} & {u_{k}}\end{aligned}\right] \succeq 0, \quad k=1, \ldots, n \\
+# \text{subject to} \; & \left[\begin{aligned}{\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}} & {e_{k}} \\ {e_{k}^{T}} & {u_{k}}\end{aligned}\right] \succeq 0, \quad k=1, \ldots, n \\
 # & \lambda \succeq 0 \\
 # &  \mathbf{1}^{T} \lambda=1
 # \end{aligned}
@@ -169,7 +169,7 @@ value.(np)
 # ```math
 # \begin{aligned}
 # \max & t \\
-# \text{subject to} & \sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T} \succeq t I \\
+# \text{subject to} \; & \sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T} \succeq t I \\
 # & \lambda \succeq 0 \\
 # & \mathbf{1}^{T} \lambda=1
 # \end{aligned}
@@ -204,7 +204,7 @@ value.(np)
 # ```math
 # \begin{aligned}
 # \min & \log \operatorname{det}\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1} \\
-# \text{subject to} & \lambda \succeq 0 \\
+# \text{subject to} \; & \lambda \succeq 0 \\
 # & \mathbf{1}^{T} \lambda=1
 # \end{aligned}
 # ```
