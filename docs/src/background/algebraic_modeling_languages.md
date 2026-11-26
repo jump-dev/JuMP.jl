@@ -19,7 +19,7 @@ seen a formulation like:
 ```math
 \begin{aligned}
 \min \;     & c^\top x \\
-\text{s.t.} & A x = b  \\
+\text{s.t.} \; & A x = b  \\
             & x \ge 0  \\
             & x_i \in \mathbb{Z}, \quad \forall i \in \mathcal{I}
 \end{aligned}
@@ -49,7 +49,7 @@ algebraically like so:
 ```math
 \begin{aligned}
 \max \;     & \sum\limits_{i = 1}^n c_i x_i                   \\
-\text{s.t.} & \sum\limits_{i = 1}^n w_i x_i \le b             \\
+\text{s.t.} \; & \sum\limits_{i = 1}^n w_i x_i \le b             \\
             & x_i \ge 0 \quad \forall i = 1,\ldots,n          \\
             & x_i \in \mathbb{Z} \quad \forall i = 1,\ldots,n.
 \end{aligned}
@@ -66,7 +66,7 @@ slack variable $x_0$:
 ```math
 \begin{aligned}
 \max \;     & \sum\limits_{i = 1}^n c_i x_i            \\
-\text{s.t.} & x_0 + \sum\limits_{i = 1}^n w_i x_i = b  \\
+\text{s.t.} \; & x_0 + \sum\limits_{i = 1}^n w_i x_i = b  \\
             & x_i \ge 0 \quad \forall i = 0,\ldots,n   \\
             & x_i \in \mathbb{Z} \quad \forall i = 1,\ldots,n.
 \end{aligned}

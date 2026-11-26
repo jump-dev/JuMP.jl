@@ -5,7 +5,7 @@ fundamental class of optimization problems of the form:
 ```math
 \begin{align}
     \min_{x \in \mathbb{R}^n} & \sum\limits_{i=1}^n c_i x_i \\
-    \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m \\
+    \;\;\text{s.t.} \; & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m \\
     & l_i \le x_i \le u_i & i = 1 \ldots n.
 \end{align}
 ```
