@@ -620,6 +620,7 @@ function documentation_structure()
                 "tutorials/algorithms/progressive_hedging.md",
             ],
             "Applications" => [
+                "tutorials/applications/battery.md",
                 "tutorials/applications/power_systems.md",
                 "tutorials/applications/optimal_power_flow.md",
                 "tutorials/applications/web_app.md",
