@@ -278,7 +278,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @build_constraint(2x >= 1)
-ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}, ScalarShape}(2 x, MathOptInterface.GreaterThan{Float64}(1.0), ScalarShape())
 ```
 
 ```jldoctest
@@ -287,9 +287,9 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @build_constraint(x .>= 0)
-2-element Vector{ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}}:
- ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(x[1], MathOptInterface.GreaterThan{Float64}(-0.0))
- ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(x[2], MathOptInterface.GreaterThan{Float64}(-0.0))
+2-element Vector{ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}, ScalarShape}}:
+ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}, ScalarShape}(x[1], MathOptInterface.GreaterThan{Float64}(-0.0), ScalarShape())
+ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}, ScalarShape}(x[2], MathOptInterface.GreaterThan{Float64}(-0.0), ScalarShape())
 ```
 """
 macro build_constraint(arg)

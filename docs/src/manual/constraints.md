@@ -1218,7 +1218,7 @@ Use [`constraint_object`](@ref) to get an instance of an
 [`AbstractConstraint`](@ref) object that stores the constraint data:
 ```jldoctest con_access
 julia> con = constraint_object(cons[1])
-ScalarConstraint{VariableRef, MathOptInterface.Integer}(x[1], MathOptInterface.Integer())
+ScalarConstraint{VariableRef, MathOptInterface.Integer, ScalarShape}(x[1], MathOptInterface.Integer(), ScalarShape())
 
 julia> con.func
 x[1]
